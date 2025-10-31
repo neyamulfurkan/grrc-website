@@ -1324,7 +1324,7 @@
         async function loadClubConfigToSidebar() {
             try {
                 // NEW - Try to load from API first
-                const result = await getClubConfig();
+               const result = await window.storage.getClubConfig();
                 if (result.success && result.data) {
                     const config = result.data;
                     const logo = document.getElementById('sidebarLogo');
@@ -1368,12 +1368,11 @@
             try {
                 // NEW - Load from API
                 const [membersResult, eventsResult, projectsResult, galleryResult] = await Promise.all([
-                    getMembers(),
-                    getEvents(),
-                    getProjects(),
-                    getGallery()
-                ]);
-
+    window.storage.getMembers(),
+    window.storage.getEvents(),
+    window.storage.getProjects(),
+    window.storage.getGallery()
+]);
                 if (membersResult.success && membersResult.data) {
                     document.getElementById('statMembers').textContent = membersResult.data.length;
                 } else {
@@ -1511,7 +1510,7 @@
         async function loadMembers(searchTerm = '') {
             try {
                 // NEW - Load from API
-                const result = await getMembers();
+                const result = await window.storage.getMembers();
                 let members = [];
 
                 if (result.success && Array.isArray(result.data)) {
@@ -1711,7 +1710,7 @@
         async function loadEvents(searchTerm = '') {
             try {
                 // NEW - Load from API
-                const result = await getEvents();
+                const result = await window.storage.getEvents();
                 let events = [];
 
                 if (result.success && Array.isArray(result.data)) {
@@ -1901,7 +1900,7 @@
         async function loadProjects(searchTerm = '') {
             try {
                 // NEW - Load from API
-                const result = await getProjects();
+               const result = await window.storage.getProjects();
                 let projects = [];
 
                 if (result.success && Array.isArray(result.data)) {
@@ -2096,7 +2095,7 @@
         async function loadGallery(searchTerm = '') {
             try {
                 // NEW - Load from API
-                const result = await getGallery();
+                const result = await window.storage.getGallery();
                 let gallery = [];
 
                 if (result.success && Array.isArray(result.data)) {
@@ -2228,7 +2227,7 @@
         async function loadAnnouncements() {
             try {
                 // NEW - Load from API
-                const result = await getAnnouncements();
+                const result = await window.storage.getAnnouncements();
                 let announcements = [];
 
                 if (result.success && Array.isArray(result.data)) {
@@ -2373,7 +2372,7 @@
         async function loadAdmins() {
             try {
                 // Try to load from API first
-                const result = await getAdmins();
+               const result = await window.storage.getAdmins();
                 let admins = [];
 
                if (result.success && Array.isArray(result.data)) {
@@ -2765,7 +2764,7 @@ function setupClubConfigForm() {
 async function loadClubConfig() {
     try {
         // Use storage.js which handles API + localStorage
-        const result = await window.storage.getClubConfig();
+       const result = await window.storage.getClubConfig();
         if (result.success && result.data) {
             const config = result.data;
 
