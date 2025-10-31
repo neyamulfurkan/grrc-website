@@ -1,3 +1,13 @@
+/**
+ * storage.js - Local Storage Management System
+ * Handles all localStorage operations for the club website
+ * Version: 2.0.1 - Fixed Authentication & API Integration
+ */
+
+// =============================================================================
+// STORAGE KEYS CONFIGURATION
+// =============================================================================
+
 const STORAGE_KEYS = {
   CLUB_CONFIG: 'clubConfig',
   ADMINS: 'admins',
@@ -15,12 +25,51 @@ const SESSION_KEYS = {
   REMEMBERED_ADMIN: 'rememberedAdmin'
 };
 
+// Make globally available
+window.STORAGE_KEYS = STORAGE_KEYS;
+window.SESSION_KEYS = SESSION_KEYS;
+
+// =============================================================================
+// DEFAULT DATA STRUCTURES
+// =============================================================================
+
+const CLUB_DEFAULTS = {
+  name: 'GSTU Robotics & Research Club',
+  shortName: 'GRRC',
+  motto: 'A Hub of Robothinkers',
+  description: 'Empowering students to explore robotics, AI, and innovative technologies through hands-on projects and collaborative learning.',
+  university: 'Gonoshasthaya Samaj Vittik Medical College',
+  email: 'contact@gstrrc.edu.bd',
+  phone: '+880123456789',
+  address: 'Dhaka, Bangladesh',
+  foundedYear: '2020',
+  logo: 'assets/default-logo.jpg',
+  socialLinks: []
+};
+
+function getDefaultDataStructure() {
+  return {
+    [STORAGE_KEYS.CLUB_CONFIG]: CLUB_DEFAULTS,
+    [STORAGE_KEYS.ADMINS]: [],
+    [STORAGE_KEYS.MEMBERS]: [],
+    [STORAGE_KEYS.EVENTS]: [],
+    [STORAGE_KEYS.PROJECTS]: [],
+    [STORAGE_KEYS.GALLERY]: [],
+    [STORAGE_KEYS.ANNOUNCEMENTS]: [],
+    [STORAGE_KEYS.THEME]: 'light'
+  };
+}
+
+// =============================================================================
+// INITIALIZATION
+// =============================================================================
+
 function initializeStorage() {
   try {
     const isInitialized = localStorage.getItem(STORAGE_KEYS.INITIALIZED);
     
     if (!isInitialized) {
-      console.log('First time initialization - will fetch from backend');
+      console.log('🔧 First time initialization - will fetch from backend');
       localStorage.setItem(STORAGE_KEYS.THEME, 'light');
       localStorage.setItem(STORAGE_KEYS.INITIALIZED, 'true');
       return true;
@@ -42,7 +91,7 @@ function resetStorage() {
     sessionStorage.clear();
     initializeStorage();
     
-    console.log('Storage reset successfully');
+    console.log('✅ Storage reset successfully');
     return true;
   } catch (error) {
     console.error('Error resetting storage:', error);
@@ -50,42 +99,51 @@ function resetStorage() {
   }
 }
 
+// =============================================================================
+// AUTHENTICATION HELPERS
+// =============================================================================
+
 function isAuthenticated() {
   try {
-    const authData = localStorage.getItem('adminAuth');
-    if (!authData) return false;
-    
-    const parsed = JSON.parse(authData);
-    return parsed && parsed.isAuthenticated === true;
+    const session = sessionStorage.getItem('adminSession');
+    const token = localStorage.getItem('grrc_auth_token');
+    return !!(session && token);
   } catch (error) {
     console.error('Error checking authentication:', error);
     return false;
   }
 }
 
+// =============================================================================
+// CLUB CONFIGURATION
+// =============================================================================
+
 async function getClubConfig() {
   try {
-    if (typeof window.apiClient === 'undefined') {
-      throw new Error('API client not available');
+    // Try API first if available
+    if (typeof window.apiClient !== 'undefined') {
+      try {
+        const response = await window.apiClient.getConfig();
+        
+        if (response.success && response.data) {
+          localStorage.setItem(STORAGE_KEYS.CLUB_CONFIG, JSON.stringify(response.data));
+          return { success: true, data: response.data };
+        }
+      } catch (apiError) {
+        console.warn('⚠️ API call failed, using cached config:', apiError.message);
+      }
     }
-
-    const response = await window.apiClient.getConfig();
     
-    if (response.success && response.data) {
-      localStorage.setItem(STORAGE_KEYS.CLUB_CONFIG, JSON.stringify(response.data));
-      return response.data;
-    }
-    
-    throw new Error('Failed to fetch config from backend');
-  } catch (error) {
-    console.warn('API failed, using cached config:', error.message);
-    
+    // Fallback to localStorage
     const cached = localStorage.getItem(STORAGE_KEYS.CLUB_CONFIG);
     if (cached) {
-      return JSON.parse(cached);
+      return { success: true, data: JSON.parse(cached) };
     }
     
-    return getDefaultDataStructure()[STORAGE_KEYS.CLUB_CONFIG];
+    return { success: true, data: CLUB_DEFAULTS };
+  } catch (error) {
+    console.error('Error getting club config:', error);
+    return { success: true, data: CLUB_DEFAULTS };
   }
 }
 
@@ -95,53 +153,68 @@ async function setClubConfig(configData) {
   }
   
   if (!isAuthenticated()) {
-    throw new Error('You must be logged in to update club configuration');
-  }
-  
-  if (typeof window.apiClient === 'undefined') {
-    throw new Error('API client not available. Please refresh the page.');
+    throw new Error('Authentication required');
   }
   
   try {
-    const currentConfig = await getClubConfig();
+    const currentResult = await getClubConfig();
+    const currentConfig = currentResult.data;
     const updatedConfig = { ...currentConfig, ...configData };
     
-    const apiResult = await window.apiClient.updateConfig(updatedConfig);
-    
-    if (!apiResult.success) {
-      throw new Error(apiResult.error || 'Failed to update club configuration');
+    // Try API if available
+    if (typeof window.apiClient !== 'undefined') {
+      try {
+        const apiResult = await window.apiClient.updateConfig(updatedConfig);
+        
+        if (apiResult.success) {
+          localStorage.setItem(STORAGE_KEYS.CLUB_CONFIG, JSON.stringify(updatedConfig));
+          console.log('✅ Club config saved to backend and cached locally');
+          return { success: true };
+        } else {
+          throw new Error(apiResult.error || 'Failed to update club configuration');
+        }
+      } catch (apiError) {
+        console.warn('⚠️ API update failed:', apiError.message);
+        throw apiError;
+      }
+    } else {
+      // Fallback to localStorage only
+      localStorage.setItem(STORAGE_KEYS.CLUB_CONFIG, JSON.stringify(updatedConfig));
+      console.log('✅ Club config saved locally (API not available)');
+      return { success: true };
     }
-    
-    localStorage.setItem(STORAGE_KEYS.CLUB_CONFIG, JSON.stringify(updatedConfig));
-    
-    console.log('Club config saved to backend and cached locally');
-    return true;
-    
   } catch (error) {
-    console.error('Failed to update club config:', error);
+    console.error('❌ Failed to update club config:', error);
     throw error;
   }
 }
 
+// =============================================================================
+// ADMINS
+// =============================================================================
+
 async function getAdmins() {
   try {
-    if (typeof window.apiClient === 'undefined') {
-      throw new Error('API client not available');
+    // Try API first if available
+    if (typeof window.apiClient !== 'undefined') {
+      try {
+        const response = await window.apiClient.getAdmins();
+        
+        if (response.success && Array.isArray(response.data)) {
+          localStorage.setItem(STORAGE_KEYS.ADMINS, JSON.stringify(response.data));
+          return { success: true, data: response.data };
+        }
+      } catch (apiError) {
+        console.warn('⚠️ API call failed, using cached admins:', apiError.message);
+      }
     }
-
-    const response = await window.apiClient.getAdmins();
     
-    if (response.success && Array.isArray(response.data)) {
-      localStorage.setItem(STORAGE_KEYS.ADMINS, JSON.stringify(response.data));
-      return response.data;
-    }
-    
-    throw new Error('Failed to fetch admins from backend');
-  } catch (error) {
-    console.warn('API failed, using cached admins:', error.message);
-    
+    // Fallback to localStorage
     const cached = localStorage.getItem(STORAGE_KEYS.ADMINS);
-    return cached ? JSON.parse(cached) : [];
+    return { success: true, data: cached ? JSON.parse(cached) : [] };
+  } catch (error) {
+    console.error('Error getting admins:', error);
+    return { success: true, data: [] };
   }
 }
 
@@ -150,23 +223,12 @@ async function addAdmin(adminData) {
     throw new Error('Username and password are required');
   }
   
-  if (!isValidTextLength(adminData.username, 'name')) {
-    throw new Error('Invalid username length');
-  }
-  
-  if (!isValidPassword(adminData.password)) {
-    throw new Error('Invalid password');
-  }
-  
   if (!isAuthenticated()) {
-    throw new Error('You must be logged in to add admins');
+    throw new Error('Authentication required');
   }
   
-  if (typeof window.apiClient === 'undefined') {
-    throw new Error('API client not available. Please refresh the page.');
-  }
-  
-  const admins = await getAdmins();
+  const adminsResult = await getAdmins();
+  const admins = adminsResult.data || [];
   
   if (admins.some(admin => admin.username === adminData.username)) {
     throw new Error('Username already exists');
@@ -181,71 +243,36 @@ async function addAdmin(adminData) {
       createdAt: getCurrentTimestamp()
     };
     
-    const apiResult = await window.apiClient.createAdmin(newAdmin);
-    
-    if (!apiResult.success) {
-      throw new Error(apiResult.error || 'Failed to create admin');
+    // Try API if available
+    if (typeof window.apiClient !== 'undefined') {
+      try {
+        const apiResult = await window.apiClient.createAdmin(newAdmin);
+        
+        if (apiResult.success) {
+          if (apiResult.data && apiResult.data.id) {
+            newAdmin.id = apiResult.data.id;
+          }
+          
+          admins.push(newAdmin);
+          localStorage.setItem(STORAGE_KEYS.ADMINS, JSON.stringify(admins));
+          console.log('✅ Admin saved:', newAdmin.username);
+          return { success: true, data: newAdmin };
+        } else {
+          throw new Error(apiResult.error || 'Failed to create admin');
+        }
+      } catch (apiError) {
+        console.warn('⚠️ API create failed:', apiError.message);
+        throw apiError;
+      }
+    } else {
+      // Fallback to localStorage only
+      admins.push(newAdmin);
+      localStorage.setItem(STORAGE_KEYS.ADMINS, JSON.stringify(admins));
+      console.log('✅ Admin saved locally (API not available)');
+      return { success: true, data: newAdmin };
     }
-    
-    if (apiResult.data && apiResult.data.id) {
-      newAdmin.id = apiResult.data.id;
-    }
-    
-    admins.push(newAdmin);
-    localStorage.setItem(STORAGE_KEYS.ADMINS, JSON.stringify(admins));
-    
-    console.log('Admin saved to backend and cached locally:', newAdmin.username);
-    return newAdmin;
-    
   } catch (error) {
-    console.error('Failed to add admin:', error);
-    throw error;
-  }
-}
-
-async function updateAdmin(adminId, updates) {
-  if (!adminId || !updates) {
-    throw new Error('Admin ID and updates are required');
-  }
-  
-  if (!isAuthenticated()) {
-    throw new Error('You must be logged in to update admins');
-  }
-  
-  if (typeof window.apiClient === 'undefined') {
-    throw new Error('API client not available. Please refresh the page.');
-  }
-  
-  const admins = await getAdmins();
-  const index = admins.findIndex(admin => admin.id === adminId);
-  
-  if (index === -1) {
-    throw new Error('Admin not found');
-  }
-  
-  if (updates.username) {
-    if (admins.some((admin, i) => i !== index && admin.username === updates.username)) {
-      throw new Error('Username already exists');
-    }
-  }
-  
-  try {
-    const updatedAdmin = { ...admins[index], ...updates };
-    
-    const apiResult = await window.apiClient.updateAdmin(adminId, updatedAdmin);
-    
-    if (!apiResult.success) {
-      throw new Error(apiResult.error || 'Failed to update admin');
-    }
-    
-    admins[index] = updatedAdmin;
-    localStorage.setItem(STORAGE_KEYS.ADMINS, JSON.stringify(admins));
-    
-    console.log('Admin update saved to backend and cached locally');
-    return true;
-    
-  } catch (error) {
-    console.error('Failed to update admin:', error);
+    console.error('❌ Failed to add admin:', error);
     throw error;
   }
 }
@@ -256,14 +283,11 @@ async function deleteAdmin(adminId) {
   }
   
   if (!isAuthenticated()) {
-    throw new Error('You must be logged in to delete admins');
+    throw new Error('Authentication required');
   }
   
-  if (typeof window.apiClient === 'undefined') {
-    throw new Error('API client not available. Please refresh the page.');
-  }
-  
-  const admins = await getAdmins();
+  const adminsResult = await getAdmins();
+  const admins = adminsResult.data || [];
   const filtered = admins.filter(admin => admin.id !== adminId);
   
   if (filtered.length === admins.length) {
@@ -275,52 +299,67 @@ async function deleteAdmin(adminId) {
   }
   
   try {
-    const apiResult = await window.apiClient.deleteAdmin(adminId);
-    
-    if (!apiResult.success) {
-      throw new Error(apiResult.error || 'Failed to delete admin');
+    // Try API if available
+    if (typeof window.apiClient !== 'undefined') {
+      try {
+        const apiResult = await window.apiClient.deleteAdmin(adminId);
+        
+        if (apiResult.success) {
+          localStorage.setItem(STORAGE_KEYS.ADMINS, JSON.stringify(filtered));
+          console.log('✅ Admin deleted');
+          return { success: true };
+        } else {
+          throw new Error(apiResult.error || 'Failed to delete admin');
+        }
+      } catch (apiError) {
+        console.warn('⚠️ API delete failed:', apiError.message);
+        throw apiError;
+      }
+    } else {
+      // Fallback to localStorage only
+      localStorage.setItem(STORAGE_KEYS.ADMINS, JSON.stringify(filtered));
+      console.log('✅ Admin deleted locally (API not available)');
+      return { success: true };
     }
-    
-    localStorage.setItem(STORAGE_KEYS.ADMINS, JSON.stringify(filtered));
-    
-    console.log('Admin deleted from backend and cache');
-    return true;
-    
   } catch (error) {
-    console.error('Failed to delete admin:', error);
+    console.error('❌ Failed to delete admin:', error);
     throw error;
   }
 }
 
+// =============================================================================
+// MEMBERS
+// =============================================================================
+
 async function getMembers(filters = {}) {
   try {
-    if (typeof window.apiClient === 'undefined') {
-      throw new Error('API client not available');
+    // Try API first if available
+    if (typeof window.apiClient !== 'undefined') {
+      try {
+        const response = await window.apiClient.getMembers();
+        
+        if (response.success && Array.isArray(response.data)) {
+          localStorage.setItem(STORAGE_KEYS.MEMBERS, JSON.stringify(response.data));
+          let result = response.data;
+          
+          if (filters.role) {
+            result = result.filter(m => m.role === filters.role);
+          }
+          if (filters.department) {
+            result = result.filter(m => m.department === filters.department);
+          }
+          if (filters.year) {
+            result = result.filter(m => m.year === filters.year);
+          }
+          
+          return { success: true, data: result };
+        }
+      } catch (apiError) {
+        console.warn('⚠️ API call failed, using cached members:', apiError.message);
+      }
     }
-
-    const response = await window.apiClient.getMembers();
     
-    if (response.success && Array.isArray(response.data)) {
-      let result = response.data;
-      
-      if (filters.role) {
-        result = result.filter(m => m.role === filters.role);
-      }
-      if (filters.department) {
-        result = result.filter(m => m.department === filters.department);
-      }
-      if (filters.year) {
-        result = result.filter(m => m.year === filters.year);
-      }
-      
-      localStorage.setItem(STORAGE_KEYS.MEMBERS, JSON.stringify(response.data));
-      return result;
-    }
-    
-    throw new Error('Failed to fetch members from backend');
-  } catch (error) {
-    console.warn('API failed, using cached members:', error.message);
-    
+    // Fallback to localStorage
     const cached = localStorage.getItem(STORAGE_KEYS.MEMBERS);
     let result = cached ? JSON.parse(cached) : [];
     
@@ -334,17 +373,10 @@ async function getMembers(filters = {}) {
       result = result.filter(m => m.year === filters.year);
     }
     
-    return result;
-  }
-}
-
-async function getMemberById(memberId) {
-  try {
-    const members = await getMembers();
-    return members.find(m => m.id === memberId) || null;
+    return { success: true, data: result };
   } catch (error) {
-    console.error('Error getting member:', error);
-    return null;
+    console.error('Error getting members:', error);
+    return { success: true, data: [] };
   }
 }
 
@@ -353,23 +385,12 @@ async function addMember(memberData) {
     throw new Error('Required fields missing: name, email, department, year, role');
   }
   
-  if (!isValidEmail(memberData.email)) {
-    throw new Error('Invalid email format');
-  }
-  
-  if (memberData.phone && !isValidPhone(memberData.phone)) {
-    throw new Error('Invalid phone format');
-  }
-  
   if (!isAuthenticated()) {
-    throw new Error('You must be logged in to add members');
+    throw new Error('Authentication required');
   }
   
-  if (typeof window.apiClient === 'undefined') {
-    throw new Error('API client not available. Please refresh the page.');
-  }
-  
-  const members = await getMembers();
+  const membersResult = await getMembers();
+  const members = membersResult.data || [];
   
   if (members.some(m => m.email === memberData.email)) {
     throw new Error('Email already exists');
@@ -378,7 +399,7 @@ async function addMember(memberData) {
   try {
     const newMember = {
       id: generateUniqueId('member'),
-      name: sanitizeText(memberData.name),
+      name: memberData.name.trim(),
       photo: memberData.photo || '',
       department: memberData.department,
       year: memberData.year,
@@ -386,30 +407,42 @@ async function addMember(memberData) {
       position: memberData.position || '',
       email: memberData.email.trim().toLowerCase(),
       phone: memberData.phone ? memberData.phone.trim() : '',
-      bio: memberData.bio ? sanitizeText(memberData.bio) : '',
+      bio: memberData.bio || '',
       skills: Array.isArray(memberData.skills) ? memberData.skills : [],
       joinedDate: memberData.joinedDate || getCurrentDate(),
       createdAt: getCurrentTimestamp()
     };
     
-    const apiResult = await window.apiClient.createMember(newMember);
-    
-    if (!apiResult.success) {
-      throw new Error(apiResult.error || 'Failed to create member');
+    // Try API if available
+    if (typeof window.apiClient !== 'undefined') {
+      try {
+        const apiResult = await window.apiClient.createMember(newMember);
+        
+        if (apiResult.success) {
+          if (apiResult.data && apiResult.data.id) {
+            newMember.id = apiResult.data.id;
+          }
+          
+          members.push(newMember);
+          localStorage.setItem(STORAGE_KEYS.MEMBERS, JSON.stringify(members));
+          console.log('✅ Member saved:', newMember.name);
+          return { success: true, data: newMember };
+        } else {
+          throw new Error(apiResult.error || 'Failed to create member');
+        }
+      } catch (apiError) {
+        console.warn('⚠️ API create failed:', apiError.message);
+        throw apiError;
+      }
+    } else {
+      // Fallback to localStorage only
+      members.push(newMember);
+      localStorage.setItem(STORAGE_KEYS.MEMBERS, JSON.stringify(members));
+      console.log('✅ Member saved locally (API not available)');
+      return { success: true, data: newMember };
     }
-    
-    if (apiResult.data && apiResult.data.id) {
-      newMember.id = apiResult.data.id;
-    }
-    
-    members.push(newMember);
-    localStorage.setItem(STORAGE_KEYS.MEMBERS, JSON.stringify(members));
-    
-    console.log('Member saved to backend and cached locally:', newMember.name);
-    return newMember;
-    
   } catch (error) {
-    console.error('Failed to add member:', error);
+    console.error('❌ Failed to add member:', error);
     throw error;
   }
 }
@@ -420,53 +453,46 @@ async function updateMember(memberId, updates) {
   }
   
   if (!isAuthenticated()) {
-    throw new Error('You must be logged in to update members');
+    throw new Error('Authentication required');
   }
   
-  if (typeof window.apiClient === 'undefined') {
-    throw new Error('API client not available. Please refresh the page.');
-  }
-  
-  const members = await getMembers();
+  const membersResult = await getMembers();
+  const members = membersResult.data || [];
   const index = members.findIndex(m => m.id === memberId);
   
   if (index === -1) {
     throw new Error('Member not found');
   }
   
-  if (updates.email) {
-    if (!isValidEmail(updates.email)) {
-      throw new Error('Invalid email format');
-    }
-    if (members.some((m, i) => i !== index && m.email === updates.email)) {
-      throw new Error('Email already exists');
-    }
-  }
-  
-  if (updates.phone && !isValidPhone(updates.phone)) {
-    throw new Error('Invalid phone format');
-  }
-  
   try {
-    if (updates.name) updates.name = sanitizeText(updates.name);
-    if (updates.bio) updates.bio = sanitizeText(updates.bio);
-    
     const updatedMember = { ...members[index], ...updates };
     
-    const apiResult = await window.apiClient.updateMember(memberId, updatedMember);
-    
-    if (!apiResult.success) {
-      throw new Error(apiResult.error || 'Failed to update member');
+    // Try API if available
+    if (typeof window.apiClient !== 'undefined') {
+      try {
+        const apiResult = await window.apiClient.updateMember(memberId, updatedMember);
+        
+        if (apiResult.success) {
+          members[index] = updatedMember;
+          localStorage.setItem(STORAGE_KEYS.MEMBERS, JSON.stringify(members));
+          console.log('✅ Member updated');
+          return { success: true };
+        } else {
+          throw new Error(apiResult.error || 'Failed to update member');
+        }
+      } catch (apiError) {
+        console.warn('⚠️ API update failed:', apiError.message);
+        throw apiError;
+      }
+    } else {
+      // Fallback to localStorage only
+      members[index] = updatedMember;
+      localStorage.setItem(STORAGE_KEYS.MEMBERS, JSON.stringify(members));
+      console.log('✅ Member updated locally (API not available)');
+      return { success: true };
     }
-    
-    members[index] = updatedMember;
-    localStorage.setItem(STORAGE_KEYS.MEMBERS, JSON.stringify(members));
-    
-    console.log('Member update saved to backend and cached locally');
-    return true;
-    
   } catch (error) {
-    console.error('Failed to update member:', error);
+    console.error('❌ Failed to update member:', error);
     throw error;
   }
 }
@@ -477,14 +503,11 @@ async function deleteMember(memberId) {
   }
   
   if (!isAuthenticated()) {
-    throw new Error('You must be logged in to delete members');
+    throw new Error('Authentication required');
   }
   
-  if (typeof window.apiClient === 'undefined') {
-    throw new Error('API client not available. Please refresh the page.');
-  }
-  
-  const members = await getMembers();
+  const membersResult = await getMembers();
+  const members = membersResult.data || [];
   const filtered = members.filter(m => m.id !== memberId);
   
   if (filtered.length === members.length) {
@@ -492,69 +515,66 @@ async function deleteMember(memberId) {
   }
   
   try {
-    const apiResult = await window.apiClient.deleteMember(memberId);
-    
-    if (!apiResult.success) {
-      throw new Error(apiResult.error || 'Failed to delete member');
+    // Try API if available
+    if (typeof window.apiClient !== 'undefined') {
+      try {
+        const apiResult = await window.apiClient.deleteMember(memberId);
+        
+        if (apiResult.success) {
+          localStorage.setItem(STORAGE_KEYS.MEMBERS, JSON.stringify(filtered));
+          console.log('✅ Member deleted');
+          return { success: true };
+        } else {
+          throw new Error(apiResult.error || 'Failed to delete member');
+        }
+      } catch (apiError) {
+        console.warn('⚠️ API delete failed:', apiError.message);
+        throw apiError;
+      }
+    } else {
+      // Fallback to localStorage only
+      localStorage.setItem(STORAGE_KEYS.MEMBERS, JSON.stringify(filtered));
+      console.log('✅ Member deleted locally (API not available)');
+      return { success: true };
     }
-    
-    localStorage.setItem(STORAGE_KEYS.MEMBERS, JSON.stringify(filtered));
-    
-    console.log('Member deleted from backend and cache');
-    return true;
-    
   } catch (error) {
-    console.error('Failed to delete member:', error);
+    console.error('❌ Failed to delete member:', error);
     throw error;
   }
 }
 
+// =============================================================================
+// EVENTS
+// =============================================================================
+
 async function getEvents(filters = {}) {
   try {
-    if (typeof window.apiClient === 'undefined') {
-      throw new Error('API client not available');
-    }
-
-    const response = await window.apiClient.getEvents();
-    
-    if (response.success && Array.isArray(response.data)) {
-      let result = response.data.map(event => {
-        if (!event.status || event.status === 'auto') {
-          event.status = calculateEventStatus(event.date);
+    // Try API first if available
+    if (typeof window.apiClient !== 'undefined') {
+      try {
+        const response = await window.apiClient.getEvents();
+        
+        if (response.success && Array.isArray(response.data)) {
+          localStorage.setItem(STORAGE_KEYS.EVENTS, JSON.stringify(response.data));
+          let result = response.data;
+          
+          if (filters.status) {
+            result = result.filter(e => e.status === filters.status);
+          }
+          if (filters.category) {
+            result = result.filter(e => e.category === filters.category);
+          }
+          
+          return { success: true, data: result };
         }
-        return event;
-      });
-      
-      if (filters.status) {
-        result = result.filter(e => e.status === filters.status);
+      } catch (apiError) {
+        console.warn('⚠️ API call failed, using cached events:', apiError.message);
       }
-      if (filters.category) {
-        result = result.filter(e => e.category === filters.category);
-      }
-      
-      result.sort((a, b) => {
-        const dateA = new Date(a.date);
-        const dateB = new Date(b.date);
-        return filters.status === 'completed' ? dateB - dateA : dateA - dateB;
-      });
-      
-      localStorage.setItem(STORAGE_KEYS.EVENTS, JSON.stringify(response.data));
-      return result;
     }
     
-    throw new Error('Failed to fetch events from backend');
-  } catch (error) {
-    console.warn('API failed, using cached events:', error.message);
-    
+    // Fallback to localStorage
     const cached = localStorage.getItem(STORAGE_KEYS.EVENTS);
     let result = cached ? JSON.parse(cached) : [];
-    
-    result = result.map(event => {
-      if (!event.status || event.status === 'auto') {
-        event.status = calculateEventStatus(event.date);
-      }
-      return event;
-    });
     
     if (filters.status) {
       result = result.filter(e => e.status === filters.status);
@@ -563,23 +583,10 @@ async function getEvents(filters = {}) {
       result = result.filter(e => e.category === filters.category);
     }
     
-    result.sort((a, b) => {
-      const dateA = new Date(a.date);
-      const dateB = new Date(b.date);
-      return filters.status === 'completed' ? dateB - dateA : dateA - dateB;
-    });
-    
-    return result;
-  }
-}
-
-async function getEventById(eventId) {
-  try {
-    const events = await getEvents();
-    return events.find(e => e.id === eventId) || null;
+    return { success: true, data: result };
   } catch (error) {
-    console.error('Error getting event:', error);
-    return null;
+    console.error('Error getting events:', error);
+    return { success: true, data: [] };
   }
 }
 
@@ -588,62 +595,58 @@ async function addEvent(eventData) {
     throw new Error('Required fields missing: title, description, date, venue');
   }
   
-  if (!isValidTextLength(eventData.title, 'title')) {
-    throw new Error('Invalid title length');
-  }
-  if (!isValidTextLength(eventData.description, 'description')) {
-    throw new Error('Invalid description length');
-  }
-  
-  if (eventData.registrationLink && !isValidUrl(eventData.registrationLink)) {
-    throw new Error('Invalid registration link');
-  }
-  
   if (!isAuthenticated()) {
-    throw new Error('You must be logged in to add events');
-  }
-  
-  if (typeof window.apiClient === 'undefined') {
-    throw new Error('API client not available. Please refresh the page.');
+    throw new Error('Authentication required');
   }
   
   try {
-    const events = await getEvents();
+    const eventsResult = await getEvents();
+    const events = eventsResult.data || [];
     
     const newEvent = {
       id: generateUniqueId('event'),
-      title: sanitizeText(eventData.title),
-      description: sanitizeText(eventData.description),
+      title: eventData.title.trim(),
+      description: eventData.description.trim(),
       category: eventData.category || 'General',
       date: eventData.date,
       time: eventData.time || '',
-      venue: sanitizeText(eventData.venue),
+      venue: eventData.venue.trim(),
       image: eventData.image || '',
-      status: eventData.status || calculateEventStatus(eventData.date),
+      status: eventData.status || 'upcoming',
       registrationLink: eventData.registrationLink || '',
-      details: eventData.details ? sanitizeText(eventData.details) : '',
-      organizer: eventData.organizer || CLUB_DEFAULTS.name,
       createdAt: getCurrentTimestamp()
     };
     
-    const apiResult = await window.apiClient.createEvent(newEvent);
-    
-    if (!apiResult.success) {
-      throw new Error(apiResult.error || 'Failed to create event');
+    // Try API if available
+    if (typeof window.apiClient !== 'undefined') {
+      try {
+        const apiResult = await window.apiClient.createEvent(newEvent);
+        
+        if (apiResult.success) {
+          if (apiResult.data && apiResult.data.id) {
+            newEvent.id = apiResult.data.id;
+          }
+          
+          events.push(newEvent);
+          localStorage.setItem(STORAGE_KEYS.EVENTS, JSON.stringify(events));
+          console.log('✅ Event saved:', newEvent.title);
+          return { success: true, data: newEvent };
+        } else {
+          throw new Error(apiResult.error || 'Failed to create event');
+        }
+      } catch (apiError) {
+        console.warn('⚠️ API create failed:', apiError.message);
+        throw apiError;
+      }
+    } else {
+      // Fallback to localStorage only
+      events.push(newEvent);
+      localStorage.setItem(STORAGE_KEYS.EVENTS, JSON.stringify(events));
+      console.log('✅ Event saved locally (API not available)');
+      return { success: true, data: newEvent };
     }
-    
-    if (apiResult.data && apiResult.data.id) {
-      newEvent.id = apiResult.data.id;
-    }
-    
-    events.push(newEvent);
-    localStorage.setItem(STORAGE_KEYS.EVENTS, JSON.stringify(events));
-    
-    console.log('Event saved to backend and cached locally:', newEvent.title);
-    return newEvent;
-    
   } catch (error) {
-    console.error('Failed to add event:', error);
+    console.error('❌ Failed to add event:', error);
     throw error;
   }
 }
@@ -654,56 +657,46 @@ async function updateEvent(eventId, updates) {
   }
   
   if (!isAuthenticated()) {
-    throw new Error('You must be logged in to update events');
+    throw new Error('Authentication required');
   }
   
-  if (typeof window.apiClient === 'undefined') {
-    throw new Error('API client not available. Please refresh the page.');
-  }
-  
-  const events = await getEvents();
+  const eventsResult = await getEvents();
+  const events = eventsResult.data || [];
   const index = events.findIndex(e => e.id === eventId);
   
   if (index === -1) {
     throw new Error('Event not found');
   }
   
-  if (updates.title && !isValidTextLength(updates.title, 'title')) {
-    throw new Error('Invalid title length');
-  }
-  if (updates.description && !isValidTextLength(updates.description, 'description')) {
-    throw new Error('Invalid description length');
-  }
-  if (updates.registrationLink && !isValidUrl(updates.registrationLink)) {
-    throw new Error('Invalid registration link');
-  }
-  
   try {
-    if (updates.title) updates.title = sanitizeText(updates.title);
-    if (updates.description) updates.description = sanitizeText(updates.description);
-    if (updates.details) updates.details = sanitizeText(updates.details);
-    if (updates.venue) updates.venue = sanitizeText(updates.venue);
-    
-    if (updates.date && !updates.status) {
-      updates.status = calculateEventStatus(updates.date);
-    }
-    
     const updatedEvent = { ...events[index], ...updates };
     
-    const apiResult = await window.apiClient.updateEvent(eventId, updatedEvent);
-    
-    if (!apiResult.success) {
-      throw new Error(apiResult.error || 'Failed to update event');
+    // Try API if available
+    if (typeof window.apiClient !== 'undefined') {
+      try {
+        const apiResult = await window.apiClient.updateEvent(eventId, updatedEvent);
+        
+        if (apiResult.success) {
+          events[index] = updatedEvent;
+          localStorage.setItem(STORAGE_KEYS.EVENTS, JSON.stringify(events));
+          console.log('✅ Event updated');
+          return { success: true };
+        } else {
+          throw new Error(apiResult.error || 'Failed to update event');
+        }
+      } catch (apiError) {
+        console.warn('⚠️ API update failed:', apiError.message);
+        throw apiError;
+      }
+    } else {
+      // Fallback to localStorage only
+      events[index] = updatedEvent;
+      localStorage.setItem(STORAGE_KEYS.EVENTS, JSON.stringify(events));
+      console.log('✅ Event updated locally (API not available)');
+      return { success: true };
     }
-    
-    events[index] = updatedEvent;
-    localStorage.setItem(STORAGE_KEYS.EVENTS, JSON.stringify(events));
-    
-    console.log('Event update saved to backend and cached locally');
-    return true;
-    
   } catch (error) {
-    console.error('Failed to update event:', error);
+    console.error('❌ Failed to update event:', error);
     throw error;
   }
 }
@@ -714,14 +707,11 @@ async function deleteEvent(eventId) {
   }
   
   if (!isAuthenticated()) {
-    throw new Error('You must be logged in to delete events');
+    throw new Error('Authentication required');
   }
   
-  if (typeof window.apiClient === 'undefined') {
-    throw new Error('API client not available. Please refresh the page.');
-  }
-  
-  const events = await getEvents();
+  const eventsResult = await getEvents();
+  const events = eventsResult.data || [];
   const filtered = events.filter(e => e.id !== eventId);
   
   if (filtered.length === events.length) {
@@ -729,55 +719,64 @@ async function deleteEvent(eventId) {
   }
   
   try {
-    const apiResult = await window.apiClient.deleteEvent(eventId);
-    
-    if (!apiResult.success) {
-      throw new Error(apiResult.error || 'Failed to delete event');
+    // Try API if available
+    if (typeof window.apiClient !== 'undefined') {
+      try {
+        const apiResult = await window.apiClient.deleteEvent(eventId);
+        
+        if (apiResult.success) {
+          localStorage.setItem(STORAGE_KEYS.EVENTS, JSON.stringify(filtered));
+          console.log('✅ Event deleted');
+          return { success: true };
+        } else {
+          throw new Error(apiResult.error || 'Failed to delete event');
+        }
+      } catch (apiError) {
+        console.warn('⚠️ API delete failed:', apiError.message);
+        throw apiError;
+      }
+    } else {
+      // Fallback to localStorage only
+      localStorage.setItem(STORAGE_KEYS.EVENTS, JSON.stringify(filtered));
+      console.log('✅ Event deleted locally (API not available)');
+      return { success: true };
     }
-    
-    localStorage.setItem(STORAGE_KEYS.EVENTS, JSON.stringify(filtered));
-    
-    console.log('Event deleted from backend and cache');
-    return true;
-    
   } catch (error) {
-    console.error('Failed to delete event:', error);
+    console.error('❌ Failed to delete event:', error);
     throw error;
   }
 }
 
+// =============================================================================
+// PROJECTS
+// =============================================================================
+
 async function getProjects(filters = {}) {
   try {
-    if (typeof window.apiClient === 'undefined') {
-      throw new Error('API client not available');
-    }
-
-    const response = await window.apiClient.getProjects();
-    
-    if (response.success && Array.isArray(response.data)) {
-      let result = response.data;
-      
-      if (filters.status) {
-        result = result.filter(p => p.status === filters.status);
+    // Try API first if available
+    if (typeof window.apiClient !== 'undefined') {
+      try {
+        const response = await window.apiClient.getProjects();
+        
+        if (response.success && Array.isArray(response.data)) {
+          localStorage.setItem(STORAGE_KEYS.PROJECTS, JSON.stringify(response.data));
+          let result = response.data;
+          
+          if (filters.status) {
+            result = result.filter(p => p.status === filters.status);
+          }
+          if (filters.category) {
+            result = result.filter(p => p.category === filters.category);
+          }
+          
+          return { success: true, data: result };
+        }
+      } catch (apiError) {
+        console.warn('⚠️ API call failed, using cached projects:', apiError.message);
       }
-      if (filters.category) {
-        result = result.filter(p => p.category === filters.category);
-      }
-      
-      result.sort((a, b) => {
-        const dateA = new Date(a.completionDate || a.createdAt);
-        const dateB = new Date(b.completionDate || b.createdAt);
-        return dateB - dateA;
-      });
-      
-      localStorage.setItem(STORAGE_KEYS.PROJECTS, JSON.stringify(response.data));
-      return result;
     }
     
-    throw new Error('Failed to fetch projects from backend');
-  } catch (error) {
-    console.warn('API failed, using cached projects:', error.message);
-    
+    // Fallback to localStorage
     const cached = localStorage.getItem(STORAGE_KEYS.PROJECTS);
     let result = cached ? JSON.parse(cached) : [];
     
@@ -788,23 +787,10 @@ async function getProjects(filters = {}) {
       result = result.filter(p => p.category === filters.category);
     }
     
-    result.sort((a, b) => {
-      const dateA = new Date(a.completionDate || a.createdAt);
-      const dateB = new Date(b.completionDate || b.createdAt);
-      return dateB - dateA;
-    });
-    
-    return result;
-  }
-}
-
-async function getProjectById(projectId) {
-  try {
-    const projects = await getProjects();
-    return projects.find(p => p.id === projectId) || null;
+    return { success: true, data: result };
   } catch (error) {
-    console.error('Error getting project:', error);
-    return null;
+    console.error('Error getting projects:', error);
+    return { success: true, data: [] };
   }
 }
 
@@ -813,35 +799,18 @@ async function addProject(projectData) {
     throw new Error('Required fields missing: title, description, category, status');
   }
   
-  if (!isValidTextLength(projectData.title, 'title')) {
-    throw new Error('Invalid title length');
-  }
-  if (!isValidTextLength(projectData.description, 'description')) {
-    throw new Error('Invalid description length');
-  }
-  
-  if (projectData.githubLink && !isValidUrl(projectData.githubLink)) {
-    throw new Error('Invalid GitHub link');
-  }
-  if (projectData.liveLink && !isValidUrl(projectData.liveLink)) {
-    throw new Error('Invalid live link');
-  }
-  
   if (!isAuthenticated()) {
-    throw new Error('You must be logged in to add projects');
-  }
-  
-  if (typeof window.apiClient === 'undefined') {
-    throw new Error('API client not available. Please refresh the page.');
+    throw new Error('Authentication required');
   }
   
   try {
-    const projects = await getProjects();
+    const projectsResult = await getProjects();
+    const projects = projectsResult.data || [];
     
     const newProject = {
       id: generateUniqueId('project'),
-      title: sanitizeText(projectData.title),
-      description: sanitizeText(projectData.description),
+      title: projectData.title.trim(),
+      description: projectData.description.trim(),
       category: projectData.category,
       status: projectData.status,
       image: projectData.image || '',
@@ -850,29 +819,39 @@ async function addProject(projectData) {
       githubLink: projectData.githubLink || '',
       liveLink: projectData.liveLink || '',
       completionDate: projectData.completionDate || '',
-      features: projectData.features ? sanitizeText(projectData.features) : '',
-      achievements: projectData.achievements ? sanitizeText(projectData.achievements) : '',
       createdAt: getCurrentTimestamp()
     };
     
-    const apiResult = await window.apiClient.createProject(newProject);
-    
-    if (!apiResult.success) {
-      throw new Error(apiResult.error || 'Failed to create project');
+    // Try API if available
+    if (typeof window.apiClient !== 'undefined') {
+      try {
+        const apiResult = await window.apiClient.createProject(newProject);
+        
+        if (apiResult.success) {
+          if (apiResult.data && apiResult.data.id) {
+            newProject.id = apiResult.data.id;
+          }
+          
+          projects.push(newProject);
+          localStorage.setItem(STORAGE_KEYS.PROJECTS, JSON.stringify(projects));
+          console.log('✅ Project saved:', newProject.title);
+          return { success: true, data: newProject };
+        } else {
+          throw new Error(apiResult.error || 'Failed to create project');
+        }
+      } catch (apiError) {
+        console.warn('⚠️ API create failed:', apiError.message);
+        throw apiError;
+      }
+    } else {
+      // Fallback to localStorage only
+      projects.push(newProject);
+      localStorage.setItem(STORAGE_KEYS.PROJECTS, JSON.stringify(projects));
+      console.log('✅ Project saved locally (API not available)');
+      return { success: true, data: newProject };
     }
-    
-    if (apiResult.data && apiResult.data.id) {
-      newProject.id = apiResult.data.id;
-    }
-    
-    projects.push(newProject);
-    localStorage.setItem(STORAGE_KEYS.PROJECTS, JSON.stringify(projects));
-    
-    console.log('Project saved to backend and cached locally:', newProject.title);
-    return newProject;
-    
   } catch (error) {
-    console.error('Failed to add project:', error);
+    console.error('❌ Failed to add project:', error);
     throw error;
   }
 }
@@ -883,55 +862,46 @@ async function updateProject(projectId, updates) {
   }
   
   if (!isAuthenticated()) {
-    throw new Error('You must be logged in to update projects');
+    throw new Error('Authentication required');
   }
   
-  if (typeof window.apiClient === 'undefined') {
-    throw new Error('API client not available. Please refresh the page.');
-  }
-  
-  const projects = await getProjects();
+  const projectsResult = await getProjects();
+  const projects = projectsResult.data || [];
   const index = projects.findIndex(p => p.id === projectId);
   
   if (index === -1) {
     throw new Error('Project not found');
   }
   
-  if (updates.title && !isValidTextLength(updates.title, 'title')) {
-    throw new Error('Invalid title length');
-  }
-  if (updates.description && !isValidTextLength(updates.description, 'description')) {
-    throw new Error('Invalid description length');
-  }
-  if (updates.githubLink && !isValidUrl(updates.githubLink)) {
-    throw new Error('Invalid GitHub link');
-  }
-  if (updates.liveLink && !isValidUrl(updates.liveLink)) {
-    throw new Error('Invalid live link');
-  }
-  
   try {
-    if (updates.title) updates.title = sanitizeText(updates.title);
-    if (updates.description) updates.description = sanitizeText(updates.description);
-    if (updates.features) updates.features = sanitizeText(updates.features);
-    if (updates.achievements) updates.achievements = sanitizeText(updates.achievements);
-    
     const updatedProject = { ...projects[index], ...updates };
     
-    const apiResult = await window.apiClient.updateProject(projectId, updatedProject);
-    
-    if (!apiResult.success) {
-      throw new Error(apiResult.error || 'Failed to update project');
+    // Try API if available
+    if (typeof window.apiClient !== 'undefined') {
+      try {
+        const apiResult = await window.apiClient.updateProject(projectId, updatedProject);
+        
+        if (apiResult.success) {
+          projects[index] = updatedProject;
+          localStorage.setItem(STORAGE_KEYS.PROJECTS, JSON.stringify(projects));
+          console.log('✅ Project updated');
+          return { success: true };
+        } else {
+          throw new Error(apiResult.error || 'Failed to update project');
+        }
+      } catch (apiError) {
+        console.warn('⚠️ API update failed:', apiError.message);
+        throw apiError;
+      }
+    } else {
+      // Fallback to localStorage only
+      projects[index] = updatedProject;
+      localStorage.setItem(STORAGE_KEYS.PROJECTS, JSON.stringify(projects));
+      console.log('✅ Project updated locally (API not available)');
+      return { success: true };
     }
-    
-    projects[index] = updatedProject;
-    localStorage.setItem(STORAGE_KEYS.PROJECTS, JSON.stringify(projects));
-    
-    console.log('Project update saved to backend and cached locally');
-    return true;
-    
   } catch (error) {
-    console.error('Failed to update project:', error);
+    console.error('❌ Failed to update project:', error);
     throw error;
   }
 }
@@ -942,14 +912,11 @@ async function deleteProject(projectId) {
   }
   
   if (!isAuthenticated()) {
-    throw new Error('You must be logged in to delete projects');
+    throw new Error('Authentication required');
   }
   
-  if (typeof window.apiClient === 'undefined') {
-    throw new Error('API client not available. Please refresh the page.');
-  }
-  
-  const projects = await getProjects();
+  const projectsResult = await getProjects();
+  const projects = projectsResult.data || [];
   const filtered = projects.filter(p => p.id !== projectId);
   
   if (filtered.length === projects.length) {
@@ -957,48 +924,61 @@ async function deleteProject(projectId) {
   }
   
   try {
-    const apiResult = await window.apiClient.deleteProject(projectId);
-    
-    if (!apiResult.success) {
-      throw new Error(apiResult.error || 'Failed to delete project');
+    // Try API if available
+    if (typeof window.apiClient !== 'undefined') {
+      try {
+        const apiResult = await window.apiClient.deleteProject(projectId);
+        
+        if (apiResult.success) {
+          localStorage.setItem(STORAGE_KEYS.PROJECTS, JSON.stringify(filtered));
+          console.log('✅ Project deleted');
+          return { success: true };
+        } else {
+          throw new Error(apiResult.error || 'Failed to delete project');
+        }
+      } catch (apiError) {
+        console.warn('⚠️ API delete failed:', apiError.message);
+        throw apiError;
+      }
+    } else {
+      // Fallback to localStorage only
+      localStorage.setItem(STORAGE_KEYS.PROJECTS, JSON.stringify(filtered));
+      console.log('✅ Project deleted locally (API not available)');
+      return { success: true };
     }
-    
-    localStorage.setItem(STORAGE_KEYS.PROJECTS, JSON.stringify(filtered));
-    
-    console.log('Project deleted from backend and cache');
-    return true;
-    
   } catch (error) {
-    console.error('Failed to delete project:', error);
+    console.error('❌ Failed to delete project:', error);
     throw error;
   }
 }
 
+// =============================================================================
+// GALLERY
+// =============================================================================
+
 async function getGallery(filters = {}) {
   try {
-    if (typeof window.apiClient === 'undefined') {
-      throw new Error('API client not available');
-    }
-
-    const response = await window.apiClient.getGallery();
-    
-    if (response.success && Array.isArray(response.data)) {
-      let result = response.data;
-      
-      if (filters.category) {
-        result = result.filter(g => g.category === filters.category);
+    // Try API first if available
+    if (typeof window.apiClient !== 'undefined') {
+      try {
+        const response = await window.apiClient.getGallery();
+        
+        if (response.success && Array.isArray(response.data)) {
+          localStorage.setItem(STORAGE_KEYS.GALLERY, JSON.stringify(response.data));
+          let result = response.data;
+          
+          if (filters.category) {
+            result = result.filter(g => g.category === filters.category);
+          }
+          
+          return { success: true, data: result };
+        }
+      } catch (apiError) {
+        console.warn('⚠️ API call failed, using cached gallery:', apiError.message);
       }
-      
-      result.sort((a, b) => new Date(b.date) - new Date(a.date));
-      
-      localStorage.setItem(STORAGE_KEYS.GALLERY, JSON.stringify(response.data));
-      return result;
     }
     
-    throw new Error('Failed to fetch gallery from backend');
-  } catch (error) {
-    console.warn('API failed, using cached gallery:', error.message);
-    
+    // Fallback to localStorage
     const cached = localStorage.getItem(STORAGE_KEYS.GALLERY);
     let result = cached ? JSON.parse(cached) : [];
     
@@ -1006,19 +986,10 @@ async function getGallery(filters = {}) {
       result = result.filter(g => g.category === filters.category);
     }
     
-    result.sort((a, b) => new Date(b.date) - new Date(a.date));
-    
-    return result;
-  }
-}
-
-async function getGalleryItemById(galleryId) {
-  try {
-    const gallery = await getGallery();
-    return gallery.find(g => g.id === galleryId) || null;
+    return { success: true, data: result };
   } catch (error) {
-    console.error('Error getting gallery item:', error);
-    return null;
+    console.error('Error getting gallery:', error);
+    return { success: true, data: [] };
   }
 }
 
@@ -1027,98 +998,55 @@ async function addGalleryItem(galleryData) {
     throw new Error('Required fields missing: image, title, category');
   }
   
-  if (!isValidTextLength(galleryData.title, 'title')) {
-    throw new Error('Invalid title length');
-  }
-  
   if (!isAuthenticated()) {
-    throw new Error('Authentication required to add gallery items');
-  }
-  
-  if (typeof window.apiClient === 'undefined') {
-    throw new Error('API client not available. Please refresh the page.');
+    throw new Error('Authentication required');
   }
   
   try {
-    const gallery = await getGallery();
+    const galleryResult = await getGallery();
+    const gallery = galleryResult.data || [];
     
     const newItem = {
       id: generateUniqueId('gallery'),
       image: galleryData.image,
-      title: sanitizeText(galleryData.title),
-      description: galleryData.description ? sanitizeText(galleryData.description) : '',
+      title: galleryData.title.trim(),
+      description: galleryData.description || '',
       category: galleryData.category,
       date: galleryData.date || getCurrentDate(),
       photographer: galleryData.photographer || '',
       createdAt: getCurrentTimestamp()
     };
     
-    const apiResult = await window.apiClient.createGalleryItem(newItem);
-    
-    if (!apiResult.success) {
-      throw new Error(apiResult.error || 'Failed to save gallery item');
+    // Try API if available
+    if (typeof window.apiClient !== 'undefined') {
+      try {
+        const apiResult = await window.apiClient.createGalleryItem(newItem);
+        
+        if (apiResult.success) {
+          if (apiResult.data && apiResult.data.id) {
+            newItem.id = apiResult.data.id;
+          }
+          
+          gallery.push(newItem);
+          localStorage.setItem(STORAGE_KEYS.GALLERY, JSON.stringify(gallery));
+          console.log('✅ Gallery item saved');
+          return { success: true, data: newItem };
+        } else {
+          throw new Error(apiResult.error || 'Failed to save gallery item');
+        }
+      } catch (apiError) {
+        console.warn('⚠️ API create failed:', apiError.message);
+        throw apiError;
+      }
+    } else {
+      // Fallback to localStorage only
+      gallery.push(newItem);
+      localStorage.setItem(STORAGE_KEYS.GALLERY, JSON.stringify(gallery));
+      console.log('✅ Gallery item saved locally (API not available)');
+      return { success: true, data: newItem };
     }
-    
-    if (apiResult.data && apiResult.data.id) {
-      newItem.id = apiResult.data.id;
-    }
-    
-    gallery.push(newItem);
-    localStorage.setItem(STORAGE_KEYS.GALLERY, JSON.stringify(gallery));
-    
-    console.log('Gallery item saved to backend and cached locally');
-    return newItem;
-    
   } catch (error) {
-    console.error('Failed to add gallery item:', error);
-    throw error;
-  }
-}
-
-async function updateGalleryItem(galleryId, updates) {
-  if (!galleryId || !updates) {
-    throw new Error('Gallery ID and updates are required');
-  }
-  
-  if (!isAuthenticated()) {
-    throw new Error('You must be logged in to update gallery items');
-  }
-  
-  if (typeof window.apiClient === 'undefined') {
-    throw new Error('API client not available. Please refresh the page.');
-  }
-  
-  const gallery = await getGallery();
-  const index = gallery.findIndex(g => g.id === galleryId);
-  
-  if (index === -1) {
-    throw new Error('Gallery item not found');
-  }
-  
-  if (updates.title && !isValidTextLength(updates.title, 'title')) {
-    throw new Error('Invalid title length');
-  }
-  
-  try {
-    if (updates.title) updates.title = sanitizeText(updates.title);
-    if (updates.description) updates.description = sanitizeText(updates.description);
-    
-    const updatedItem = { ...gallery[index], ...updates };
-    
-    const apiResult = await window.apiClient.updateGalleryItem(galleryId, updatedItem);
-    
-    if (!apiResult.success) {
-      throw new Error(apiResult.error || 'Failed to update gallery item');
-    }
-    
-    gallery[index] = updatedItem;
-    localStorage.setItem(STORAGE_KEYS.GALLERY, JSON.stringify(gallery));
-    
-    console.log('Gallery item update saved to backend and cached locally');
-    return true;
-    
-  } catch (error) {
-    console.error('Failed to update gallery item:', error);
+    console.error('❌ Failed to add gallery item:', error);
     throw error;
   }
 }
@@ -1129,14 +1057,11 @@ async function deleteGalleryItem(galleryId) {
   }
   
   if (!isAuthenticated()) {
-    throw new Error('You must be logged in to delete gallery items');
+    throw new Error('Authentication required');
   }
   
-  if (typeof window.apiClient === 'undefined') {
-    throw new Error('API client not available. Please refresh the page.');
-  }
-  
-  const gallery = await getGallery();
+  const galleryResult = await getGallery();
+  const gallery = galleryResult.data || [];
   const filtered = gallery.filter(g => g.id !== galleryId);
   
   if (filtered.length === gallery.length) {
@@ -1144,48 +1069,61 @@ async function deleteGalleryItem(galleryId) {
   }
   
   try {
-    const apiResult = await window.apiClient.deleteGalleryItem(galleryId);
-    
-    if (!apiResult.success) {
-      throw new Error(apiResult.error || 'Failed to delete gallery item');
+    // Try API if available
+    if (typeof window.apiClient !== 'undefined') {
+      try {
+        const apiResult = await window.apiClient.deleteGalleryItem(galleryId);
+        
+        if (apiResult.success) {
+          localStorage.setItem(STORAGE_KEYS.GALLERY, JSON.stringify(filtered));
+          console.log('✅ Gallery item deleted');
+          return { success: true };
+        } else {
+          throw new Error(apiResult.error || 'Failed to delete gallery item');
+        }
+      } catch (apiError) {
+        console.warn('⚠️ API delete failed:', apiError.message);
+        throw apiError;
+      }
+    } else {
+      // Fallback to localStorage only
+      localStorage.setItem(STORAGE_KEYS.GALLERY, JSON.stringify(filtered));
+      console.log('✅ Gallery item deleted locally (API not available)');
+      return { success: true };
     }
-    
-    localStorage.setItem(STORAGE_KEYS.GALLERY, JSON.stringify(filtered));
-    
-    console.log('Gallery item deleted from backend and cache');
-    return true;
-    
   } catch (error) {
-    console.error('Failed to delete gallery item:', error);
+    console.error('❌ Failed to delete gallery item:', error);
     throw error;
   }
 }
 
+// =============================================================================
+// ANNOUNCEMENTS
+// =============================================================================
+
 async function getAnnouncements(filters = {}) {
   try {
-    if (typeof window.apiClient === 'undefined') {
-      throw new Error('API client not available');
-    }
-
-    const response = await window.apiClient.getAnnouncements();
-    
-    if (response.success && Array.isArray(response.data)) {
-      let result = response.data;
-      
-      if (filters.priority) {
-        result = result.filter(a => a.priority === filters.priority);
+    // Try API first if available
+    if (typeof window.apiClient !== 'undefined') {
+      try {
+        const response = await window.apiClient.getAnnouncements();
+        
+        if (response.success && Array.isArray(response.data)) {
+          localStorage.setItem(STORAGE_KEYS.ANNOUNCEMENTS, JSON.stringify(response.data));
+          let result = response.data;
+          
+          if (filters.priority) {
+            result = result.filter(a => a.priority === filters.priority);
+          }
+          
+          return { success: true, data: result };
+        }
+      } catch (apiError) {
+        console.warn('⚠️ API call failed, using cached announcements:', apiError.message);
       }
-      
-      result.sort((a, b) => new Date(b.date) - new Date(a.date));
-      
-      localStorage.setItem(STORAGE_KEYS.ANNOUNCEMENTS, JSON.stringify(response.data));
-      return result;
     }
     
-    throw new Error('Failed to fetch announcements from backend');
-  } catch (error) {
-    console.warn('API failed, using cached announcements:', error.message);
-    
+    // Fallback to localStorage
     const cached = localStorage.getItem(STORAGE_KEYS.ANNOUNCEMENTS);
     let result = cached ? JSON.parse(cached) : [];
     
@@ -1193,19 +1131,10 @@ async function getAnnouncements(filters = {}) {
       result = result.filter(a => a.priority === filters.priority);
     }
     
-    result.sort((a, b) => new Date(b.date) - new Date(a.date));
-    
-    return result;
-  }
-}
-
-async function getAnnouncementById(announcementId) {
-  try {
-    const announcements = await getAnnouncements();
-    return announcements.find(a => a.id === announcementId) || null;
+    return { success: true, data: result };
   } catch (error) {
-    console.error('Error getting announcement:', error);
-    return null;
+    console.error('Error getting announcements:', error);
+    return { success: true, data: [] };
   }
 }
 
@@ -1214,51 +1143,53 @@ async function addAnnouncement(announcementData) {
     throw new Error('Required fields missing: title, content');
   }
   
-  if (!isValidTextLength(announcementData.title, 'title')) {
-    throw new Error('Invalid title length');
-  }
-  if (!isValidTextLength(announcementData.content, 'description')) {
-    throw new Error('Invalid content length');
-  }
-  
   if (!isAuthenticated()) {
-    throw new Error('You must be logged in to add announcements');
-  }
-  
-  if (typeof window.apiClient === 'undefined') {
-    throw new Error('API client not available. Please refresh the page.');
+    throw new Error('Authentication required');
   }
   
   try {
-    const announcements = await getAnnouncements();
+    const announcementsResult = await getAnnouncements();
+    const announcements = announcementsResult.data || [];
     
     const newAnnouncement = {
       id: generateUniqueId('announcement'),
-      title: sanitizeText(announcementData.title),
-      content: sanitizeText(announcementData.content),
+      title: announcementData.title.trim(),
+      content: announcementData.content.trim(),
       priority: announcementData.priority || 'normal',
       date: getCurrentTimestamp(),
       createdAt: getCurrentTimestamp()
     };
     
-    const apiResult = await window.apiClient.createAnnouncement(newAnnouncement);
-    
-    if (!apiResult.success) {
-      throw new Error(apiResult.error || 'Failed to create announcement');
+    // Try API if available
+    if (typeof window.apiClient !== 'undefined') {
+      try {
+        const apiResult = await window.apiClient.createAnnouncement(newAnnouncement);
+        
+        if (apiResult.success) {
+          if (apiResult.data && apiResult.data.id) {
+            newAnnouncement.id = apiResult.data.id;
+          }
+          
+          announcements.push(newAnnouncement);
+          localStorage.setItem(STORAGE_KEYS.ANNOUNCEMENTS, JSON.stringify(announcements));
+          console.log('✅ Announcement saved:', newAnnouncement.title);
+          return { success: true, data: newAnnouncement };
+        } else {
+          throw new Error(apiResult.error || 'Failed to create announcement');
+        }
+      } catch (apiError) {
+        console.warn('⚠️ API create failed:', apiError.message);
+        throw apiError;
+      }
+    } else {
+      // Fallback to localStorage only
+      announcements.push(newAnnouncement);
+      localStorage.setItem(STORAGE_KEYS.ANNOUNCEMENTS, JSON.stringify(announcements));
+      console.log('✅ Announcement saved locally (API not available)');
+      return { success: true, data: newAnnouncement };
     }
-    
-    if (apiResult.data && apiResult.data.id) {
-      newAnnouncement.id = apiResult.data.id;
-    }
-    
-    announcements.push(newAnnouncement);
-    localStorage.setItem(STORAGE_KEYS.ANNOUNCEMENTS, JSON.stringify(announcements));
-    
-    console.log('Announcement saved to backend and cached locally:', newAnnouncement.title);
-    return newAnnouncement;
-    
   } catch (error) {
-    console.error('Failed to add announcement:', error);
+    console.error('❌ Failed to add announcement:', error);
     throw error;
   }
 }
@@ -1269,47 +1200,46 @@ async function updateAnnouncement(announcementId, updates) {
   }
   
   if (!isAuthenticated()) {
-    throw new Error('You must be logged in to update announcements');
+    throw new Error('Authentication required');
   }
   
-  if (typeof window.apiClient === 'undefined') {
-    throw new Error('API client not available. Please refresh the page.');
-  }
-  
-  const announcements = await getAnnouncements();
+  const announcementsResult = await getAnnouncements();
+  const announcements = announcementsResult.data || [];
   const index = announcements.findIndex(a => a.id === announcementId);
   
   if (index === -1) {
     throw new Error('Announcement not found');
   }
   
-  if (updates.title && !isValidTextLength(updates.title, 'title')) {
-    throw new Error('Invalid title length');
-  }
-  if (updates.content && !isValidTextLength(updates.content, 'description')) {
-    throw new Error('Invalid content length');
-  }
-  
   try {
-    if (updates.title) updates.title = sanitizeText(updates.title);
-    if (updates.content) updates.content = sanitizeText(updates.content);
-    
     const updatedAnnouncement = { ...announcements[index], ...updates };
     
-    const apiResult = await window.apiClient.updateAnnouncement(announcementId, updatedAnnouncement);
-    
-    if (!apiResult.success) {
-      throw new Error(apiResult.error || 'Failed to update announcement');
+    // Try API if available
+    if (typeof window.apiClient !== 'undefined') {
+      try {
+        const apiResult = await window.apiClient.updateAnnouncement(announcementId, updatedAnnouncement);
+        
+        if (apiResult.success) {
+          announcements[index] = updatedAnnouncement;
+          localStorage.setItem(STORAGE_KEYS.ANNOUNCEMENTS, JSON.stringify(announcements));
+          console.log('✅ Announcement updated');
+          return { success: true };
+        } else {
+          throw new Error(apiResult.error || 'Failed to update announcement');
+        }
+      } catch (apiError) {
+        console.warn('⚠️ API update failed:', apiError.message);
+        throw apiError;
+      }
+    } else {
+      // Fallback to localStorage only
+      announcements[index] = updatedAnnouncement;
+      localStorage.setItem(STORAGE_KEYS.ANNOUNCEMENTS, JSON.stringify(announcements));
+      console.log('✅ Announcement updated locally (API not available)');
+      return { success: true };
     }
-    
-    announcements[index] = updatedAnnouncement;
-    localStorage.setItem(STORAGE_KEYS.ANNOUNCEMENTS, JSON.stringify(announcements));
-    
-    console.log('Announcement update saved to backend and cached locally');
-    return true;
-    
   } catch (error) {
-    console.error('Failed to update announcement:', error);
+    console.error('❌ Failed to update announcement:', error);
     throw error;
   }
 }
@@ -1320,14 +1250,11 @@ async function deleteAnnouncement(announcementId) {
   }
   
   if (!isAuthenticated()) {
-    throw new Error('You must be logged in to delete announcements');
+    throw new Error('Authentication required');
   }
   
-  if (typeof window.apiClient === 'undefined') {
-    throw new Error('API client not available. Please refresh the page.');
-  }
-  
-  const announcements = await getAnnouncements();
+  const announcementsResult = await getAnnouncements();
+  const announcements = announcementsResult.data || [];
   const filtered = announcements.filter(a => a.id !== announcementId);
   
   if (filtered.length === announcements.length) {
@@ -1335,22 +1262,37 @@ async function deleteAnnouncement(announcementId) {
   }
   
   try {
-    const apiResult = await window.apiClient.deleteAnnouncement(announcementId);
-    
-    if (!apiResult.success) {
-      throw new Error(apiResult.error || 'Failed to delete announcement');
+    // Try API if available
+    if (typeof window.apiClient !== 'undefined') {
+      try {
+        const apiResult = await window.apiClient.deleteAnnouncement(announcementId);
+        
+        if (apiResult.success) {
+          localStorage.setItem(STORAGE_KEYS.ANNOUNCEMENTS, JSON.stringify(filtered));
+          console.log('✅ Announcement deleted');
+          return { success: true };
+        } else {
+          throw new Error(apiResult.error || 'Failed to delete announcement');
+        }
+      } catch (apiError) {
+        console.warn('⚠️ API delete failed:', apiError.message);
+        throw apiError;
+      }
+    } else {
+      // Fallback to localStorage only
+      localStorage.setItem(STORAGE_KEYS.ANNOUNCEMENTS, JSON.stringify(filtered));
+      console.log('✅ Announcement deleted locally (API not available)');
+      return { success: true };
     }
-    
-    localStorage.setItem(STORAGE_KEYS.ANNOUNCEMENTS, JSON.stringify(filtered));
-    
-    console.log('Announcement deleted from backend and cache');
-    return true;
-    
   } catch (error) {
-    console.error('Failed to delete announcement:', error);
+    console.error('❌ Failed to delete announcement:', error);
     throw error;
   }
 }
+
+// =============================================================================
+// THEME
+// =============================================================================
 
 function getTheme() {
   try {
@@ -1369,7 +1311,7 @@ function setTheme(theme) {
     }
     
     localStorage.setItem(STORAGE_KEYS.THEME, theme);
-    console.log('Theme set to:', theme);
+    console.log('✅ Theme set to:', theme);
     return true;
   } catch (error) {
     console.error('Error setting theme:', error);
@@ -1377,20 +1319,55 @@ function setTheme(theme) {
   }
 }
 
+// =============================================================================
+// UTILITY FUNCTIONS
+// =============================================================================
+
+function generateUniqueId(prefix = 'item') {
+  return `${prefix}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+}
+
+function getCurrentTimestamp() {
+  return new Date().toISOString();
+}
+
+function getCurrentDate() {
+  return new Date().toISOString().split('T')[0];
+}
+
+function calculateEventStatus(eventDate) {
+  const now = new Date();
+  const event = new Date(eventDate);
+  
+  if (event > now) return 'upcoming';
+  if (event.toDateString() === now.toDateString()) return 'ongoing';
+  return 'completed';
+}
+
+// =============================================================================
+// STATISTICS
+// =============================================================================
+
 async function getStatistics() {
   try {
-    const members = await getMembers();
-    const events = await getEvents();
-    const projects = await getProjects();
-    const gallery = await getGallery();
-    const announcements = await getAnnouncements();
-    const admins = await getAdmins();
+    const membersResult = await getMembers();
+    const eventsResult = await getEvents();
+    const projectsResult = await getProjects();
+    const galleryResult = await getGallery();
+    const announcementsResult = await getAnnouncements();
+    const adminsResult = await getAdmins();
+    
+    const members = membersResult.data || [];
+    const events = eventsResult.data || [];
+    const projects = projectsResult.data || [];
+    const gallery = galleryResult.data || [];
+    const announcements = announcementsResult.data || [];
+    const admins = adminsResult.data || [];
     
     return {
       totalMembers: members.length,
       executiveMembers: members.filter(m => m.role === 'Executive Member').length,
       generalMembers: members.filter(m => m.role === 'General Member').length,
-      alumni: members.filter(m => m.role === 'Alumni').length,
       
       totalEvents: events.length,
       upcomingEvents: events.filter(e => e.status === 'upcoming').length,
@@ -1412,7 +1389,6 @@ async function getStatistics() {
       totalMembers: 0,
       executiveMembers: 0,
       generalMembers: 0,
-      alumni: 0,
       totalEvents: 0,
       upcomingEvents: 0,
       ongoingEvents: 0,
@@ -1428,11 +1404,19 @@ async function getStatistics() {
   }
 }
 
+// =============================================================================
+// SEARCH FUNCTIONS
+// =============================================================================
+
 async function searchMembers(query) {
   try {
-    if (!query) return await getMembers();
+    if (!query) {
+      const result = await getMembers();
+      return result.data || [];
+    }
     
-    const members = await getMembers();
+    const membersResult = await getMembers();
+    const members = membersResult.data || [];
     const searchTerm = query.toLowerCase().trim();
     
     return members.filter(m => 
@@ -1450,9 +1434,13 @@ async function searchMembers(query) {
 
 async function searchEvents(query) {
   try {
-    if (!query) return await getEvents();
+    if (!query) {
+      const result = await getEvents();
+      return result.data || [];
+    }
     
-    const events = await getEvents();
+    const eventsResult = await getEvents();
+    const events = eventsResult.data || [];
     const searchTerm = query.toLowerCase().trim();
     
     return events.filter(e => 
@@ -1469,9 +1457,13 @@ async function searchEvents(query) {
 
 async function searchProjects(query) {
   try {
-    if (!query) return await getProjects();
+    if (!query) {
+      const result = await getProjects();
+      return result.data || [];
+    }
     
-    const projects = await getProjects();
+    const projectsResult = await getProjects();
+    const projects = projectsResult.data || [];
     const searchTerm = query.toLowerCase().trim();
     
     return projects.filter(p => 
@@ -1486,22 +1478,164 @@ async function searchProjects(query) {
   }
 }
 
-async function searchGallery(query) {
+// =============================================================================
+// EXPORT FUNCTIONS
+// =============================================================================
+
+async function exportAllData() {
   try {
-    if (!query) return await getGallery();
+    const clubConfigResult = await getClubConfig();
+    const membersResult = await getMembers();
+    const eventsResult = await getEvents();
+    const projectsResult = await getProjects();
+    const galleryResult = await getGallery();
+    const announcementsResult = await getAnnouncements();
     
-    const gallery = await getGallery();
-    const searchTerm = query.toLowerCase().trim();
+    const exportData = {
+      clubConfig: clubConfigResult.data,
+      members: membersResult.data || [],
+      events: eventsResult.data || [],
+      projects: projectsResult.data || [],
+      gallery: galleryResult.data || [],
+      announcements: announcementsResult.data || [],
+      exportDate: getCurrentTimestamp(),
+      version: '2.0.1'
+    };
     
-    return gallery.filter(g => 
-      g.title.toLowerCase().includes(searchTerm) ||
-      (g.description && g.description.toLowerCase().includes(searchTerm)) ||
-      g.category.toLowerCase().includes(searchTerm)
-    );
+    const dataStr = JSON.stringify(exportData, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(dataBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `grrc-data-backup-${Date.now()}.json`;
+    link.click();
+    URL.revokeObjectURL(url);
+    
+    console.log('✅ Data exported successfully');
+    return { success: true };
   } catch (error) {
-    console.error('Error searching gallery:', error);
-    return [];
+    console.error('❌ Error exporting data:', error);
+    return { success: false, error: error.message };
   }
 }
 
-async function exportAll
+// =============================================================================
+// INITIALIZATION ON LOAD
+// =============================================================================
+
+// Auto-initialize storage when script loads
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initializeStorage);
+} else {
+  initializeStorage();
+}
+
+// =============================================================================
+// GLOBAL EXPORTS
+// =============================================================================
+
+// Make all functions globally available
+window.storage = {
+  // Keys
+  STORAGE_KEYS,
+  SESSION_KEYS,
+  
+  // Initialization
+  initializeStorage,
+  resetStorage,
+  
+  // Authentication
+  isAuthenticated,
+  
+  // Club Config
+  getClubConfig,
+  setClubConfig,
+  
+  // Admins
+  getAdmins,
+  addAdmin,
+  deleteAdmin,
+  
+  // Members
+  getMembers,
+  addMember,
+  updateMember,
+  deleteMember,
+  
+  // Events
+  getEvents,
+  addEvent,
+  updateEvent,
+  deleteEvent,
+  
+  // Projects
+  getProjects,
+  addProject,
+  updateProject,
+  deleteProject,
+  
+  // Gallery
+  getGallery,
+  addGalleryItem,
+  deleteGalleryItem,
+  
+  // Announcements
+  getAnnouncements,
+  addAnnouncement,
+  updateAnnouncement,
+  deleteAnnouncement,
+  
+  // Theme
+  getTheme,
+  setTheme,
+  
+  // Utilities
+  getStatistics,
+  searchMembers,
+  searchEvents,
+  searchProjects,
+  exportAllData,
+  generateUniqueId,
+  getCurrentTimestamp,
+  getCurrentDate
+};
+
+console.log('✅ storage.js v2.0.1 loaded successfully');
+console.log('📦 Storage API available at window.storage');
+
+// =============================================================================
+// GLOBAL ALIASES FOR BACKWARD COMPATIBILITY
+// =============================================================================
+
+// Expose functions globally for config.js and admin-panel.html
+window.getClubConfig = window.storage.getClubConfig;
+window.setClubConfig = window.storage.setClubConfig;
+window.getMembers = window.storage.getMembers;
+window.addMember = window.storage.addMember;
+window.updateMember = window.storage.updateMember;
+window.deleteMember = window.storage.deleteMember;
+window.getEvents = window.storage.getEvents;
+window.addEvent = window.storage.addEvent;
+window.updateEvent = window.storage.updateEvent;
+window.deleteEvent = window.storage.deleteEvent;
+window.getProjects = window.storage.getProjects;
+window.addProject = window.storage.addProject;
+window.updateProject = window.storage.updateProject;
+window.deleteProject = window.storage.deleteProject;
+window.getGallery = window.storage.getGallery;
+window.addGalleryItem = window.storage.addGalleryItem;
+window.deleteGalleryItem = window.storage.deleteGalleryItem;
+window.getAnnouncements = window.storage.getAnnouncements;
+window.addAnnouncement = window.storage.addAnnouncement;
+window.updateAnnouncement = window.storage.updateAnnouncement;
+window.deleteAnnouncement = window.storage.deleteAnnouncement;
+window.getAdmins = window.storage.getAdmins;
+window.addAdmin = window.storage.addAdmin;
+window.deleteAdmin = window.storage.deleteAdmin;
+window.getStatistics = window.storage.getStatistics;
+window.searchMembers = window.storage.searchMembers;
+window.searchEvents = window.storage.searchEvents;
+window.searchProjects = window.storage.searchProjects;
+window.exportAllData = window.storage.exportAllData;
+
+console.log('🌐 Global function aliases created for backward compatibility');

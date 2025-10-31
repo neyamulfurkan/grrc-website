@@ -5,21 +5,22 @@
  * Handles all authentication operations including:
  * - Admin login/logout
  * - Session management
- * - Password hashing and validation
+ * - Password hashing and validation (fallback)
  * - "Remember me" functionality
  * - Authentication state checks
  * - Session expiration handling
  * 
- * Dependencies: config.js (must be loaded first)
- * Storage: Uses sessionStorage for sessions, localStorage for "remember me"
+ * Dependencies: api-client.js (for backend auth), config.js
+ * Storage: Uses sessionStorage for sessions, localStorage for "remember me" and tokens
  * 
- * MODIFIED: Added backend API authentication support with localStorage fallback
+ * FIXED: Properly integrated with backend API authentication via api-client.js
  */
 
 // ==================== CONSTANTS ====================
 const AUTH_CONFIG = {
   SESSION_KEY: 'adminSession',
   REMEMBER_KEY: 'rememberedAdmin',
+  TOKEN_KEY: 'grrc_auth_token',
   SESSION_DURATION_HOURS: 24,
   PASSWORD_MIN_LENGTH: 6,
   PASSWORD_MAX_LENGTH: 128,
@@ -40,18 +41,20 @@ const STORAGE_KEYS_FALLBACK = {
 // Use STORAGE_KEYS from config.js if available, otherwise use fallback
 const STORAGE = typeof STORAGE_KEYS !== 'undefined' ? STORAGE_KEYS : STORAGE_KEYS_FALLBACK;
 
-/* NEW - Check if API client is available */
-window.API_AVAILABLE = typeof window.login !== 'undefined';
+/* Check if API client is available */
+window.API_AVAILABLE = typeof window.apiClient !== 'undefined' && 
+                       typeof window.apiClient.login === 'function';
+
 if (window.API_AVAILABLE) {
-  console.log('✅ Backend API client detected');
+  console.log('✅ Backend API client (api-client.js) detected - Using API authentication');
 } else {
-  console.log('⚠️ Backend API not available, using localStorage only');
+  console.log('⚠️ Backend API not available - Using localStorage fallback authentication');
 }
 
 // ==================== PASSWORD UTILITIES ====================
 
 /**
- * Simple hash function for passwords
+ * Simple hash function for passwords (FALLBACK ONLY)
  * Note: This is a basic hash for demonstration. In production, use bcrypt or similar.
  * @param {string} password - Plain text password
  * @returns {string} Hashed password
@@ -186,15 +189,17 @@ function isAccountLocked(username) {
 /**
  * Creates a new admin session
  * @param {object} admin - Admin object {id, username, role}
+ * @param {boolean} hasToken - Whether JWT token is present
  * @returns {object} Session object
  */
-function createSession(admin) {
+function createSession(admin, hasToken = false) {
   const session = {
     adminId: admin.id,
     username: admin.username,
     role: admin.role || 'Admin',
     timestamp: new Date().toISOString(),
-    userAgent: navigator.userAgent.substring(0, 100) // Track device
+    userAgent: navigator.userAgent.substring(0, 100), // Track device
+    hasToken: hasToken // Track if session has JWT token
   };
   
   try {
@@ -223,6 +228,20 @@ function getSession() {
 }
 
 /**
+ * Checks if JWT token exists in localStorage
+ * @returns {boolean} True if token exists
+ */
+function hasValidToken() {
+  try {
+    const token = localStorage.getItem(AUTH_CONFIG.TOKEN_KEY);
+    return !!token && token.trim().length > 0;
+  } catch (error) {
+    console.error('Error checking token:', error);
+    return false;
+  }
+}
+
+/**
  * Checks if a session is still valid (not expired)
  * @param {object} session - Session object
  * @returns {boolean} True if valid, false if expired
@@ -243,7 +262,7 @@ function isSessionValid(session) {
 }
 
 /**
- * Clears the current session
+ * Clears the current session and token
  */
 function clearSession() {
   try {
@@ -275,14 +294,14 @@ function extendSession() {
 
 /**
  * Authenticates an admin user
- * MODIFIED - Added backend API authentication with localStorage fallback
+ * FIXED - Properly integrated with api-client.js backend authentication
  * @param {string} username - Username
  * @param {string} password - Plain text password
  * @param {boolean} rememberMe - Remember this user
  * @returns {object} {success: boolean, message: string, admin: object|null}
  */
 async function login(username, password, rememberMe = false) {
-  // EXISTING - Validate inputs
+  // Validate inputs
   if (!username || !username.trim()) {
     return { success: false, message: 'Username is required', admin: null };
   }
@@ -293,7 +312,7 @@ async function login(username, password, rememberMe = false) {
   
   username = username.trim().toLowerCase();
   
-  // EXISTING - Check if account is locked
+  // Check if account is locked
   const lockStatus = isAccountLocked(username);
   if (lockStatus.isLocked) {
     return { 
@@ -303,24 +322,31 @@ async function login(username, password, rememberMe = false) {
     };
   }
   
-  // EXISTING - Validate password format
+  // Validate password format
   const passwordValidation = validatePassword(password);
   if (!passwordValidation.isValid) {
     return { success: false, message: passwordValidation.message, admin: null };
   }
   
   try {
-    /* NEW - Try API authentication first */
-    if (typeof window.login !== 'undefined' && window.API_AVAILABLE) {
+    /* PRIMARY: Try API authentication first via api-client.js */
+    if (window.API_AVAILABLE && window.apiClient && typeof window.apiClient.login === 'function') {
+      console.log('🔐 Attempting API authentication via api-client.js...');
+      
       try {
-        const apiResult = await window.login(username, password);
-        if (apiResult.success && apiResult.data) {
+        const apiResult = await window.apiClient.login(username, password);
+        
+        if (apiResult.success && apiResult.data && apiResult.data.admin) {
+          console.log('✅ API authentication successful');
+          
           // Reset failed attempts on successful login
           resetLoginAttempts(username);
           
-          // Create session
+          // api-client.js automatically saves the token to localStorage
           const admin = apiResult.data.admin;
-          const session = createSession(admin);
+          
+          // Create session with token flag
+          const session = createSession(admin, true);
           if (!session) {
             return { success: false, message: 'Failed to create session', admin: null };
           }
@@ -347,13 +373,27 @@ async function login(username, password, rememberMe = false) {
             message: 'Login successful', 
             admin: admin 
           };
+        } else {
+          // API returned failure
+          console.log('❌ API authentication failed:', apiResult.message || 'Unknown error');
+          recordFailedAttempt(username);
+          return {
+            success: false,
+            message: apiResult.message || 'Invalid credentials',
+            admin: null
+          };
         }
       } catch (apiError) {
-        console.warn('API authentication failed, falling back to localStorage:', apiError);
+        console.warn('⚠️ API authentication error, falling back to localStorage:', apiError.message);
+        // Continue to fallback below
       }
+    } else {
+      console.log('⚠️ API client not available, using localStorage authentication');
     }
     
-    // EXISTING - Fallback to localStorage authentication
+    /* FALLBACK: localStorage authentication */
+    console.log('🔐 Using localStorage fallback authentication...');
+    
     let admins = [];
     try {
       admins = JSON.parse(localStorage.getItem(STORAGE.ADMINS) || '[]');
@@ -362,7 +402,7 @@ async function login(username, password, rememberMe = false) {
       return { success: false, message: 'Authentication system error', admin: null };
     }
     
-    // EXISTING - Create default admin if none exist
+    // Create default admin if none exist
     if (admins.length === 0) {
       const defaultAdmin = {
         id: `admin_${Date.now()}`,
@@ -376,10 +416,10 @@ async function login(username, password, rememberMe = false) {
       console.log('✅ Default admin created: username="admin", password="admin123"');
     }
     
-    // EXISTING - Hash the provided password
+    // Hash the provided password
     const hashedPassword = hashPassword(password);
     
-    // EXISTING - Find matching admin
+    // Find matching admin
     const admin = admins.find(a => 
       a.username.toLowerCase() === username && a.password === hashedPassword
     );
@@ -403,16 +443,16 @@ async function login(username, password, rememberMe = false) {
       }
     }
     
-    // EXISTING - Reset failed attempts on successful login
+    // Reset failed attempts on successful login
     resetLoginAttempts(username);
     
-    // EXISTING - Create session
-    const session = createSession(admin);
+    // Create session WITHOUT token flag (localStorage fallback)
+    const session = createSession(admin, false);
     if (!session) {
       return { success: false, message: 'Failed to create session', admin: null };
     }
     
-    // EXISTING - Handle "Remember Me"
+    // Handle "Remember Me"
     if (rememberMe) {
       try {
         localStorage.setItem(AUTH_CONFIG.REMEMBER_KEY, username);
@@ -427,10 +467,9 @@ async function login(username, password, rememberMe = false) {
       }
     }
     
-    // EXISTING - Log successful login
     console.log(`✅ Admin logged in via localStorage: ${admin.username} (${admin.role})`);
     
-    // EXISTING - Return success with admin data (without password)
+    // Return success with admin data (without password)
     const { password: _, ...adminWithoutPassword } = admin;
     return { 
       success: true, 
@@ -446,16 +485,30 @@ async function login(username, password, rememberMe = false) {
 
 /**
  * Logs out the current admin
+ * FIXED - Properly integrated with api-client.js logout
  * @param {boolean} redirectToLogin - Whether to redirect to login page
  */
-function logout(redirectToLogin = true) {
+async function logout(redirectToLogin = true) {
   const session = getSession();
   
   if (session) {
-    console.log(`✅ Admin logged out: ${session.username}`);
+    console.log(`✅ Logging out: ${session.username}`);
   }
   
-  // Clear session
+  // Call API logout if available and session has token
+  if (window.API_AVAILABLE && window.apiClient && typeof window.apiClient.logout === 'function') {
+    if (session && session.hasToken) {
+      console.log('🔐 Calling API logout via api-client.js...');
+      try {
+        await window.apiClient.logout();
+        console.log('✅ API logout successful');
+      } catch (error) {
+        console.error('⚠️ API logout error:', error);
+      }
+    }
+  }
+  
+  // Clear session (api-client.js clears token automatically)
   clearSession();
   
   // Optionally clear remember me
@@ -469,12 +522,14 @@ function logout(redirectToLogin = true) {
 
 /**
  * Checks if a user is currently authenticated
+ * FIXED - Token-aware authentication check
  * @param {boolean} redirectIfNot - Whether to redirect to login if not authenticated
  * @returns {boolean} True if authenticated, false otherwise
  */
 function isAuthenticated(redirectIfNot = false) {
   const session = getSession();
   
+  // No session at all
   if (!session) {
     if (redirectIfNot && typeof window !== 'undefined') {
       window.location.href = 'admin.html';
@@ -482,12 +537,26 @@ function isAuthenticated(redirectIfNot = false) {
     return false;
   }
   
+  // Check session validity (time-based)
   if (!isSessionValid(session)) {
+    console.log('⚠️ Session expired');
     clearSession();
     if (redirectIfNot && typeof window !== 'undefined') {
       window.location.href = 'admin.html';
     }
     return false;
+  }
+  
+  // If session claims to have token, verify it exists
+  if (session.hasToken) {
+    if (!hasValidToken()) {
+      console.log('⚠️ Session has token flag but token is missing - clearing session');
+      clearSession();
+      if (redirectIfNot && typeof window !== 'undefined') {
+        window.location.href = 'admin.html';
+      }
+      return false;
+    }
   }
   
   // Extend session on activity
@@ -506,6 +575,16 @@ function getCurrentAdmin() {
   const session = getSession();
   if (!session) return null;
   
+  // If using API authentication, return session data directly
+  if (session.hasToken) {
+    return {
+      id: session.adminId,
+      username: session.username,
+      role: session.role
+    };
+  }
+  
+  // Fallback: Get from localStorage
   try {
     const admins = JSON.parse(localStorage.getItem(STORAGE.ADMINS) || '[]');
     const admin = admins.find(a => a.id === session.adminId);
@@ -566,6 +645,14 @@ function changePassword(currentPassword, newPassword) {
     return { success: false, message: 'No active session' };
   }
   
+  // If using API authentication, cannot change password here
+  if (session.hasToken) {
+    return { 
+      success: false, 
+      message: 'Password changes must be done through the API' 
+    };
+  }
+  
   // Validate new password
   const validation = validatePassword(newPassword);
   if (!validation.isValid) {
@@ -603,26 +690,28 @@ function changePassword(currentPassword, newPassword) {
 
 /**
  * Initializes authentication system
- * - Creates default admin if none exist
+ * - Creates default admin if none exist (localStorage fallback only)
  * - Cleans up expired sessions
  * - Logs authentication status
  */
 function initializeAuth() {
   try {
-    // Check if admins exist, create default if not
-    let admins = JSON.parse(localStorage.getItem(STORAGE.ADMINS) || '[]');
-    
-    if (admins.length === 0) {
-      const defaultAdmin = {
-        id: `admin_${Date.now()}`,
-        username: 'admin',
-        password: hashPassword('admin123'),
-        role: 'Super Admin',
-        createdAt: new Date().toISOString()
-      };
-      admins = [defaultAdmin];
-      localStorage.setItem(STORAGE.ADMINS, JSON.stringify(admins));
-      console.log('✅ Default admin created: username="admin", password="admin123"');
+    // Only create default admin if using localStorage fallback
+    if (!window.API_AVAILABLE) {
+      let admins = JSON.parse(localStorage.getItem(STORAGE.ADMINS) || '[]');
+      
+      if (admins.length === 0) {
+        const defaultAdmin = {
+          id: `admin_${Date.now()}`,
+          username: 'admin',
+          password: hashPassword('admin123'),
+          role: 'Super Admin',
+          createdAt: new Date().toISOString()
+        };
+        admins = [defaultAdmin];
+        localStorage.setItem(STORAGE.ADMINS, JSON.stringify(admins));
+        console.log('✅ Default admin created: username="admin", password="admin123"');
+      }
     }
     
     // Clean up expired login attempts (older than 24 hours)
@@ -653,7 +742,8 @@ function initializeAuth() {
     // Log current authentication status
     if (isAuthenticated()) {
       const admin = getCurrentAdmin();
-      console.log(`✅ Auth.js loaded - Currently logged in: ${admin?.username || 'Unknown'}`);
+      const authMethod = getSession()?.hasToken ? 'API' : 'localStorage';
+      console.log(`✅ Auth.js loaded - Currently logged in: ${admin?.username || 'Unknown'} (${authMethod})`);
     } else {
       console.log('✅ Auth.js loaded - No active session');
     }
@@ -666,11 +756,14 @@ function initializeAuth() {
 // ==================== AUTO-INITIALIZE ====================
 // Initialize when the script loads
 if (typeof window !== 'undefined') {
-  // Initialize immediately or wait for DOM
+  // Wait for DOM and api-client.js to load
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initializeAuth);
+    document.addEventListener('DOMContentLoaded', () => {
+      // Small delay to ensure api-client.js is loaded
+      setTimeout(initializeAuth, 100);
+    });
   } else {
-    initializeAuth();
+    setTimeout(initializeAuth, 100);
   }
 }
 

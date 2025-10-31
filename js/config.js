@@ -1,297 +1,505 @@
+// Global flag to prevent duplicate page initialization
+let isPageLoading = false;
+
+// FIXED: Cache-first approach with graceful fallback
 async function loadClubConfiguration() {
   try {
-    console.log('Loading club configuration from backend...');
+    console.log('Loading club configuration...');
     
-    const config = await getClubConfig();
+    // Check if API client exists
+    if (!window.apiClient) {
+      console.warn('API client not available, using cached data');
+      return loadFromCache('clubConfig');
+    }
     
-    if (!config) {
-      console.error('Failed to load club configuration');
+    // Try to get from cache first
+    const cached = await loadFromCache('clubConfig');
+    if (cached) {
+      console.log('Using cached club configuration');
+      updateClubConfigDOM(cached);
+      return true;
+    }
+    
+    // Cache miss - try API call
+    const result = await window.apiClient.getConfig();
+    
+    if (result.success && result.data) {
+      // Save to cache
+      await saveToCache('clubConfig', result.data);
+      updateClubConfigDOM(result.data);
+      console.log('Club configuration loaded from API and cached');
+      return true;
+    }
+    
+    console.error('Failed to load club configuration');
+    return false;
+    
+  } catch (error) {
+    console.warn('Error loading club configuration, using cache:', error);
+    const cached = await loadFromCache('clubConfig');
+    if (cached) {
+      updateClubConfigDOM(cached);
+      return true;
+    }
+    return false;
+  }
+}
+
+// Helper function to update DOM with club config
+function updateClubConfigDOM(config) {
+  if (!config) return;
+  
+  const logoElements = document.querySelectorAll('.club-logo');
+  logoElements.forEach(el => {
+    if (config.logo) {
+      el.src = config.logo;
+      el.alt = config.shortName || 'Club Logo';
+    }
+  });
+  
+  const clubNameElements = document.querySelectorAll('.club-name');
+  clubNameElements.forEach(el => {
+    el.textContent = config.name || 'Robotics Club';
+  });
+  
+  const clubShortNameElements = document.querySelectorAll('.club-short-name');
+  clubShortNameElements.forEach(el => {
+    el.textContent = config.shortName || 'RC';
+  });
+  
+  const clubMottoElements = document.querySelectorAll('.club-motto');
+  clubMottoElements.forEach(el => {
+    el.textContent = config.motto || '';
+  });
+  
+  const universityNameElements = document.querySelectorAll('.university-name');
+  universityNameElements.forEach(el => {
+    el.textContent = config.university || '';
+  });
+  
+  const clubDescriptionElements = document.querySelectorAll('.club-description');
+  clubDescriptionElements.forEach(el => {
+    el.textContent = config.description || '';
+  });
+  
+  const clubEmailElements = document.querySelectorAll('.club-email');
+  clubEmailElements.forEach(el => {
+    if (el.tagName === 'A') {
+      el.href = `mailto:${config.email || ''}`;
+      el.textContent = config.email || '';
+    } else {
+      el.textContent = config.email || '';
+    }
+  });
+  
+  const clubPhoneElements = document.querySelectorAll('.club-phone');
+  clubPhoneElements.forEach(el => {
+    if (el.tagName === 'A') {
+      el.href = `tel:${config.phone || ''}`;
+      el.textContent = config.phone || '';
+    } else {
+      el.textContent = config.phone || '';
+    }
+  });
+  
+  const clubAddressElements = document.querySelectorAll('.club-address');
+  clubAddressElements.forEach(el => {
+    el.textContent = config.address || '';
+  });
+  
+  const clubFoundedYearElements = document.querySelectorAll('.club-founded-year');
+  clubFoundedYearElements.forEach(el => {
+    el.textContent = config.foundedYear || '';
+  });
+  
+  if (config.socialLinks && Array.isArray(config.socialLinks) && config.socialLinks.length > 0) {
+    const socialContainer = document.querySelector('.social-links-container');
+    if (socialContainer) {
+      socialContainer.innerHTML = '';
+      
+      config.socialLinks.forEach(link => {
+        if (link.url) {
+          const anchor = document.createElement('a');
+          anchor.href = link.url;
+          anchor.target = '_blank';
+          anchor.rel = 'noopener noreferrer';
+          anchor.className = 'social-link';
+          anchor.title = link.platform || 'Social Link';
+          
+          const icon = document.createElement('span');
+          icon.textContent = link.icon || '🔗';
+          anchor.appendChild(icon);
+          
+          socialContainer.appendChild(anchor);
+        }
+      });
+    }
+  }
+  
+  document.title = `${config.shortName || 'Club'} - ${config.name || 'Robotics Club'}`;
+  
+  const favicon = document.querySelector('link[rel="icon"]');
+  if (favicon && config.logo) {
+    favicon.href = config.logo;
+  }
+}
+
+// FIXED: Cache-first with error boundaries
+async function loadRecentEvents(limit = 3) {
+  try {
+    console.log('Loading recent events...');
+    
+    // Try cache first
+    const cached = await loadFromCache('events');
+    if (cached && Array.isArray(cached)) {
+      console.log('Using cached events');
+      displayRecentEvents(cached, limit);
+      return true;
+    }
+    
+    // Cache miss - try API if available
+    if (!window.apiClient) {
+      console.warn('API client not available');
+      displayEmptyEvents();
       return false;
     }
     
-    const logoElements = document.querySelectorAll('.club-logo');
-    logoElements.forEach(el => {
-      if (config.logo) {
-        el.src = config.logo;
-        el.alt = config.shortName || 'Club Logo';
-      }
-    });
+    const result = await window.apiClient.getEvents();
     
-    const clubNameElements = document.querySelectorAll('.club-name');
-    clubNameElements.forEach(el => {
-      el.textContent = config.name || 'Robotics Club';
-    });
-    
-    const clubShortNameElements = document.querySelectorAll('.club-short-name');
-    clubShortNameElements.forEach(el => {
-      el.textContent = config.shortName || 'RC';
-    });
-    
-    const clubMottoElements = document.querySelectorAll('.club-motto');
-    clubMottoElements.forEach(el => {
-      el.textContent = config.motto || '';
-    });
-    
-    const universityNameElements = document.querySelectorAll('.university-name');
-    universityNameElements.forEach(el => {
-      el.textContent = config.university || '';
-    });
-    
-    const clubDescriptionElements = document.querySelectorAll('.club-description');
-    clubDescriptionElements.forEach(el => {
-      el.textContent = config.description || '';
-    });
-    
-    const clubEmailElements = document.querySelectorAll('.club-email');
-    clubEmailElements.forEach(el => {
-      if (el.tagName === 'A') {
-        el.href = `mailto:${config.email || ''}`;
-        el.textContent = config.email || '';
-      } else {
-        el.textContent = config.email || '';
-      }
-    });
-    
-    const clubPhoneElements = document.querySelectorAll('.club-phone');
-    clubPhoneElements.forEach(el => {
-      if (el.tagName === 'A') {
-        el.href = `tel:${config.phone || ''}`;
-        el.textContent = config.phone || '';
-      } else {
-        el.textContent = config.phone || '';
-      }
-    });
-    
-    const clubAddressElements = document.querySelectorAll('.club-address');
-    clubAddressElements.forEach(el => {
-      el.textContent = config.address || '';
-    });
-    
-    const clubFoundedYearElements = document.querySelectorAll('.club-founded-year');
-    clubFoundedYearElements.forEach(el => {
-      el.textContent = config.foundedYear || '';
-    });
-    
-    if (config.socialLinks && Array.isArray(config.socialLinks) && config.socialLinks.length > 0) {
-      const socialContainer = document.querySelector('.social-links-container');
-      if (socialContainer) {
-        socialContainer.innerHTML = '';
-        
-        config.socialLinks.forEach(link => {
-          if (link.url) {
-            const anchor = document.createElement('a');
-            anchor.href = link.url;
-            anchor.target = '_blank';
-            anchor.rel = 'noopener noreferrer';
-            anchor.className = 'social-link';
-            anchor.title = link.platform || 'Social Link';
-            
-            const icon = document.createElement('span');
-            icon.textContent = link.icon || '🔗';
-            anchor.appendChild(icon);
-            
-            socialContainer.appendChild(anchor);
-          }
-        });
-      }
-    }
-    
-    document.title = `${config.shortName || 'Club'} - ${config.name || 'Robotics Club'}`;
-    
-    const favicon = document.querySelector('link[rel="icon"]');
-    if (favicon && config.logo) {
-      favicon.href = config.logo;
-    }
-    
-    console.log('Club configuration loaded successfully');
-    return true;
-    
-  } catch (error) {
-    console.error('Error loading club configuration:', error);
-    return false;
-  }
-}
-
-async function loadRecentEvents(limit = 3) {
-  try {
-    console.log('Loading recent events from backend...');
-    
-    const events = await getEvents({ status: 'upcoming' });
-    
-    const container = document.getElementById('recent-events-container');
-    if (!container) return false;
-    
-    if (events.length === 0) {
-      container.innerHTML = '<p class="no-data">No upcoming events at the moment.</p>';
+    if (result.success && Array.isArray(result.data)) {
+      await saveToCache('events', result.data);
+      displayRecentEvents(result.data, limit);
+      console.log('Events loaded from API and cached');
       return true;
     }
     
-    container.innerHTML = '';
-    
-    const recentEvents = events.slice(0, limit);
-    
-    recentEvents.forEach(event => {
-      const eventCard = createEventCard(event);
-      container.appendChild(eventCard);
-    });
-    
-    console.log(`Loaded ${recentEvents.length} recent events`);
-    return true;
+    displayEmptyEvents();
+    return false;
     
   } catch (error) {
-    console.error('Error loading recent events:', error);
-    const container = document.getElementById('recent-events-container');
-    if (container) {
-      container.innerHTML = '<p class="error-message">Failed to load events. Please try again later.</p>';
-    }
+    console.warn('Error loading events, showing empty state:', error);
+    displayEmptyEvents();
     return false;
   }
 }
 
+function displayRecentEvents(events, limit) {
+  const container = document.getElementById('recent-events-container');
+  if (!container) return;
+  
+  const upcomingEvents = events.filter(e => e.status === 'upcoming' || e.status === 'Upcoming');
+  
+  if (upcomingEvents.length === 0) {
+    container.innerHTML = '<p class="no-data">No upcoming events at the moment.</p>';
+    return;
+  }
+  
+  container.innerHTML = '';
+  const recentEvents = upcomingEvents.slice(0, limit);
+  
+  recentEvents.forEach(event => {
+    const eventCard = createEventCard(event);
+    container.appendChild(eventCard);
+  });
+  
+  console.log(`Displayed ${recentEvents.length} recent events`);
+}
+
+function displayEmptyEvents() {
+  const container = document.getElementById('recent-events-container');
+  if (container) {
+    container.innerHTML = '<p class="no-data">No upcoming events at the moment.</p>';
+  }
+}
+
+// FIXED: Cache-first with error boundaries
 async function loadFeaturedProjects(limit = 6) {
   try {
-    console.log('Loading featured projects from backend...');
+    console.log('Loading featured projects...');
     
-    const projects = await getProjects({ status: 'completed' });
-    
-    const container = document.getElementById('featured-projects-container');
-    if (!container) return false;
-    
-    if (projects.length === 0) {
-      container.innerHTML = '<p class="no-data">No projects to display yet.</p>';
+    // Try cache first
+    const cached = await loadFromCache('projects');
+    if (cached && Array.isArray(cached)) {
+      console.log('Using cached projects');
+      displayFeaturedProjects(cached, limit);
       return true;
     }
     
-    container.innerHTML = '';
+    // Cache miss - try API if available
+    if (!window.apiClient) {
+      console.warn('API client not available');
+      displayEmptyProjects();
+      return false;
+    }
     
-    const featuredProjects = projects.slice(0, limit);
+    const result = await window.apiClient.getProjects();
     
-    featuredProjects.forEach(project => {
-      const projectCard = createProjectCard(project);
-      container.appendChild(projectCard);
-    });
+    if (result.success && Array.isArray(result.data)) {
+      await saveToCache('projects', result.data);
+      displayFeaturedProjects(result.data, limit);
+      console.log('Projects loaded from API and cached');
+      return true;
+    }
     
-    console.log(`Loaded ${featuredProjects.length} featured projects`);
-    return true;
+    displayEmptyProjects();
+    return false;
     
   } catch (error) {
-    console.error('Error loading featured projects:', error);
-    const container = document.getElementById('featured-projects-container');
-    if (container) {
-      container.innerHTML = '<p class="error-message">Failed to load projects. Please try again later.</p>';
-    }
+    console.warn('Error loading projects, showing empty state:', error);
+    displayEmptyProjects();
     return false;
   }
 }
 
+function displayFeaturedProjects(projects, limit) {
+  const container = document.getElementById('featured-projects-container');
+  if (!container) return;
+  
+  if (projects.length === 0) {
+    container.innerHTML = '<p class="no-data">No projects to display yet.</p>';
+    return;
+  }
+  
+  container.innerHTML = '';
+  const featuredProjects = projects.slice(0, limit);
+  
+  featuredProjects.forEach(project => {
+    const projectCard = createProjectCard(project);
+    container.appendChild(projectCard);
+  });
+  
+  console.log(`Displayed ${featuredProjects.length} featured projects`);
+}
+
+function displayEmptyProjects() {
+  const container = document.getElementById('featured-projects-container');
+  if (container) {
+    container.innerHTML = '<p class="no-data">No projects to display yet.</p>';
+  }
+}
+
+// FIXED: Cache-first with error boundaries
 async function loadExecutiveMembers(limit = 4) {
   try {
-    console.log('Loading executive members from backend...');
+    console.log('Loading executive members...');
     
-    const members = await getMembers({ role: 'Executive Member' });
-    
-    const container = document.getElementById('executive-members-container');
-    if (!container) return false;
-    
-    if (members.length === 0) {
-      container.innerHTML = '<p class="no-data">No executive members listed yet.</p>';
+    // Try cache first
+    const cached = await loadFromCache('members');
+    if (cached && Array.isArray(cached)) {
+      console.log('Using cached members');
+      displayExecutiveMembers(cached, limit);
       return true;
     }
     
-    container.innerHTML = '';
+    // Cache miss - try API if available
+    if (!window.apiClient) {
+      console.warn('API client not available');
+      displayEmptyMembers();
+      return false;
+    }
     
-    const executiveMembers = members.slice(0, limit);
+    const result = await window.apiClient.getMembers();
     
-    executiveMembers.forEach(member => {
-      const memberCard = createMemberCard(member);
-      container.appendChild(memberCard);
-    });
+    if (result.success && Array.isArray(result.data)) {
+      await saveToCache('members', result.data);
+      displayExecutiveMembers(result.data, limit);
+      console.log('Members loaded from API and cached');
+      return true;
+    }
     
-    console.log(`Loaded ${executiveMembers.length} executive members`);
-    return true;
+    displayEmptyMembers();
+    return false;
     
   } catch (error) {
-    console.error('Error loading executive members:', error);
-    const container = document.getElementById('executive-members-container');
-    if (container) {
-      container.innerHTML = '<p class="error-message">Failed to load members. Please try again later.</p>';
-    }
+    console.warn('Error loading members, showing empty state:', error);
+    displayEmptyMembers();
     return false;
   }
 }
 
+function displayExecutiveMembers(members, limit) {
+  const container = document.getElementById('executive-members-container');
+  if (!container) return;
+  
+  const executiveMembers = members.filter(m => m.role === 'Executive Member' || m.role === 'Executive');
+  
+  if (executiveMembers.length === 0) {
+    container.innerHTML = '<p class="no-data">No executive members listed yet.</p>';
+    return;
+  }
+  
+  container.innerHTML = '';
+  const displayMembers = executiveMembers.slice(0, limit);
+  
+  displayMembers.forEach(member => {
+    const memberCard = createMemberCard(member);
+    container.appendChild(memberCard);
+  });
+  
+  console.log(`Displayed ${displayMembers.length} executive members`);
+}
+
+function displayEmptyMembers() {
+  const container = document.getElementById('executive-members-container');
+  if (container) {
+    container.innerHTML = '<p class="no-data">No executive members listed yet.</p>';
+  }
+}
+
+// FIXED: Cache-first with error boundaries
 async function loadGalleryPreview(limit = 8) {
   try {
-    console.log('Loading gallery preview from backend...');
+    console.log('Loading gallery preview...');
     
-    const gallery = await getGallery();
-    
-    const container = document.getElementById('gallery-preview-container');
-    if (!container) return false;
-    
-    if (gallery.length === 0) {
-      container.innerHTML = '<p class="no-data">No photos in gallery yet.</p>';
+    // Try cache first
+    const cached = await loadFromCache('gallery');
+    if (cached && Array.isArray(cached)) {
+      console.log('Using cached gallery');
+      displayGalleryPreview(cached, limit);
       return true;
     }
     
-    container.innerHTML = '';
+    // Cache miss - try API if available
+    if (!window.apiClient) {
+      console.warn('API client not available');
+      displayEmptyGallery();
+      return false;
+    }
     
-    const previewItems = gallery.slice(0, limit);
+    const result = await window.apiClient.getGalleryItems();
     
-    previewItems.forEach(item => {
-      const galleryItem = createGalleryItem(item);
-      container.appendChild(galleryItem);
-    });
+    if (result.success && Array.isArray(result.data)) {
+      await saveToCache('gallery', result.data);
+      displayGalleryPreview(result.data, limit);
+      console.log('Gallery loaded from API and cached');
+      return true;
+    }
     
-    console.log(`Loaded ${previewItems.length} gallery items`);
-    return true;
+    displayEmptyGallery();
+    return false;
     
   } catch (error) {
-    console.error('Error loading gallery preview:', error);
-    const container = document.getElementById('gallery-preview-container');
-    if (container) {
-      container.innerHTML = '<p class="error-message">Failed to load gallery. Please try again later.</p>';
-    }
+    console.warn('Error loading gallery, showing empty state:', error);
+    displayEmptyGallery();
     return false;
   }
 }
 
+function displayGalleryPreview(gallery, limit) {
+  const container = document.getElementById('gallery-preview-container');
+  if (!container) return;
+  
+  if (gallery.length === 0) {
+    container.innerHTML = '<p class="no-data">No photos in gallery yet.</p>';
+    return;
+  }
+  
+  container.innerHTML = '';
+  const previewItems = gallery.slice(0, limit);
+  
+  previewItems.forEach(item => {
+    const galleryItem = createGalleryItem(item);
+    container.appendChild(galleryItem);
+  });
+  
+  console.log(`Displayed ${previewItems.length} gallery items`);
+}
+
+function displayEmptyGallery() {
+  const container = document.getElementById('gallery-preview-container');
+  if (container) {
+    container.innerHTML = '<p class="no-data">No photos in gallery yet.</p>';
+  }
+}
+
+// FIXED: Cache-first with error boundaries
 async function loadAnnouncements(limit = 5) {
   try {
-    console.log('Loading announcements from backend...');
+    console.log('Loading announcements...');
     
-    const announcements = await getAnnouncements();
-    
-    const container = document.getElementById('announcements-container');
-    if (!container) return false;
-    
-    if (announcements.length === 0) {
-      container.innerHTML = '<p class="no-data">No announcements at the moment.</p>';
+    // Try cache first
+    const cached = await loadFromCache('announcements');
+    if (cached && Array.isArray(cached)) {
+      console.log('Using cached announcements');
+      displayAnnouncements(cached, limit);
       return true;
     }
     
-    container.innerHTML = '';
+    // Cache miss - try API if available
+    if (!window.apiClient) {
+      console.warn('API client not available');
+      displayEmptyAnnouncements();
+      return false;
+    }
     
-    const recentAnnouncements = announcements.slice(0, limit);
+    const result = await window.apiClient.getAnnouncements();
     
-    recentAnnouncements.forEach(announcement => {
-      const announcementItem = createAnnouncementItem(announcement);
-      container.appendChild(announcementItem);
-    });
+    if (result.success && Array.isArray(result.data)) {
+      await saveToCache('announcements', result.data);
+      displayAnnouncements(result.data, limit);
+      console.log('Announcements loaded from API and cached');
+      return true;
+    }
     
-    console.log(`Loaded ${recentAnnouncements.length} announcements`);
-    return true;
+    displayEmptyAnnouncements();
+    return false;
     
   } catch (error) {
-    console.error('Error loading announcements:', error);
-    const container = document.getElementById('announcements-container');
-    if (container) {
-      container.innerHTML = '<p class="error-message">Failed to load announcements. Please try again later.</p>';
-    }
+    console.warn('Error loading announcements, showing empty state:', error);
+    displayEmptyAnnouncements();
     return false;
   }
 }
 
+function displayAnnouncements(announcements, limit) {
+  const container = document.getElementById('announcements-container');
+  if (!container) return;
+  
+  if (announcements.length === 0) {
+    container.innerHTML = '<p class="no-data">No announcements at the moment.</p>';
+    return;
+  }
+  
+  container.innerHTML = '';
+  const recentAnnouncements = announcements.slice(0, limit);
+  
+  recentAnnouncements.forEach(announcement => {
+    const announcementItem = createAnnouncementItem(announcement);
+    container.appendChild(announcementItem);
+  });
+  
+  console.log(`Displayed ${recentAnnouncements.length} announcements`);
+}
+
+function displayEmptyAnnouncements() {
+  const container = document.getElementById('announcements-container');
+  if (container) {
+    container.innerHTML = '<p class="no-data">No announcements at the moment.</p>';
+  }
+}
+
+// Cache helper functions using localStorage
+async function loadFromCache(key) {
+  try {
+    const cached = localStorage.getItem(`cache_${key}`);
+    return cached ? JSON.parse(cached) : null;
+  } catch (error) {
+    console.warn(`Error loading ${key} from cache:`, error);
+    return null;
+  }
+}
+
+async function saveToCache(key, data) {
+  try {
+    localStorage.setItem(`cache_${key}`, JSON.stringify(data));
+    return true;
+  } catch (error) {
+    console.warn(`Error saving ${key} to cache:`, error);
+    return false;
+  }
+}
+
+// Card creation functions (unchanged)
 function createEventCard(event) {
   const card = document.createElement('div');
   card.className = 'event-card';
@@ -551,6 +759,7 @@ function createAnnouncementItem(announcement) {
   return item;
 }
 
+// Navigation functions (unchanged)
 function viewEventDetails(eventId) {
   window.location.href = `events.html?id=${eventId}`;
 }
@@ -563,43 +772,118 @@ function viewGalleryItem(galleryId) {
   window.location.href = `gallery.html?id=${galleryId}`;
 }
 
+// Helper function to delay execution
+function delay(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+// FIXED: Sequential loading with delays and error boundaries
 async function initializePage() {
+  // Prevent duplicate initialization
+  if (isPageLoading) {
+    console.log('Page already loading, skipping duplicate call');
+    return;
+  }
+  
+  isPageLoading = true;
+  
   try {
     console.log('Initializing page...');
     
-    await loadClubConfiguration();
+    // Step 1: Load club configuration first
+    try {
+      await loadClubConfiguration();
+    } catch (error) {
+      console.error('Error loading club configuration:', error);
+    }
+    
+    await delay(100);
     
     const currentPage = window.location.pathname.split('/').pop() || 'index.html';
     
     if (currentPage === 'index.html' || currentPage === '') {
-      await Promise.all([
-        loadRecentEvents(3),
-        loadFeaturedProjects(6),
-        loadExecutiveMembers(4),
-        loadGalleryPreview(8),
-        loadAnnouncements(5)
-      ]);
+      // Step 2: Load recent events
+      try {
+        await loadRecentEvents(3);
+      } catch (error) {
+        console.error('Error loading events:', error);
+      }
+      
+      await delay(100);
+      
+      // Step 3: Load featured projects
+      try {
+        await loadFeaturedProjects(6);
+      } catch (error) {
+        console.error('Error loading projects:', error);
+      }
+      
+      await delay(100);
+      
+      // Step 4: Load executive members
+      try {
+        await loadExecutiveMembers(4);
+      } catch (error) {
+        console.error('Error loading members:', error);
+      }
+      
+      await delay(100);
+      
+      // Step 5: Load gallery preview
+      try {
+        await loadGalleryPreview(8);
+      } catch (error) {
+        console.error('Error loading gallery:', error);
+      }
+      
+      await delay(100);
+      
+      // Step 6: Load announcements
+      try {
+        await loadAnnouncements(5);
+      } catch (error) {
+        console.error('Error loading announcements:', error);
+      }
     } else if (currentPage === 'events.html') {
-      await loadAllEvents();
+      try {
+        await loadAllEvents();
+      } catch (error) {
+        console.error('Error loading all events:', error);
+      }
     } else if (currentPage === 'projects.html') {
-      await loadAllProjects();
+      try {
+        await loadAllProjects();
+      } catch (error) {
+        console.error('Error loading all projects:', error);
+      }
     } else if (currentPage === 'members.html') {
-      await loadAllMembers();
+      try {
+        await loadAllMembers();
+      } catch (error) {
+        console.error('Error loading all members:', error);
+      }
     } else if (currentPage === 'gallery.html') {
-      await loadAllGallery();
+      try {
+        await loadAllGallery();
+      } catch (error) {
+        console.error('Error loading all gallery:', error);
+      }
     }
     
     console.log('Page initialized successfully');
     
   } catch (error) {
-    console.error('Error initializing page:', error);
+    console.error('Error during page initialization:', error);
+  } finally {
+    isPageLoading = false;
   }
 }
 
+// Initialize on DOM ready
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', initializePage);
 } else {
   initializePage();
 }
 
-console.log('load-config.js loaded successfully (TRUE API-FIRST loader)');
+console.log('✅ config.js loaded successfully (CACHE-FIRST with error boundaries)');

@@ -20,7 +20,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
             position: relative;
             overflow: hidden;
         }
@@ -111,15 +111,15 @@
 
         /* Login Card */
         .login-card {
-            background: var(--surface-color);
-            border-radius: var(--radius-lg);
+            background: white;
+            border-radius: 16px;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
             overflow: hidden;
         }
 
         /* Login Header */
         .login-header {
-            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
             padding: 3rem 2rem 2rem;
             text-align: center;
             color: white;
@@ -164,7 +164,7 @@
             display: block;
             margin-bottom: 0.5rem;
             font-weight: 600;
-            color: var(--text-primary);
+            color: #1f2937;
             font-size: 0.95rem;
         }
 
@@ -177,27 +177,27 @@
             left: 1rem;
             top: 50%;
             transform: translateY(-50%);
-            color: var(--text-secondary);
+            color: #6b7280;
             font-size: 1.25rem;
         }
 
         .form-control {
             width: 100%;
             padding: 0.875rem 1rem 0.875rem 3rem;
-            border: 2px solid var(--border-color);
-            border-radius: var(--radius-md);
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
             font-size: 1rem;
-            background: var(--background-color);
-            color: var(--text-primary);
+            background: #f9fafb;
+            color: #1f2937;
             transition: all 0.3s ease;
             box-sizing: border-box;
         }
 
         .form-control:focus {
             outline: none;
-            border-color: var(--primary-color);
-            background: var(--surface-color);
-            box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.1);
+            border-color: #6366f1;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
         }
 
         .form-control.error {
@@ -212,7 +212,7 @@
             transform: translateY(-50%);
             background: none;
             border: none;
-            color: var(--text-secondary);
+            color: #6b7280;
             cursor: pointer;
             font-size: 1.25rem;
             padding: 0.25rem;
@@ -220,7 +220,7 @@
         }
 
         .password-toggle:hover {
-            color: var(--primary-color);
+            color: #6366f1;
         }
 
         /* Error Message */
@@ -230,7 +230,7 @@
             border: 1px solid #fecaca;
             color: #dc2626;
             padding: 0.875rem 1rem;
-            border-radius: var(--radius-md);
+            border-radius: 8px;
             margin-bottom: 1.5rem;
             font-size: 0.9rem;
             animation: shake 0.3s ease;
@@ -246,12 +246,6 @@
             75% { transform: translateX(10px); }
         }
 
-        [data-theme="dark"] .error-message {
-            background: rgba(239, 68, 68, 0.1);
-            border-color: rgba(239, 68, 68, 0.3);
-            color: #fca5a5;
-        }
-
         /* Remember Me Checkbox */
         .remember-me {
             display: flex;
@@ -264,7 +258,7 @@
             height: 18px;
             margin-right: 0.5rem;
             cursor: pointer;
-            accent-color: var(--primary-color);
+            accent-color: #6366f1;
         }
 
         .remember-me label {
@@ -278,10 +272,10 @@
         .btn-login {
             width: 100%;
             padding: 1rem;
-            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
             color: white;
             border: none;
-            border-radius: var(--radius-md);
+            border-radius: 8px;
             font-size: 1rem;
             font-weight: 600;
             cursor: pointer;
@@ -331,43 +325,43 @@
         /* Login Footer */
         .login-footer {
             padding: 1.5rem 2rem;
-            background: var(--background-color);
+            background: #f9fafb;
             text-align: center;
-            border-top: 1px solid var(--border-color);
+            border-top: 1px solid #e5e7eb;
         }
 
         .login-footer p {
             margin: 0;
-            color: var(--text-secondary);
+            color: #6b7280;
             font-size: 0.9rem;
         }
 
         .login-footer a {
-            color: var(--primary-color);
+            color: #6366f1;
             text-decoration: none;
             font-weight: 600;
             transition: color 0.3s ease;
         }
 
         .login-footer a:hover {
-            color: var(--secondary-color);
+            color: #8b5cf6;
         }
 
         /* Default Credentials Notice */
         .default-notice {
             background: rgba(99, 102, 241, 0.1);
             border: 1px solid rgba(99, 102, 241, 0.3);
-            border-radius: var(--radius-md);
+            border-radius: 8px;
             padding: 1rem;
             margin-bottom: 1.5rem;
             font-size: 0.85rem;
-            color: var(--text-primary);
+            color: #1f2937;
         }
 
         .default-notice strong {
             display: block;
             margin-bottom: 0.5rem;
-            color: var(--primary-color);
+            color: #6366f1;
         }
 
         .default-notice code {
@@ -517,16 +511,25 @@
         </div>
     </div>
 
-    <!-- JavaScript Files -->
-    <script src="js/api-client.js"></script> <!-- NEW - API integration -->
-    <script src="js/config.js"></script>
-    <script src="js/storage.js"></script>
-    <script src="js/auth.js"></script>
-    <script src="js/theme.js"></script>
+    <!-- JavaScript Files - Load in correct order -->
+    <script src="js/api-client.js"></script>
 
     <script>
-        // Admin Login Functionality
+        /**
+         * FIXED Admin Login System v4.0
+         * ==============================
+         * Critical fixes:
+         * 1. Ensures BOTH token AND session are saved before redirect
+         * 2. Adds verification step to confirm storage writes completed
+         * 3. Adds longer delay (1000ms) to ensure async operations complete
+         * 4. Forces token into apiClient before redirect
+         * 5. Better error handling with detailed logging
+         * 6. Prevents race conditions with proper async/await flow
+         */
+
         document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Admin Login System v4.0 - Initializing...');
+
             // Elements
             const loginForm = document.getElementById('loginForm');
             const usernameInput = document.getElementById('username');
@@ -537,116 +540,131 @@
             const errorMessage = document.getElementById('errorMessage');
             const defaultNotice = document.getElementById('defaultNotice');
 
-            // Initialize theme
-            if (typeof initTheme === 'function') {
-                initTheme();
+            // Wait for API client to be ready
+            let retryCount = 0;
+            const maxRetries = 20;
+
+            function checkAPIReady() {
+                if (typeof window.apiClient !== 'undefined' && typeof window.apiClient.login === 'function') {
+                    console.log('✅ API Client loaded successfully');
+                    initializeLogin();
+                    return true;
+                } else {
+                    console.warn(`⏳ Waiting for API Client... (${retryCount + 1}/${maxRetries})`);
+                    retryCount++;
+                    if (retryCount < maxRetries) {
+                        setTimeout(checkAPIReady, 200);
+                    } else {
+                        console.error('❌ Failed to load API Client');
+                        showError('Failed to load authentication system. Please refresh the page.');
+                        loginButton.disabled = true;
+                    }
+                    return false;
+                }
             }
 
-            // Check if already logged in
-            checkExistingSession();
-
-            // Create default admin if no admins exist
-            ensureDefaultAdmin();
-
-            // Check if there are any admins and hide/show default notice
-            checkAdminExistence();
-
-            // Password toggle functionality
-            passwordToggle.addEventListener('click', function() {
-                const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
-                passwordInput.setAttribute('type', type);
-                passwordToggle.textContent = type === 'password' ? '👁️' : '🙈';
-            });
-
-            // Form submission
-            loginForm.addEventListener('submit', function(e) {
-                e.preventDefault();
-                handleLogin();
-            });
-
-            // Enter key support
-            passwordInput.addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    handleLogin();
-                }
-            });
+            checkAPIReady();
 
             /**
-             * Check if user is already logged in
+             * Initialize login functionality
+             */
+            function initializeLogin() {
+                console.log('🔧 Initializing login page...');
+
+                // Check existing session
+                checkExistingSession();
+
+                // Password toggle
+                passwordToggle.addEventListener('click', function() {
+                    const type = passwordInput.type === 'password' ? 'text' : 'password';
+                    passwordInput.type = type;
+                    passwordToggle.textContent = type === 'password' ? '👁️' : '🙈';
+                });
+
+                // Form submission
+                loginForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    handleLogin();
+                });
+
+                // Auto-fill remembered username
+                const rememberedAdmin = localStorage.getItem('rememberedAdmin');
+                if (rememberedAdmin) {
+                    usernameInput.value = rememberedAdmin;
+                    rememberMeCheckbox.checked = true;
+                    passwordInput.focus();
+                    console.log('✅ Auto-filled remembered username');
+                }
+
+                console.log('✅ Login page initialized');
+            }
+
+            /**
+             * Check if user already has valid session
              */
             function checkExistingSession() {
                 try {
+                    const token = localStorage.getItem('grrc_auth_token');
                     const session = sessionStorage.getItem('adminSession');
-                    if (session) {
-                        const sessionData = JSON.parse(session);
-                        // Check if session is still valid (within 24 hours)
-                        const sessionTime = new Date(sessionData.timestamp);
-                        const now = new Date();
-                        const hoursDiff = (now - sessionTime) / (1000 * 60 * 60);
-                        
-                        if (hoursDiff < 24) {
-                            // Session is valid, redirect to admin panel
-                            window.location.href = 'admin-panel.html';
-                        } else {
-                            // Session expired, clear it
-                            sessionStorage.removeItem('adminSession');
-                        }
-                    }
-                } catch (error) {
-                    console.error('Error checking session:', error);
-                }
-            }
 
-            /**
-             * Ensure default admin exists
-             */
-            function ensureDefaultAdmin() {
-                try {
-                    let admins = JSON.parse(localStorage.getItem('admins') || '[]');
-                    
-                    if (admins.length === 0) {
-                        // Create default admin
-                        const defaultAdmin = {
-                            id: Date.now() + '-' + Math.random().toString(36).substr(2, 9),
-                            username: 'admin',
-                            password: hashPassword('admin123'), // Simple hash
-                            role: 'Super Admin',
-                            createdAt: new Date().toISOString()
-                        };
-                        
-                        admins.push(defaultAdmin);
-                        localStorage.setItem('admins', JSON.stringify(admins));
-                        console.log('Default admin created');
+                    if (!token || !session) {
+                        console.log('ℹ️ No existing session found');
+                        return;
                     }
-                } catch (error) {
-                    console.error('Error creating default admin:', error);
-                }
-            }
 
-            /**
-             * Check if admins exist and show/hide default notice
-             */
-            function checkAdminExistence() {
-                try {
-                    const admins = JSON.parse(localStorage.getItem('admins') || '[]');
-                    
-                    // If only default admin exists, show notice
-                    if (admins.length === 1 && admins[0].username === 'admin') {
-                        defaultNotice.style.display = 'block';
-                    } else if (admins.length === 0) {
-                        defaultNotice.style.display = 'block';
+                    const sessionData = JSON.parse(session);
+                    const sessionTime = new Date(sessionData.timestamp);
+                    const now = new Date();
+                    const hoursDiff = (now - sessionTime) / (1000 * 60 * 60);
+
+                    if (hoursDiff < 24) {
+                        console.log('✅ Valid session found - redirecting to admin panel');
+                        window.location.href = 'admin-panel.html';
                     } else {
-                        defaultNotice.style.display = 'none';
+                        console.log('⚠️ Session expired - clearing');
+                        localStorage.removeItem('grrc_auth_token');
+                        sessionStorage.removeItem('adminSession');
                     }
                 } catch (error) {
-                    console.error('Error checking admin existence:', error);
+                    console.error('❌ Error checking session:', error);
                 }
             }
 
             /**
-             * Handle login process
+             * CRITICAL: Verify storage writes completed
              */
-            function handleLogin() {
+            function verifyStorageWrites(expectedToken, expectedSession) {
+                return new Promise((resolve) => {
+                    let attempts = 0;
+                    const maxAttempts = 10;
+                    
+                    const checkInterval = setInterval(() => {
+                        attempts++;
+                        
+                        const storedToken = localStorage.getItem('grrc_auth_token');
+                        const storedSession = sessionStorage.getItem('adminSession');
+                        
+                        console.log(`🔍 Verification attempt ${attempts}/${maxAttempts}:`);
+                        console.log('   Token in localStorage:', storedToken ? 'YES' : 'NO');
+                        console.log('   Session in sessionStorage:', storedSession ? 'YES' : 'NO');
+                        
+                        if (storedToken && storedSession) {
+                            clearInterval(checkInterval);
+                            console.log('✅ Storage verification PASSED');
+                            resolve(true);
+                        } else if (attempts >= maxAttempts) {
+                            clearInterval(checkInterval);
+                            console.error('❌ Storage verification FAILED after max attempts');
+                            resolve(false);
+                        }
+                    }, 100);
+                });
+            }
+
+            /**
+             * Handle login form submission
+             */
+            async function handleLogin() {
                 const username = usernameInput.value.trim();
                 const password = passwordInput.value;
                 const rememberMe = rememberMeCheckbox.checked;
@@ -664,105 +682,141 @@
                     return;
                 }
 
-                if (password.length < 6) {
-                    showError('Password must be at least 6 characters');
-                    passwordInput.focus();
-                    return;
-                }
+                console.log('🔐 Starting login process...');
+                console.log('📝 Username:', username);
+                console.log('🔒 Password length:', password.length);
 
-                // Show loading state
                 setLoadingState(true);
                 hideError();
 
-                // Simulate network delay for better UX
-                setTimeout(() => {
-                    authenticateUser(username, password, rememberMe);
-                }, 800);
-            }
-
-            /**
-             * Authenticate user credentials
-             * MODIFIED - API integration with localStorage fallback
-             */
-            async function authenticateUser(username, password, rememberMe) {
                 try {
-                    // NEW - Try API login first
-                    if (typeof login === 'function') {
-                        try {
-                            const result = await login(username, password);
-                            if (result.success && result.data) {
-                                loginSuccess(result.data.admin, rememberMe);
-                                return;
-                            }
-                        } catch (apiError) {
-                            console.warn('API login failed, falling back to localStorage:', apiError);
+                    // Step 1: Call API login
+                    console.log('📡 Calling apiClient.login()...');
+                    const result = await window.apiClient.login(username, password);
+
+                    console.log('📨 Login result:', result);
+
+                    if (result.success && result.data && result.data.token) {
+                        console.log('✅ Login API call successful!');
+                        console.log('🎫 Token received:', result.data.token.substring(0, 20) + '...');
+
+                        // Step 2: CRITICAL - Manually ensure token is saved
+                        console.log('💾 Step 1: Saving token to localStorage...');
+                        localStorage.setItem('grrc_auth_token', result.data.token);
+                        
+                        // Step 3: Force token into apiClient
+                        console.log('💾 Step 2: Loading token into apiClient...');
+                        if (window.apiClient && window.apiClient.setAuthToken) {
+                            window.apiClient.setAuthToken(result.data.token);
                         }
-                    }
 
-                    // EXISTING - Fallback to localStorage
-                    const admins = JSON.parse(localStorage.getItem('admins') || '[]');
-                    const hashedPassword = hashPassword(password);
+                        // Step 4: Create and save session
+                        console.log('💾 Step 3: Creating session in sessionStorage...');
+                        const sessionData = {
+                            username: result.data.admin.username,
+                            role: result.data.admin.role,
+                            adminId: result.data.admin.id,
+                            timestamp: new Date().toISOString()
+                        };
+                        sessionStorage.setItem('adminSession', JSON.stringify(sessionData));
 
-                    // Find matching admin
-                    const admin = admins.find(a => 
-                        a.username.toLowerCase() === username.toLowerCase() && 
-                        a.password === hashedPassword
-                    );
+                        // Step 5: Save username if remember me is checked
+                        if (rememberMe) {
+                            localStorage.setItem('rememberedAdmin', username);
+                            console.log('💾 Step 4: Username saved for next time');
+                        } else {
+                            localStorage.removeItem('rememberedAdmin');
+                        }
 
-                    if (admin) {
-                        // Successful login
-                        loginSuccess(admin, rememberMe);
+                        // Step 6: CRITICAL - Verify storage writes completed
+                        console.log('🔍 Step 5: Verifying storage writes...');
+                        const verified = await verifyStorageWrites(result.data.token, sessionData);
+                        
+                        if (!verified) {
+                            throw new Error('Failed to verify storage writes - data may not have persisted');
+                        }
+
+                        // Step 7: Final verification before redirect
+                        const finalToken = localStorage.getItem('grrc_auth_token');
+                        const finalSession = sessionStorage.getItem('adminSession');
+                        const apiClientToken = window.apiClient.getAuthToken();
+
+                        console.log('🔍 Final verification:');
+                        console.log('   Token in localStorage:', finalToken ? 'YES' : 'NO');
+                        console.log('   Session in sessionStorage:', finalSession ? 'YES' : 'NO');
+                        console.log('   Token in apiClient:', apiClientToken ? 'YES' : 'NO');
+
+                        if (!finalToken || !finalSession) {
+                            throw new Error('Final verification failed - storage not persisted');
+                        }
+
+                        console.log('✅ All verifications passed!');
+                        console.log('🎉 Login successful - preparing redirect...');
+
+                        // Step 8: Show success message briefly
+                        showSuccess('Login successful! Redirecting...');
+
+                        // Step 9: Redirect with delay to ensure everything is saved
+                        console.log('⏳ Waiting 1000ms before redirect...');
+                        setTimeout(() => {
+                            console.log('🚀 Redirecting to admin-panel.html NOW');
+                            window.location.href = 'admin-panel.html';
+                        }, 1000);
+
                     } else {
-                        // Failed login
-                        loginFailed();
+                        console.error('❌ Login failed:', result.error);
+                        
+                        // Show user-friendly error messages
+                        let errorMsg = 'Login failed. Please try again.';
+                        
+                        if (result.error) {
+                            if (result.error.includes('Invalid') || result.error.includes('credentials')) {
+                                errorMsg = 'Invalid username or password.';
+                            } else if (result.error.includes('timeout') || result.error.includes('Network')) {
+                                errorMsg = 'Connection error. Please check your internet and try again.';
+                            } else if (result.error.includes('Unauthorized')) {
+                                errorMsg = 'Invalid credentials. Please check your username and password.';
+                            } else {
+                                errorMsg = result.error;
+                            }
+                        }
+                        
+                        showError(errorMsg);
+                        setLoadingState(false);
+                        passwordInput.value = '';
+                        passwordInput.focus();
                     }
+
                 } catch (error) {
-                    console.error('Authentication error:', error);
-                    showError('An error occurred. Please try again.');
+                    console.error('❌ Login error:', error);
+                    let errorMsg = 'An error occurred during login.';
+                    
+                    if (error.message.includes('timeout')) {
+                        errorMsg = 'Connection timeout. Please check your internet connection.';
+                    } else if (error.message.includes('Network') || error.message.includes('Failed to fetch')) {
+                        errorMsg = 'Cannot connect to server. Please check your internet connection.';
+                    } else if (error.message.includes('storage') || error.message.includes('verification')) {
+                        errorMsg = 'Login data could not be saved. Please try again or clear your browser cache.';
+                    } else {
+                        errorMsg = error.message || 'An unexpected error occurred.';
+                    }
+                    
+                    showError(errorMsg);
                     setLoadingState(false);
                 }
             }
 
             /**
-             * Handle successful login
+             * Show success message
              */
-            function loginSuccess(admin, rememberMe) {
-                // Create session
-                const sessionData = {
-                    adminId: admin.id,
-                    username: admin.username,
-                    role: admin.role,
-                    timestamp: new Date().toISOString()
-                };
-
-                // Save to sessionStorage (always)
-                sessionStorage.setItem('adminSession', JSON.stringify(sessionData));
-
-                // Save to localStorage if "Remember Me" is checked
-                if (rememberMe) {
-                    localStorage.setItem('rememberedAdmin', admin.username);
-                } else {
-                    localStorage.removeItem('rememberedAdmin');
-                }
-
-                // Redirect to admin panel
-                window.location.href = 'admin-panel.html';
-            }
-
-            /**
-             * Handle failed login
-             */
-            function loginFailed() {
-                setLoadingState(false);
-                showError('Invalid username or password. Please try again.');
-                passwordInput.value = '';
-                passwordInput.focus();
-                
-                // Shake effect
-                loginForm.style.animation = 'none';
-                setTimeout(() => {
-                    loginForm.style.animation = '';
-                }, 10);
+            function showSuccess(message) {
+                errorMessage.textContent = message;
+                errorMessage.style.background = '#d1fae5';
+                errorMessage.style.borderColor = '#a7f3d0';
+                errorMessage.style.color = '#065f46';
+                errorMessage.classList.add('show');
+                usernameInput.classList.remove('error');
+                passwordInput.classList.remove('error');
             }
 
             /**
@@ -770,6 +824,9 @@
              */
             function showError(message) {
                 errorMessage.textContent = message;
+                errorMessage.style.background = '#fef2f2';
+                errorMessage.style.borderColor = '#fecaca';
+                errorMessage.style.color = '#dc2626';
                 errorMessage.classList.add('show');
                 usernameInput.classList.add('error');
                 passwordInput.classList.add('error');
@@ -794,16 +851,12 @@
                 } else {
                     loginButton.classList.remove('loading');
                 }
+                usernameInput.disabled = loading;
+                passwordInput.disabled = loading;
+                rememberMeCheckbox.disabled = loading;
             }
 
-            
-            // Auto-fill remembered username
-            const rememberedAdmin = localStorage.getItem('rememberedAdmin');
-            if (rememberedAdmin) {
-                usernameInput.value = rememberedAdmin;
-                rememberMeCheckbox.checked = true;
-                passwordInput.focus();
-            }
+            console.log('✅ Admin Login System ready');
         });
     </script>
 </body>

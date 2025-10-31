@@ -2,16 +2,24 @@
  * API Client for GSTU Robotics Club Backend
  * ==========================================
  * Centralized module for all frontend-backend communication.
- * Handles authentication, error handling, and retry logic.
+ * Handles authentication, error handling, and request deduplication.
  * 
- * CRITICAL FIX: Corrected all API endpoint paths and function names
- * to match backend routes and what storage.js/load-config.js expect
+ * CRITICAL FIX v1.3.0:
+ * - Fixed token persistence using localStorage instead of memory-only
+ * - Tokens now persist across page reloads
+ * - Automatic token loading on initialization
+ * - Added request deduplication to prevent concurrent identical requests
+ * - Added 5-second timeout to all fetch() calls
+ * - Removed retry logic (was causing infinite loops and server overload)
+ * - Added detailed error logging with endpoint, status, and duration
+ * - Fixed getGalleryItems() to properly call getGallery()
  * 
  * Features:
  * - Automatic authentication header injection
+ * - Persistent token storage (localStorage)
  * - Consistent error handling across all requests
- * - Token management (in-memory storage)
- * - Network error handling with retry logic
+ * - Request deduplication
+ * - 5-second request timeout
  * - CORS-compatible request configuration
  * 
  * Usage:
@@ -19,7 +27,7 @@
  * - All functions are available globally via window.apiClient object
  * 
  * @author GSTU Robotics Club
- * @version 1.1.0 - Fixed endpoint mismatches
+ * @version 1.3.0 - Fixed token persistence with localStorage
  */
 
 // ============ CONFIGURATION ============
@@ -27,31 +35,78 @@
 const API_BASE_URL = 'https://grrc-website-10.onrender.com';
 
 const AUTH_TOKEN_KEY = 'grrc_auth_token';
-const MAX_RETRIES = 3;
-const RETRY_DELAY = 1000; // milliseconds
+const REQUEST_TIMEOUT = 5000; // 5 seconds
+
+// ============ REQUEST DEDUPLICATION ============
+
+/**
+ * Track active requests to prevent duplicates
+ * Key: URL + method + body hash
+ * Value: Promise of ongoing request
+ */
+const activeRequests = new Map();
+
+/**
+ * Generate unique key for request deduplication
+ * @param {string} url - Full request URL
+ * @param {Object} config - Fetch config
+ * @returns {string} - Unique request key
+ */
+function getRequestKey(url, config) {
+    const method = config.method || 'GET';
+    const bodyHash = config.body ? btoa(config.body).substring(0, 20) : '';
+    return `${method}:${url}:${bodyHash}`;
+}
 
 // ============ TOKEN MANAGEMENT ============
 
 /**
- * Store authentication token in memory
+ * Store authentication token in localStorage (persistent)
  * @param {string} token - JWT token from backend
  */
 function setAuthToken(token) {
-    window.__authToken = token;
+    try {
+        localStorage.setItem(AUTH_TOKEN_KEY, token);
+        window.__authToken = token;
+        console.log('🔐 Token saved to localStorage');
+    } catch (error) {
+        console.error('❌ Failed to save token to localStorage:', error);
+        // Fallback to memory-only storage
+        window.__authToken = token;
+    }
 }
 
 /**
- * Retrieve authentication token from memory
+ * Retrieve authentication token from localStorage
  * @returns {string|null} - JWT token or null
  */
 function getAuthToken() {
-    return window.__authToken || null;
+    try {
+        // Try to get from localStorage first
+        const token = localStorage.getItem(AUTH_TOKEN_KEY);
+        if (token) {
+            window.__authToken = token;
+            return token;
+        }
+        // Fallback to memory
+        return window.__authToken || null;
+    } catch (error) {
+        console.error('❌ Failed to read token from localStorage:', error);
+        // Fallback to memory
+        return window.__authToken || null;
+    }
 }
 
 /**
  * Clear authentication token (logout)
  */
 function clearAuthToken() {
+    try {
+        localStorage.removeItem(AUTH_TOKEN_KEY);
+        console.log('🔓 Token removed from localStorage');
+    } catch (error) {
+        console.error('❌ Failed to remove token from localStorage:', error);
+    }
     window.__authToken = null;
 }
 
@@ -63,18 +118,37 @@ function isAuthenticated() {
     return !!getAuthToken();
 }
 
+// ============ INITIALIZE TOKEN ON LOAD ============
+
+/**
+ * Load token from localStorage on initialization
+ */
+(function initializeAuth() {
+    try {
+        const savedToken = localStorage.getItem(AUTH_TOKEN_KEY);
+        if (savedToken) {
+            window.__authToken = savedToken;
+            console.log('🔐 Token loaded from localStorage');
+        } else {
+            console.log('🔓 No saved token found');
+        }
+    } catch (error) {
+        console.error('❌ Failed to initialize auth:', error);
+    }
+})();
+
 // ============ HTTP REQUEST WRAPPER ============
 
 /**
- * Generic HTTP request wrapper with error handling
+ * Generic HTTP request wrapper with error handling, timeout, and deduplication
  * @param {string} endpoint - API endpoint (e.g., '/api/content/members')
  * @param {Object} options - Fetch options (method, body, headers, etc.)
- * @param {number} retryCount - Current retry attempt (for internal use)
  * @returns {Promise<Object>} - { success: boolean, data: any, error: string }
  */
-async function request(endpoint, options = {}, retryCount = 0) {
+async function request(endpoint, options = {}) {
     const url = `${API_BASE_URL}${endpoint}`;
     const token = getAuthToken();
+    const startTime = Date.now();
     
     const defaultHeaders = {
         'Content-Type': 'application/json',
@@ -93,70 +167,102 @@ async function request(endpoint, options = {}, retryCount = 0) {
         },
     };
     
-    try {
-        const response = await fetch(url, config);
-        
-        // Handle non-JSON responses (e.g., network errors)
-        const contentType = response.headers.get('content-type');
-        let data;
-        
-        if (contentType && contentType.includes('application/json')) {
-            data = await response.json();
-        } else {
-            data = { message: await response.text() };
-        }
-        
-        // Handle authentication errors (token expired or invalid)
-        if (response.status === 401 || response.status === 403) {
-            clearAuthToken();
-            console.warn('Authentication failed. Token cleared.');
+    // Check for duplicate in-flight requests
+    const requestKey = getRequestKey(url, config);
+    if (activeRequests.has(requestKey)) {
+        console.log(`♻️ Reusing existing request: ${endpoint}`);
+        return activeRequests.get(requestKey);
+    }
+    
+    // Create new request promise
+    const requestPromise = (async () => {
+        try {
+            // Create timeout promise
+            const timeoutPromise = new Promise((_, reject) => {
+                setTimeout(() => reject(new Error('Request timeout')), REQUEST_TIMEOUT);
+            });
             
-            // Redirect to login if on admin page
-            if (window.location.pathname.includes('admin')) {
-                setTimeout(() => {
-                    window.location.href = '/admin.html';
-                }, 1000);
+            // Race between fetch and timeout
+            const response = await Promise.race([
+                fetch(url, config),
+                timeoutPromise
+            ]);
+            
+            const duration = Date.now() - startTime;
+            
+            // Handle non-JSON responses (e.g., network errors)
+            const contentType = response.headers.get('content-type');
+            let data;
+            
+            if (contentType && contentType.includes('application/json')) {
+                data = await response.json();
+            } else {
+                data = { message: await response.text() };
             }
             
+            // Log response details
+            console.log(`📊 API Response [${endpoint}]: Status ${response.status} (${duration}ms)`);
+            
+            // Handle authentication errors (token expired or invalid)
+            if (response.status === 401 || response.status === 403) {
+                clearAuthToken();
+                console.warn('🔐 Authentication failed. Token cleared.');
+                
+                // Redirect to login if on admin page
+                if (window.location.pathname.includes('admin')) {
+                    setTimeout(() => {
+                        window.location.href = '/admin.html';
+                    }, 1000);
+                }
+                
+                return {
+                    success: false,
+                    data: null,
+                    error: data.error || 'Authentication required. Please login again.'
+                };
+            }
+            
+            // Handle other HTTP errors
+            if (!response.ok) {
+                console.error(`❌ API Error [${endpoint}]: ${data.error || data.message || 'Unknown error'}`);
+                return {
+                    success: false,
+                    data: null,
+                    error: data.error || data.message || `Request failed with status ${response.status}`
+                };
+            }
+            
+            // Success response
+            console.log(`✅ API Success [${endpoint}]: ${duration}ms`);
+            return {
+                success: true,
+                data: data.data || data,
+                error: null
+            };
+            
+        } catch (error) {
+            const duration = Date.now() - startTime;
+            console.error(`❌ API Error [${endpoint}]: ${error.message}`);
+            console.error(`⏱️ Duration: ${duration}ms`);
+            
+            // Return error immediately (no retries)
             return {
                 success: false,
                 data: null,
-                error: data.error || 'Authentication required. Please login again.'
+                error: error.message === 'Request timeout' 
+                    ? 'Request timeout (5s). Please check your connection.'
+                    : error.message || 'Network error. Please check your connection.'
             };
+        } finally {
+            // Remove from active requests after completion
+            activeRequests.delete(requestKey);
         }
-        
-        // Handle other HTTP errors
-        if (!response.ok) {
-            return {
-                success: false,
-                data: null,
-                error: data.error || data.message || `Request failed with status ${response.status}`
-            };
-        }
-        
-        // Success response
-        return {
-            success: true,
-            data: data.data || data,
-            error: null
-        };
-        
-    } catch (error) {
-        console.error(`API Request Error [${endpoint}]:`, error);
-        
-        // Retry logic for network errors
-        if (retryCount < MAX_RETRIES && error.name === 'TypeError') {
-            console.log(`Retrying request (${retryCount + 1}/${MAX_RETRIES})...`);
-            await new Promise(resolve => setTimeout(resolve, RETRY_DELAY * (retryCount + 1)));
-            return request(endpoint, options, retryCount + 1);
-        }
-        
-        return {
-            success: false,
-            data: null,
-            error: error.message || 'Network error. Please check your connection.'
-        };
-    }
+    })();
+    
+    // Store in active requests
+    activeRequests.set(requestKey, requestPromise);
+    
+    return requestPromise;
 }
 
 // ============ PUBLIC CONTENT APIs ============
@@ -242,11 +348,22 @@ async function getGallery(filters = {}) {
 
 /**
  * Alias for getGallery() - for compatibility with load-config.js
+ * FIXED: Now properly calls getGallery() with filters and handles response
  * @param {Object} filters - { category, date_from, date_to }
  * @returns {Promise<Object>} - { success, data: [gallery items], error }
  */
 async function getGalleryItems(filters = {}) {
-    return getGallery(filters);
+    try {
+        const result = await getGallery(filters);
+        return result;
+    } catch (error) {
+        console.error('❌ getGalleryItems error:', error);
+        return {
+            success: false,
+            data: null,
+            error: error.message || 'Failed to fetch gallery items'
+        };
+    }
 }
 
 /**
@@ -296,9 +413,10 @@ async function login(username, password) {
         body: JSON.stringify({ username, password })
     });
     
-    // Store token on successful login
+    // Store token on successful login (now persists in localStorage)
     if (result.success && result.data && result.data.token) {
         setAuthToken(result.data.token);
+        console.log('✅ Login successful - token saved');
     }
     
     return result;
@@ -633,7 +751,7 @@ window.apiClient = {
     isAuthenticated,
     
     // Public Content APIs
-    getConfig,                    // FIXED: This is what storage.js expects
+    getConfig,
     getMembers,
     getMemberById,
     getEvents,
@@ -641,11 +759,11 @@ window.apiClient = {
     getProjects,
     getProjectById,
     getGallery,
-    getGalleryItems,             // ADDED: Alias for load-config.js compatibility
+    getGalleryItems,
     getGalleryItemById,
     getAnnouncements,
     getStatistics,
-    getAdmins,                   // ADDED: Missing function for fetching admins list
+    getAdmins,
     
     // Authentication APIs
     login,
@@ -653,7 +771,7 @@ window.apiClient = {
     verifyToken,
     
     // Admin APIs - Config
-    updateConfig,                // FIXED: Renamed from updateClubConfig to match storage.js
+    updateConfig,
     
     // Admin APIs - Members
     createMember,
@@ -694,14 +812,18 @@ window.apiClient = {
 };
 
 // Log initialization
-console.log('✅ API Client initialized (v1.1.0 - Fixed)');
+console.log('✅ API Client initialized (v1.3.0 - Persistent Auth)');
 console.log('📡 API Base URL:', API_BASE_URL);
-console.log('🔐 Authentication:', isAuthenticated() ? 'Active' : 'Not authenticated');
+console.log('🔐 Authentication:', isAuthenticated() ? 'Active (token loaded)' : 'Not authenticated');
+console.log('💾 Token Storage: localStorage');
 console.log('🔧 Fixed Issues:');
-console.log('   - Renamed updateClubConfig → updateConfig');
-console.log('   - Added getGalleryItems() alias');
-console.log('   - Added getAdmins() function');
-console.log('   - All endpoints verified against backend routes');
+console.log('   - Token now persists across page reloads');
+console.log('   - Automatic token loading on initialization');
+console.log('   - Removed retry logic (prevents infinite loops)');
+console.log('   - Added 5-second request timeout');
+console.log('   - Added request deduplication');
+console.log('   - Added detailed error logging');
+console.log('   - Fixed getGalleryItems() error handling');
 
 // Export for Node.js environment (if needed)
 if (typeof module !== 'undefined' && module.exports) {
