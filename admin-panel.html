@@ -1,0 +1,2713 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Admin Panel - GSTU Robotics & Research Club">
+    <title>Admin Panel - GSTU Robotics & Research Club</title>
+    
+    <!-- CSS Files - Load in correct order -->
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/common.css">
+    <link rel="stylesheet" href="css/components.css">
+    
+    <style>
+        /* Admin Panel Specific Styles */
+        .admin-container {
+            display: flex;
+            min-height: 100vh;
+            background: var(--background-color);
+        }
+
+        /* Sidebar Styles */
+        .admin-sidebar {
+            width: 260px;
+            background: var(--surface-color);
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            z-index: 1000;
+        }
+
+        .sidebar-header {
+            padding: var(--space-lg);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .admin-logo {
+            width: 50px;
+            height: 50px;
+            border-radius: var(--radius-md);
+            margin-bottom: var(--space-sm);
+        }
+
+        .admin-title {
+            font-size: var(--font-size-lg);
+            font-weight: var(--font-weight-bold);
+            color: var(--text-primary);
+            margin-bottom: var(--space-xs);
+        }
+
+        .admin-subtitle {
+            font-size: var(--font-size-sm);
+            color: var(--text-secondary);
+        }
+
+        .sidebar-nav {
+            padding: var(--space-md);
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: var(--space-sm) var(--space-md);
+            margin-bottom: var(--space-xs);
+            color: var(--text-secondary);
+            text-decoration: none;
+            border-radius: var(--radius-md);
+            transition: all 0.2s ease;
+            cursor: pointer;
+            font-size: var(--font-size-base);
+        }
+
+        .nav-item:hover {
+            background: var(--primary-color);
+            color: white;
+            transform: translateX(4px);
+        }
+
+        .nav-item.active {
+            background: var(--primary-color);
+            color: white;
+            font-weight: var(--font-weight-semibold);
+        }
+
+        .nav-item-icon {
+            margin-right: var(--space-sm);
+            font-size: var(--font-size-lg);
+        }
+
+        .logout-btn {
+            margin-top: var(--space-md);
+            background: var(--error-color);
+            color: white;
+        }
+
+        .logout-btn:hover {
+            background: var(--error-dark);
+            transform: translateX(4px);
+        }
+
+        /* Main Content Area */
+        .admin-main {
+            flex: 1;
+            margin-left: 260px;
+            padding: var(--space-xl);
+            transition: margin-left 0.3s ease;
+        }
+
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-xl);
+        }
+
+        .admin-header h1 {
+            font-size: var(--font-size-3xl);
+            font-weight: var(--font-weight-bold);
+            color: var(--text-primary);
+        }
+
+        .admin-user {
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+            padding: var(--space-sm) var(--space-md);
+            background: var(--surface-color);
+            border-radius: var(--radius-full);
+            border: 1px solid var(--border-color);
+        }
+
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: var(--font-weight-bold);
+        }
+
+        /* Mobile Toggle */
+        .mobile-sidebar-toggle {
+            display: none;
+            position: fixed;
+            bottom: var(--space-lg);
+            right: var(--space-lg);
+            width: 56px;
+            height: 56px;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            font-size: var(--font-size-xl);
+            cursor: pointer;
+            box-shadow: var(--shadow-xl);
+            z-index: 999;
+        }
+
+        /* Section Content */
+        .section-content {
+            display: none;
+        }
+
+        .section-content.active {
+            display: block;
+            animation: fadeInUp 0.4s ease;
+        }
+
+        /* Dashboard Stats */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: var(--space-lg);
+            margin-bottom: var(--space-xl);
+        }
+
+        .stat-card {
+            background: var(--surface-color);
+            padding: var(--space-lg);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-color);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .stat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-md);
+        }
+
+        .stat-icon {
+            font-size: var(--font-size-3xl);
+        }
+
+        .stat-number {
+            font-size: var(--font-size-4xl);
+            font-weight: var(--font-weight-bold);
+            color: var(--primary-color);
+            margin-bottom: var(--space-xs);
+        }
+
+        .stat-label {
+            font-size: var(--font-size-sm);
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Form Styles */
+        .admin-form {
+            background: var(--surface-color);
+            padding: var(--space-xl);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-color);
+            margin-bottom: var(--space-xl);
+        }
+
+        .form-group {
+            margin-bottom: var(--space-lg);
+        }
+
+        .form-label {
+            display: block;
+            font-weight: var(--font-weight-semibold);
+            color: var(--text-primary);
+            margin-bottom: var(--space-xs);
+        }
+
+        .form-input,
+        .form-select,
+        .form-textarea {
+            width: 100%;
+            padding: var(--space-sm) var(--space-md);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            background: var(--background-color);
+            color: var(--text-primary);
+            font-size: var(--font-size-base);
+            transition: border-color 0.2s ease;
+        }
+
+        .form-input:focus,
+        .form-select:focus,
+        .form-textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .form-textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: var(--space-md);
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .file-input-label {
+            display: inline-block;
+            padding: var(--space-sm) var(--space-md);
+            background: var(--primary-color);
+            color: white;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        .file-input-label:hover {
+            background: var(--primary-dark);
+        }
+
+        .file-input-wrapper input[type="file"] {
+            position: absolute;
+            left: -9999px;
+        }
+
+        .image-preview {
+            margin-top: var(--space-md);
+            max-width: 200px;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-color);
+        }
+
+        /* Table Styles */
+        .data-table-wrapper {
+            background: var(--surface-color);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+        }
+
+        .table-header {
+            padding: var(--space-lg);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .data-table th {
+            background: var(--background-color);
+            padding: var(--space-md);
+            text-align: left;
+            font-weight: var(--font-weight-semibold);
+            color: var(--text-primary);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .data-table td {
+            padding: var(--space-md);
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-secondary);
+        }
+
+        .data-table tr:hover {
+            background: var(--background-color);
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: var(--space-xs);
+        }
+
+        .btn-icon {
+            padding: var(--space-xs) var(--space-sm);
+            font-size: var(--font-size-sm);
+        }
+
+        .btn-edit {
+            background: var(--info-color);
+            color: white;
+        }
+
+        .btn-delete {
+            background: var(--error-color);
+            color: white;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: var(--radius-full);
+            font-size: var(--font-size-xs);
+            font-weight: var(--font-weight-semibold);
+        }
+
+        .badge-success {
+            background: var(--success-light);
+            color: var(--success-dark);
+        }
+
+        .badge-warning {
+            background: var(--warning-light);
+            color: var(--warning-dark);
+        }
+
+        .badge-info {
+            background: var(--info-light);
+            color: var(--info-dark);
+        }
+
+        /* Responsive */
+        @media (max-width: 1023px) {
+            .admin-sidebar {
+                transform: translateX(-100%);
+            }
+
+            .admin-sidebar.mobile-open {
+                transform: translateX(0);
+            }
+
+            .admin-main {
+                margin-left: 0;
+            }
+
+            .mobile-sidebar-toggle {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .admin-header {
+                flex-direction: column;
+                gap: var(--space-md);
+                align-items: flex-start;
+            }
+        }
+
+        @media (max-width: 767px) {
+            .admin-main {
+                padding: var(--space-md);
+            }
+
+            .admin-form {
+                padding: var(--space-md);
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .data-table-wrapper {
+                overflow-x: auto;
+            }
+
+            .data-table {
+                min-width: 600px;
+            }
+        }
+
+        /* Toast Notification */
+        .toast {
+            position: fixed;
+            top: var(--space-lg);
+            right: var(--space-lg);
+            padding: var(--space-md) var(--space-lg);
+            background: var(--surface-color);
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-xl);
+            border-left: 4px solid var(--success-color);
+            display: none;
+            align-items: center;
+            gap: var(--space-sm);
+            z-index: 10000;
+            animation: slideInRight 0.3s ease;
+        }
+
+        .toast.show {
+            display: flex;
+        }
+
+        .toast.error {
+            border-left-color: var(--error-color);
+        }
+
+        .toast-message {
+            color: var(--text-primary);
+        }
+
+        @keyframes slideInRight {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Tags Input */
+        .tags-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--space-xs);
+            padding: var(--space-sm);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            background: var(--background-color);
+            min-height: 42px;
+        }
+
+        .tag {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-xs);
+            padding: 4px 12px;
+            background: var(--primary-color);
+            color: white;
+            border-radius: var(--radius-full);
+            font-size: var(--font-size-sm);
+        }
+
+        .tag-remove {
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .tags-input {
+            flex: 1;
+            min-width: 120px;
+            border: none;
+            background: transparent;
+            outline: none;
+            color: var(--text-primary);
+        }
+    </style>
+</head>
+<body>
+    <!-- Toast Notification -->
+    <div class="toast" id="toast">
+        <span class="toast-icon" id="toastIcon">✓</span>
+        <span class="toast-message" id="toastMessage"></span>
+    </div>
+
+    <div class="admin-container">
+        <!-- Sidebar -->
+        <aside class="admin-sidebar" id="adminSidebar">
+            <div class="sidebar-header">
+                <img src="assets/default-logo.jpg" alt="GRRC Logo" class="admin-logo" id="sidebarLogo">
+                <div class="admin-title" id="sidebarTitle">Admin Panel</div>
+                <div class="admin-subtitle">GSTU Robotics Club</div>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <a class="nav-item active" data-section="dashboard">
+                    <span class="nav-item-icon">📊</span>
+                    Dashboard
+                </a>
+                <a class="nav-item" data-section="club-config">
+                    <span class="nav-item-icon">⚙️</span>
+                    Club Config
+                </a>
+                <a class="nav-item" data-section="members">
+                    <span class="nav-item-icon">👥</span>
+                    Members
+                </a>
+                <a class="nav-item" data-section="events">
+                    <span class="nav-item-icon">📅</span>
+                    Events
+                </a>
+                <a class="nav-item" data-section="projects">
+                    <span class="nav-item-icon">🚀</span>
+                    Projects
+                </a>
+                <a class="nav-item" data-section="gallery">
+                    <span class="nav-item-icon">🖼️</span>
+                    Gallery
+                </a>
+                <a class="nav-item" data-section="announcements">
+                    <span class="nav-item-icon">📢</span>
+                    Announcements
+                </a>
+                <a class="nav-item" data-section="admins">
+                    <span class="nav-item-icon">🔐</span>
+                    Admins
+                </a>
+                <a class="nav-item logout-btn" id="logoutBtn">
+                    <span class="nav-item-icon">🚪</span>
+                    Logout
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="admin-main">
+            <!-- Header -->
+            <div class="admin-header">
+                <h1 id="sectionTitle">Dashboard</h1>
+                <div class="admin-user">
+                    <div class="user-avatar" id="userAvatar">A</div>
+                    <div>
+                        <div style="font-weight: 600; color: var(--text-primary);" id="userName">Admin</div>
+                        <div style="font-size: 0.875rem; color: var(--text-secondary);" id="userRole">Super Admin</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dashboard Section -->
+            <div class="section-content active" id="dashboardSection">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div class="stat-icon">👥</div>
+                        </div>
+                        <div class="stat-number" id="statMembers">0</div>
+                        <div class="stat-label">Total Members</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div class="stat-icon">📅</div>
+                        </div>
+                        <div class="stat-number" id="statEvents">0</div>
+                        <div class="stat-label">Total Events</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div class="stat-icon">🚀</div>
+                        </div>
+                        <div class="stat-number" id="statProjects">0</div>
+                        <div class="stat-label">Total Projects</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div class="stat-icon">🖼️</div>
+                        </div>
+                        <div class="stat-number" id="statGallery">0</div>
+                        <div class="stat-label">Gallery Photos</div>
+                    </div>
+                </div>
+
+                <div class="admin-form">
+                    <h2 style="margin-bottom: var(--space-lg);">Quick Overview</h2>
+                    <p style="color: var(--text-secondary); margin-bottom: var(--space-md);">
+                        Welcome to the GSTU Robotics & Research Club Admin Panel. Use the sidebar navigation to manage different sections of the website.
+                    </p>
+                    <div style="display: flex; gap: var(--space-md); flex-wrap: wrap;">
+                        <button class="btn btn-primary" onclick="navigateToSection('members')">Manage Members</button>
+                        <button class="btn btn-secondary" onclick="navigateToSection('events')">Manage Events</button>
+                        <button class="btn btn-outline" onclick="navigateToSection('projects')">Manage Projects</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Club Config Section -->
+            <div class="section-content" id="clubConfigSection">
+                <form class="admin-form" id="clubConfigForm">
+                    <h2 style="margin-bottom: var(--space-lg);">Club Configuration</h2>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Club Logo</label>
+                        <div class="file-input-wrapper">
+                            <label for="logoInput" class="file-input-label">📷 Choose Logo Image</label>
+                            <input type="file" id="logoInput" accept="image/*">
+                        </div>
+                        <input type="url" class="form-input" id="logoUrl" placeholder="Or enter image URL" style="margin-top: var(--space-sm);">
+                        <img id="logoPreview" class="image-preview" style="display: none;">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Club Name</label>
+                        <input type="text" class="form-input" id="clubName" placeholder="GSTU Robotics & Research Club" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Club Motto</label>
+                        <input type="text" class="form-input" id="clubMotto" placeholder="A Hub of Robothinkers" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Club Description</label>
+                        <textarea class="form-textarea" id="clubDescription" placeholder="Enter club description..." required></textarea>
+                    </div>
+
+                    <h3 style="margin: var(--space-xl) 0 var(--space-md);">Social Links</h3>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Facebook</label>
+                            <input type="url" class="form-input" id="socialFacebook" placeholder="https://facebook.com/...">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Twitter</label>
+                            <input type="url" class="form-input" id="socialTwitter" placeholder="https://twitter.com/...">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Instagram</label>
+                            <input type="url" class="form-input" id="socialInstagram" placeholder="https://instagram.com/...">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">LinkedIn</label>
+                            <input type="url" class="form-input" id="socialLinkedin" placeholder="https://linkedin.com/...">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">YouTube</label>
+                            <input type="url" class="form-input" id="socialYoutube" placeholder="https://youtube.com/...">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">GitHub</label>
+                            <input type="url" class="form-input" id="socialGithub" placeholder="https://github.com/...">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Email</label>
+                        <input type="email" class="form-input" id="socialEmail" placeholder="contact@grrc.edu.bd">
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">💾 Save Configuration</button>
+                </form>
+            </div>
+
+            <!-- Members Section -->
+            <div class="section-content" id="membersSection">
+                <div class="admin-form">
+                    <h2 style="margin-bottom: var(--space-lg);">Add/Edit Member</h2>
+                    <form id="memberForm">
+                        <input type="hidden" id="memberId">
+                        
+                        <div class="form-group">
+                            <label class="form-label">Photo</label>
+                            <div class="file-input-wrapper">
+                                <label for="memberPhoto" class="file-input-label">📷 Choose Photo</label>
+                                <input type="file" id="memberPhoto" accept="image/*">
+                            </div>
+                            <input type="url" class="form-input" id="memberPhotoUrl" placeholder="Or enter image URL" style="margin-top: var(--space-sm);">
+                            <img id="memberPhotoPreview" class="image-preview" style="display: none;">
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Full Name *</label>
+                                <input type="text" class="form-input" id="memberName" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Email *</label>
+                                <input type="email" class="form-input" id="memberEmail" required>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Department *</label>
+                                <select class="form-select" id="memberDepartment" required>
+                                    <option value="">Select Department</option>
+                                    <option value="Computer Science & Engineering">Computer Science & Engineering</option>
+                                    <option value="Electrical & Electronic Engineering">Electrical & Electronic Engineering</option>
+                                    <option value="Electronics & Communication Engineering">Electronics & Communication Engineering</option>
+                                    <option value="Mechanical Engineering">Mechanical Engineering</option>
+                                    <option value="Civil Engineering">Civil Engineering</option>
+                                    <option value="Physics">Physics</option>
+                                    <option value="Chemistry">Chemistry</option>
+                                    <option value="Mathematics">Mathematics</option>
+                                    <option value="Statistics">Statistics</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Year *</label>
+                                <select class="form-select" id="memberYear" required>
+                                    <option value="">Select Year</option>
+                                    <option value="1st">1st Year</option>
+                                    <option value="2nd">2nd Year</option>
+                                    <option value="3rd">3rd Year</option>
+                                    <option value="4th">4th Year</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Role *</label>
+                                <select class="form-select" id="memberRole" required>
+                                    <option value="">Select Role</option>
+                                    <option value="Executive Member">Executive Member</option>
+                                    <option value="General Member">General Member</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Phone</label>
+                                <input type="tel" class="form-input" id="memberPhone" placeholder="+8801234567890">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Bio</label>
+                            <textarea class="form-textarea" id="memberBio" placeholder="Brief bio..."></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Skills (Press Enter after each skill)</label>
+                            <div class="tags-container" id="skillsContainer">
+                                <input type="text" class="tags-input" id="skillsInput" placeholder="Type a skill and press Enter">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Joined Date</label>
+                            <input type="date" class="form-input" id="memberJoinedDate">
+                        </div>
+
+                        <div style="display: flex; gap: var(--space-md);">
+                            <button type="submit" class="btn btn-primary">💾 Save Member</button>
+                            <button type="button" class="btn btn-secondary" onclick="resetMemberForm()">🔄 Reset Form</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="data-table-wrapper">
+                    <div class="table-header">
+                        <h3>All Members</h3>
+                        <input type="text" class="form-input" id="memberSearch" placeholder="🔍 Search members..." style="max-width: 300px;">
+                    </div>
+                    <div style="overflow-x: auto;">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Department</th>
+                                    <th>Year</th>
+                                    <th>Role</th>
+                                    <th>Email</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="membersTableBody">
+                                <tr>
+                                    <td colspan="6" style="text-align: center; padding: var(--space-xl);">No members added yet</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Events Section -->
+            <div class="section-content" id="eventsSection">
+                <div class="admin-form">
+                    <h2 style="margin-bottom: var(--space-lg);">Add/Edit Event</h2>
+                    <form id="eventForm">
+                        <input type="hidden" id="eventId">
+                        
+                        <div class="form-group">
+                            <label class="form-label">Event Image</label>
+                            <div class="file-input-wrapper">
+                                <label for="eventImage" class="file-input-label">📷 Choose Image</label>
+                                <input type="file" id="eventImage" accept="image/*">
+                            </div>
+                            <input type="url" class="form-input" id="eventImageUrl" placeholder="Or enter image URL" style="margin-top: var(--space-sm);">
+                            <img id="eventImagePreview" class="image-preview" style="display: none;">
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Event Title *</label>
+                                <input type="text" class="form-input" id="eventTitle" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Category</label>
+                                <select class="form-select" id="eventCategory">
+                                    <option value="Workshop">Workshop</option>
+                                    <option value="Competition">Competition</option>
+                                    <option value="Seminar">Seminar</option>
+                                    <option value="Meetup">Meetup</option>
+                                    <option value="General">General</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Description *</label>
+                            <textarea class="form-textarea" id="eventDescription" required></textarea>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Date *</label>
+                                <input type="date" class="form-input" id="eventDate" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Time *</label>
+                                <input type="text" class="form-input" id="eventTime" placeholder="2:00 PM - 5:00 PM" required>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Venue *</label>
+                                <input type="text" class="form-input" id="eventVenue" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Status</label>
+                                <select class="form-select" id="eventStatus">
+                                    <option value="upcoming">Upcoming</option>
+                                    <option value="ongoing">Ongoing</option>
+                                    <option value="completed">Completed</option>
+                                    <option value="cancelled">Cancelled</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Registration Link</label>
+                            <input type="url" class="form-input" id="eventRegistrationLink" placeholder="https://forms.google.com/...">
+                        </div>
+
+                        <div style="display: flex; gap: var(--space-md);">
+                            <button type="submit" class="btn btn-primary">💾 Save Event</button>
+                            <button type="button" class="btn btn-secondary" onclick="resetEventForm()">🔄 Reset Form</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="data-table-wrapper">
+                    <div class="table-header">
+                        <h3>All Events</h3>
+                        <input type="text" class="form-input" id="eventSearch" placeholder="🔍 Search events..." style="max-width: 300px;">
+                    </div>
+                    <div style="overflow-x: auto;">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Title</th>
+                                    <th>Date</th>
+                                    <th>Venue</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="eventsTableBody">
+                                <tr>
+                                    <td colspan="5" style="text-align: center; padding: var(--space-xl);">No events added yet</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Projects Section -->
+            <div class="section-content" id="projectsSection">
+                <div class="admin-form">
+                    <h2 style="margin-bottom: var(--space-lg);">Add/Edit Project</h2>
+                    <form id="projectForm">
+                        <input type="hidden" id="projectId">
+                        
+                        <div class="form-group">
+                            <label class="form-label">Project Image</label>
+                            <div class="file-input-wrapper">
+                                <label for="projectImage" class="file-input-label">📷 Choose Image</label>
+                                <input type="file" id="projectImage" accept="image/*">
+                            </div>
+                            <input type="url" class="form-input" id="projectImageUrl" placeholder="Or enter image URL" style="margin-top: var(--space-sm);">
+                            <img id="projectImagePreview" class="image-preview" style="display: none;">
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Project Title *</label>
+                                <input type="text" class="form-input" id="projectTitle" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Category</label>
+                                <select class="form-select" id="projectCategory">
+                                    <option value="Robotics">Robotics</option>
+                                    <option value="IoT">IoT</option>
+                                    <option value="AI/ML">AI/ML</option>
+                                    <option value="Web Development">Web Development</option>
+                                    <option value="Mobile App">Mobile App</option>
+                                    <option value="Research">Research</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Description *</label>
+                            <textarea class="form-textarea" id="projectDescription" required></textarea>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Status</label>
+                                <select class="form-select" id="projectStatus">
+                                    <option value="completed">Completed</option>
+                                    <option value="ongoing">Ongoing</option>
+                                    <option value="planned">Planned</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Completion Date</label>
+                                <input type="date" class="form-input" id="projectCompletionDate">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Technologies (Press Enter after each)</label>
+                            <div class="tags-container" id="technologiesContainer">
+                                <input type="text" class="tags-input" id="technologiesInput" placeholder="Type a technology and press Enter">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Team Members (One per line)</label>
+                            <textarea class="form-textarea" id="projectTeamMembers" placeholder="John Doe - Lead Developer&#10;Jane Smith - Designer" style="min-height: 80px;"></textarea>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">GitHub Link</label>
+                                <input type="url" class="form-input" id="projectGithubLink" placeholder="https://github.com/...">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Live Demo Link</label>
+                                <input type="url" class="form-input" id="projectLiveLink" placeholder="https://demo.example.com">
+                            </div>
+                        </div>
+
+                        <div style="display: flex; gap: var(--space-md);">
+                            <button type="submit" class="btn btn-primary">💾 Save Project</button>
+                            <button type="button" class="btn btn-secondary" onclick="resetProjectForm()">🔄 Reset Form</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="data-table-wrapper">
+                    <div class="table-header">
+                        <h3>All Projects</h3>
+                        <input type="text" class="form-input" id="projectSearch" placeholder="🔍 Search projects..." style="max-width: 300px;">
+                    </div>
+                    <div style="overflow-x: auto;">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Title</th>
+                                    <th>Category</th>
+                                    <th>Status</th>
+                                    <th>Technologies</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="projectsTableBody">
+                                <tr>
+                                    <td colspan="5" style="text-align: center; padding: var(--space-xl);">No projects added yet</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Gallery Section -->
+            <div class="section-content" id="gallerySection">
+                <div class="admin-form">
+                    <h2 style="margin-bottom: var(--space-lg);">Add Gallery Item</h2>
+                    <form id="galleryForm">
+                        <input type="hidden" id="galleryId">
+                        
+                        <div class="form-group">
+                            <label class="form-label">Image *</label>
+                            <div class="file-input-wrapper">
+                                <label for="galleryImage" class="file-input-label">📷 Choose Image</label>
+                                <input type="file" id="galleryImage" accept="image/*" required>
+                            </div>
+                            <input type="url" class="form-input" id="galleryImageUrl" placeholder="Or enter image URL" style="margin-top: var(--space-sm);">
+                            <img id="galleryImagePreview" class="image-preview" style="display: none;">
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Title *</label>
+                                <input type="text" class="form-input" id="galleryTitle" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Category *</label>
+                                <select class="form-select" id="galleryCategory" required>
+                                    <option value="Events">Events</option>
+                                    <option value="Workshops">Workshops</option>
+                                    <option value="Projects">Projects</option>
+                                    <option value="Team">Team</option>
+                                    <option value="Competitions">Competitions</option>
+                                    <option value="General">General</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Description</label>
+                            <textarea class="form-textarea" id="galleryDescription" style="min-height: 80px;"></textarea>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Date *</label>
+                                <input type="date" class="form-input" id="galleryDate" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Photographer</label>
+                                <input type="text" class="form-input" id="galleryPhotographer" placeholder="Optional">
+                            </div>
+                        </div>
+
+                        <div style="display: flex; gap: var(--space-md);">
+                            <button type="submit" class="btn btn-primary">💾 Add to Gallery</button>
+                            <button type="button" class="btn btn-secondary" onclick="resetGalleryForm()">🔄 Reset Form</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="data-table-wrapper">
+                    <div class="table-header">
+                        <h3>Gallery Items</h3>
+                        <input type="text" class="form-input" id="gallerySearch" placeholder="🔍 Search gallery..." style="max-width: 300px;">
+                    </div>
+                    <div style="overflow-x: auto;">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Preview</th>
+                                    <th>Title</th>
+                                    <th>Category</th>
+                                    <th>Date</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="galleryTableBody">
+                                <tr>
+                                    <td colspan="5" style="text-align: center; padding: var(--space-xl);">No gallery items yet</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Announcements Section -->
+            <div class="section-content" id="announcementsSection">
+                <div class="admin-form">
+                    <h2 style="margin-bottom: var(--space-lg);">Add/Edit Announcement</h2>
+                    <form id="announcementForm">
+                        <input type="hidden" id="announcementId">
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Title *</label>
+                                <input type="text" class="form-input" id="announcementTitle" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Priority</label>
+                                <select class="form-select" id="announcementPriority">
+                                    <option value="normal">Normal</option>
+                                    <option value="high">High</option>
+                                    <option value="low">Low</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Content *</label>
+                            <textarea class="form-textarea" id="announcementContent" required style="min-height: 150px;"></textarea>
+                        </div>
+
+                        <div style="display: flex; gap: var(--space-md);">
+                            <button type="submit" class="btn btn-primary">💾 Save Announcement</button>
+                            <button type="button" class="btn btn-secondary" onclick="resetAnnouncementForm()">🔄 Reset Form</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="data-table-wrapper">
+                    <div class="table-header">
+                        <h3>All Announcements</h3>
+                    </div>
+                    <div style="overflow-x: auto;">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Title</th>
+                                    <th>Priority</th>
+                                    <th>Date</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="announcementsTableBody">
+                                <tr>
+                                    <td colspan="4" style="text-align: center; padding: var(--space-xl);">No announcements yet</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Admins Section -->
+            <div class="section-content" id="adminsSection">
+                <div class="admin-form">
+                    <h2 style="margin-bottom: var(--space-lg);">Add New Admin</h2>
+                    <form id="adminForm">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Username *</label>
+                                <input type="text" class="form-input" id="adminUsername" required minlength="3">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Role</label>
+                                <input type="text" class="form-input" id="adminRole" value="Admin" required>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Password * (minimum 6 characters)</label>
+                            <input type="password" class="form-input" id="adminPassword" required minlength="6">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Confirm Password *</label>
+                            <input type="password" class="form-input" id="adminPasswordConfirm" required minlength="6">
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">➕ Add Admin</button>
+                    </form>
+                </div>
+
+                <div class="data-table-wrapper">
+                    <div class="table-header">
+                        <h3>All Admins</h3>
+                    </div>
+                    <div style="overflow-x: auto;">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Username</th>
+                                    <th>Role</th>
+                                    <th>Created At</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="adminsTableBody">
+                                <tr>
+                                    <td colspan="4" style="text-align: center; padding: var(--space-xl);">Loading...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Mobile Sidebar Toggle -->
+        <button class="mobile-sidebar-toggle" id="mobileSidebarToggle">☰</button>
+    </div>
+
+    <!-- JS Files - Load in correct order -->
+    <script src="js/api-client.js"></script> <!-- NEW - API client -->
+    <script src="js/config.js"></script>
+    <script src="js/storage.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/theme.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/load-config.js"></script>
+
+    <script>
+        // Authentication Check
+        if (!isAuthenticated()) {
+            window.location.href = 'admin.html';
+        }
+
+        // Global variables
+        let currentSection = 'dashboard';
+        let memberSkills = [];
+        let projectTechnologies = [];
+        let currentEditMemberId = null;
+        let currentEditEventId = null;
+        let currentEditProjectId = null;
+        let currentEditAnnouncementId = null;
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            initTheme();
+            loadAdminInfo();
+            loadClubConfigToSidebar();
+            loadDashboardStats();
+            setupNavigation();
+            setupLogoutButton();
+            setupForms();
+            setupMobileSidebar();
+            loadAllData();
+        });
+
+        // Load admin info
+        function loadAdminInfo() {
+            const admin = getCurrentAdmin();
+            if (admin) {
+                document.getElementById('userName').textContent = admin.username;
+                document.getElementById('userRole').textContent = admin.role || 'Admin';
+                document.getElementById('userAvatar').textContent = admin.username.charAt(0).toUpperCase();
+            }
+        }
+
+        /* MODIFIED - API integration for loading club config to sidebar */
+        async function loadClubConfigToSidebar() {
+            try {
+                // NEW - Try to load from API first
+                const result = await getClubConfig();
+                if (result.success && result.data) {
+                    const config = result.data;
+                    const logo = document.getElementById('sidebarLogo');
+                    const subtitle = document.querySelector('.admin-subtitle');
+                    
+                    if (logo && config.logo) {
+                        logo.src = config.logo;
+                        logo.onerror = function() {
+                            this.src = 'assets/default-logo.jpg';
+                        };
+                    }
+                    
+                    if (subtitle && config.name) {
+                        subtitle.textContent = config.name;
+                    }
+                    return;
+                }
+
+                // EXISTING - Fallback to localStorage
+                const config = JSON.parse(localStorage.getItem('clubConfig')) || {};
+                const logo = document.getElementById('sidebarLogo');
+                const subtitle = document.querySelector('.admin-subtitle');
+                
+                if (logo && config.logo) {
+                    logo.src = config.logo;
+                    logo.onerror = function() {
+                        this.src = 'assets/default-logo.jpg';
+                    };
+                }
+                
+                if (subtitle && config.name) {
+                    subtitle.textContent = config.name;
+                }
+            } catch (error) {
+                console.error('Error loading sidebar config:', error);
+            }
+        }
+
+        /* MODIFIED - API integration for loading dashboard stats */
+        async function loadDashboardStats() {
+            try {
+                // NEW - Load from API
+                const [membersResult, eventsResult, projectsResult, galleryResult] = await Promise.all([
+                    getMembers(),
+                    getEvents(),
+                    getProjects(),
+                    getGallery()
+                ]);
+
+                if (membersResult.success && membersResult.data) {
+                    document.getElementById('statMembers').textContent = membersResult.data.length;
+                } else {
+                    const members = JSON.parse(localStorage.getItem('members')) || [];
+                    document.getElementById('statMembers').textContent = members.length;
+                }
+
+                if (eventsResult.success && eventsResult.data) {
+                    document.getElementById('statEvents').textContent = eventsResult.data.length;
+                } else {
+                    const events = JSON.parse(localStorage.getItem('events')) || [];
+                    document.getElementById('statEvents').textContent = events.length;
+                }
+
+                if (projectsResult.success && projectsResult.data) {
+                    document.getElementById('statProjects').textContent = projectsResult.data.length;
+                } else {
+                    const projects = JSON.parse(localStorage.getItem('projects')) || [];
+                    document.getElementById('statProjects').textContent = projects.length;
+                }
+
+                if (galleryResult.success && galleryResult.data) {
+                    document.getElementById('statGallery').textContent = galleryResult.data.length;
+                } else {
+                    const gallery = JSON.parse(localStorage.getItem('gallery')) || [];
+                    document.getElementById('statGallery').textContent = gallery.length;
+                }
+            } catch (error) {
+                console.error('Error loading stats:', error);
+                // EXISTING - Fallback
+                const members = JSON.parse(localStorage.getItem('members')) || [];
+                const events = JSON.parse(localStorage.getItem('events')) || [];
+                const projects = JSON.parse(localStorage.getItem('projects')) || [];
+                const gallery = JSON.parse(localStorage.getItem('gallery')) || [];
+
+                document.getElementById('statMembers').textContent = members.length;
+                document.getElementById('statEvents').textContent = events.length;
+                document.getElementById('statProjects').textContent = projects.length;
+                document.getElementById('statGallery').textContent = gallery.length;
+            }
+        }
+
+        // Setup navigation
+        function setupNavigation() {
+            const navItems = document.querySelectorAll('.nav-item[data-section]');
+            navItems.forEach(item => {
+                item.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const section = item.dataset.section;
+                    navigateToSection(section);
+                });
+            });
+
+            // Search
+            const searchInput = document.getElementById('memberSearch');
+            if (searchInput) {
+                searchInput.addEventListener('input', (e) => {
+                    loadMembers(e.target.value);
+                });
+            }
+        }
+
+        async function saveMember() {
+            try {
+                const photoFile = document.getElementById('memberPhoto').files[0];
+                const photoUrl = document.getElementById('memberPhotoUrl').value;
+                let photo = photoUrl;
+
+                if (photoFile) {
+                    photo = await imageToBase64(photoFile);
+                }
+
+                const email = document.getElementById('memberEmail').value;
+                if (!validateEmail(email)) {
+                    showToast('Invalid email format', 'error');
+                    return;
+                }
+
+                const phone = document.getElementById('memberPhone').value;
+                if (phone && !validatePhone(phone)) {
+                    showToast('Invalid phone format (use +880XXXXXXXXXX or 01XXXXXXXXX)', 'error');
+                    return;
+                }
+
+                const member = {
+                    id: currentEditMemberId || generateId(),
+                    name: document.getElementById('memberName').value,
+                    photo: photo,
+                    department: document.getElementById('memberDepartment').value,
+                    year: document.getElementById('memberYear').value,
+                    role: document.getElementById('memberRole').value,
+                    email: email,
+                    phone: phone,
+                    bio: document.getElementById('memberBio').value,
+                    skills: memberSkills,
+                    joinedDate: document.getElementById('memberJoinedDate').value
+                };
+
+                let members = JSON.parse(localStorage.getItem('members')) || [];
+                
+                if (currentEditMemberId) {
+                    const index = members.findIndex(m => m.id === currentEditMemberId);
+                    if (index !== -1) members[index] = member;
+                } else {
+                    members.push(member);
+                }
+
+                localStorage.setItem('members', JSON.stringify(members));
+                showToast(currentEditMemberId ? 'Member updated successfully!' : 'Member added successfully!', 'success');
+                resetMemberForm();
+                loadMembers();
+                loadDashboardStats();
+            } catch (error) {
+                console.error('Error saving member:', error);
+                showToast('Error saving member', 'error');
+            }
+        }
+
+        /* MODIFIED - API integration for loading members */
+        async function loadMembers(searchTerm = '') {
+            try {
+                // NEW - Load from API
+                const result = await getMembers();
+                if (result.success && result.data) {
+                    let members = result.data;
+                    
+                    if (searchTerm) {
+                        members = members.filter(m => 
+                            m.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                            m.department.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                            m.email.toLowerCase().includes(searchTerm.toLowerCase())
+                        );
+                    }
+
+                    const tbody = document.getElementById('membersTableBody');
+                    
+                    if (members.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: var(--space-xl);">No members found</td></tr>';
+                        return;
+                    }
+
+                    tbody.innerHTML = members.map(member => `
+                        <tr>
+                            <td style="font-weight: 600;">${member.name}</td>
+                            <td>${member.department}</td>
+                            <td>${member.year}</td>
+                            <td><span class="badge ${member.role === 'Executive Member' ? 'badge-success' : 'badge-info'}">${member.role}</span></td>
+                            <td>${member.email}</td>
+                            <td class="action-buttons">
+                                <button class="btn btn-icon btn-edit" onclick="editMember('${member.id}')">✏️</button>
+                                <button class="btn btn-icon btn-delete" onclick="deleteMember('${member.id}')">🗑️</button>
+                            </td>
+                        </tr>
+                    `).join('');
+                    return;
+                }
+
+                // EXISTING - Fallback to localStorage
+                let members = JSON.parse(localStorage.getItem('members')) || [];
+                
+                if (searchTerm) {
+                    members = members.filter(m => 
+                        m.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                        m.department.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                        m.email.toLowerCase().includes(searchTerm.toLowerCase())
+                    );
+                }
+
+                const tbody = document.getElementById('membersTableBody');
+                
+                if (members.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: var(--space-xl);">No members found</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = members.map(member => `
+                    <tr>
+                        <td style="font-weight: 600;">${member.name}</td>
+                        <td>${member.department}</td>
+                        <td>${member.year}</td>
+                        <td><span class="badge ${member.role === 'Executive Member' ? 'badge-success' : 'badge-info'}">${member.role}</span></td>
+                        <td>${member.email}</td>
+                        <td class="action-buttons">
+                            <button class="btn btn-icon btn-edit" onclick="editMember('${member.id}')">✏️</button>
+                            <button class="btn btn-icon btn-delete" onclick="deleteMember('${member.id}')">🗑️</button>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading members:', error);
+            }
+        }
+
+        function editMember(id) {
+            try {
+                const members = JSON.parse(localStorage.getItem('members')) || [];
+                const member = members.find(m => m.id === id);
+                
+                if (!member) return;
+
+                currentEditMemberId = id;
+                
+                document.getElementById('memberName').value = member.name || '';
+                document.getElementById('memberEmail').value = member.email || '';
+                document.getElementById('memberDepartment').value = member.department || '';
+                document.getElementById('memberYear').value = member.year || '';
+                document.getElementById('memberRole').value = member.role || '';
+                document.getElementById('memberPhone').value = member.phone || '';
+                document.getElementById('memberBio').value = member.bio || '';
+                document.getElementById('memberJoinedDate').value = member.joinedDate || '';
+
+                if (member.photo) {
+                    document.getElementById('memberPhotoUrl').value = member.photo;
+                    document.getElementById('memberPhotoPreview').src = member.photo;
+                    document.getElementById('memberPhotoPreview').style.display = 'block';
+                }
+
+                memberSkills = member.skills || [];
+                const skillsContainer = document.getElementById('skillsContainer');
+                const skillsInput = document.getElementById('skillsInput');
+                renderTags(skillsContainer, memberSkills, skillsInput, (index) => {
+                    memberSkills.splice(index, 1);
+                    renderTags(skillsContainer, memberSkills, skillsInput);
+                });
+
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                showToast('Editing member', 'info');
+            } catch (error) {
+                console.error('Error editing member:', error);
+            }
+        }
+
+        function deleteMember(id) {
+            if (!confirm('Are you sure you want to delete this member?')) return;
+
+            try {
+                let members = JSON.parse(localStorage.getItem('members')) || [];
+                members = members.filter(m => m.id !== id);
+                localStorage.setItem('members', JSON.stringify(members));
+                showToast('Member deleted successfully', 'success');
+                loadMembers();
+                loadDashboardStats();
+            } catch (error) {
+                console.error('Error deleting member:', error);
+                showToast('Error deleting member', 'error');
+            }
+        }
+
+        function resetMemberForm() {
+            document.getElementById('memberForm').reset();
+            currentEditMemberId = null;
+            memberSkills = [];
+            document.getElementById('memberPhotoPreview').style.display = 'none';
+            const skillsContainer = document.getElementById('skillsContainer');
+            const skillsInput = document.getElementById('skillsInput');
+            renderTags(skillsContainer, memberSkills, skillsInput, () => {});
+        }
+
+        // Event Form
+        function setupEventForm() {
+            const form = document.getElementById('eventForm');
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                await saveEvent();
+            });
+
+            const searchInput = document.getElementById('eventSearch');
+            if (searchInput) {
+                searchInput.addEventListener('input', (e) => {
+                    loadEvents(e.target.value);
+                });
+            }
+        }
+
+        async function saveEvent() {
+            try {
+                const imageFile = document.getElementById('eventImage').files[0];
+                const imageUrl = document.getElementById('eventImageUrl').value;
+                let image = imageUrl;
+
+                if (imageFile) {
+                    image = await imageToBase64(imageFile);
+                }
+
+                const event = {
+                    id: currentEditEventId || generateId(),
+                    title: document.getElementById('eventTitle').value,
+                    description: document.getElementById('eventDescription').value,
+                    category: document.getElementById('eventCategory').value,
+                    date: document.getElementById('eventDate').value,
+                    time: document.getElementById('eventTime').value,
+                    venue: document.getElementById('eventVenue').value,
+                    image: image,
+                    status: document.getElementById('eventStatus').value,
+                    registrationLink: document.getElementById('eventRegistrationLink').value
+                };
+
+                let events = JSON.parse(localStorage.getItem('events')) || [];
+                
+                if (currentEditEventId) {
+                    const index = events.findIndex(e => e.id === currentEditEventId);
+                    if (index !== -1) events[index] = event;
+                } else {
+                    events.push(event);
+                }
+
+                localStorage.setItem('events', JSON.stringify(events));
+                showToast(currentEditEventId ? 'Event updated successfully!' : 'Event added successfully!', 'success');
+                resetEventForm();
+                loadEvents();
+                loadDashboardStats();
+            } catch (error) {
+                console.error('Error saving event:', error);
+                showToast('Error saving event', 'error');
+            }
+        }
+
+        /* MODIFIED - API integration for loading events */
+        async function loadEvents(searchTerm = '') {
+            try {
+                // NEW - Load from API
+                const result = await getEvents();
+                if (result.success && result.data) {
+                    let events = result.data;
+                    
+                    if (searchTerm) {
+                        events = events.filter(e => 
+                            e.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                            e.venue.toLowerCase().includes(searchTerm.toLowerCase())
+                        );
+                    }
+
+                    const tbody = document.getElementById('eventsTableBody');
+                    
+                    if (events.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: var(--space-xl);">No events found</td></tr>';
+                        return;
+                    }
+
+                    tbody.innerHTML = events.map(event => `
+                        <tr>
+                            <td style="font-weight: 600;">${event.title}</td>
+                            <td>${formatDate(event.date)}</td>
+                            <td>${event.venue}</td>
+                            <td><span class="badge ${getStatusBadgeClass(event.status)}">${event.status}</span></td>
+                            <td class="action-buttons">
+                                <button class="btn btn-icon btn-edit" onclick="editEvent('${event.id}')">✏️</button>
+                                <button class="btn btn-icon btn-delete" onclick="deleteEvent('${event.id}')">🗑️</button>
+                            </td>
+                        </tr>
+                    `).join('');
+                    return;
+                }
+
+                // EXISTING - Fallback to localStorage
+                let events = JSON.parse(localStorage.getItem('events')) || [];
+                
+                if (searchTerm) {
+                    events = events.filter(e => 
+                        e.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                        e.venue.toLowerCase().includes(searchTerm.toLowerCase())
+                    );
+                }
+
+                const tbody = document.getElementById('eventsTableBody');
+                
+                if (events.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: var(--space-xl);">No events found</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = events.map(event => `
+                    <tr>
+                        <td style="font-weight: 600;">${event.title}</td>
+                        <td>${formatDate(event.date)}</td>
+                        <td>${event.venue}</td>
+                        <td><span class="badge ${getStatusBadgeClass(event.status)}">${event.status}</span></td>
+                        <td class="action-buttons">
+                            <button class="btn btn-icon btn-edit" onclick="editEvent('${event.id}')">✏️</button>
+                            <button class="btn btn-icon btn-delete" onclick="deleteEvent('${event.id}')">🗑️</button>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading events:', error);
+            }
+        }
+
+        function editEvent(id) {
+            try {
+                const events = JSON.parse(localStorage.getItem('events')) || [];
+                const event = events.find(e => e.id === id);
+                
+                if (!event) return;
+
+                currentEditEventId = id;
+                
+                document.getElementById('eventTitle').value = event.title || '';
+                document.getElementById('eventDescription').value = event.description || '';
+                document.getElementById('eventCategory').value = event.category || 'Workshop';
+                document.getElementById('eventDate').value = event.date || '';
+                document.getElementById('eventTime').value = event.time || '';
+                document.getElementById('eventVenue').value = event.venue || '';
+                document.getElementById('eventStatus').value = event.status || 'upcoming';
+                document.getElementById('eventRegistrationLink').value = event.registrationLink || '';
+
+                if (event.image) {
+                    document.getElementById('eventImageUrl').value = event.image;
+                    document.getElementById('eventImagePreview').src = event.image;
+                    document.getElementById('eventImagePreview').style.display = 'block';
+                }
+
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                showToast('Editing event', 'info');
+            } catch (error) {
+                console.error('Error editing event:', error);
+            }
+        }
+
+        function deleteEvent(id) {
+            if (!confirm('Are you sure you want to delete this event?')) return;
+
+            try {
+                let events = JSON.parse(localStorage.getItem('events')) || [];
+                events = events.filter(e => e.id !== id);
+                localStorage.setItem('events', JSON.stringify(events));
+                showToast('Event deleted successfully', 'success');
+                loadEvents();
+                loadDashboardStats();
+            } catch (error) {
+                console.error('Error deleting event:', error);
+                showToast('Error deleting event', 'error');
+            }
+        }
+
+        function resetEventForm() {
+            document.getElementById('eventForm').reset();
+            currentEditEventId = null;
+            document.getElementById('eventImagePreview').style.display = 'none';
+        }
+
+        // Project Form
+        function setupProjectForm() {
+            const form = document.getElementById('projectForm');
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                await saveProject();
+            });
+
+            const searchInput = document.getElementById('projectSearch');
+            if (searchInput) {
+                searchInput.addEventListener('input', (e) => {
+                    loadProjects(e.target.value);
+                });
+            }
+        }
+
+        async function saveProject() {
+            try {
+                const imageFile = document.getElementById('projectImage').files[0];
+                const imageUrl = document.getElementById('projectImageUrl').value;
+                let image = imageUrl;
+
+                if (imageFile) {
+                    image = await imageToBase64(imageFile);
+                }
+
+                const teamMembersText = document.getElementById('projectTeamMembers').value;
+                const teamMembers = teamMembersText.split('\n').filter(m => m.trim()).map(m => m.trim());
+
+                const project = {
+                    id: currentEditProjectId || generateId(),
+                    title: document.getElementById('projectTitle').value,
+                    description: document.getElementById('projectDescription').value,
+                    category: document.getElementById('projectCategory').value,
+                    status: document.getElementById('projectStatus').value,
+                    image: image,
+                    technologies: projectTechnologies,
+                    teamMembers: teamMembers,
+                    githubLink: document.getElementById('projectGithubLink').value,
+                    liveLink: document.getElementById('projectLiveLink').value,
+                    completionDate: document.getElementById('projectCompletionDate').value
+                };
+
+                let projects = JSON.parse(localStorage.getItem('projects')) || [];
+                
+                if (currentEditProjectId) {
+                    const index = projects.findIndex(p => p.id === currentEditProjectId);
+                    if (index !== -1) projects[index] = project;
+                } else {
+                    projects.push(project);
+                }
+
+                localStorage.setItem('projects', JSON.stringify(projects));
+                showToast(currentEditProjectId ? 'Project updated successfully!' : 'Project added successfully!', 'success');
+                resetProjectForm();
+                loadProjects();
+                loadDashboardStats();
+            } catch (error) {
+                console.error('Error saving project:', error);
+                showToast('Error saving project', 'error');
+            }
+        }
+
+        /* MODIFIED - API integration for loading projects */
+        async function loadProjects(searchTerm = '') {
+            try {
+                // NEW - Load from API
+                const result = await getProjects();
+                if (result.success && result.data) {
+                    let projects = result.data;
+                    
+                    if (searchTerm) {
+                        projects = projects.filter(p => 
+                            p.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                            p.description.toLowerCase().includes(searchTerm.toLowerCase())
+                        );
+                    }
+
+                    const tbody = document.getElementById('projectsTableBody');
+                    
+                    if (projects.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: var(--space-xl);">No projects found</td></tr>';
+                        return;
+                    }
+
+                    tbody.innerHTML = projects.map(project => `
+                        <tr>
+                            <td style="font-weight: 600;">${project.title}</td>
+                            <td>${project.category}</td>
+                            <td><span class="badge ${getStatusBadgeClass(project.status)}">${project.status}</span></td>
+                            <td>${project.technologies.slice(0, 3).join(', ')}${project.technologies.length > 3 ? '...' : ''}</td>
+                            <td class="action-buttons">
+                                <button class="btn btn-icon btn-edit" onclick="editProject('${project.id}')">✏️</button>
+                                <button class="btn btn-icon btn-delete" onclick="deleteProject('${project.id}')">🗑️</button>
+                            </td>
+                        </tr>
+                    `).join('');
+                    return;
+                }
+
+                // EXISTING - Fallback to localStorage
+                let projects = JSON.parse(localStorage.getItem('projects')) || [];
+                
+                if (searchTerm) {
+                    projects = projects.filter(p => 
+                        p.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                        p.description.toLowerCase().includes(searchTerm.toLowerCase())
+                    );
+                }
+
+                const tbody = document.getElementById('projectsTableBody');
+                
+                if (projects.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: var(--space-xl);">No projects found</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = projects.map(project => `
+                    <tr>
+                        <td style="font-weight: 600;">${project.title}</td>
+                        <td>${project.category}</td>
+                        <td><span class="badge ${getStatusBadgeClass(project.status)}">${project.status}</span></td>
+                        <td>${project.technologies.slice(0, 3).join(', ')}${project.technologies.length > 3 ? '...' : ''}</td>
+                        <td class="action-buttons">
+                            <button class="btn btn-icon btn-edit" onclick="editProject('${project.id}')">✏️</button>
+                            <button class="btn btn-icon btn-delete" onclick="deleteProject('${project.id}')">🗑️</button>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading projects:', error);
+            }
+        }
+
+        function editProject(id) {
+            try {
+                const projects = JSON.parse(localStorage.getItem('projects')) || [];
+                const project = projects.find(p => p.id === id);
+                
+                if (!project) return;
+
+                currentEditProjectId = id;
+                
+                document.getElementById('projectTitle').value = project.title || '';
+                document.getElementById('projectDescription').value = project.description || '';
+                document.getElementById('projectCategory').value = project.category || 'Robotics';
+                document.getElementById('projectStatus').value = project.status || 'completed';
+                document.getElementById('projectGithubLink').value = project.githubLink || '';
+                document.getElementById('projectLiveLink').value = project.liveLink || '';
+                document.getElementById('projectCompletionDate').value = project.completionDate || '';
+
+                if (project.image) {
+                    document.getElementById('projectImageUrl').value = project.image;
+                    document.getElementById('projectImagePreview').src = project.image;
+                    document.getElementById('projectImagePreview').style.display = 'block';
+                }
+
+                if (project.teamMembers) {
+                    document.getElementById('projectTeamMembers').value = project.teamMembers.join('\n');
+                }
+
+                projectTechnologies = project.technologies || [];
+                const techContainer = document.getElementById('technologiesContainer');
+                const techInput = document.getElementById('technologiesInput');
+                renderTags(techContainer, projectTechnologies, techInput, (index) => {
+                    projectTechnologies.splice(index, 1);
+                    renderTags(techContainer, projectTechnologies, techInput);
+                });
+
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                showToast('Editing project', 'info');
+            } catch (error) {
+                console.error('Error editing project:', error);
+            }
+        }
+
+        function deleteProject(id) {
+            if (!confirm('Are you sure you want to delete this project?')) return;
+
+            try {
+                let projects = JSON.parse(localStorage.getItem('projects')) || [];
+                projects = projects.filter(p => p.id !== id);
+                localStorage.setItem('projects', JSON.stringify(projects));
+                showToast('Project deleted successfully', 'success');
+                loadProjects();
+                loadDashboardStats();
+            } catch (error) {
+                console.error('Error deleting project:', error);
+                showToast('Error deleting project', 'error');
+            }
+        }
+
+        function resetProjectForm() {
+            document.getElementById('projectForm').reset();
+            currentEditProjectId = null;
+            projectTechnologies = [];
+            document.getElementById('projectImagePreview').style.display = 'none';
+            const techContainer = document.getElementById('technologiesContainer');
+            const techInput = document.getElementById('technologiesInput');
+            renderTags(techContainer, projectTechnologies, techInput, () => {});
+        }
+
+        // Gallery Form
+        function setupGalleryForm() {
+            const form = document.getElementById('galleryForm');
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                await saveGalleryItem();
+            });
+
+            const searchInput = document.getElementById('gallerySearch');
+            if (searchInput) {
+                searchInput.addEventListener('input', (e) => {
+                    loadGallery(e.target.value);
+                });
+            }
+        }
+
+        async function saveGalleryItem() {
+            try {
+                const imageFile = document.getElementById('galleryImage').files[0];
+                const imageUrl = document.getElementById('galleryImageUrl').value;
+                let image = imageUrl;
+
+                if (imageFile) {
+                    image = await imageToBase64(imageFile);
+                }
+
+                if (!image) {
+                    showToast('Image is required', 'error');
+                    return;
+                }
+
+                const item = {
+                    id: generateId(),
+                    image: image,
+                    title: document.getElementById('galleryTitle').value,
+                    description: document.getElementById('galleryDescription').value,
+                    category: document.getElementById('galleryCategory').value,
+                    date: document.getElementById('galleryDate').value,
+                    photographer: document.getElementById('galleryPhotographer').value
+                };
+
+                let gallery = JSON.parse(localStorage.getItem('gallery')) || [];
+                gallery.push(item);
+
+                localStorage.setItem('gallery', JSON.stringify(gallery));
+                showToast('Gallery item added successfully!', 'success');
+                resetGalleryForm();
+                loadGallery();
+                loadDashboardStats();
+            } catch (error) {
+                console.error('Error saving gallery item:', error);
+                showToast('Error saving gallery item', 'error');
+            }
+        }
+
+        /* MODIFIED - API integration for loading gallery */
+        async function loadGallery(searchTerm = '') {
+            try {
+                // NEW - Load from API
+                const result = await getGallery();
+                if (result.success && result.data) {
+                    let gallery = result.data;
+                    
+                    if (searchTerm) {
+                        gallery = gallery.filter(g => 
+                            g.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                            g.category.toLowerCase().includes(searchTerm.toLowerCase())
+                        );
+                    }
+
+                    const tbody = document.getElementById('galleryTableBody');
+                    
+                    if (gallery.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: var(--space-xl);">No gallery items found</td></tr>';
+                        return;
+                    }
+
+                    tbody.innerHTML = gallery.map(item => `
+                        <tr>
+                            <td><img src="${item.image}" alt="${item.title}" style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px;"></td>
+                            <td style="font-weight: 600;">${item.title}</td>
+                            <td><span class="badge badge-info">${item.category}</span></td>
+                            <td>${formatDate(item.date)}</td>
+                            <td class="action-buttons">
+                                <button class="btn btn-icon btn-delete" onclick="deleteGalleryItem('${item.id}')">🗑️</button>
+                            </td>
+                        </tr>
+                    `).join('');
+                    return;
+                }
+
+                // EXISTING - Fallback to localStorage
+                let gallery = JSON.parse(localStorage.getItem('gallery')) || [];
+                
+                if (searchTerm) {
+                    gallery = gallery.filter(g => 
+                        g.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                        g.category.toLowerCase().includes(searchTerm.toLowerCase())
+                    );
+                }
+
+                const tbody = document.getElementById('galleryTableBody');
+                
+                if (gallery.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: var(--space-xl);">No gallery items found</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = gallery.map(item => `
+                    <tr>
+                        <td><img src="${item.image}" alt="${item.title}" style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px;"></td>
+                        <td style="font-weight: 600;">${item.title}</td>
+                        <td><span class="badge badge-info">${item.category}</span></td>
+                        <td>${formatDate(item.date)}</td>
+                        <td class="action-buttons">
+                            <button class="btn btn-icon btn-delete" onclick="deleteGalleryItem('${item.id}')">🗑️</button>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading gallery:', error);
+            }
+        }
+
+        function deleteGalleryItem(id) {
+            if (!confirm('Are you sure you want to delete this gallery item?')) return;
+
+            try {
+                let gallery = JSON.parse(localStorage.getItem('gallery')) || [];
+                gallery = gallery.filter(g => g.id !== id);
+                localStorage.setItem('gallery', JSON.stringify(gallery));
+                showToast('Gallery item deleted successfully', 'success');
+                loadGallery();
+                loadDashboardStats();
+            } catch (error) {
+                console.error('Error deleting gallery item:', error);
+                showToast('Error deleting gallery item', 'error');
+            }
+        }
+
+        function resetGalleryForm() {
+            document.getElementById('galleryForm').reset();
+            document.getElementById('galleryImagePreview').style.display = 'none';
+        }
+
+        // Announcement Form
+        function setupAnnouncementForm() {
+            const form = document.getElementById('announcementForm');
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                saveAnnouncement();
+            });
+        }
+
+        function saveAnnouncement() {
+            try {
+                const announcement = {
+                    id: currentEditAnnouncementId || generateId(),
+                    title: document.getElementById('announcementTitle').value,
+                    content: document.getElementById('announcementContent').value,
+                    priority: document.getElementById('announcementPriority').value,
+                    date: new Date().toISOString()
+                };
+
+                let announcements = JSON.parse(localStorage.getItem('announcements')) || [];
+                
+                if (currentEditAnnouncementId) {
+                    const index = announcements.findIndex(a => a.id === currentEditAnnouncementId);
+                    if (index !== -1) announcements[index] = announcement;
+                } else {
+                    announcements.push(announcement);
+                }
+
+                localStorage.setItem('announcements', JSON.stringify(announcements));
+                showToast(currentEditAnnouncementId ? 'Announcement updated!' : 'Announcement added!', 'success');
+                resetAnnouncementForm();
+                loadAnnouncements();
+            } catch (error) {
+                console.error('Error saving announcement:', error);
+                showToast('Error saving announcement', 'error');
+            }
+        }
+
+        /* MODIFIED - API integration for loading announcements */
+        async function loadAnnouncements() {
+            try {
+                // NEW - Load from API
+                const result = await getAnnouncements();
+                if (result.success && result.data) {
+                    const announcements = result.data;
+                    const tbody = document.getElementById('announcementsTableBody');
+                    
+                    if (announcements.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: var(--space-xl);">No announcements yet</td></tr>';
+                        return;
+                    }
+
+                    tbody.innerHTML = announcements.map(announcement => `
+                        <tr>
+                            <td style="font-weight: 600;">${announcement.title}</td>
+                            <td><span class="badge ${announcement.priority === 'high' ? 'badge-warning' : 'badge-info'}">${announcement.priority}</span></td>
+                            <td>${formatDate(announcement.date)}</td>
+                            <td class="action-buttons">
+                                <button class="btn btn-icon btn-edit" onclick="editAnnouncement('${announcement.id}')">✏️</button>
+                                <button class="btn btn-icon btn-delete" onclick="deleteAnnouncement('${announcement.id}')">🗑️</button>
+                            </td>
+                        </tr>
+                    `).join('');
+                    return;
+                }
+
+                // EXISTING - Fallback to localStorage
+                const announcements = JSON.parse(localStorage.getItem('announcements')) || [];
+                const tbody = document.getElementById('announcementsTableBody');
+                
+                if (announcements.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: var(--space-xl);">No announcements yet</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = announcements.map(announcement => `
+                    <tr>
+                        <td style="font-weight: 600;">${announcement.title}</td>
+                        <td><span class="badge ${announcement.priority === 'high' ? 'badge-warning' : 'badge-info'}">${announcement.priority}</span></td>
+                        <td>${formatDate(announcement.date)}</td>
+                        <td class="action-buttons">
+                            <button class="btn btn-icon btn-edit" onclick="editAnnouncement('${announcement.id}')">✏️</button>
+                            <button class="btn btn-icon btn-delete" onclick="deleteAnnouncement('${announcement.id}')">🗑️</button>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading announcements:', error);
+            }
+        }
+
+        function editAnnouncement(id) {
+            try {
+                const announcements = JSON.parse(localStorage.getItem('announcements')) || [];
+                const announcement = announcements.find(a => a.id === id);
+                
+                if (!announcement) return;
+
+                currentEditAnnouncementId = id;
+                
+                document.getElementById('announcementTitle').value = announcement.title || '';
+                document.getElementById('announcementContent').value = announcement.content || '';
+                document.getElementById('announcementPriority').value = announcement.priority || 'normal';
+
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                showToast('Editing announcement', 'info');
+            } catch (error) {
+                console.error('Error editing announcement:', error);
+            }
+        }
+
+        function deleteAnnouncement(id) {
+            if (!confirm('Are you sure you want to delete this announcement?')) return;
+
+            try {
+                let announcements = JSON.parse(localStorage.getItem('announcements')) || [];
+                announcements = announcements.filter(a => a.id !== id);
+                localStorage.setItem('announcements', JSON.stringify(announcements));
+                showToast('Announcement deleted successfully', 'success');
+                loadAnnouncements();
+            } catch (error) {
+                console.error('Error deleting announcement:', error);
+                showToast('Error deleting announcement', 'error');
+            }
+        }
+
+        function resetAnnouncementForm() {
+            document.getElementById('announcementForm').reset();
+            currentEditAnnouncementId = null;
+        }
+
+        // Admin Form
+        function setupAdminForm() {
+            const form = document.getElementById('adminForm');
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                saveAdmin();
+            });
+        }
+
+        function saveAdmin() {
+            try {
+                const username = document.getElementById('adminUsername').value;
+                const password = document.getElementById('adminPassword').value;
+                const confirmPassword = document.getElementById('adminPasswordConfirm').value;
+                const role = document.getElementById('adminRole').value;
+
+                if (password !== confirmPassword) {
+                    showToast('Passwords do not match', 'error');
+                    return;
+                }
+
+                const admins = JSON.parse(localStorage.getItem('admins')) || [];
+                
+                if (admins.find(a => a.username === username)) {
+                    showToast('Username already exists', 'error');
+                    return;
+                }
+
+                const admin = {
+                    id: generateId(),
+                    username: username,
+                    password: hashPassword(password),
+                    role: role,
+                    createdAt: new Date().toISOString()
+                };
+
+                admins.push(admin);
+                localStorage.setItem('admins', JSON.stringify(admins));
+                showToast('Admin added successfully!', 'success');
+                document.getElementById('adminForm').reset();
+                loadAdmins();
+            } catch (error) {
+                console.error('Error saving admin:', error);
+                showToast('Error saving admin', 'error');
+            }
+        }
+
+        function loadAdmins() {
+            try {
+                const admins = JSON.parse(localStorage.getItem('admins')) || [];
+                const tbody = document.getElementById('adminsTableBody');
+                const currentAdmin = getCurrentAdmin();
+                
+                if (admins.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: var(--space-xl);">No admins found</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = admins.map(admin => `
+                    <tr>
+                        <td style="font-weight: 600;">${admin.username}</td>
+                        <td><span class="badge badge-info">${admin.role}</span></td>
+                        <td>${formatDate(admin.createdAt)}</td>
+                        <td class="action-buttons">
+                            ${admin.id !== currentAdmin.adminId ? 
+                                `<button class="btn btn-icon btn-delete" onclick="deleteAdmin('${admin.id}')">🗑️</button>` : 
+                                '<span style="color: var(--text-secondary); font-size: 0.875rem;">Current User</span>'}
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading admins:', error);
+            }
+        }
+
+        function deleteAdmin(id) {
+            if (!confirm('Are you sure you want to delete this admin?')) return;
+
+            try {
+                let admins = JSON.parse(localStorage.getItem('admins')) || [];
+                admins = admins.filter(a => a.id !== id);
+                localStorage.setItem('admins', JSON.stringify(admins));
+                showToast('Admin deleted successfully', 'success');
+                loadAdmins();
+            } catch (error) {
+                console.error('Error deleting admin:', error);
+                showToast('Error deleting admin', 'error');
+            }
+        }
+
+        // Load all initial data
+        function loadAllData() {
+            loadMembers();
+            loadEvents();
+            loadProjects();
+            loadGallery();
+            loadAnnouncements();
+            loadAdmins();
+        }
+
+       // Utility Functions
+        function getStatusBadgeClass(status) {
+            const statusMap = {
+                'upcoming': 'badge-info',
+                'ongoing': 'badge-warning',
+                'completed': 'badge-success',
+                'cancelled': 'badge-error',
+                'planned': 'badge-info'
+            };
+            return statusMap[status] || 'badge-info';
+        }
+
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toastMessage');
+            const toastIcon = document.getElementById('toastIcon');
+
+            toastMessage.textContent = message;
+            toastIcon.textContent = type === 'success' ? '✓' : '✕';
+            toast.className = `toast ${type === 'error' ? 'error' : ''} show`;
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // Setup logout button
+        function setupLogoutButton() {
+            document.getElementById('logoutBtn').addEventListener('click', (e) => {
+                e.preventDefault();
+                if (confirm('Are you sure you want to logout?')) {
+                    logout();
+                }
+            });
+        }
+
+        // Navigate to section
+        function navigateToSection(section) {
+            // Update active nav item
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            document.querySelector(`[data-section="${section}"]`)?.classList.add('active');
+
+            // Hide all sections
+            document.querySelectorAll('.section-content').forEach(content => {
+                content.classList.remove('active');
+            });
+
+            // Convert section name to proper ID format
+            // 'club-config' should become 'clubConfigSection'
+            let sectionId = section;
+            if (section.includes('-')) {
+                // Convert kebab-case to camelCase
+                sectionId = section.replace(/-([a-z])/g, (match, letter) => letter.toUpperCase());
+            }
+            sectionId = sectionId + 'Section';
+            
+            // Show selected section
+            const sectionElement = document.getElementById(sectionId);
+            if (sectionElement) {
+                sectionElement.classList.add('active');
+            }
+
+            // Update title
+            const titles = {
+                'dashboard': 'Dashboard',
+                'club-config': 'Club Configuration',
+                'members': 'Manage Members',
+                'events': 'Manage Events',
+                'projects': 'Manage Projects',
+                'gallery': 'Manage Gallery',
+                'announcements': 'Manage Announcements',
+                'admins': 'Manage Admins'
+            };
+            document.getElementById('sectionTitle').textContent = titles[section] || 'Admin Panel';
+
+            currentSection = section;
+
+            // Close mobile sidebar
+            document.getElementById('adminSidebar').classList.remove('mobile-open');
+
+            // Load section-specific data
+            if (section === 'club-config') loadClubConfig();
+            if (section === 'members') loadMembers();
+            if (section === 'events') loadEvents();
+            if (section === 'projects') loadProjects();
+            if (section === 'gallery') loadGallery();
+            if (section === 'announcements') loadAnnouncements();
+            if (section === 'admins') loadAdmins();
+        }
+
+        // Setup mobile sidebar
+        function setupMobileSidebar() {
+            const toggle = document.getElementById('mobileSidebarToggle');
+            const sidebar = document.getElementById('adminSidebar');
+
+            toggle.addEventListener('click', () => {
+                sidebar.classList.toggle('mobile-open');
+            });
+
+            // Close on outside click
+            document.addEventListener('click', (e) => {
+                if (!sidebar.contains(e.target) && !toggle.contains(e.target)) {
+                    sidebar.classList.remove('mobile-open');
+                }
+            });
+        }
+
+        // Setup all forms
+        function setupForms() {
+            setupClubConfigForm();
+            setupMemberForm();
+            setupEventForm();
+            setupProjectForm();
+            setupGalleryForm();
+            setupAnnouncementForm();
+            setupAdminForm();
+            setupImagePreviews();
+            setupTagsInput();
+        }
+
+        // Image preview setup
+        function setupImagePreviews() {
+            const imageInputs = [
+                { file: 'logoInput', url: 'logoUrl', preview: 'logoPreview' },
+                { file: 'memberPhoto', url: 'memberPhotoUrl', preview: 'memberPhotoPreview' },
+                { file: 'eventImage', url: 'eventImageUrl', preview: 'eventImagePreview' },
+                { file: 'projectImage', url: 'projectImageUrl', preview: 'projectImagePreview' },
+                { file: 'galleryImage', url: 'galleryImageUrl', preview: 'galleryImagePreview' }
+            ];
+
+            imageInputs.forEach(input => {
+                const fileInput = document.getElementById(input.file);
+                const urlInput = document.getElementById(input.url);
+                const preview = document.getElementById(input.preview);
+
+                if (fileInput) {
+                    fileInput.addEventListener('change', async (e) => {
+                        const file = e.target.files[0];
+                        if (file) {
+                            const base64 = await imageToBase64(file);
+                            if (preview) {
+                                preview.src = base64;
+                                preview.style.display = 'block';
+                            }
+                        }
+                    });
+                }
+
+                if (urlInput && preview) {
+                    urlInput.addEventListener('input', (e) => {
+                        if (e.target.value) {
+                            preview.src = e.target.value;
+                            preview.style.display = 'block';
+                        } else {
+                            preview.style.display = 'none';
+                        }
+                    });
+                }
+            });
+        }
+
+        // Tags input setup
+        function setupTagsInput() {
+            // Skills tags
+            const skillsInput = document.getElementById('skillsInput');
+            const skillsContainer = document.getElementById('skillsContainer');
+
+            if (skillsInput && skillsContainer) {
+                skillsInput.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        const value = skillsInput.value.trim();
+                        if (value && !memberSkills.includes(value)) {
+                            memberSkills.push(value);
+                            renderTags(skillsContainer, memberSkills, skillsInput, (index) => {
+                                memberSkills.splice(index, 1);
+                                renderTags(skillsContainer, memberSkills, skillsInput);
+                            });
+                            skillsInput.value = '';
+                        }
+                    }
+                });
+            }
+
+            // Technologies tags
+            const techInput = document.getElementById('technologiesInput');
+            const techContainer = document.getElementById('technologiesContainer');
+
+            if (techInput && techContainer) {
+                techInput.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        const value = techInput.value.trim();
+                        if (value && !projectTechnologies.includes(value)) {
+                            projectTechnologies.push(value);
+                            renderTags(techContainer, projectTechnologies, techInput, (index) => {
+                                projectTechnologies.splice(index, 1);
+                                renderTags(techContainer, projectTechnologies, techInput);
+                            });
+                            techInput.value = '';
+                        }
+                    }
+                });
+            }
+        }
+
+        // Render tags
+        function renderTags(container, tags, input, onRemove) {
+            const existingTags = container.querySelectorAll('.tag');
+            existingTags.forEach(tag => tag.remove());
+
+            tags.forEach((tag, index) => {
+                const tagEl = document.createElement('span');
+                tagEl.className = 'tag';
+                tagEl.innerHTML = `${tag} <span class="tag-remove" data-index="${index}">×</span>`;
+                container.insertBefore(tagEl, input);
+
+                tagEl.querySelector('.tag-remove').addEventListener('click', () => {
+                    onRemove(index);
+                });
+            });
+        }
+
+        // Club Config Form
+        function setupClubConfigForm() {
+            const form = document.getElementById('clubConfigForm');
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+
+                try {
+                    const logoFile = document.getElementById('logoInput').files[0];
+                    const logoUrl = document.getElementById('logoUrl').value;
+                    let logo = logoUrl;
+
+                    if (logoFile) {
+                        logo = await imageToBase64(logoFile);
+                    }
+
+                    const config = {
+                        logo: logo,
+                        name: document.getElementById('clubName').value,
+                        motto: document.getElementById('clubMotto').value,
+                        description: document.getElementById('clubDescription').value,
+                        socialLinks: []
+                    };
+
+                    // Collect social links
+                    const socials = ['facebook', 'twitter', 'instagram', 'linkedin', 'youtube', 'github', 'email'];
+                    socials.forEach(platform => {
+                        const value = document.getElementById(`social${platform.charAt(0).toUpperCase() + platform.slice(1)}`).value;
+                        if (value) {
+                            config.socialLinks.push({ platform, url: value });
+                        }
+                    });
+
+                    localStorage.setItem('clubConfig', JSON.stringify(config));
+                    showToast('Club configuration saved successfully!', 'success');
+                    loadClubConfigToSidebar();
+                } catch (error) {
+                    console.error('Error saving config:', error);
+                    showToast('Error saving configuration', 'error');
+                }
+            });
+        }
+
+        /* MODIFIED - API integration for loading club config */
+        async function loadClubConfig() {
+            try {
+                // NEW - Try to load from API first
+                const result = await getClubConfig();
+                if (result.success && result.data) {
+                    const config = result.data;
+
+                    if (config.logo) {
+                        document.getElementById('logoUrl').value = config.logo;
+                        const preview = document.getElementById('logoPreview');
+                        preview.src = config.logo;
+                        preview.style.display = 'block';
+                        preview.onerror = function() {
+                            this.src = 'assets/default-logo.jpg';
+                        };
+                    }
+
+                    document.getElementById('clubName').value = config.name || 'GSTU Robotics & Research Club';
+                    document.getElementById('clubMotto').value = config.motto || 'A Hub of Robothinkers';
+                    document.getElementById('clubDescription').value = config.description || '';
+
+                    if (config.socialLinks) {
+                        config.socialLinks.forEach(link => {
+                            const inputId = `social${link.platform.charAt(0).toUpperCase() + link.platform.slice(1)}`;
+                            const input = document.getElementById(inputId);
+                            if (input) input.value = link.url;
+                        });
+                    }
+                    return;
+                }
+
+                // EXISTING - Fallback to localStorage
+                const config = JSON.parse(localStorage.getItem('clubConfig')) || {};
+
+                if (config.logo) {
+                    document.getElementById('logoUrl').value = config.logo;
+                    const preview = document.getElementById('logoPreview');
+                    preview.src = config.logo;
+                    preview.style.display = 'block';
+                    preview.onerror = function() {
+                        this.src = 'assets/default-logo.jpg';
+                    };
+                }
+
+                document.getElementById('clubName').value = config.name || 'GSTU Robotics & Research Club';
+                document.getElementById('clubMotto').value = config.motto || 'A Hub of Robothinkers';
+                document.getElementById('clubDescription').value = config.description || '';
+
+                if (config.socialLinks) {
+                    config.socialLinks.forEach(link => {
+                        const inputId = `social${link.platform.charAt(0).toUpperCase() + link.platform.slice(1)}`;
+                        const input = document.getElementById(inputId);
+                        if (input) input.value = link.url;
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading club config:', error);
+            }
+        }
+
+        // Member Form
+        function setupMemberForm() {
+            const form = document.getElementById('memberForm');
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                await saveMember();
+            });
+        }
+    </script>
+</body>
+</html>

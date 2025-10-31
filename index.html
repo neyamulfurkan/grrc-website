@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="GSTU Robotics & Research Club - A Hub of Robothinkers at Gopalganj Science and Technology University">
+    <meta name="keywords" content="GSTU, robotics, research, technology, Gopalganj, university club">
+    <title>GSTU Robotics & Research Club - Home</title>
+    
+    <!-- CSS Files -->
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/common.css">
+    <link rel="stylesheet" href="css/components.css">
+    
+    <style>
+        /* Page-specific styles for index.html */
+        
+        /* Hero Section */
+        .hero {
+            min-height: 90vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            position: relative;
+            overflow: hidden;
+            padding: 2rem;
+        }
+        
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="%23ffffff" fill-opacity="0.05" d="M0,96L48,112C96,128,192,160,288,160C384,160,480,128,576,122.7C672,117,768,139,864,138.7C960,139,1056,117,1152,106.7C1248,96,1344,96,1392,96L1440,96L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path></svg>');
+            background-size: cover;
+            background-position: bottom;
+            opacity: 0.3;
+            animation: wave 15s ease-in-out infinite;
+        }
+        
+        @keyframes wave {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+        
+        .hero-content {
+            position: relative;
+            z-index: 1;
+            max-width: 800px;
+        }
+        
+        .hero h1 {
+            font-size: clamp(2.5rem, 6vw, 4rem);
+            font-weight: 700;
+            color: white;
+            margin-bottom: 1rem;
+            animation: fadeInUp 0.8s ease-out;
+        }
+        
+        .hero .motto {
+            font-size: clamp(1.2rem, 3vw, 1.8rem);
+            color: rgba(255, 255, 255, 0.9);
+            margin-bottom: 2rem;
+            animation: fadeInUp 0.8s ease-out 0.2s backwards;
+        }
+        
+        .hero .description {
+            font-size: 1.1rem;
+            color: rgba(255, 255, 255, 0.85);
+            margin-bottom: 2rem;
+            line-height: 1.6;
+            animation: fadeInUp 0.8s ease-out 0.4s backwards;
+        }
+        
+        .hero-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            animation: fadeInUp 0.8s ease-out 0.6s backwards;
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* Upcoming Events Section */
+        .upcoming-events {
+            padding: 5rem 0;
+            background: var(--background-color);
+        }
+        
+        .section-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+        
+        .section-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+        
+        .section-subtitle {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+        }
+        
+        .events-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+        
+        .event-card {
+            background: var(--surface-color);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            box-shadow: var(--shadow-md);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .event-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-lg);
+        }
+        
+        .event-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        }
+        
+        .event-content {
+            padding: 1.5rem;
+        }
+        
+        .event-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+        
+        .event-meta {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+        
+        .event-meta span {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .event-description {
+            color: var(--text-secondary);
+            line-height: 1.6;
+            margin-bottom: 1rem;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-secondary);
+        }
+        
+        .empty-state-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+        
+        /* Why Join Us Section */
+        .why-join {
+            padding: 5rem 0;
+            background: var(--surface-color);
+        }
+        
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+        
+        .feature-card {
+            background: var(--background-color);
+            padding: 2rem;
+            border-radius: var(--radius-lg);
+            text-align: center;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: 2px solid transparent;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--accent-color);
+            box-shadow: var(--shadow-lg);
+        }
+        
+        .feature-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+        
+        .feature-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+        
+        .feature-description {
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+        
+        /* Executive Committee Section */
+        .executive-committee {
+            padding: 5rem 0;
+            background: var(--background-color);
+        }
+        
+        .members-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+        
+        .member-card {
+            background: var(--surface-color);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            box-shadow: var(--shadow-md);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .member-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-lg);
+        }
+        
+        .member-photo {
+            width: 100%;
+            height: 250px;
+            object-fit: cover;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        }
+        
+        .member-info {
+            padding: 1.5rem;
+            text-align: center;
+        }
+        
+        .member-name {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.3rem;
+        }
+        
+        .member-role {
+            color: var(--accent-color);
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+        
+        .member-department {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .hero {
+                min-height: 80vh;
+                padding: 1rem;
+            }
+            
+            .hero-buttons {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .section-title {
+                font-size: 2rem;
+            }
+            
+            .events-grid,
+            .features-grid,
+            .members-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo-container">
+                    <img id="clubLogo" src="" alt="GRRC Logo" class="logo">
+                    <span id="clubName" class="club-name">GRRC</span>
+                </div>
+                
+                <nav class="nav-menu" id="navMenu">
+                    <a href="index.html" class="nav-link active">Home</a>
+                    <a href="members.html" class="nav-link">Members</a>
+                    <a href="events.html" class="nav-link">Events</a>
+                    <a href="projects.html" class="nav-link">Projects</a>
+                    <a href="gallery.html" class="nav-link">Gallery</a>
+                    <a href="admin.html" class="nav-link">Admin</a>
+                </nav>
+                
+                <div class="header-actions">
+                    <button id="themeToggle" class="theme-toggle" aria-label="Toggle theme">
+                        <span class="theme-icon">🌙</span>
+                    </button>
+                    <button class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Toggle menu">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Mobile Navigation Overlay -->
+    <div class="mobile-nav-overlay" id="mobileNavOverlay">
+        <nav class="mobile-nav">
+            <a href="index.html" class="mobile-nav-link active">Home</a>
+            <a href="members.html" class="mobile-nav-link">Members</a>
+            <a href="events.html" class="mobile-nav-link">Events</a>
+            <a href="projects.html" class="mobile-nav-link">Projects</a>
+            <a href="gallery.html" class="mobile-nav-link">Gallery</a>
+            <a href="admin.html" class="mobile-nav-link">Admin</a>
+        </nav>
+    </div>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+            <h1 id="heroClubName">GSTU Robotics & Research Club</h1>
+            <p class="motto" id="heroMotto">A Hub of Robothinkers</p>
+            <p class="description" id="heroDescription">
+                Join us in exploring the fascinating world of robotics, automation, and innovation at Gopalganj Science and Technology University.
+            </p>
+            <div class="hero-buttons">
+                <a href="members.html" class="btn btn-primary btn-lg">Meet Our Team</a>
+                <a href="events.html" class="btn btn-secondary btn-lg">Upcoming Events</a>
+                <a href="projects.html" class="btn btn-outline btn-lg">View Projects</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Upcoming Events Section -->
+    <section class="upcoming-events">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Upcoming Events</h2>
+                <p class="section-subtitle">Don't miss out on our exciting workshops and competitions</p>
+            </div>
+            
+            <div id="eventsContainer" class="events-grid">
+                <!-- Events will be loaded here via JavaScript -->
+            </div>
+            
+            <div style="text-align: center; margin-top: 2rem;">
+                <a href="events.html" class="btn btn-primary">View All Events</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Why Join Us Section -->
+    <section class="why-join">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Why Join Us?</h2>
+                <p class="section-subtitle">Discover the benefits of being part of GRRC</p>
+            </div>
+            
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">💡</div>
+                    <h3 class="feature-title">Innovation</h3>
+                    <p class="feature-description">
+                        Work on cutting-edge robotics projects and bring your innovative ideas to life with like-minded peers.
+                    </p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">🎓</div>
+                    <h3 class="feature-title">Workshops</h3>
+                    <p class="feature-description">
+                        Attend regular workshops and training sessions on robotics, AI, IoT, and emerging technologies.
+                    </p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">🤖</div>
+                    <h3 class="feature-title">Projects</h3>
+                    <p class="feature-description">
+                        Collaborate on real-world projects, participate in competitions, and build your technical portfolio.
+                    </p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">🤝</div>
+                    <h3 class="feature-title">Community</h3>
+                    <p class="feature-description">
+                        Join a vibrant community of robotics enthusiasts, share knowledge, and grow together.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Executive Committee Section -->
+    <section class="executive-committee">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Executive Committee</h2>
+                <p class="section-subtitle">Meet the leaders driving our vision forward</p>
+            </div>
+            
+            <div id="executiveContainer" class="members-grid">
+                <!-- Executive members will be loaded here via JavaScript -->
+            </div>
+            
+            <div style="text-align: center; margin-top: 2rem;">
+                <a href="members.html" class="btn btn-primary">View All Members</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3 class="footer-title">GSTU Robotics & Research Club</h3>
+                    <p class="footer-description" id="footerDescription">
+                        A Hub of Robothinkers at Gopalganj Science and Technology University
+                    </p>
+                </div>
+                
+                <div class="footer-section">
+                    <h4 class="footer-subtitle">Quick Links</h4>
+                    <ul class="footer-links">
+                        <li><a href="index.html">Home</a></li>
+                        <li><a href="members.html">Members</a></li>
+                        <li><a href="events.html">Events</a></li>
+                        <li><a href="projects.html">Projects</a></li>
+                        <li><a href="gallery.html">Gallery</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-section">
+                    <h4 class="footer-subtitle">Connect With Us</h4>
+                    <div class="social-links" id="socialLinks">
+                        <!-- Social links will be loaded here via JavaScript -->
+                    </div>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <p>&copy; <span id="currentYear"></span> GSTU Robotics & Research Club. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript Files -->
+    <script src="js/api-client.js"></script> <!-- NEW - API client -->
+    <script src="js/config.js"></script>
+    <script src="js/storage.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/theme.js"></script>
+    <script src="js/navigation.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/load-config.js"></script>
+    
+    <script>
+        /* MODIFIED - Added API integration */
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Set current year in footer
+            document.getElementById('currentYear').textContent = new Date().getFullYear();
+            
+            // NEW - Use await for async functions
+            await loadClubConfig();
+            await loadUpcomingEvents();
+            await loadExecutiveMembers();
+            
+            // Initialize theme
+            if (typeof initTheme === 'function') {
+                initTheme();
+            }
+            
+            // Initialize navigation
+            if (typeof initNavigation === 'function') {
+                initNavigation();
+            }
+        });
+        
+        /* MODIFIED - Added API integration */
+        // Load club configuration from API with localStorage fallback
+        async function loadClubConfig() {
+            try {
+                // NEW - Try API first
+                if (typeof getClubConfig === 'function') {
+                    const result = await getClubConfig();
+                    if (result.success && result.data) {
+                        const config = result.data;
+                        
+                        // Update club name
+                        if (config.name) {
+                            document.getElementById('clubName').textContent = config.name;
+                            document.getElementById('heroClubName').textContent = config.name;
+                        }
+                        
+                        // Update motto
+                        if (config.motto) {
+                            document.getElementById('heroMotto').textContent = config.motto;
+                        }
+                        
+                        // Update description
+                        if (config.description) {
+                            document.getElementById('heroDescription').textContent = config.description;
+                            document.getElementById('footerDescription').textContent = config.description;
+                        }
+                        
+                        // Update logo
+                        if (config.logo) {
+                            document.getElementById('clubLogo').src = config.logo;
+                        } else {
+                            document.getElementById('clubLogo').src = 'assets/default-logo.svg';
+                        }
+                        
+                        // Update social links
+                        if (config.socialLinks && config.socialLinks.length > 0) {
+                            const socialContainer = document.getElementById('socialLinks');
+                            socialContainer.innerHTML = config.socialLinks.map(link => 
+                                `<a href="${link.url}" target="_blank" rel="noopener noreferrer" class="social-link" title="${link.platform}">
+                                    ${getSocialIcon(link.platform)}
+                                </a>`
+                            ).join('');
+                        } else {
+                            document.getElementById('socialLinks').innerHTML = '<p style="color: var(--text-secondary);">No social links added yet</p>';
+                        }
+                        return;
+                    }
+                }
+                
+                // EXISTING - Fallback to localStorage
+                const config = JSON.parse(localStorage.getItem('clubConfig') || '{}');
+                
+                // Update club name
+                if (config.name) {
+                    document.getElementById('clubName').textContent = config.name;
+                    document.getElementById('heroClubName').textContent = config.name;
+                }
+                
+                // Update motto
+                if (config.motto) {
+                    document.getElementById('heroMotto').textContent = config.motto;
+                }
+                
+                // Update description
+                if (config.description) {
+                    document.getElementById('heroDescription').textContent = config.description;
+                    document.getElementById('footerDescription').textContent = config.description;
+                }
+                
+                // Update logo
+                if (config.logo) {
+                    document.getElementById('clubLogo').src = config.logo;
+                } else {
+                    // Use default logo
+                    document.getElementById('clubLogo').src = 'assets/default-logo.svg';
+                }
+                
+                // Update social links
+                if (config.socialLinks && config.socialLinks.length > 0) {
+                    const socialContainer = document.getElementById('socialLinks');
+                    socialContainer.innerHTML = config.socialLinks.map(link => 
+                        `<a href="${link.url}" target="_blank" rel="noopener noreferrer" class="social-link" title="${link.platform}">
+                            ${getSocialIcon(link.platform)}
+                        </a>`
+                    ).join('');
+                } else {
+                    document.getElementById('socialLinks').innerHTML = '<p style="color: var(--text-secondary);">No social links added yet</p>';
+                }
+            } catch (error) {
+                console.error('Error loading club config:', error);
+                // Fallback to localStorage on error
+                const config = JSON.parse(localStorage.getItem('clubConfig') || '{}');
+                
+                if (config.name) {
+                    document.getElementById('clubName').textContent = config.name;
+                    document.getElementById('heroClubName').textContent = config.name;
+                }
+                if (config.motto) {
+                    document.getElementById('heroMotto').textContent = config.motto;
+                }
+                if (config.description) {
+                    document.getElementById('heroDescription').textContent = config.description;
+                    document.getElementById('footerDescription').textContent = config.description;
+                }
+                if (config.logo) {
+                    document.getElementById('clubLogo').src = config.logo;
+                } else {
+                    document.getElementById('clubLogo').src = 'assets/default-logo.svg';
+                }
+                if (config.socialLinks && config.socialLinks.length > 0) {
+                    const socialContainer = document.getElementById('socialLinks');
+                    socialContainer.innerHTML = config.socialLinks.map(link => 
+                        `<a href="${link.url}" target="_blank" rel="noopener noreferrer" class="social-link" title="${link.platform}">
+                            ${getSocialIcon(link.platform)}
+                        </a>`
+                    ).join('');
+                } else {
+                    document.getElementById('socialLinks').innerHTML = '<p style="color: var(--text-secondary);">No social links added yet</p>';
+                }
+            }
+        }
+        
+        /* MODIFIED - Added API integration */
+        // Load upcoming events (next 3)
+        async function loadUpcomingEvents() {
+            try {
+                // NEW - Try API first
+                if (typeof getEvents === 'function') {
+                    const result = await getEvents({ status: 'upcoming' });
+                    if (result.success && result.data) {
+                        const events = result.data;
+                        const container = document.getElementById('eventsContainer');
+                        
+                        // Filter upcoming events
+                        const now = new Date();
+                        const upcomingEvents = events
+                            .filter(event => new Date(event.date) >= now)
+                            .sort((a, b) => new Date(a.date) - new Date(b.date))
+                            .slice(0, 3);
+                        
+                        if (upcomingEvents.length === 0) {
+                            container.innerHTML = `
+                                <div class="empty-state">
+                                    <div class="empty-state-icon">📅</div>
+                                    <h3>No Upcoming Events</h3>
+                                    <p>Check back soon for exciting workshops and competitions!</p>
+                                </div>
+                            `;
+                            return;
+                        }
+                        
+                        container.innerHTML = upcomingEvents.map(event => `
+                            <div class="event-card">
+                                ${event.image ? 
+                                    `<img src="${event.image}" alt="${event.title}" class="event-image">` : 
+                                    `<div class="event-image"></div>`
+                                }
+                                <div class="event-content">
+                                    <h3 class="event-title">${event.title}</h3>
+                                    <div class="event-meta">
+                                        <span>📅 ${formatDate(event.date)}</span>
+                                        <span>⏰ ${event.time || 'TBA'}</span>
+                                        <span>📍 ${event.venue || 'TBA'}</span>
+                                    </div>
+                                    <p class="event-description">${truncateText(event.description, 120)}</p>
+                                    ${event.registrationLink ? 
+                                        `<a href="${event.registrationLink}" target="_blank" class="btn btn-primary btn-sm">Register Now</a>` : 
+                                        ''
+                                    }
+                                </div>
+                            </div>
+                        `).join('');
+                        return;
+                    }
+                }
+                
+                // EXISTING - Fallback to localStorage
+                const events = JSON.parse(localStorage.getItem('events') || '[]');
+                const container = document.getElementById('eventsContainer');
+                
+                // Filter upcoming events
+                const now = new Date();
+                const upcomingEvents = events
+                    .filter(event => event.status === 'upcoming' && new Date(event.date) >= now)
+                    .sort((a, b) => new Date(a.date) - new Date(b.date))
+                    .slice(0, 3);
+                
+                if (upcomingEvents.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">📅</div>
+                            <h3>No Upcoming Events</h3>
+                            <p>Check back soon for exciting workshops and competitions!</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                container.innerHTML = upcomingEvents.map(event => `
+                    <div class="event-card">
+                        ${event.image ? 
+                            `<img src="${event.image}" alt="${event.title}" class="event-image">` : 
+                            `<div class="event-image"></div>`
+                        }
+                        <div class="event-content">
+                            <h3 class="event-title">${event.title}</h3>
+                            <div class="event-meta">
+                                <span>📅 ${formatDate(event.date)}</span>
+                                <span>⏰ ${event.time || 'TBA'}</span>
+                                <span>📍 ${event.venue || 'TBA'}</span>
+                            </div>
+                            <p class="event-description">${truncateText(event.description, 120)}</p>
+                            ${event.registrationLink ? 
+                                `<a href="${event.registrationLink}" target="_blank" class="btn btn-primary btn-sm">Register Now</a>` : 
+                                ''
+                            }
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading events:', error);
+                document.getElementById('eventsContainer').innerHTML = `
+                    <div class="empty-state">
+                        <p>Error loading events. Please try again later.</p>
+                    </div>
+                `;
+            }
+        }
+        
+        /* MODIFIED - Added API integration */
+        // Load executive committee members (show 4)
+        async function loadExecutiveMembers() {
+            try {
+                // NEW - Try API first
+                if (typeof getMembers === 'function') {
+                    const result = await getMembers({ role: 'Executive Member' });
+                    if (result.success && result.data) {
+                        const members = result.data;
+                        const container = document.getElementById('executiveContainer');
+                        
+                        // Filter executive members
+                        const executives = members.slice(0, 4);
+                        
+                        if (executives.length === 0) {
+                            container.innerHTML = `
+                                <div class="empty-state">
+                                    <div class="empty-state-icon">👥</div>
+                                    <h3>No Executive Members Yet</h3>
+                                    <p>Our leadership team will be announced soon!</p>
+                                </div>
+                            `;
+                            return;
+                        }
+                        
+                        container.innerHTML = executives.map(member => `
+                            <div class="member-card" onclick="window.location.href='members.html'">
+                                ${member.photo ? 
+                                    `<img src="${member.photo}" alt="${member.name}" class="member-photo">` : 
+                                    `<div class="member-photo"></div>`
+                                }
+                                <div class="member-info">
+                                    <h3 class="member-name">${member.name}</h3>
+                                    <p class="member-role">${member.role}</p>
+                                    <p class="member-department">${member.department} - Year ${member.year}</p>
+                                </div>
+                            </div>
+                        `).join('');
+                        return;
+                    }
+                }
+                
+                // EXISTING - Fallback to localStorage
+                const members = JSON.parse(localStorage.getItem('members') || '[]');
+                const container = document.getElementById('executiveContainer');
+                
+                // Filter executive members
+                const executives = members
+                    .filter(member => member.role && member.role.toLowerCase().includes('executive'))
+                    .slice(0, 4);
+                
+                if (executives.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">👥</div>
+                            <h3>No Executive Members Yet</h3>
+                            <p>Our leadership team will be announced soon!</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                container.innerHTML = executives.map(member => `
+                    <div class="member-card" onclick="window.location.href='members.html'">
+                        ${member.photo ? 
+                            `<img src="${member.photo}" alt="${member.name}" class="member-photo">` : 
+                            `<div class="member-photo"></div>`
+                        }
+                        <div class="member-info">
+                            <h3 class="member-name">${member.name}</h3>
+                            <p class="member-role">${member.role}</p>
+                            <p class="member-department">${member.department} - Year ${member.year}</p>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading executive members:', error);
+                document.getElementById('executiveContainer').innerHTML = `
+                    <div class="empty-state">
+                        <p>Error loading members. Please try again later.</p>
+                    </div>
+                `;
+            }
+        }
+        
+        // Helper function to get social media icons
+        function getSocialIcon(platform) {
+            const icons = {
+                'facebook': '📘',
+                'twitter': '🐦',
+                'instagram': '📷',
+                'linkedin': '💼',
+                'youtube': '📹',
+                'github': '💻',
+                'email': '✉️'
+            };
+            return icons[platform.toLowerCase()] || '🔗';
+        }
+        
+        // Helper function to format date
+        function formatDate(dateString) {
+            const options = { year: 'numeric', month: 'long', day: 'numeric' };
+            return new Date(dateString).toLocaleDateString('en-US', options);
+        }
+        
+        // Helper function to truncate text
+        function truncateText(text, maxLength) {
+            if (!text) return '';
+            if (text.length <= maxLength) return text;
+            return text.substring(0, maxLength).trim() + '...';
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,64 @@
+{
+  "name": "gstu-robotics-club-backend",
+  "version": "1.0.0",
+  "description": "Backend API for GSTU Robotics Club Management System",
+  "main": "backend/server.js",
+  "scripts": {
+    "start": "node backend/server.js",
+    "dev": "nodemon backend/server.js",
+    "dev:watch": "nodemon --watch backend backend/server.js",
+    "init-db": "psql -U postgres -d grrc_db -f backend/db/schema.sql && psql -U postgres -d grrc_db -f backend/db/seed.sql",
+    "db:schema": "psql -U postgres -d grrc_db -f backend/db/schema.sql",
+    "db:seed": "psql -U postgres -d grrc_db -f backend/db/seed.sql",
+    "db:reset": "psql -U postgres -d grrc_db -c 'DROP SCHEMA public CASCADE; CREATE SCHEMA public;' && npm run init-db",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "robotics",
+    "club-management",
+    "express",
+    "postgresql",
+    "rest-api",
+    "jwt",
+    "nodejs"
+  ],
+  "author": "GSTU Robotics & Research Club",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/gstu-robotics/grrc-website.git"
+  },
+  "bugs": {
+    "url": "https://github.com/gstu-robotics/grrc-website/issues"
+  },
+  "homepage": "https://github.com/gstu-robotics/grrc-website#readme",
+  "dependencies": {
+    "bcrypt": "^5.1.1",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "express-validator": "^7.0.1",
+    "helmet": "^7.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "morgan": "^1.10.0",
+    "pg": "^8.11.3"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.10"
+  },
+  "engines": {
+    "node": ">=16.0.0",
+    "npm": ">=8.0.0"
+  },
+  "nodemonConfig": {
+    "watch": [
+      "backend"
+    ],
+    "ext": "js,json",
+    "ignore": [
+      "node_modules",
+      "*.test.js"
+    ],
+    "delay": "1000"
+  }
+}

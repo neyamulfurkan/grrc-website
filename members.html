@@ -1,0 +1,1214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Meet the talented members of GSTU Robotics & Research Club - A Hub of Robothinkers">
+    <meta name="keywords" content="GSTU, Robotics Club, Members, Team, Gopalganj Science and Technology University">
+    <title>Our Members - GSTU Robotics & Research Club</title>
+    
+    <!-- CSS Files -->
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/common.css">
+    <link rel="stylesheet" href="css/components.css">
+    
+    <style>
+        /* Page-Specific Styles */
+        .page-header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            padding: 4rem 0 3rem;
+            text-align: center;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .page-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url("data:image/svg+xml,%3Csvg width='100' height='100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 0h100v100H0z' fill='none'/%3E%3Cpath d='M0 0L50 50L0 100M50 0L100 50L50 100M100 0v100' stroke='rgba(255,255,255,0.05)' stroke-width='1'/%3E%3C/svg%3E");
+            opacity: 0.3;
+        }
+
+        .page-header-content {
+            position: relative;
+            z-index: 1;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        .page-header h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            font-weight: 700;
+            animation: fadeInUp 0.6s ease;
+        }
+
+        .page-header p {
+            font-size: 1.25rem;
+            opacity: 0.95;
+            animation: fadeInUp 0.6s ease 0.2s backwards;
+        }
+
+        /* Members Stats */
+        .members-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+            padding: 3rem 0;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .stat-card {
+            background: var(--surface-color);
+            padding: 2rem;
+            border-radius: var(--radius-lg);
+            text-align: center;
+            box-shadow: var(--shadow-md);
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 1rem;
+        }
+
+        /* Filter Section */
+        .filter-section {
+            background: var(--surface-color);
+            padding: 2rem;
+            border-radius: var(--radius-lg);
+            margin-bottom: 3rem;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .filter-header {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 250px;
+            position: relative;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 0.75rem 1rem 0.75rem 3rem;
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius-md);
+            font-size: 1rem;
+            background: var(--background-color);
+            color: var(--text-primary);
+            transition: border-color 0.3s ease;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+            font-size: 1.2rem;
+        }
+
+        .filter-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .filter-btn {
+            padding: 0.75rem 1.5rem;
+            border: 2px solid var(--border-color);
+            background: var(--background-color);
+            color: var(--text-primary);
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .filter-btn:hover {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .filter-btn.active {
+            background: var(--primary-color);
+            border-color: var(--primary-color);
+            color: white;
+        }
+
+        .department-filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .dept-btn {
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--border-color);
+            background: var(--background-color);
+            color: var(--text-secondary);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-size: 0.875rem;
+            transition: all 0.3s ease;
+        }
+
+        .dept-btn:hover {
+            border-color: var(--accent-color);
+            color: var(--accent-color);
+        }
+
+        .dept-btn.active {
+            background: var(--accent-color);
+            border-color: var(--accent-color);
+            color: white;
+        }
+
+        /* Members Grid */
+        .members-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 2rem;
+            margin-bottom: 4rem;
+        }
+
+        .member-card {
+            background: var(--surface-color);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            box-shadow: var(--shadow-md);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .member-card:hover {
+            transform: translateY(-8px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .member-photo {
+            width: 100%;
+            height: 280px;
+            object-fit: cover;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        }
+
+        .member-info {
+            padding: 1.5rem;
+        }
+
+        .member-name {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .member-role {
+            color: var(--primary-color);
+            font-weight: 500;
+            font-size: 0.95rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .member-details {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .member-detail-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .detail-icon {
+            font-size: 1rem;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            overflow-y: auto;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .modal-content {
+            background: var(--surface-color);
+            border-radius: var(--radius-lg);
+            max-width: 800px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+            animation: slideUp 0.4s ease;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 1.5rem;
+            right: 1.5rem;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--background-color);
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+            z-index: 10;
+        }
+
+        .modal-close:hover {
+            background: var(--primary-color);
+            color: white;
+            transform: rotate(90deg);
+        }
+
+        .modal-header {
+            position: relative;
+            padding: 3rem;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            text-align: center;
+        }
+
+        .modal-photo {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 5px solid white;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-name {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .modal-role {
+            font-size: 1.1rem;
+            opacity: 0.95;
+        }
+
+        .modal-body {
+            padding: 2.5rem;
+        }
+
+        .modal-section {
+            margin-bottom: 2rem;
+        }
+
+        .modal-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .modal-section-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .modal-info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .modal-info-item {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .modal-info-label {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .modal-info-value {
+            color: var(--text-primary);
+            font-size: 1rem;
+        }
+
+        .modal-bio {
+            color: var(--text-secondary);
+            line-height: 1.6;
+            font-size: 1rem;
+        }
+
+        .skills-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .skill-badge {
+            padding: 0.5rem 1rem;
+            background: var(--primary-color);
+            color: white;
+            border-radius: var(--radius-md);
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .contact-links {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .contact-link {
+            padding: 0.75rem 1.5rem;
+            background: var(--background-color);
+            color: var(--text-primary);
+            border-radius: var(--radius-md);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s ease;
+            border: 2px solid var(--border-color);
+        }
+
+        .contact-link:hover {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--text-secondary);
+        }
+
+        .empty-icon {
+            font-size: 5rem;
+            margin-bottom: 1.5rem;
+            opacity: 0.5;
+        }
+
+        .empty-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+        }
+
+        .empty-message {
+            font-size: 1.1rem;
+            margin-bottom: 2rem;
+        }
+
+        /* Loading State */
+        .loading {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--text-secondary);
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid var(--border-color);
+            border-top-color: var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .page-header h1 {
+                font-size: 2rem;
+            }
+
+            .page-header p {
+                font-size: 1rem;
+            }
+
+            .members-stats {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 1rem;
+                padding: 2rem 0;
+            }
+
+            .stat-card {
+                padding: 1.5rem;
+            }
+
+            .stat-number {
+                font-size: 2rem;
+            }
+
+            .filter-header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .search-box {
+                min-width: 100%;
+            }
+
+            .filter-buttons {
+                width: 100%;
+            }
+
+            .filter-btn {
+                flex: 1;
+                min-width: calc(50% - 0.5rem);
+            }
+
+            .members-grid {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+
+            .modal-content {
+                margin: 1rem;
+            }
+
+            .modal-header {
+                padding: 2rem;
+            }
+
+            .modal-photo {
+                width: 120px;
+                height: 120px;
+            }
+
+            .modal-name {
+                font-size: 1.5rem;
+            }
+
+            .modal-body {
+                padding: 1.5rem;
+            }
+
+            .modal-info-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .members-stats {
+                grid-template-columns: 1fr;
+            }
+
+            .filter-btn {
+                min-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content container">
+            <div class="logo-container">
+                <img src="assets/default-logo.svg" alt="GRRC Logo" class="logo" id="headerLogo">
+                <span class="club-name" id="headerClubName">GRRC</span>
+            </div>
+            
+            <nav class="nav-menu" id="navMenu">
+                <a href="index.html" class="nav-link">Home</a>
+                <a href="members.html" class="nav-link active">Members</a>
+                <a href="events.html" class="nav-link">Events</a>
+                <a href="projects.html" class="nav-link">Projects</a>
+                <a href="gallery.html" class="nav-link">Gallery</a>
+                <a href="admin.html" class="nav-link">Admin</a>
+            </nav>
+
+            <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
+                <span class="theme-icon">🌙</span>
+            </button>
+
+            <button class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Toggle menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Mobile Navigation Overlay -->
+    <div class="mobile-nav-overlay" id="mobileNavOverlay">
+        <nav class="mobile-nav">
+            <a href="index.html" class="mobile-nav-link">Home</a>
+            <a href="members.html" class="mobile-nav-link active">Members</a>
+            <a href="events.html" class="mobile-nav-link">Events</a>
+            <a href="projects.html" class="mobile-nav-link">Projects</a>
+            <a href="gallery.html" class="mobile-nav-link">Gallery</a>
+            <a href="admin.html" class="mobile-nav-link">Admin</a>
+        </nav>
+    </div>
+
+    <!-- Page Header -->
+    <section class="page-header">
+        <div class="page-header-content">
+            <h1>Our Members</h1>
+            <p>Meet the brilliant minds behind GSTU Robotics & Research Club</p>
+        </div>
+    </section>
+
+    <!-- Main Content -->
+    <main class="container">
+        <!-- Members Statistics -->
+        <div class="members-stats" id="membersStats">
+            <div class="stat-card">
+                <div class="stat-number" id="totalMembers">0</div>
+                <div class="stat-label">Total Members</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="executiveCount">0</div>
+                <div class="stat-label">Executive Committee</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="departmentCount">0</div>
+                <div class="stat-label">Departments</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="generalCount">0</div>
+                <div class="stat-label">General Members</div>
+            </div>
+        </div>
+
+        <!-- Filter Section -->
+        <div class="filter-section">
+            <div class="filter-header">
+                <div class="search-box">
+                    <span class="search-icon">🔍</span>
+                    <input 
+                        type="text" 
+                        id="searchInput" 
+                        placeholder="Search by name or department..."
+                        autocomplete="off"
+                    >
+                </div>
+            </div>
+
+            <div class="filter-buttons" id="filterButtons">
+                <button class="filter-btn active" data-filter="all">All Members</button>
+                <button class="filter-btn" data-filter="executive">Executive Committee</button>
+                <button class="filter-btn" data-filter="general">General Members</button>
+                <button class="filter-btn" data-filter="department">By Department</button>
+            </div>
+
+            <div class="department-filters" id="departmentFilters" style="display: none;">
+                <!-- Department buttons will be populated dynamically -->
+            </div>
+        </div>
+
+        <!-- Members Grid -->
+        <div id="membersContainer">
+            <div class="loading">
+                <div class="spinner"></div>
+                <p>Loading members...</p>
+            </div>
+        </div>
+    </main>
+
+    <!-- Member Detail Modal -->
+    <div class="modal" id="memberModal">
+        <div class="modal-content" id="modalContent">
+            <button class="modal-close" id="modalClose">&times;</button>
+            <!-- Modal content will be populated dynamically -->
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content container">
+            <div class="footer-section">
+                <h3 id="footerClubName">GRRC</h3>
+                <p id="footerDescription">A Hub of Robothinkers at Gopalganj Science and Technology University</p>
+            </div>
+            
+            <div class="footer-section">
+                <h4>Quick Links</h4>
+                <nav class="footer-links">
+                    <a href="index.html">Home</a>
+                    <a href="members.html">Members</a>
+                    <a href="events.html">Events</a>
+                    <a href="projects.html">Projects</a>
+                    <a href="gallery.html">Gallery</a>
+                    <a href="admin.html">Admin</a>
+                </nav>
+            </div>
+            
+            <div class="footer-section">
+                <h4>Connect With Us</h4>
+                <div class="social-links" id="footerSocialLinks">
+                    <p style="color: var(--text-secondary); font-size: 0.9rem;">No social links added yet</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer-bottom container">
+            <p>&copy; <span id="currentYear"></span> GSTU Robotics & Research Club. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- JavaScript Files -->
+    <script src="js/api-client.js"></script>
+    <script src="js/config.js"></script>
+    <script src="js/storage.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/theme.js"></script>
+    <script src="js/navigation.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/load-config.js"></script>
+
+    <script>
+        // Global state
+        let allMembers = [];
+        let filteredMembers = [];
+        let currentFilter = 'all';
+        let currentDepartment = null;
+
+        // Helper function to create default avatar SVG
+        function createDefaultAvatar(name) {
+            const initial = name ? name.charAt(0).toUpperCase() : '?';
+            const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><rect fill="#1a1f3a" width="200" height="200"/><text x="100" y="110" font-family="Arial" font-size="80" fill="#00d4ff" text-anchor="middle">${initial}</text></svg>`;
+            return 'data:image/svg+xml;base64,' + btoa(svg);
+        }
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadClubConfig();
+            await loadMembers();
+            initializeFilters();
+            initializeSearch();
+            initializeModal();
+            
+            // Set current year in footer
+            document.getElementById('currentYear').textContent = new Date().getFullYear();
+        });
+
+        // Load club configuration
+        async function loadClubConfig() {
+            try {
+                // Try API first
+                if (typeof getClubConfig === 'function') {
+                    const result = await getClubConfig();
+                    if (result.success && result.data) {
+                        applyClubConfig(result.data);
+                        return;
+                    }
+                }
+                
+                // Fallback to localStorage
+                const config = JSON.parse(localStorage.getItem('clubConfig') || '{}');
+                applyClubConfig(config);
+            } catch (error) {
+                console.error('Error loading club config:', error);
+            }
+        }
+
+        // Apply club configuration to page
+        function applyClubConfig(config) {
+            // Update header
+            if (config.logo) {
+                document.getElementById('headerLogo').src = config.logo;
+            }
+            if (config.name) {
+                document.getElementById('headerClubName').textContent = config.name;
+                document.getElementById('footerClubName').textContent = config.name;
+            }
+            
+            // Update footer
+            if (config.description) {
+                document.getElementById('footerDescription').textContent = config.description;
+            }
+            
+            // Load social links
+            if (config.socialLinks && config.socialLinks.length > 0) {
+                const socialLinksHTML = config.socialLinks.map(link => 
+                    `<a href="${link.url}" target="_blank" rel="noopener noreferrer" class="social-link">${getSocialIcon(link.platform)}</a>`
+                ).join('');
+                document.getElementById('footerSocialLinks').innerHTML = socialLinksHTML;
+            }
+        }
+
+        // Get social media icon
+        function getSocialIcon(platform) {
+            const icons = {
+                facebook: '📘',
+                twitter: '🐦',
+                instagram: '📷',
+                linkedin: '💼',
+                youtube: '📺',
+                github: '💻',
+                email: '📧'
+            };
+            return icons[platform.toLowerCase()] || '🔗';
+        }
+
+        // Load members
+        async function loadMembers() {
+            try {
+                // Try API first
+                if (typeof getMembers === 'function') {
+                    const result = await getMembers();
+                    if (result.success && result.data) {
+                        allMembers = result.data;
+                        processMembersData();
+                        return;
+                    }
+                }
+                
+                // Fallback to localStorage
+                allMembers = JSON.parse(localStorage.getItem('members') || '[]');
+                processMembersData();
+                
+            } catch (error) {
+                console.error('Error loading members:', error);
+                displayEmptyState('Error loading members. Please try again.');
+            }
+        }
+
+        // Process members data
+        function processMembersData() {
+            // Sort members: executives first, then by name
+            allMembers.sort((a, b) => {
+                const aIsExec = (a.role || '').toLowerCase().includes('executive');
+                const bIsExec = (b.role || '').toLowerCase().includes('executive');
+                
+                if (aIsExec && !bIsExec) return -1;
+                if (!aIsExec && bIsExec) return 1;
+                return (a.name || '').localeCompare(b.name || '');
+            });
+
+            filteredMembers = [...allMembers];
+            
+            updateStatistics();
+            displayMembers();
+            populateDepartmentFilters();
+        }
+
+        // Update statistics
+        function updateStatistics() {
+            const totalMembers = allMembers.length;
+            const executiveCount = allMembers.filter(m => 
+                (m.role || '').toLowerCase().includes('executive')
+            ).length;
+            const generalCount = totalMembers - executiveCount;
+            const departments = new Set(allMembers.map(m => m.department).filter(Boolean));
+
+            document.getElementById('totalMembers').textContent = totalMembers;
+            document.getElementById('executiveCount').textContent = executiveCount;
+            document.getElementById('generalCount').textContent = generalCount;
+            document.getElementById('departmentCount').textContent = departments.size;
+        }
+
+        // Display members grid
+        function displayMembers() {
+            const container = document.getElementById('membersContainer');
+
+            if (filteredMembers.length === 0) {
+                if (allMembers.length === 0) {
+                    displayEmptyState('No members added yet');
+                } else {
+                    displayEmptyState('No members found matching your filters');
+                }
+                return;
+            }
+
+            const membersHTML = `
+                <div class="members-grid">
+                    ${filteredMembers.map(member => createMemberCard(member)).join('')}
+                </div>
+            `;
+
+            container.innerHTML = membersHTML;
+
+            // Add click handlers to cards
+            document.querySelectorAll('.member-card').forEach(card => {
+                card.addEventListener('click', () => {
+                    const memberId = card.dataset.memberId;
+                    showMemberModal(memberId);
+                });
+            });
+        }
+
+        // Create member card HTML
+        function createMemberCard(member) {
+            const defaultPhoto = createDefaultAvatar(member.name);
+            const photoSrc = member.photo || defaultPhoto;
+            
+            return `
+                <div class="member-card" data-member-id="${member.id}">
+                    <img 
+                        src="${photoSrc}" 
+                        alt="${member.name || 'Member'}" 
+                        class="member-photo"
+                        onerror="this.src='${defaultPhoto}'"
+                    >
+                    <div class="member-info">
+                        <div class="member-name">${member.name || 'Unknown'}</div>
+                        <div class="member-role">${member.role || 'Member'}</div>
+                        <div class="member-details">
+                            <div class="member-detail-item">
+                                <span class="detail-item">
+                                <span class="detail-icon">🎓</span>
+                                <span>${member.department || 'N/A'}</span>
+                            </div>
+                            <div class="member-detail-icon">📅</span>
+                                <span>${member.year ? member.year + ' Year' : 'N/A'}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Display empty state
+        function displayEmptyState(message) {
+            const container = document.getElementById('membersContainer');
+            container.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-icon">👥</div>
+                    <div class="empty-title">No Members Found</div>
+                    <div class="empty-message">${message}</div>
+                    ${allMembers.length === 0 ? '<a href="admin.html" class="btn btn-primary">Add Members from Admin Panel</a>' : ''}
+                </div>
+            `;
+        }
+
+        // Show member detail modal
+        function showMemberModal(memberId) {
+            const member = allMembers.find(m => m.id === memberId);
+            if (!member) return;
+
+            const defaultPhoto = createDefaultAvatar(member.name);
+            const photoSrc = member.photo || defaultPhoto;
+
+            const modalHTML = `
+                <button class="modal-close" id="modalClose">&times;</button>
+                <div class="modal-header">
+                    <img 
+                        src="${photoSrc}" 
+                        alt="${member.name || 'Member'}" 
+                        class="modal-photo"
+                        onerror="this.src='${defaultPhoto}'"
+                    >
+                    <div class="modal-name">${member.name || 'Unknown'}</div>
+                    <div class="modal-role">${member.role || 'Member'}</div>
+                </div>
+                <div class="modal-body">
+                    <!-- Basic Information -->
+                    <div class="modal-section">
+                        <div class="modal-section-title">
+                            <span>📋</span>
+                            <span>Basic Information</span>
+                        </div>
+                        <div class="modal-info-grid">
+                            <div class="modal-info-item">
+                                <div class="modal-info-label">Department</div>
+                                <div class="modal-info-value">${member.department || 'N/A'}</div>
+                            </div>
+                            <div class="modal-info-item">
+                                <div class="modal-info-label">Year</div>
+                                <div class="modal-info-value">${member.year ? member.year + ' Year' : 'N/A'}</div>
+                            </div>
+                            <div class="modal-info-item">
+                                <div class="modal-info-label">Joined Date</div>
+                                <div class="modal-info-value">${member.joinedDate ? formatDate(member.joinedDate) : 'N/A'}</div>
+                            </div>
+                            <div class="modal-info-item">
+                                <div class="modal-info-label">Member ID</div>
+                                <div class="modal-info-value">${member.id || 'N/A'}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    ${member.bio ? `
+                    <div class="modal-section">
+                        <div class="modal-section-title">
+                            <span>📝</span>
+                            <span>About</span>
+                        </div>
+                        <div class="modal-bio">${member.bio}</div>
+                    </div>
+                    ` : ''}
+
+                    ${member.skills && member.skills.length > 0 ? `
+                    <div class="modal-section">
+                        <div class="modal-section-title">
+                            <span>⚡</span>
+                            <span>Skills & Expertise</span>
+                        </div>
+                        <div class="skills-list">
+                            ${member.skills.map(skill => `<span class="skill-badge">${skill}</span>`).join('')}
+                        </div>
+                    </div>
+                    ` : ''}
+
+                    ${member.email || member.phone ? `
+                    <div class="modal-section">
+                        <div class="modal-section-title">
+                            <span>📞</span>
+                            <span>Contact Information</span>
+                        </div>
+                        <div class="contact-links">
+                            ${member.email ? `<a href="mailto:${member.email}" class="contact-link">📧 ${member.email}</a>` : ''}
+                            ${member.phone ? `<a href="tel:${member.phone}" class="contact-link">📱 ${member.phone}</a>` : ''}
+                        </div>
+                    </div>
+                    ` : ''}
+                </div>
+            `;
+
+            document.getElementById('modalContent').innerHTML = modalHTML;
+            document.getElementById('memberModal').classList.add('active');
+
+            // Re-attach close handler
+            document.getElementById('modalClose').addEventListener('click', closeModal);
+        }
+
+        // Close modal
+        function closeModal() {
+            document.getElementById('memberModal').classList.remove('active');
+        }
+
+        // Initialize modal
+        function initializeModal() {
+            const modal = document.getElementById('memberModal');
+            
+            // Close on overlay click
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    closeModal();
+                }
+            });
+
+            // Close on escape key
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && modal.classList.contains('active')) {
+                    closeModal();
+                }
+            });
+        }
+
+        // Initialize filters
+        function initializeFilters() {
+            const filterButtons = document.querySelectorAll('.filter-btn');
+            
+            filterButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    // Remove active class from all buttons
+                    filterButtons.forEach(btn => btn.classList.remove('active'));
+                    button.classList.add('active');
+
+                    // Get filter type
+                    const filter = button.dataset.filter;
+                    currentFilter = filter;
+
+                    // Show/hide department filters
+                    const deptFilters = document.getElementById('departmentFilters');
+                    if (filter === 'department') {
+                        deptFilters.style.display = 'flex';
+                    } else {
+                        deptFilters.style.display = 'none';
+                        currentDepartment = null;
+                    }
+
+                    // Apply filter
+                    applyFilters();
+                });
+            });
+        }
+
+        // Populate department filters
+        function populateDepartmentFilters() {
+            const departments = [...new Set(allMembers.map(m => m.department).filter(Boolean))].sort();
+            const container = document.getElementById('departmentFilters');
+
+            if (departments.length === 0) {
+                container.innerHTML = '<p style="color: var(--text-secondary); font-size: 0.9rem;">No departments available</p>';
+                return;
+            }
+
+            const buttonsHTML = departments.map(dept => 
+                `<button class="dept-btn" data-department="${dept}">${dept}</button>`
+            ).join('');
+
+            container.innerHTML = buttonsHTML;
+
+            // Add click handlers
+            document.querySelectorAll('.dept-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    // Toggle active state
+                    document.querySelectorAll('.dept-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+
+                    currentDepartment = btn.dataset.department;
+                    applyFilters();
+                });
+            });
+        }
+
+        // Apply all active filters
+        function applyFilters() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
+
+            filteredMembers = allMembers.filter(member => {
+                // Search filter
+                if (searchTerm) {
+                    const matchesSearch = 
+                        (member.name || '').toLowerCase().includes(searchTerm) ||
+                        (member.department || '').toLowerCase().includes(searchTerm) ||
+                        (member.role || '').toLowerCase().includes(searchTerm);
+                    
+                    if (!matchesSearch) return false;
+                }
+
+                // Role filter
+                if (currentFilter === 'executive') {
+                    if (!(member.role || '').toLowerCase().includes('executive')) return false;
+                }
+                if (currentFilter === 'general') {
+                    if ((member.role || '').toLowerCase().includes('executive')) return false;
+                }
+
+                // Department filter
+                if (currentFilter === 'department' && currentDepartment) {
+                    if (member.department !== currentDepartment) return false;
+                }
+
+                return true;
+            });
+
+            displayMembers();
+        }
+
+        // Initialize search
+        function initializeSearch() {
+            const searchInput = document.getElementById('searchInput');
+            let debounceTimer;
+
+            searchInput.addEventListener('input', () => {
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(() => {
+                    applyFilters();
+                }, 300);
+            });
+        }
+
+        // Format date
+        function formatDate(dateString) {
+            try {
+                const date = new Date(dateString);
+                const options = { year: 'numeric', month: 'long', day: 'numeric' };
+                return date.toLocaleDateString('en-US', options);
+            } catch (error) {
+                return dateString;
+            }
+        }
+    </script>
+</body>
+</html>

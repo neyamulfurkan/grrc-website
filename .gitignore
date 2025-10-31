@@ -1,0 +1,112 @@
+# ====================================
+# GSTU Robotics Club - Git Ignore File
+# ====================================
+
+# -------------------- Dependencies --------------------
+# Node.js dependencies installed via npm
+# These should be installed fresh on each machine
+node_modules/
+
+# -------------------- Environment Variables --------------------
+# Contains sensitive information like passwords and API keys
+# Each developer should have their own .env file
+.env
+
+# Keep the example file for reference
+!.env.example
+
+# -------------------- Logs --------------------
+# Application and npm logs may contain sensitive information
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+logs/
+
+# -------------------- Build Directories --------------------
+# Compiled output and build artifacts
+dist/
+build/
+.next/
+out/
+
+# -------------------- Operating System Files --------------------
+# macOS system files
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows system files
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+Desktop.ini
+
+# Linux system files
+*~
+.directory
+
+# -------------------- Editor/IDE Directories --------------------
+# Visual Studio Code
+.vscode/
+*.code-workspace
+
+# JetBrains IDEs (WebStorm, IntelliJ, etc.)
+.idea/
+*.iml
+*.iws
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+*.swp
+*.swo
+*.swn
+*~
+
+# Emacs
+*~
+\#*\#
+.\#*
+
+# -------------------- Testing --------------------
+# Test coverage reports
+coverage/
+*.lcov
+.nyc_output/
+
+# -------------------- Temporary Files --------------------
+# Various temporary files
+*.tmp
+*.temp
+.cache/
+
+# -------------------- Database --------------------
+# Local database files (if using SQLite for development)
+*.sqlite
+*.sqlite3
+*.db
+
+# Database backups
+*.sql.backup
+*.dump
+
+# -------------------- Security --------------------
+# SSL certificates and keys
+*.pem
+*.key
+*.cert
+
+# -------------------- Package Manager --------------------
+# Yarn
+yarn.lock
+.yarn/
+.pnp.*
+
+# pnpm
+pnpm-lock.yaml
+
+# Keep package-lock.json for npm (comment out if using yarn/pnpm)
+# package-lock.json

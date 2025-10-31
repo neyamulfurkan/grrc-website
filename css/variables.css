@@ -1,0 +1,347 @@
+/* ============================================
+   GSTU Robotics & Research Club - CSS Variables
+   Version: 1.0.0
+   Description: Complete theming system with dual theme support
+   ============================================ */
+
+/* ============================================
+   ROOT VARIABLES - LIGHT THEME (DEFAULT)
+   ============================================ */
+:root {
+  /* ===== PRIMARY COLOR PALETTE ===== */
+  --primary-color: #1a1f3a;           /* Deep navy blue - headers, primary elements */
+  --primary-light: #2a3f5f;           /* Lighter navy - hover states */
+  --primary-dark: #0d1220;            /* Darker navy - active states */
+  
+  --secondary-color: #00d4ff;         /* Electric cyan - accents, CTAs */
+  --secondary-light: #33ddff;         /* Lighter cyan - hover effects */
+  --secondary-dark: #00a8cc;          /* Darker cyan - active states */
+  
+  --accent-color: #8b5cf6;            /* Vibrant purple - badges, highlights */
+  --accent-light: #a78bfa;            /* Lighter purple - hover */
+  --accent-dark: #7c3aed;             /* Darker purple - active */
+  
+  --warning-color: #ff6b35;           /* Warm orange - alerts, warnings */
+  --warning-light: #ff8c5a;           /* Lighter orange - hover */
+  --warning-dark: #ff4500;            /* Darker orange - active */
+
+  /* ===== STATUS COLORS ===== */
+  --success-color: #10b981;           /* Green - success, completed */
+  --error-color: #ef4444;             /* Red - errors, cancelled */
+  --info-color: #6366f1;              /* Indigo - info, planned */
+  --pending-color: #f59e0b;           /* Amber - ongoing, pending */
+
+  /* ===== BACKGROUND COLORS ===== */
+  --background-color: #f8fafc;        /* Light gray-blue - page background */
+  --background-secondary: #f1f5f9;    /* Slightly darker - sections */
+  --surface-color: #ffffff;           /* White - cards, modals */
+  --surface-hover: #f9fafb;           /* Very light gray - hover states */
+
+  /* ===== TEXT COLORS ===== */
+  --text-primary: #1e293b;            /* Almost black - main text */
+  --text-secondary: #64748b;          /* Medium gray - secondary text */
+  --text-tertiary: #94a3b8;           /* Light gray - disabled, placeholder */
+  --text-inverse: #ffffff;            /* White - text on dark backgrounds */
+
+  /* ===== BORDER COLORS ===== */
+  --border-color: #e2e8f0;            /* Light gray - default borders */
+  --border-light: #f1f5f9;            /* Very light - subtle borders */
+  --border-dark: #cbd5e1;             /* Medium gray - prominent borders */
+  --border-focus: var(--primary-color); /* Primary - focused inputs */
+
+  /* ===== SHADOW DEFINITIONS ===== */
+  --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  --shadow-inner: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06);
+
+  /* ===== SPACING SCALE (8px Grid System) ===== */
+  --space-xs: 0.5rem;      /* 8px */
+  --space-sm: 1rem;        /* 16px */
+  --space-md: 1.5rem;      /* 24px */
+  --space-lg: 2rem;        /* 32px */
+  --space-xl: 3rem;        /* 48px */
+  --space-2xl: 4rem;       /* 64px */
+  --space-3xl: 6rem;       /* 96px */
+
+  /* ===== BORDER RADIUS ===== */
+  --radius-sm: 0.25rem;    /* 4px - small elements */
+  --radius-md: 0.5rem;     /* 8px - buttons, inputs */
+  --radius-lg: 1rem;       /* 16px - cards */
+  --radius-xl: 1.5rem;     /* 24px - large cards */
+  --radius-2xl: 2rem;      /* 32px - hero sections */
+  --radius-full: 9999px;   /* Full rounded - pills, avatars */
+
+  /* ===== TYPOGRAPHY ===== */
+  /* Font Families */
+  --font-primary: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+  --font-mono: 'Courier New', Courier, monospace;
+
+  /* Font Sizes */
+  --font-xs: 0.75rem;      /* 12px */
+  --font-sm: 0.875rem;     /* 14px */
+  --font-base: 1rem;       /* 16px */
+  --font-lg: 1.125rem;     /* 18px */
+  --font-xl: 1.25rem;      /* 20px */
+  --font-2xl: 1.5rem;      /* 24px */
+  --font-3xl: 1.875rem;    /* 30px */
+  --font-4xl: 2.25rem;     /* 36px */
+  --font-5xl: 3rem;        /* 48px */
+  --font-6xl: 3.75rem;     /* 60px */
+
+  /* Font Weights */
+  --font-weight-light: 300;
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  --font-weight-extrabold: 800;
+
+  /* Line Heights */
+  --line-height-tight: 1.25;
+  --line-height-normal: 1.5;
+  --line-height-relaxed: 1.75;
+  --line-height-loose: 2;
+
+  /* Letter Spacing */
+  --letter-spacing-tight: -0.025em;
+  --letter-spacing-normal: 0em;
+  --letter-spacing-wide: 0.025em;
+  --letter-spacing-wider: 0.05em;
+
+  /* ===== TRANSITION DURATIONS ===== */
+  --transition-fast: 150ms;
+  --transition-base: 300ms;
+  --transition-slow: 500ms;
+  --transition-slower: 700ms;
+
+  /* ===== TRANSITION EASINGS ===== */
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+
+  /* ===== Z-INDEX SCALE ===== */
+  --z-dropdown: 1000;
+  --z-sticky: 1020;
+  --z-fixed: 1030;
+  --z-modal-backdrop: 1040;
+  --z-modal: 1050;
+  --z-popover: 1060;
+  --z-tooltip: 1070;
+
+  /* ===== RESPONSIVE BREAKPOINTS (as custom properties) ===== */
+  --breakpoint-mobile: 320px;
+  --breakpoint-tablet: 768px;
+  --breakpoint-desktop: 1024px;
+  --breakpoint-wide: 1280px;
+
+  /* ===== CONTAINER WIDTHS ===== */
+  --container-sm: 640px;
+  --container-md: 768px;
+  --container-lg: 1024px;
+  --container-xl: 1280px;
+  --container-2xl: 1536px;
+
+  /* ===== GRADIENT DEFINITIONS ===== */
+  --gradient-primary: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+  --gradient-secondary: linear-gradient(135deg, var(--secondary-color) 0%, var(--accent-color) 100%);
+  --gradient-accent: linear-gradient(135deg, var(--accent-color) 0%, var(--warning-color) 100%);
+  --gradient-dark: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+
+  /* ===== OVERLAY COLORS ===== */
+  --overlay-light: rgba(255, 255, 255, 0.9);
+  --overlay-dark: rgba(0, 0, 0, 0.5);
+  --overlay-darker: rgba(0, 0, 0, 0.75);
+  --overlay-darkest: rgba(0, 0, 0, 0.95);
+
+  /* ===== GLASSMORPHISM ===== */
+  --glass-background: rgba(255, 255, 255, 0.1);
+  --glass-border: rgba(255, 255, 255, 0.2);
+  --glass-blur: blur(10px);
+
+  /* ===== BADGE COLORS ===== */
+  --badge-primary-bg: var(--primary-color);
+  --badge-primary-text: var(--text-inverse);
+  --badge-secondary-bg: var(--secondary-color);
+  --badge-secondary-text: var(--text-inverse);
+  --badge-success-bg: var(--success-color);
+  --badge-success-text: var(--text-inverse);
+  --badge-warning-bg: var(--warning-color);
+  --badge-warning-text: var(--text-inverse);
+  --badge-error-bg: var(--error-color);
+  --badge-error-text: var(--text-inverse);
+  --badge-info-bg: var(--info-color);
+  --badge-info-text: var(--text-inverse);
+
+  /* ===== INPUT COLORS ===== */
+  --input-background: var(--surface-color);
+  --input-border: var(--border-color);
+  --input-border-focus: var(--border-focus);
+  --input-text: var(--text-primary);
+  --input-placeholder: var(--text-tertiary);
+  --input-disabled-bg: var(--background-secondary);
+  --input-disabled-text: var(--text-tertiary);
+
+  /* ===== BUTTON COLORS ===== */
+  --btn-primary-bg: var(--primary-color);
+  --btn-primary-text: var(--text-inverse);
+  --btn-primary-hover: var(--primary-light);
+  --btn-secondary-bg: var(--secondary-color);
+  --btn-secondary-text: var(--text-inverse);
+  --btn-secondary-hover: var(--secondary-light);
+  --btn-outline-border: var(--primary-color);
+  --btn-outline-text: var(--primary-color);
+  --btn-outline-hover-bg: var(--primary-color);
+  --btn-outline-hover-text: var(--text-inverse);
+
+  /* ===== HEADER COLORS ===== */
+  --header-background: var(--surface-color);
+  --header-text: var(--text-primary);
+  --header-shadow: var(--shadow-sm);
+  --header-border: var(--border-light);
+
+  /* ===== FOOTER COLORS ===== */
+  --footer-background: var(--primary-color);
+  --footer-text: rgba(255, 255, 255, 0.8);
+  --footer-heading: var(--text-inverse);
+  --footer-link-hover: var(--secondary-color);
+}
+
+/* ============================================
+   DARK THEME OVERRIDES
+   ============================================ */
+[data-theme="dark"] {
+  /* ===== PRIMARY COLOR PALETTE ===== */
+  --primary-color: #00d4ff;           /* Cyan becomes primary in dark */
+  --primary-light: #33ddff;
+  --primary-dark: #00a8cc;
+  
+  --secondary-color: #8b5cf6;         /* Purple becomes secondary */
+  --secondary-light: #a78bfa;
+  --secondary-dark: #7c3aed;
+  
+  --accent-color: #ff6b35;            /* Orange becomes accent */
+  --accent-light: #ff8c5a;
+  --accent-dark: #ff4500;
+  
+  --warning-color: #fbbf24;           /* Brighter yellow for dark mode */
+  --warning-light: #fcd34d;
+  --warning-dark: #f59e0b;
+
+  /* ===== STATUS COLORS (adjusted for dark mode) ===== */
+  --success-color: #34d399;           /* Brighter green */
+  --error-color: #f87171;             /* Softer red */
+  --info-color: #818cf8;              /* Softer indigo */
+  --pending-color: #fbbf24;           /* Brighter amber */
+
+  /* ===== BACKGROUND COLORS ===== */
+  --background-color: #0f172a;        /* Very dark blue-black */
+  --background-secondary: #1e293b;    /* Dark slate */
+  --surface-color: #1e293b;           /* Dark slate - cards */
+  --surface-hover: #334155;           /* Lighter slate - hover */
+
+  /* ===== TEXT COLORS ===== */
+  --text-primary: #f1f5f9;            /* Almost white */
+  --text-secondary: #cbd5e1;          /* Light gray */
+  --text-tertiary: #94a3b8;           /* Medium gray */
+  --text-inverse: #0f172a;            /* Dark - text on light backgrounds */
+
+  /* ===== BORDER COLORS ===== */
+  --border-color: #334155;            /* Dark gray */
+  --border-light: #1e293b;            /* Very dark - subtle */
+  --border-dark: #475569;             /* Medium gray - prominent */
+  --border-focus: var(--primary-color); /* Cyan focus */
+
+  /* ===== SHADOW DEFINITIONS (more pronounced in dark) ===== */
+  --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.4), 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.3);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.6), 0 10px 10px -5px rgba(0, 0, 0, 0.4);
+  --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+  --shadow-inner: inset 0 2px 4px 0 rgba(0, 0, 0, 0.4);
+
+  /* ===== GRADIENT DEFINITIONS ===== */
+  --gradient-primary: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+  --gradient-secondary: linear-gradient(135deg, var(--secondary-color) 0%, var(--accent-color) 100%);
+  --gradient-accent: linear-gradient(135deg, var(--accent-color) 0%, var(--warning-color) 100%);
+  --gradient-dark: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+
+  /* ===== OVERLAY COLORS ===== */
+  --overlay-light: rgba(30, 41, 59, 0.9);
+  --overlay-dark: rgba(0, 0, 0, 0.7);
+  --overlay-darker: rgba(0, 0, 0, 0.85);
+  --overlay-darkest: rgba(0, 0, 0, 0.95);
+
+  /* ===== GLASSMORPHISM ===== */
+  --glass-background: rgba(30, 41, 59, 0.3);
+  --glass-border: rgba(100, 116, 139, 0.3);
+  --glass-blur: blur(10px);
+
+  /* ===== INPUT COLORS ===== */
+  --input-background: var(--background-secondary);
+  --input-border: var(--border-color);
+  --input-border-focus: var(--primary-color);
+  --input-text: var(--text-primary);
+  --input-placeholder: var(--text-tertiary);
+  --input-disabled-bg: var(--surface-color);
+  --input-disabled-text: var(--text-tertiary);
+
+  /* ===== BUTTON COLORS ===== */
+  --btn-primary-bg: var(--primary-color);
+  --btn-primary-text: var(--text-inverse);
+  --btn-primary-hover: var(--primary-light);
+  --btn-secondary-bg: var(--secondary-color);
+  --btn-secondary-text: var(--text-inverse);
+  --btn-secondary-hover: var(--secondary-light);
+  --btn-outline-border: var(--primary-color);
+  --btn-outline-text: var(--primary-color);
+  --btn-outline-hover-bg: var(--primary-color);
+  --btn-outline-hover-text: var(--text-inverse);
+
+  /* ===== HEADER COLORS ===== */
+  --header-background: var(--surface-color);
+  --header-text: var(--text-primary);
+  --header-shadow: var(--shadow-md);
+  --header-border: var(--border-color);
+
+  /* ===== FOOTER COLORS ===== */
+  --footer-background: var(--background-secondary);
+  --footer-text: var(--text-secondary);
+  --footer-heading: var(--text-primary);
+  --footer-link-hover: var(--primary-color);
+}
+
+/* ============================================
+   UTILITY CLASSES USING VARIABLES
+   ============================================ */
+
+/* Background Colors */
+.bg-primary { background-color: var(--primary-color); }
+.bg-secondary { background-color: var(--secondary-color); }
+.bg-accent { background-color: var(--accent-color); }
+.bg-surface { background-color: var(--surface-color); }
+
+/* Text Colors */
+.text-primary { color: var(--text-primary); }
+.text-secondary { color: var(--text-secondary); }
+.text-inverse { color: var(--text-inverse); }
+
+/* Border Radius */
+.rounded-sm { border-radius: var(--radius-sm); }
+.rounded-md { border-radius: var(--radius-md); }
+.rounded-lg { border-radius: var(--radius-lg); }
+.rounded-full { border-radius: var(--radius-full); }
+
+/* Shadows */
+.shadow-sm { box-shadow: var(--shadow-sm); }
+.shadow-md { box-shadow: var(--shadow-md); }
+.shadow-lg { box-shadow: var(--shadow-lg); }
+
+/* ============================================
+   END OF VARIABLES.CSS
+   ============================================ */
