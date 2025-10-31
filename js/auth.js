@@ -327,7 +327,7 @@ async function login(username, password, rememberMe = false) {
   
   try {
     /* PRIMARY: Try API authentication first via api-client.js */
-    if (checkAPIAvailable()) {
+    if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady) {
       console.log('🔐 Attempting API authentication via api-client.js...');
       
       try {
@@ -498,7 +498,7 @@ async function logout(redirectToLogin = true) {
   }
   
   // Call API logout if available and session has token
-  if (checkAPIAvailable()) {
+  if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady) {
     if (session && session.hasToken) {
       console.log('🔐 Calling API logout via api-client.js...');
       try {
@@ -550,9 +550,15 @@ function isAuthenticated(redirectIfNot = false) {
   }
   
   // If session claims to have token, verify it exists
-  if (session.hasToken) {
-    if (!hasValidToken()) {
-      console.log('⚠️ Session has token flag but token is missing - clearing session');
+  if (session.hasToken && !hasValidToken()) {
+    console.log('⚠️ Token missing but session exists - attempting to restore from localStorage');
+    const token = localStorage.getItem(AUTH_CONFIG.TOKEN_KEY);
+    if (token) {
+      // Token exists in localStorage, keep session valid
+      return true;
+    } else {
+      // No token anywhere, clear session
+      console.log('⚠️ No token found - clearing session');
       clearSession();
       if (redirectIfNot && typeof window !== 'undefined') {
         window.location.href = 'admin.html';

@@ -20,10 +20,22 @@ DROP TABLE IF EXISTS club_config CASCADE;
 -- ====================================
 CREATE TABLE club_config (
     id SERIAL PRIMARY KEY,
-    logo TEXT DEFAULT 'assets/default-logo.jpg',
-    name VARCHAR(255) NOT NULL,
-    motto VARCHAR(500),
-    description TEXT,
+    club_club_club_club_club_logo TEXT DEFAULT 'assets/default-logo.jpg',
+    club_name VARCHAR(255) NOT NULL,
+    club_motto VARCHAR(500),
+    club_description TEXT,
+    club_name VARCHAR(255) NOT NULL,
+    club_motto VARCHAR(500),
+    club_description TEXT,
+    club_name VARCHAR(255) NOT NULL,
+    club_motto VARCHAR(500),
+    club_description TEXT,
+    club_name VARCHAR(255) NOT NULL,
+    club_motto VARCHAR(500),
+    club_description TEXT,
+    club_name VARCHAR(255) NOT NULL,
+    club_motto VARCHAR(500),
+    club_description TEXT,
     social_links JSONB DEFAULT '[]'::jsonb, -- Array of {platform: string, url: string}
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
