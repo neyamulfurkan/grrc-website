@@ -24,9 +24,7 @@
 
 // ============ CONFIGURATION ============
 
-const API_BASE_URL = window.location.hostname === 'localhost' 
-    ? 'http://localhost:5000' 
-    : (typeof API_URL !== 'undefined' ? API_URL : 'http://localhost:5000');
+const API_BASE_URL = 'https://grrc-website-10.onrender.com';
 
 const AUTH_TOKEN_KEY = 'grrc_auth_token';
 const MAX_RETRIES = 3;
