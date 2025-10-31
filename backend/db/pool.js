@@ -117,8 +117,18 @@ if (poolConfig) {
   // Test connection on startup
   (async () => {
     try {
-      const client = await pool.connect();
-      const result = await client.query('SELECT NOW() as time, current_database() as db');
+      const client = await Promise.race([
+        pool.connect(),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Connection timeout')), 5000)
+        )
+      ]);
+      const result = await Promise.race([
+        client.query('SELECT NOW() as time, current_database() as db'),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Query timeout')), 3000)
+        )
+      ]);
       console.log('✅ Database connection test successful');
       console.log(`   Connected to: ${result.rows[0].db}`);
       console.log(`   Server time: ${result.rows[0].time}`);

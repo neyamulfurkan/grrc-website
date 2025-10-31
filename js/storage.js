@@ -121,11 +121,18 @@ function isAuthenticated() {
 async function getClubConfig() {
   try {
     // Try API first if available
-    if (typeof window.apiClient !== 'undefined') {
+    if (typeof window.apiClient !== 'undefined' && typeof window.apiClient.getConfig === 'function') {
+      console.log('🔄 Fetching club config from API...');
       try {
-        const response = await window.apiClient.getConfig();
+        const response = await Promise.race([
+          window.apiClient.getConfig(),
+          new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('API timeout')), 8000)
+          )
+        ]);
         
         if (response.success && response.data) {
+          console.log('✅ Club config fetched from API');
           localStorage.setItem(STORAGE_KEYS.CLUB_CONFIG, JSON.stringify(response.data));
           return { success: true, data: response.data };
         }
@@ -162,7 +169,7 @@ async function setClubConfig(configData) {
     const updatedConfig = { ...currentConfig, ...configData };
     
     // Try API if available
-    if (typeof window.apiClient !== 'undefined') {
+    if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady !== false) {
       try {
         const apiResult = await window.apiClient.updateConfig(updatedConfig);
         
@@ -196,7 +203,7 @@ async function setClubConfig(configData) {
 async function getAdmins() {
   try {
     // Try API first if available
-    if (typeof window.apiClient !== 'undefined') {
+    if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady !== false) {
       try {
         const response = await window.apiClient.getAdmins();
         
@@ -244,7 +251,7 @@ async function addAdmin(adminData) {
     };
     
     // Try API if available
-    if (typeof window.apiClient !== 'undefined') {
+    if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady !== false) {
       try {
         const apiResult = await window.apiClient.createAdmin(newAdmin);
         
@@ -300,7 +307,7 @@ async function deleteAdmin(adminId) {
   
   try {
     // Try API if available
-    if (typeof window.apiClient !== 'undefined') {
+    if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady !== false) {
       try {
         const apiResult = await window.apiClient.deleteAdmin(adminId);
         
@@ -334,7 +341,7 @@ async function deleteAdmin(adminId) {
 async function getMembers(filters = {}) {
   try {
     // Try API first if available
-    if (typeof window.apiClient !== 'undefined') {
+    if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady !== false) {
       try {
         const response = await window.apiClient.getMembers();
         
@@ -414,7 +421,7 @@ async function addMember(memberData) {
     };
     
     // Try API if available
-    if (typeof window.apiClient !== 'undefined') {
+    if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady !== false) {
       try {
         const apiResult = await window.apiClient.createMember(newMember);
         
@@ -468,7 +475,7 @@ async function updateMember(memberId, updates) {
     const updatedMember = { ...members[index], ...updates };
     
     // Try API if available
-    if (typeof window.apiClient !== 'undefined') {
+    if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady !== false) {
       try {
         const apiResult = await window.apiClient.updateMember(memberId, updatedMember);
         
@@ -516,7 +523,7 @@ async function deleteMember(memberId) {
   
   try {
     // Try API if available
-    if (typeof window.apiClient !== 'undefined') {
+    if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady !== false) {
       try {
         const apiResult = await window.apiClient.deleteMember(memberId);
         
@@ -550,7 +557,7 @@ async function deleteMember(memberId) {
 async function getEvents(filters = {}) {
   try {
     // Try API first if available
-    if (typeof window.apiClient !== 'undefined') {
+    if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady !== false) {
       try {
         const response = await window.apiClient.getEvents();
         
@@ -618,7 +625,7 @@ async function addEvent(eventData) {
     };
     
     // Try API if available
-    if (typeof window.apiClient !== 'undefined') {
+    if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady !== false) {
       try {
         const apiResult = await window.apiClient.createEvent(newEvent);
         
@@ -672,7 +679,7 @@ async function updateEvent(eventId, updates) {
     const updatedEvent = { ...events[index], ...updates };
     
     // Try API if available
-    if (typeof window.apiClient !== 'undefined') {
+    if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady !== false) {
       try {
         const apiResult = await window.apiClient.updateEvent(eventId, updatedEvent);
         
@@ -720,7 +727,7 @@ async function deleteEvent(eventId) {
   
   try {
     // Try API if available
-    if (typeof window.apiClient !== 'undefined') {
+    if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady !== false) {
       try {
         const apiResult = await window.apiClient.deleteEvent(eventId);
         
@@ -754,7 +761,7 @@ async function deleteEvent(eventId) {
 async function getProjects(filters = {}) {
   try {
     // Try API first if available
-    if (typeof window.apiClient !== 'undefined') {
+    if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady !== false) {
       try {
         const response = await window.apiClient.getProjects();
         
@@ -823,7 +830,7 @@ async function addProject(projectData) {
     };
     
     // Try API if available
-    if (typeof window.apiClient !== 'undefined') {
+    if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady !== false) {
       try {
         const apiResult = await window.apiClient.createProject(newProject);
         
@@ -877,7 +884,7 @@ async function updateProject(projectId, updates) {
     const updatedProject = { ...projects[index], ...updates };
     
     // Try API if available
-    if (typeof window.apiClient !== 'undefined') {
+    if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady !== false) {
       try {
         const apiResult = await window.apiClient.updateProject(projectId, updatedProject);
         
@@ -925,7 +932,7 @@ async function deleteProject(projectId) {
   
   try {
     // Try API if available
-    if (typeof window.apiClient !== 'undefined') {
+    if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady !== false) {
       try {
         const apiResult = await window.apiClient.deleteProject(projectId);
         
@@ -959,7 +966,7 @@ async function deleteProject(projectId) {
 async function getGallery(filters = {}) {
   try {
     // Try API first if available
-    if (typeof window.apiClient !== 'undefined') {
+    if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady !== false) {
       try {
         const response = await window.apiClient.getGallery();
         
@@ -1018,7 +1025,7 @@ async function addGalleryItem(galleryData) {
     };
     
     // Try API if available
-    if (typeof window.apiClient !== 'undefined') {
+    if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady !== false) {
       try {
         const apiResult = await window.apiClient.createGalleryItem(newItem);
         
@@ -1070,7 +1077,7 @@ async function deleteGalleryItem(galleryId) {
   
   try {
     // Try API if available
-    if (typeof window.apiClient !== 'undefined') {
+    if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady !== false) {
       try {
         const apiResult = await window.apiClient.deleteGalleryItem(galleryId);
         
@@ -1104,7 +1111,7 @@ async function deleteGalleryItem(galleryId) {
 async function getAnnouncements(filters = {}) {
   try {
     // Try API first if available
-    if (typeof window.apiClient !== 'undefined') {
+    if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady !== false) {
       try {
         const response = await window.apiClient.getAnnouncements();
         
@@ -1161,7 +1168,7 @@ async function addAnnouncement(announcementData) {
     };
     
     // Try API if available
-    if (typeof window.apiClient !== 'undefined') {
+    if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady !== false) {
       try {
         const apiResult = await window.apiClient.createAnnouncement(newAnnouncement);
         
@@ -1215,7 +1222,7 @@ async function updateAnnouncement(announcementId, updates) {
     const updatedAnnouncement = { ...announcements[index], ...updates };
     
     // Try API if available
-    if (typeof window.apiClient !== 'undefined') {
+    if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady !== false) {
       try {
         const apiResult = await window.apiClient.updateAnnouncement(announcementId, updatedAnnouncement);
         
@@ -1263,7 +1270,7 @@ async function deleteAnnouncement(announcementId) {
   
   try {
     // Try API if available
-    if (typeof window.apiClient !== 'undefined') {
+    if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady !== false) {
       try {
         const apiResult = await window.apiClient.deleteAnnouncement(announcementId);
         

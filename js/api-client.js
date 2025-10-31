@@ -183,11 +183,23 @@ async function request(endpoint, options = {}) {
             });
             
             // Race between fetch and timeout
+            const fetchPromise = fetch(url, config);
             const response = await Promise.race([
-                fetch(url, config),
+                fetchPromise,
                 timeoutPromise
-            ]);
-            
+            ]).catch(error => {
+                // Cancel the fetch on timeout
+                if (error.message === 'Request timeout') {
+                    console.error('⏱️ Request timed out, retrying with longer timeout...');
+                    return Promise.race([
+                        fetch(url, { ...config, signal: AbortSignal.timeout(10000) }),
+                        new Promise((_, reject) => 
+                            setTimeout(() => reject(new Error('Extended timeout')), 10000)
+                        )
+                    ]);
+                }
+                throw error;
+            });
             const duration = Date.now() - startTime;
             
             // Handle non-JSON responses (e.g., network errors)
@@ -824,6 +836,21 @@ console.log('   - Added 5-second request timeout');
 console.log('   - Added request deduplication');
 console.log('   - Added detailed error logging');
 console.log('   - Fixed getGalleryItems() error handling');
+
+
+// ============ API READINESS FLAG ============
+
+/**
+ * Mark API client as ready after initialization
+ */
+window.apiClient.isReady = true;
+window.API_AVAILABLE = true; // Backward compatibility
+
+// Verify token is loaded
+if (isAuthenticated()) {
+    console.log('🔐 Existing authentication token detected and loaded');
+}
+
 
 // Export for Node.js environment (if needed)
 if (typeof module !== 'undefined' && module.exports) {

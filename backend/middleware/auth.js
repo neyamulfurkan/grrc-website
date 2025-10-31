@@ -21,8 +21,9 @@ function authenticateToken(req, res, next) {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1]; // Format: "Bearer TOKEN"
 
-  // Check if token exists
+ // Check if token exists
   if (!token) {
+    console.log('❌ No token provided in request');
     return res.status(401).json({
       success: false,
       error: 'Access token required. Please login first.',
@@ -131,6 +132,9 @@ function isSuperAdmin(req, res, next) {
  * @returns {string} JWT token
  */
 function generateToken(payload, expiresIn = null) {
+  if (!process.env.JWT_SECRET) {
+    throw new Error('JWT_SECRET is not configured');
+  }
   return jwt.sign(
     payload,
     process.env.JWT_SECRET,

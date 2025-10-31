@@ -41,9 +41,6 @@ const STORAGE_KEYS_FALLBACK = {
 // Use STORAGE_KEYS from config.js if available, otherwise use fallback
 const STORAGE = typeof STORAGE_KEYS !== 'undefined' ? STORAGE_KEYS : STORAGE_KEYS_FALLBACK;
 
-/* Check if API client is available */
-window.API_AVAILABLE = typeof window.apiClient !== 'undefined' && 
-                       typeof window.apiClient.login === 'function';
 
 if (window.API_AVAILABLE) {
   console.log('✅ Backend API client (api-client.js) detected - Using API authentication');
@@ -330,7 +327,7 @@ async function login(username, password, rememberMe = false) {
   
   try {
     /* PRIMARY: Try API authentication first via api-client.js */
-    if (window.API_AVAILABLE && window.apiClient && typeof window.apiClient.login === 'function') {
+    if (checkAPIAvailable()) {
       console.log('🔐 Attempting API authentication via api-client.js...');
       
       try {
@@ -388,7 +385,12 @@ async function login(username, password, rememberMe = false) {
         // Continue to fallback below
       }
     } else {
-      console.log('⚠️ API client not available, using localStorage authentication');
+      console.log('⚠️ API client not available or not ready, using localStorage authentication');
+      console.log('   API Check:', {
+        exists: typeof window.apiClient !== 'undefined',
+        hasLogin: typeof window.apiClient?.login === 'function',
+        isReady: window.apiClient?.isReady
+      });
     }
     
     /* FALLBACK: localStorage authentication */
@@ -496,7 +498,7 @@ async function logout(redirectToLogin = true) {
   }
   
   // Call API logout if available and session has token
-  if (window.API_AVAILABLE && window.apiClient && typeof window.apiClient.logout === 'function') {
+  if (checkAPIAvailable()) {
     if (session && session.hasToken) {
       console.log('🔐 Calling API logout via api-client.js...');
       try {
@@ -697,7 +699,7 @@ function changePassword(currentPassword, newPassword) {
 function initializeAuth() {
   try {
     // Only create default admin if using localStorage fallback
-    if (!window.API_AVAILABLE) {
+    if (!checkAPIAvailable()) {
       let admins = JSON.parse(localStorage.getItem(STORAGE.ADMINS) || '[]');
       
       if (admins.length === 0) {
