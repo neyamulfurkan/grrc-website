@@ -1514,7 +1514,7 @@
                 const result = await getMembers();
                 let members = [];
 
-                if (result.success && result.data && Array.isArray(result.data)) {
+                if (result.success && Array.isArray(result.data)) {
                     members = result.data;
                 } else {
                     console.warn('⚠️ API returned invalid data, using localStorage fallback:', result);
@@ -1714,7 +1714,7 @@
                 const result = await getEvents();
                 let events = [];
 
-                if (result.success && result.data && Array.isArray(result.data)) {
+                if (result.success && Array.isArray(result.data)) {
                     events = result.data;
                 } else {
                     console.warn('⚠️ API returned invalid data, using localStorage fallback:', result);
@@ -1904,7 +1904,7 @@
                 const result = await getProjects();
                 let projects = [];
 
-                if (result.success && result.data && Array.isArray(result.data)) {
+                if (result.success && Array.isArray(result.data)) {
                     projects = result.data;
                 } else {
                     console.warn('⚠️ API returned invalid data, using localStorage fallback:', result);
@@ -2099,7 +2099,7 @@
                 const result = await getGallery();
                 let gallery = [];
 
-                if (result.success && result.data && Array.isArray(result.data)) {
+                if (result.success && Array.isArray(result.data)) {
                     gallery = result.data;
                 } else {
                     console.warn('⚠️ API returned invalid data, using localStorage fallback:', result);
@@ -2231,7 +2231,7 @@
                 const result = await getAnnouncements();
                 let announcements = [];
 
-                if (result.success && result.data && Array.isArray(result.data)) {
+                if (result.success && Array.isArray(result.data)) {
                     announcements = result.data;
                 } else {
                     console.warn('⚠️ API returned invalid data, using localStorage fallback:', result);
@@ -2376,7 +2376,7 @@
                 const result = await getAdmins();
                 let admins = [];
 
-                if (result.success && result.data && Array.isArray(result.data)) {
+               if (result.success && Array.isArray(result.data)) {
                     admins = result.data;
                 } else {
                     console.warn('⚠️ API returned invalid data, using localStorage fallback:', result);
