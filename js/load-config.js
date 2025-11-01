@@ -119,8 +119,8 @@ function updateClubConfigDOM(config) {
   
   console.log('🎨 Updating DOM with config:', config);
   
-  // ✅ CRITICAL FIX: Update ALL possible logo selectors
-  const logoElements = document.querySelectorAll('.club-logo, #sidebarLogo, #headerLogo, #clubLogo, #footerLogo, .logo');
+  // ✅ CRITICAL FIX: Update ALL possible logo selectors INCLUDING admin-logo
+  const logoElements = document.querySelectorAll('.club-logo, .admin-logo, #sidebarLogo, #headerLogo, #clubLogo, #footerLogo, .logo');
   logoElements.forEach(el => {
     const logoValue = config.logo || config.logo_url;
     if (logoValue) {
@@ -137,12 +137,17 @@ function updateClubConfigDOM(config) {
     }
   });
   
-  // ✅ CRITICAL FIX: Update ALL possible club name selectors
-  const clubNameElements = document.querySelectorAll('.club-name, .admin-subtitle, #headerClubName, #clubName, #heroClubName, #footerClubName, #sidebarTitle');
+  // ✅ CRITICAL FIX: Update ALL possible club name selectors INCLUDING sidebarSubtitle
+  const clubNameElements = document.querySelectorAll('.club-name, .admin-subtitle, #sidebarSubtitle, #headerClubName, #clubName, #heroClubName, #footerClubName, #sidebarTitle');
   clubNameElements.forEach(el => {
     const nameValue = config.name || config.club_name;
     if (nameValue) {
-      el.textContent = nameValue;
+      // Don't change "Admin Panel" text in sidebarTitle
+      if (el.id === 'sidebarTitle') {
+        el.textContent = 'Admin Panel';
+      } else {
+        el.textContent = nameValue;
+      }
       console.log('✅ Name updated:', el.id || el.className);
     }
   });
