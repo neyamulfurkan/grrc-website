@@ -1123,12 +1123,14 @@ async function getGallery(filters = {}) {
         if (response.success && Array.isArray(response.data)) {
           const mappedData = response.data.map(item => ({
             ...item,
+            image: item.image || item.image_url,
             createdAt: item.created_at || item.createdAt
           }));
           
           // ✅ CRITICAL FIX: Save to ALL cache keys
           localStorage.setItem(STORAGE_KEYS.GALLERY, JSON.stringify(mappedData));
           localStorage.setItem('gallery', JSON.stringify(mappedData));
+          localStorage.setItem('cache_gallery', JSON.stringify(mappedData));
           
           let result = mappedData;
           

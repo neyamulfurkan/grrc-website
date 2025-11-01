@@ -660,7 +660,15 @@
         document.addEventListener('DOMContentLoaded', async function() {
             document.getElementById('currentYear').textContent = new Date().getFullYear();
             
+            // Wait for API client to be ready
+            let retries = 0;
+            while ((!window.apiClient || !window.apiClient.isReady) && retries < 50) {
+                await new Promise(resolve => setTimeout(resolve, 100));
+                retries++;
+            }
+            
             await loadClubConfig();
+            await new Promise(resolve => setTimeout(resolve, 500)); // Wait for config
             await loadGalleryForSlideshow();
             await loadUpcomingEvents();
             await loadExecutiveMembers();
@@ -680,9 +688,7 @@
         
         let galleryItems = [];
         
-        // ✅ CRITICAL FIX: Clear cache first to force fresh data
-        localStorage.removeItem('cache_gallery');
-        
+        // Try API first WITHOUT clearing cache
         if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady) {
             try {
                 console.log('📡 Calling API for gallery...');
@@ -694,6 +700,7 @@
                     console.log('✅ Slideshow loaded', galleryItems.length, 'images from API');
                     // Save to cache
                     localStorage.setItem('gallery', JSON.stringify(galleryItems));
+                    localStorage.setItem('cache_gallery', JSON.stringify(galleryItems));
                 }
             } catch (apiError) {
                 console.error('❌ API call failed:', apiError);
@@ -712,10 +719,13 @@
         console.log('🔍 Total gallery items:', galleryItems.length);
         
         if (galleryItems.length > 0) {
-            // ✅ CRITICAL FIX: Filter valid images
+            // ✅ FIXED: Check both image and image_url fields
             slideshowImages = galleryItems
-                .filter(item => item && item.image && item.image.trim() !== '')
-                .map(item => item.image)
+                .filter(item => {
+                    const imageUrl = item.image || item.image_url;
+                    return imageUrl && imageUrl.trim() !== '';
+                })
+                .map(item => item.image || item.image_url)
                 .slice(0, 10);
             
             console.log('✅ Valid slideshow images:', slideshowImages.length);
@@ -726,6 +736,7 @@
                 initializeSlideshow();
             } else {
                 console.warn('⚠️ No valid images found in gallery');
+                console.warn('📋 Gallery items:', galleryItems);
             }
         } else {
             console.warn('⚠️ No gallery items found');
@@ -748,6 +759,16 @@
                 img.src = image;
                 img.alt = 'Gallery Image';
                 img.loading = index === 0 ? 'eager' : 'lazy';
+                
+                // Add error handler
+                img.onerror = function() {
+                    console.error('❌ Failed to load image:', image);
+                    this.style.display = 'none';
+                };
+                
+                img.onload = function() {
+                    console.log('✅ Image loaded successfully:', image.substring(0, 50) + '...');
+                };
                 
                 slide.appendChild(img);
                 slideshowContainer.appendChild(slide);
