@@ -51,8 +51,9 @@ function updateClubConfigDOM(config) {
   
   const logoElements = document.querySelectorAll('.club-logo');
   logoElements.forEach(el => {
-    if (config.logo) {
-      el.src = config.logo;
+    const logoValue = config.logo || config.logo_url;
+    if (logoValue) {
+      el.src = logoValue;
       el.alt = config.shortName || 'Club Logo';
     }
   });
@@ -139,8 +140,9 @@ function updateClubConfigDOM(config) {
   document.title = `${config.shortName || 'Club'} - ${config.name || 'Robotics Club'}`;
   
   const favicon = document.querySelector('link[rel="icon"]');
-  if (favicon && config.logo) {
-    favicon.href = config.logo;
+  const logoValue = config.logo || config.logo_url;
+  if (favicon && logoValue) {
+    favicon.href = logoValue;
   }
 }
 

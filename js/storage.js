@@ -44,7 +44,7 @@ const CLUB_DEFAULTS = {
   phone: '+880123456789',
   address: 'Dhaka, Bangladesh',
   foundedYear: '2020',
-  logo: 'assets/default-logo.jpg',
+  logo_url: 'assets/default-logo.jpg',
   socialLinks: []
 };
 
@@ -121,8 +121,13 @@ async function getClubConfig() {
         
         if (response.success && response.data) {
           console.log('✅ Club config fetched from API');
-          localStorage.setItem(STORAGE_KEYS.CLUB_CONFIG, JSON.stringify(response.data));
-          return { success: true, data: response.data };
+          // Map backend logo_url to frontend logo
+          const mappedData = { ...response.data };
+          if (mappedData.logo_url) {
+            mappedData.logo = mappedData.logo_url;
+          }
+          localStorage.setItem(STORAGE_KEYS.CLUB_CONFIG, JSON.stringify(mappedData));
+          return { success: true, data: mappedData };
         }
       } catch (apiError) {
         console.warn('⚠️ API call failed, using cached config:', apiError.message);
@@ -159,7 +164,14 @@ async function setClubConfig(configData) {
     // Try API if available
     if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady) {
       try {
-        const apiResult = await window.apiClient.updateConfig(updatedConfig);
+        // Map frontend 'logo' to backend 'logo_url'
+    const backendConfig = { ...updatedConfig };
+    if (backendConfig.logo) {
+      backendConfig.logo_url = backendConfig.logo;
+      delete backendConfig.logo;
+    }
+    
+    const apiResult = await window.apiClient.updateConfig(backendConfig);
         
         if (apiResult.success) {
           localStorage.setItem(STORAGE_KEYS.CLUB_CONFIG, JSON.stringify(updatedConfig));

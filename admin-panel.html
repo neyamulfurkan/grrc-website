@@ -2791,7 +2791,7 @@ function setupClubConfigForm() {
             }
 
             const config = {
-                logo: logo,
+                logo: logo, // Keep as 'logo' for frontend consistency
                 club_name: document.getElementById('clubName').value,
                 club_motto: document.getElementById('clubMotto').value,
                 club_description: document.getElementById('clubDescription').value,
@@ -2837,10 +2837,12 @@ async function loadClubConfig() {
         if (result.success && result.data) {
             const config = result.data;
 
-            if (config.logo) {
-                document.getElementById('logoUrl').value = config.logo;
+            // Handle both logo and logo_url for backward compatibility
+            const logoValue = config.logo || config.logo_url;
+            if (logoValue) {
+                document.getElementById('logoUrl').value = logoValue;
                 const preview = document.getElementById('logoPreview');
-                preview.src = config.logo;
+                preview.src = logoValue;
                 preview.style.display = 'block';
                 preview.onerror = function() {
                     this.src = 'assets/default-logo.jpg';
