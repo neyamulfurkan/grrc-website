@@ -544,8 +544,9 @@ async function getEvents(filters = {}) {
         
         if (response.success && Array.isArray(response.data)) {
           const mappedData = response.data.map(event => ({
-            ...event,
-            venue: event.location || event.venue,
+  ...event,
+  location: event.venue || event.location,
+  venue: event.venue || event.location,
             image: event.image_url || event.image,
             registrationLink: event.registration_link || event.registrationLink,
             createdAt: event.created_at || event.createdAt
@@ -622,18 +623,18 @@ async function addEvent(eventData) {
     if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady) {
       try {
         const backendEvent = {
-          id: newEvent.id,
-          title: newEvent.title,
-          description: newEvent.description,
-          category: newEvent.category,
-          date: newEvent.date,
-          time: newEvent.time,
-          venue: newEvent.venue,
-          image: newEvent.image,
-          status: newEvent.status,
-          registration_link: newEvent.registrationLink,
-          created_at: newEvent.createdAt
-        };
+  id: newEvent.id,
+  title: newEvent.title,
+  description: newEvent.description,
+  category: newEvent.category,
+  date: newEvent.date,
+  time: newEvent.time,
+  location: newEvent.venue,
+  image: newEvent.image,
+  status: newEvent.status,
+  registration_link: newEvent.registrationLink,
+  created_at: newEvent.createdAt
+};
         
         console.log('🔄 Sending to backend:', backendEvent);
         
@@ -692,18 +693,18 @@ async function updateEvent(eventId, updates) {
     if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady) {
       try {
         const backendEvent = {
-          id: updatedEvent.id,
-          title: updatedEvent.title,
-          description: updatedEvent.description,
-          category: updatedEvent.category,
-          date: updatedEvent.date,
-          time: updatedEvent.time,
-          venue: updatedEvent.venue,
-          image: updatedEvent.image,
-          status: updatedEvent.status,
-          registration_link: updatedEvent.registrationLink,
-          created_at: updatedEvent.createdAt
-        };
+  id: newEvent.id,
+  title: newEvent.title,
+  description: newEvent.description,
+  category: newEvent.category,
+  date: newEvent.date,
+  time: newEvent.time,
+  location: newEvent.venue,
+  image: newEvent.image,
+  status: newEvent.status,
+  registration_link: newEvent.registrationLink,
+  created_at: newEvent.createdAt
+};
         
         const apiResult = await window.apiClient.updateEvent(eventId, backendEvent);
         
