@@ -513,71 +513,35 @@ async function deleteMember(memberId) {
     throw new Error('Authentication required');
   }
   
+  const membersResult = await getMembers();
+  const members = membersResult.data || [];
+  const filtered = members.filter(m => m.id !== memberId);
+  
+  if (filtered.length === members.length) {
+    throw new Error('Member not found');
+  }
+  
   try {
     // Try API if available
     if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady !== false) {
       try {
-        console.log(`🗑️ Attempting to delete member ID: ${memberId} via API`);
         const apiResult = await window.apiClient.deleteMember(memberId);
         
         if (apiResult.success) {
-          // Clear localStorage cache
-          localStorage.removeItem(STORAGE_KEYS.MEMBERS);
-          console.log('✅ Member deleted from API');
+          localStorage.setItem(STORAGE_KEYS.MEMBERS, JSON.stringify(filtered));
+          console.log('✅ Member deleted');
           return { success: true };
         } else {
-          console.warn('⚠️ API delete failed:', apiResult.error);
           throw new Error(apiResult.error || 'Failed to delete member');
         }
       } catch (apiError) {
-        console.error('❌ API delete error:', apiError);
+        console.warn('⚠️ API delete failed:', apiError.message);
         throw apiError;
       }
     } else {
       // Fallback to localStorage only
-      const membersResult = await getMembers();
-      const members = membersResult.data || [];
-      const filtered = members.filter(m => m.id !== memberId);
-      
-      if (filtered.length === members.length) {
-        throw new Error('Member not found in localStorage');
-      }
-      
       localStorage.setItem(STORAGE_KEYS.MEMBERS, JSON.stringify(filtered));
-      console.log('✅ Member deleted from localStorage (API not available)');
-      return { success: true };
-    }
-  } catch (error) {
-    console.error('❌ Failed to delete member:', error);
-    throw error;
-  }
-}
-        
-        if (apiResult.success) {
-          // Clear localStorage cache
-          localStorage.removeItem(STORAGE_KEYS.MEMBERS);
-          console.log('✅ Member deleted from API');
-          return { success: true };
-        } else {
-          console.warn('⚠️ API delete failed:', apiResult.error);
-          throw new Error(apiResult.error || 'Failed to delete member');
-        }
-      } catch (apiError) {
-        console.error('❌ API delete error:', apiError);
-        throw apiError;
-      }
-    } else {
-      // Fallback to localStorage only
-      const membersResult = await getMembers();
-      const members = membersResult.data || [];
-      const filtered = members.filter(m => m.id !== memberId);
-      
-      if (filtered.length === members.length) {
-        throw new Error('Member not found in localStorage');
-      }
-      
-      localStorage.setItem(STORAGE_KEYS.MEMBERS, JSON.stringify(filtered));
-      console.log('✅ Member deleted from localStorage (API not available)');
+      console.log('✅ Member deleted locally (API not available)');
       return { success: true };
     }
   } catch (error) {
@@ -1681,51 +1645,4 @@ window.searchEvents = window.storage.searchEvents;
 window.searchProjects = window.storage.searchProjects;
 window.exportAllData = window.storage.exportAllData;
 
-
-// =============================================================================
-// GLOBAL ALIASES FOR BACKWARD COMPATIBILITY  
-// =============================================================================
-
-// CRITICAL FIX: Expose functions BOTH ways for maximum compatibility
-// Method 1: Direct global access (for inline scripts)
-window.getClubConfig = getClubConfig;
-window.setClubConfig = setClubConfig;
-window.getMembers = getMembers;
-window.addMember = addMember;
-window.updateMember = updateMember;
-window.deleteMember = deleteMember;
-window.getEvents = getEvents;
-window.addEvent = addEvent;
-window.updateEvent = updateEvent;
-window.deleteEvent = deleteEvent;
-window.getProjects = getProjects;
-window.addProject = addProject;
-window.updateProject = updateProject;
-window.deleteProject = deleteProject;
-window.getGallery = getGallery;
-window.addGalleryItem = addGalleryItem;
-window.deleteGalleryItem = deleteGalleryItem;
-window.getAnnouncements = getAnnouncements;
-window.addAnnouncement = addAnnouncement;
-window.updateAnnouncement = updateAnnouncement;
-window.deleteAnnouncement = deleteAnnouncement;
-window.getAdmins = getAdmins;
-window.addAdmin = addAdmin;
-window.deleteAdmin = deleteAdmin;
-window.getStatistics = getStatistics;
-window.searchMembers = searchMembers;
-window.searchEvents = searchEvents;
-window.searchProjects = searchProjects;
-window.exportAllData = exportAllData;
-window.isAuthenticated = isAuthenticated;
-
-// Method 2: window.storage wrapper (for admin-panel.html)
-// This MUST come AFTER the window.storage object is created above
-Object.keys(window.storage).forEach(key => {
-  if (typeof window.storage[key] === 'function' && !window[key]) {
-    window[key] = window.storage[key];
-  }
-});
-
-console.log('🌐 Global function aliases created for backward compatibility');
 console.log('🌐 Global function aliases created for backward compatibility');
