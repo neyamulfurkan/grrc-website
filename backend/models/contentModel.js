@@ -13,7 +13,31 @@ async function getClubConfig() {
 async function updateClubConfig(data) {
   try {
     const { logo, club_name, club_motto, club_description, social_links } = data;
-    const query = `
+    
+    // Check if config row exists
+    const checkResult = await pool.query('SELECT id FROM club_config LIMIT 1');
+    
+    if (checkResult.rows.length === 0) {
+      // Insert if doesn't exist
+      const insertQuery = `
+        INSERT INTO club_config (logo, club_name, club_motto, club_description, social_links)
+        VALUES ($1, $2, $3, $4, $5)
+        RETURNING *
+      `;
+      const insertValues = [
+        logo || 'assets/default-logo.jpg',
+        club_name || 'GSTU Robotics Club',
+        club_motto || '',
+        club_description || '',
+        social_links || {}
+      ];
+      const result = await pool.query(insertQuery, insertValues);
+      console.log('✅ Club config inserted:', result.rows[0]);
+      return { success: true, data: result.rows[0], error: null };
+    }
+    
+    // Update existing config - FIXED: removed JSON.stringify
+    const updateQuery = `
       UPDATE club_config 
       SET logo = COALESCE($1, logo),
           club_name = COALESCE($2, club_name),
@@ -21,11 +45,13 @@ async function updateClubConfig(data) {
           club_description = COALESCE($4, club_description),
           social_links = COALESCE($5, social_links),
           updated_at = CURRENT_TIMESTAMP
-      WHERE id = 1
+      WHERE id = (SELECT id FROM club_config LIMIT 1)
       RETURNING *
     `;
-    const values = [logo, club_name, club_motto, club_description, JSON.stringify(social_links)];
-    const result = await pool.query(query, values);
+    const values = [logo, club_name, club_motto, club_description, social_links]; // ✅ FIXED
+    const result = await pool.query(updateQuery, values);
+    
+    console.log('✅ Club config updated:', result.rows[0]);
     return { success: true, data: result.rows[0], error: null };
   } catch (error) {
     console.error('❌ Error in updateClubConfig:', error.message);
@@ -216,21 +242,23 @@ async function createEvent(data) {
       status, registration_link, details, organizer 
     } = data;
     
-    const eventLocation = location || venue;
-    const eventImage = image_url || image;
+    // Handle both 'venue' and 'location' for backwards compatibility
+    const eventVenue = venue || location; // ✅ FIXED: renamed from eventLocation
+    // Handle both 'image' and 'image_url' for backwards compatibility
+    const eventImage = image || image_url;
     
     const query = `
-  INSERT INTO events (title, description, category, date, time, venue, image, status, registration_link, details, organizer)
-  VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
-  RETURNING *
-`;
+      INSERT INTO events (title, description, category, date, time, venue, image, status, registration_link, details, organizer)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+      RETURNING *
+    `;
     const values = [
       title, 
       description, 
       category || 'General',
       date, 
       time || null,
-      eventLocation, 
+      eventVenue,  // ✅ FIXED: using eventVenue instead of eventLocation
       eventImage, 
       status || 'upcoming', 
       registration_link, 
@@ -368,8 +396,8 @@ async function createProject(data) {
       category || 'Other',
       status || 'ongoing',
       image_url || image,
-      JSON.stringify(technologies || []),
-      JSON.stringify(team_members || []),
+      technologies || [],  // ✅ FIXED: removed JSON.stringify
+      team_members || [],  // ✅ FIXED: removed JSON.stringify
       github_link || github_url,
       live_link || demo_url,
       completion_date,
@@ -390,7 +418,15 @@ async function createProject(data) {
 
 async function updateProject(id, data) {
   try {
-    const { title, description, category, status, image, technologies, team_members, github_link, live_link, completion_date, features, achievements } = data;
+    const { 
+      title, description, category, status, 
+      image, image_url,
+      technologies, team_members, 
+      github_link, github_url,
+      live_link, demo_url,
+      completion_date, features, achievements 
+    } = data;
+    
     const query = `
       UPDATE projects 
       SET title = COALESCE($1, title),
@@ -413,16 +449,17 @@ async function updateProject(id, data) {
       description,
       category,
       status,
-      image,
-      technologies ? JSON.stringify(technologies) : null,
-      team_members ? JSON.stringify(team_members) : null,
-      github_link,
-      live_link,
+      image_url || image,
+      technologies || [],  // ✅ FIXED: removed JSON.stringify
+      team_members || [],  // ✅ FIXED: removed JSON.stringify
+      github_link || github_url,
+      live_link || demo_url,
       completion_date,
       features,
       achievements,
-      id
+      id  // ✅ FIXED: added id parameter
     ];
+    
     const result = await pool.query(query, values);
     if (result.rows.length === 0) {
       return { success: false, data: null, error: 'Project not found' };
