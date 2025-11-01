@@ -1619,10 +1619,21 @@ window.apiClient.getGallery()
             return;
         }
 
-        await window.storage.deleteMember(id);
-        showToast('Member deleted successfully', 'success');
-        await loadMembers();
-        await loadDashboardStats();
+        // Clear cache FIRST to force fresh data load
+        localStorage.removeItem('cache_members');
+        localStorage.removeItem(STORAGE_KEYS.MEMBERS);
+
+        // Try API deletion
+        const result = await window.apiClient.deleteMember(id);
+        
+        if (result.success) {
+            showToast('Member deleted successfully', 'success');
+            // Force reload from API
+            await loadMembers();
+            await loadDashboardStats();
+        } else {
+            throw new Error(result.error || 'Failed to delete member');
+        }
     } catch (error) {
         console.error('Error deleting member:', error);
         

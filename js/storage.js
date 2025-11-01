@@ -513,13 +513,45 @@ async function deleteMember(memberId) {
     throw new Error('Authentication required');
   }
   
-  const membersResult = await getMembers();
-  const members = membersResult.data || [];
-  const filtered = members.filter(m => m.id !== memberId);
-  
-  if (filtered.length === members.length) {
-    throw new Error('Member not found');
+  try {
+    // Try API if available
+    if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady !== false) {
+      try {
+        console.log(`🗑️ Attempting to delete member ID: ${memberId} via API`);
+        const apiResult = await window.apiClient.deleteMember(memberId);
+        
+        if (apiResult.success) {
+          // Clear localStorage cache
+          localStorage.removeItem(STORAGE_KEYS.MEMBERS);
+          console.log('✅ Member deleted from API');
+          return { success: true };
+        } else {
+          console.warn('⚠️ API delete failed:', apiResult.error);
+          throw new Error(apiResult.error || 'Failed to delete member');
+        }
+      } catch (apiError) {
+        console.error('❌ API delete error:', apiError);
+        throw apiError;
+      }
+    } else {
+      // Fallback to localStorage only
+      const membersResult = await getMembers();
+      const members = membersResult.data || [];
+      const filtered = members.filter(m => m.id !== memberId);
+      
+      if (filtered.length === members.length) {
+        throw new Error('Member not found in localStorage');
+      }
+      
+      localStorage.setItem(STORAGE_KEYS.MEMBERS, JSON.stringify(filtered));
+      console.log('✅ Member deleted from localStorage (API not available)');
+      return { success: true };
+    }
+  } catch (error) {
+    console.error('❌ Failed to delete member:', error);
+    throw error;
   }
+}
   
   try {
     // Try API if available
