@@ -255,12 +255,17 @@ async function deleteAdmin(adminId) {
     throw new Error('Authentication required');
   }
   
+  // Clear cache first to force fresh fetch from API
+  localStorage.removeItem('cache_admins');
+  localStorage.removeItem(STORAGE_KEYS.ADMINS);
+  
   const adminsResult = await getAdmins();
   const admins = adminsResult.data || [];
   const filtered = admins.filter(admin => admin.id !== adminId);
   
   if (filtered.length === admins.length) {
-    throw new Error('Admin not found');
+    console.warn('Admin not found in local list, attempting API delete anyway...');
+    // Don't throw error - try API delete anyway
   }
   
   if (filtered.length === 0) {

@@ -2496,28 +2496,29 @@
         }
 
         async function deleteAdmin(id) {
-            if (!confirm('Are you sure you want to delete this admin?')) return;
+    if (!confirm('Are you sure you want to delete this admin?')) return;
 
-            try {
-                if (!isAuthenticated()) {
-                    showToast('Please log in again', 'error');
-                    setTimeout(() => window.location.href = 'admin.html', 1000);
-                    return;
-                }
+    try {
+        if (!isAuthenticated()) {
+            showToast('Please log in again', 'error');
+            setTimeout(() => window.location.href = 'admin.html', 1000);
+            return;
+        }
 
-                const result = await window.apiClient.getAdmins();
-                const admins = result.success ? result.data : [];
-                const adminExists = admins.find(a => a.id === id);
-                
-                if (!adminExists) {
-                    showToast('Admin not found', 'error');
-                    return;
-                }
+        // Clear cache BEFORE checking if admin exists
+        localStorage.removeItem('cache_admins');
+        localStorage.removeItem(STORAGE_KEYS.ADMINS);
 
-                localStorage.removeItem('cache_admins');
-                localStorage.removeItem(STORAGE_KEYS.ADMINS);
+        const result = await window.apiClient.getAdmins();
+        const admins = result.success ? result.data : [];
+        const adminExists = admins.find(a => a.id === id);
+        
+        if (!adminExists) {
+            console.warn('Admin not found in cached list, attempting delete anyway...');
+            // Don't return - try delete anyway
+        }
 
-                await window.storage.deleteAdmin(id);
+        await window.storage.deleteAdmin(id);
                 showToast('Admin deleted successfully', 'success');
                 await loadAdmins();
             } catch (error) {
