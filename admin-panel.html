@@ -2791,23 +2791,21 @@ function setupClubConfigForm() {
             }
 
             const config = {
-                logo: logo, // Keep as 'logo' for frontend consistency
-                club_name: document.getElementById('clubName').value,
-                club_motto: document.getElementById('clubMotto').value,
-                club_description: document.getElementById('clubDescription').value,
-                social_links: []
+                logo: logo,
+                name: document.getElementById('clubName').value,
+                motto: document.getElementById('clubMotto').value,
+                description: document.getElementById('clubDescription').value,
+                socialLinks: []
             };
 
-            // Collect social links
             const socials = ['facebook', 'twitter', 'instagram', 'linkedin', 'youtube', 'github', 'email'];
             socials.forEach(platform => {
                 const value = document.getElementById(`social${platform.charAt(0).toUpperCase() + platform.slice(1)}`).value;
                 if (value) {
-                    config.social_links.push({ platform, url: value });
+                    config.socialLinks.push({ platform, url: value });
                 }
             });
 
-            // Use storage.js which handles API + localStorage
             await setClubConfig(config);
             showToast('Club configuration saved successfully!', 'success');
             await loadClubConfigToSidebar();
@@ -2832,12 +2830,10 @@ function setupClubConfigForm() {
         /* MODIFIED - API integration for loading club config */
 async function loadClubConfig() {
     try {
-        // Use storage.js which handles API + localStorage
-       const result = await getClubConfig();
+        const result = await getClubConfig();
         if (result.success && result.data) {
             const config = result.data;
 
-            // Handle both logo and logo_url for backward compatibility
             const logoValue = config.logo || config.logo_url;
             if (logoValue) {
                 document.getElementById('logoUrl').value = logoValue;
@@ -2849,17 +2845,19 @@ async function loadClubConfig() {
                 };
             }
 
-            document.getElementById('clubName').value = config.name || 'GSTU Robotics & Research Club';
-            document.getElementById('clubMotto').value = config.motto || 'A Hub of Robothinkers';
+            document.getElementById('clubName').value = config.name || config.club_name || 'GSTU Robotics & Research Club';
+            document.getElementById('clubMotto').value = config.motto || '';
             document.getElementById('clubDescription').value = config.description || '';
 
-            if (config.social_links || config.socialLinks) {
-                const links = config.social_links || config.socialLinks;
-                links.forEach(link => {
-                    const inputId = `social${link.platform.charAt(0).toUpperCase() + link.platform.slice(1)}`;
-                    const input = document.getElementById(inputId);
-                    if (input) input.value = link.url;
-                });
+            if (config.socialLinks || config.social_links) {
+                const links = config.socialLinks || config.social_links;
+                if (Array.isArray(links)) {
+                    links.forEach(link => {
+                        const inputId = `social${link.platform.charAt(0).toUpperCase() + link.platform.slice(1)}`;
+                        const input = document.getElementById(inputId);
+                        if (input) input.value = link.url;
+                    });
+                }
             }
         }
     } catch (error) {

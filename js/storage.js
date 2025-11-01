@@ -132,10 +132,26 @@ async function setClubConfig(configData) {
     
     if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady) {
       try {
-        const backendConfig = { ...updatedConfig };
-        if (backendConfig.logo) {
-          backendConfig.logo_url = backendConfig.logo;
-          delete backendConfig.logo;
+        const backendConfig = {
+          club_name: updatedConfig.name,
+          description: updatedConfig.description,
+          logo_url: updatedConfig.logo || updatedConfig.logo_url,
+          contact_email: updatedConfig.email,
+          contact_phone: updatedConfig.phone,
+          address: updatedConfig.address,
+          facebook_url: null,
+          instagram_url: null,
+          youtube_url: null,
+          github_url: null
+        };
+        
+        if (updatedConfig.socialLinks && Array.isArray(updatedConfig.socialLinks)) {
+          updatedConfig.socialLinks.forEach(link => {
+            if (link.platform === 'facebook') backendConfig.facebook_url = link.url;
+            if (link.platform === 'instagram') backendConfig.instagram_url = link.url;
+            if (link.platform === 'youtube') backendConfig.youtube_url = link.url;
+            if (link.platform === 'github') backendConfig.github_url = link.url;
+          });
         }
         
         const apiResult = await window.apiClient.updateConfig(backendConfig);
