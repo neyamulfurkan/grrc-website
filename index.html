@@ -836,6 +836,9 @@
         document.addEventListener('DOMContentLoaded', async function() {
             document.getElementById('currentYear').textContent = new Date().getFullYear();
             
+            // Initialize mobile menu functionality
+            initializeMobileMenu();
+            
             // Wait for API client to be ready
             let retries = 0;
             while ((!window.apiClient || !window.apiClient.isReady) && retries < 50) {
@@ -857,6 +860,42 @@
                 initNavigation();
             }
         });
+        
+        // Mobile menu initialization
+        function initializeMobileMenu() {
+            const mobileMenuToggle = document.getElementById('mobileMenuToggle');
+            const mobileNavOverlay = document.getElementById('mobileNavOverlay');
+            const mobileNavLinks = document.querySelectorAll('.mobile-nav-link');
+            
+            if (mobileMenuToggle && mobileNavOverlay) {
+                // Toggle mobile menu
+                mobileMenuToggle.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    mobileNavOverlay.classList.toggle('active');
+                    mobileMenuToggle.classList.toggle('active');
+                    document.body.style.overflow = mobileNavOverlay.classList.contains('active') ? 'hidden' : '';
+                });
+                
+                // Close menu when clicking on a link
+                mobileNavLinks.forEach(link => {
+                    link.addEventListener('click', function() {
+                        mobileNavOverlay.classList.remove('active');
+                        mobileMenuToggle.classList.remove('active');
+                        document.body.style.overflow = '';
+                    });
+                });
+                
+                // Close menu when clicking outside
+                mobileNavOverlay.addEventListener('click', function(e) {
+                    if (e.target === mobileNavOverlay) {
+                        mobileNavOverlay.classList.remove('active');
+                        mobileMenuToggle.classList.remove('active');
+                        document.body.style.overflow = '';
+                    }
+                });
+            }
+        }
         
         async function loadGalleryForSlideshow() {
             try {
