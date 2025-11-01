@@ -1316,45 +1316,60 @@
             }
         }
 
-        async function loadClubConfigToSidebar() {
-            try {
-                const result = await getClubConfig();
-                if (result.success && result.data) {
-                    const config = result.data;
-                    const logo = document.getElementById('sidebarLogo');
-                    const subtitle = document.querySelector('.admin-subtitle');
-                    
-                    if (logo && config.logo) {
-                        logo.src = config.logo;
-                        logo.onerror = function() {
-                            this.src = 'assets/default-logo.jpg';
-                        };
-                    }
-                    
-                    if (subtitle && config.name) {
-                        subtitle.textContent = config.name;
-                    }
-                    return;
-                }
-
-                const config = JSON.parse(localStorage.getItem('clubConfig')) || {};
-                const logo = document.getElementById('sidebarLogo');
-                const subtitle = document.querySelector('.admin-subtitle');
-                
-                if (logo && config.logo) {
-                    logo.src = config.logo;
-                    logo.onerror = function() {
-                        this.src = 'assets/default-logo.jpg';
-                    };
-                }
-                
-                if (subtitle && config.name) {
-                    subtitle.textContent = config.name;
-                }
-            } catch (error) {
-                console.error('Error loading sidebar config:', error);
+       async function loadClubConfigToSidebar() {
+    try {
+        // Clear cache first to force fresh data
+        localStorage.removeItem('cache_clubConfig');
+        localStorage.removeItem('clubConfig');
+        
+        const result = await getClubConfig();
+        if (result.success && result.data) {
+            const config = result.data;
+            const logo = document.getElementById('sidebarLogo');
+            const subtitle = document.querySelector('.admin-subtitle');
+            const titleEl = document.getElementById('sidebarTitle');
+            
+            if (logo && config.logo) {
+                // Force reload by adding timestamp to prevent cache
+                const logoUrl = config.logo.includes('?') 
+                    ? config.logo + '&t=' + Date.now()
+                    : config.logo + '?t=' + Date.now();
+                logo.src = logoUrl;
+                logo.onerror = function() {
+                    this.src = 'assets/default-logo.jpg';
+                };
             }
+            
+            if (subtitle && config.name) {
+                subtitle.textContent = config.name;
+            }
+            
+            if (titleEl && config.shortName) {
+                titleEl.textContent = config.shortName + ' Admin Panel';
+            }
+            
+            console.log('✅ Sidebar updated with:', config.name, config.logo);
+            return;
         }
+
+        const config = JSON.parse(localStorage.getItem('clubConfig')) || {};
+        const logo = document.getElementById('sidebarLogo');
+        const subtitle = document.querySelector('.admin-subtitle');
+        
+        if (logo && config.logo) {
+            logo.src = config.logo;
+            logo.onerror = function() {
+                this.src = 'assets/default-logo.jpg';
+            };
+        }
+        
+        if (subtitle && config.name) {
+            subtitle.textContent = config.name;
+        }
+    } catch (error) {
+        console.error('Error loading sidebar config:', error);
+    }
+}
 
         async function loadDashboardStats() {
             try {
@@ -2816,21 +2831,23 @@
 
                    await setClubConfig(config);
 
+// Clear ALL config caches
 localStorage.removeItem('cache_clubConfig');
 localStorage.removeItem(STORAGE_KEYS.CLUB_CONFIG);
+localStorage.removeItem('clubConfig');
 
-showToast('Club configuration saved successfully!', 'success');
+showToast('Club configuration saved! Page will reload in 2 seconds...', 'success');
+
+// Wait a moment for backend to process
+await new Promise(resolve => setTimeout(resolve, 500));
+
+// Reload sidebar immediately
 await loadClubConfigToSidebar();
 
-// Reload config globally so all pages see changes
-if (typeof window.loadClubConfiguration === 'function') {
-  await window.loadClubConfiguration();
-}
-
-// Force refresh after 1 second to ensure changes are visible
+// Force full page reload after 2 seconds to ensure all changes are visible
 setTimeout(() => {
-  window.location.reload();
-}, 1000);
+  window.location.reload(true); // true = bypass cache
+}, 2000);
                 } catch (error) {
                     console.error('Error saving config:', error);
                     
