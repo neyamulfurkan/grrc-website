@@ -1,13 +1,3 @@
-/**
- * ====================================
- * Admin Routes - Protected Content Management
- * ====================================
- * Purpose: CRUD operations for all content (requires authentication)
- * Routes: /api/admin/*
- * All routes require valid JWT token in Authorization header
- * ====================================
- */
-
 const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcrypt');
@@ -30,24 +20,15 @@ const {
   updateAnnouncement,
   deleteAnnouncement,
   getAllAdmins,
+  getAdminById,
   createAdmin,
   updateAdmin,
   deleteAdmin,
 } = require('../models/contentModel');
 
-// Apply authentication middleware to ALL admin routes
 router.use(authenticateToken);
 router.use(isAdmin);
 
-// ====================================
-// CLUB CONFIGURATION
-// ====================================
-
-/**
- * PUT /api/admin/config
- * Update club configuration
- * Body: { logo, name, motto, description, social_links }
- */
 router.put('/config', async (req, res) => {
   try {
     const result = await updateClubConfig(req.body);
@@ -59,7 +40,12 @@ router.put('/config', async (req, res) => {
     console.log(`✏️ Club config updated by ${req.user.username}`);
     res.json(result);
   } catch (error) {
-    console.error('Error updating club config:', error);
+    console.error('❌ Error in PUT /config:', {
+      error: error.message,
+      stack: error.stack,
+      body: req.body,
+      params: req.params
+    });
     res.status(500).json({
       success: false,
       error: 'Failed to update club configuration',
@@ -67,19 +53,10 @@ router.put('/config', async (req, res) => {
   }
 });
 
-// ====================================
-// MEMBERS MANAGEMENT
-// ====================================
-
-/**
- * POST /api/admin/members
- * Create new member
- * Body: { name, photo, department, year, role, position, email, phone, bio, skills, joined_date }
- */
 router.post('/members', async (req, res) => {
   try {
-    // Validate required fields
     const { name, department, year, role, email } = req.body;
+    
     if (!name || !department || !year || !role || !email) {
       return res.status(400).json({
         success: false,
@@ -87,7 +64,13 @@ router.post('/members', async (req, res) => {
       });
     }
 
-    const result = await createMember(req.body);
+    const memberData = {
+      ...req.body,
+      joined_date: req.body.joined_date || req.body.joinedDate
+    };
+    delete memberData.joinedDate;
+
+    const result = await createMember(memberData);
     
     if (!result.success) {
       return res.status(400).json(result);
@@ -96,7 +79,12 @@ router.post('/members', async (req, res) => {
     console.log(`➕ Member created: ${name} by ${req.user.username}`);
     res.status(201).json(result);
   } catch (error) {
-    console.error('Error creating member:', error);
+    console.error('❌ Error in POST /members:', {
+      error: error.message,
+      stack: error.stack,
+      body: req.body,
+      params: req.params
+    });
     res.status(500).json({
       success: false,
       error: 'Failed to create member',
@@ -104,11 +92,6 @@ router.post('/members', async (req, res) => {
   }
 });
 
-/**
- * PUT /api/admin/members/:id
- * Update member
- * Body: Partial member data
- */
 router.put('/members/:id', async (req, res) => {
   try {
     const result = await updateMember(req.params.id, req.body);
@@ -120,7 +103,12 @@ router.put('/members/:id', async (req, res) => {
     console.log(`✏️ Member updated: ID ${req.params.id} by ${req.user.username}`);
     res.json(result);
   } catch (error) {
-    console.error('Error updating member:', error);
+    console.error('❌ Error in PUT /members/:id:', {
+      error: error.message,
+      stack: error.stack,
+      body: req.body,
+      params: req.params
+    });
     res.status(500).json({
       success: false,
       error: 'Failed to update member',
@@ -128,10 +116,6 @@ router.put('/members/:id', async (req, res) => {
   }
 });
 
-/**
- * DELETE /api/admin/members/:id
- * Delete member
- */
 router.delete('/members/:id', async (req, res) => {
   try {
     const result = await deleteMember(req.params.id);
@@ -143,7 +127,12 @@ router.delete('/members/:id', async (req, res) => {
     console.log(`🗑️ Member deleted: ID ${req.params.id} by ${req.user.username}`);
     res.json(result);
   } catch (error) {
-    console.error('Error deleting member:', error);
+    console.error('❌ Error in DELETE /members/:id:', {
+      error: error.message,
+      stack: error.stack,
+      body: req.body,
+      params: req.params
+    });
     res.status(500).json({
       success: false,
       error: 'Failed to delete member',
@@ -151,27 +140,26 @@ router.delete('/members/:id', async (req, res) => {
   }
 });
 
-// ====================================
-// EVENTS MANAGEMENT
-// ====================================
-
-/**
- * POST /api/admin/events
- * Create new event
- * Body: { title, description, category, date, time, venue, image, status, registration_link, details, organizer }
- */
 router.post('/events', async (req, res) => {
   try {
-    // Validate required fields
-    const { title, description, date, venue } = req.body;
-    if (!title || !description || !date || !venue) {
+    const { title, description, date, location, venue } = req.body;
+    
+    const eventLocation = location || venue;
+    
+    if (!title || !description || !date || !eventLocation) {
       return res.status(400).json({
         success: false,
-        error: 'Required fields: title, description, date, venue',
+        error: 'Required fields: title, description, date, location (or venue)',
       });
     }
 
-    const result = await createEvent(req.body);
+    const eventData = {
+      ...req.body,
+      location: eventLocation
+    };
+    delete eventData.venue;
+
+    const result = await createEvent(eventData);
     
     if (!result.success) {
       return res.status(400).json(result);
@@ -180,7 +168,12 @@ router.post('/events', async (req, res) => {
     console.log(`➕ Event created: ${title} by ${req.user.username}`);
     res.status(201).json(result);
   } catch (error) {
-    console.error('Error creating event:', error);
+    console.error('❌ Error in POST /events:', {
+      error: error.message,
+      stack: error.stack,
+      body: req.body,
+      params: req.params
+    });
     res.status(500).json({
       success: false,
       error: 'Failed to create event',
@@ -188,11 +181,6 @@ router.post('/events', async (req, res) => {
   }
 });
 
-/**
- * PUT /api/admin/events/:id
- * Update event
- * Body: Partial event data
- */
 router.put('/events/:id', async (req, res) => {
   try {
     const result = await updateEvent(req.params.id, req.body);
@@ -204,7 +192,12 @@ router.put('/events/:id', async (req, res) => {
     console.log(`✏️ Event updated: ID ${req.params.id} by ${req.user.username}`);
     res.json(result);
   } catch (error) {
-    console.error('Error updating event:', error);
+    console.error('❌ Error in PUT /events/:id:', {
+      error: error.message,
+      stack: error.stack,
+      body: req.body,
+      params: req.params
+    });
     res.status(500).json({
       success: false,
       error: 'Failed to update event',
@@ -212,10 +205,6 @@ router.put('/events/:id', async (req, res) => {
   }
 });
 
-/**
- * DELETE /api/admin/events/:id
- * Delete event
- */
 router.delete('/events/:id', async (req, res) => {
   try {
     const result = await deleteEvent(req.params.id);
@@ -227,7 +216,12 @@ router.delete('/events/:id', async (req, res) => {
     console.log(`🗑️ Event deleted: ID ${req.params.id} by ${req.user.username}`);
     res.json(result);
   } catch (error) {
-    console.error('Error deleting event:', error);
+    console.error('❌ Error in DELETE /events/:id:', {
+      error: error.message,
+      stack: error.stack,
+      body: req.body,
+      params: req.params
+    });
     res.status(500).json({
       success: false,
       error: 'Failed to delete event',
@@ -235,27 +229,24 @@ router.delete('/events/:id', async (req, res) => {
   }
 });
 
-// ====================================
-// PROJECTS MANAGEMENT
-// ====================================
-
-/**
- * POST /api/admin/projects
- * Create new project
- * Body: { title, description, category, status, image, technologies, team_members, github_link, live_link, completion_date, features, achievements }
- */
 router.post('/projects', async (req, res) => {
   try {
-    // Validate required fields
-    const { title, description, category } = req.body;
-    if (!title || !description || !category) {
+    const { title, description, category, status } = req.body;
+    
+    if (!title || !description) {
       return res.status(400).json({
         success: false,
-        error: 'Required fields: title, description, category',
+        error: 'Required fields: title, description',
       });
     }
 
-    const result = await createProject(req.body);
+    const projectData = {
+      ...req.body,
+      category: category || 'Other',
+      status: status || 'ongoing'
+    };
+
+    const result = await createProject(projectData);
     
     if (!result.success) {
       return res.status(400).json(result);
@@ -264,7 +255,12 @@ router.post('/projects', async (req, res) => {
     console.log(`➕ Project created: ${title} by ${req.user.username}`);
     res.status(201).json(result);
   } catch (error) {
-    console.error('Error creating project:', error);
+    console.error('❌ Error in POST /projects:', {
+      error: error.message,
+      stack: error.stack,
+      body: req.body,
+      params: req.params
+    });
     res.status(500).json({
       success: false,
       error: 'Failed to create project',
@@ -272,11 +268,6 @@ router.post('/projects', async (req, res) => {
   }
 });
 
-/**
- * PUT /api/admin/projects/:id
- * Update project
- * Body: Partial project data
- */
 router.put('/projects/:id', async (req, res) => {
   try {
     const result = await updateProject(req.params.id, req.body);
@@ -288,7 +279,12 @@ router.put('/projects/:id', async (req, res) => {
     console.log(`✏️ Project updated: ID ${req.params.id} by ${req.user.username}`);
     res.json(result);
   } catch (error) {
-    console.error('Error updating project:', error);
+    console.error('❌ Error in PUT /projects/:id:', {
+      error: error.message,
+      stack: error.stack,
+      body: req.body,
+      params: req.params
+    });
     res.status(500).json({
       success: false,
       error: 'Failed to update project',
@@ -296,10 +292,6 @@ router.put('/projects/:id', async (req, res) => {
   }
 });
 
-/**
- * DELETE /api/admin/projects/:id
- * Delete project
- */
 router.delete('/projects/:id', async (req, res) => {
   try {
     const result = await deleteProject(req.params.id);
@@ -311,7 +303,12 @@ router.delete('/projects/:id', async (req, res) => {
     console.log(`🗑️ Project deleted: ID ${req.params.id} by ${req.user.username}`);
     res.json(result);
   } catch (error) {
-    console.error('Error deleting project:', error);
+    console.error('❌ Error in DELETE /projects/:id:', {
+      error: error.message,
+      stack: error.stack,
+      body: req.body,
+      params: req.params
+    });
     res.status(500).json({
       success: false,
       error: 'Failed to delete project',
@@ -319,18 +316,8 @@ router.delete('/projects/:id', async (req, res) => {
   }
 });
 
-// ====================================
-// GALLERY MANAGEMENT
-// ====================================
-
-/**
- * POST /api/admin/gallery
- * Create new gallery item
- * Body: { image, title, description, category, date, photographer }
- */
 router.post('/gallery', async (req, res) => {
   try {
-    // Validate required fields
     const { image, title, category, date } = req.body;
     if (!image || !title || !category || !date) {
       return res.status(400).json({
@@ -348,7 +335,12 @@ router.post('/gallery', async (req, res) => {
     console.log(`➕ Gallery item created: ${title} by ${req.user.username}`);
     res.status(201).json(result);
   } catch (error) {
-    console.error('Error creating gallery item:', error);
+    console.error('❌ Error in POST /gallery:', {
+      error: error.message,
+      stack: error.stack,
+      body: req.body,
+      params: req.params
+    });
     res.status(500).json({
       success: false,
       error: 'Failed to create gallery item',
@@ -356,11 +348,6 @@ router.post('/gallery', async (req, res) => {
   }
 });
 
-/**
- * PUT /api/admin/gallery/:id
- * Update gallery item
- * Body: Partial gallery item data
- */
 router.put('/gallery/:id', async (req, res) => {
   try {
     const result = await updateGalleryItem(req.params.id, req.body);
@@ -372,7 +359,12 @@ router.put('/gallery/:id', async (req, res) => {
     console.log(`✏️ Gallery item updated: ID ${req.params.id} by ${req.user.username}`);
     res.json(result);
   } catch (error) {
-    console.error('Error updating gallery item:', error);
+    console.error('❌ Error in PUT /gallery/:id:', {
+      error: error.message,
+      stack: error.stack,
+      body: req.body,
+      params: req.params
+    });
     res.status(500).json({
       success: false,
       error: 'Failed to update gallery item',
@@ -380,10 +372,6 @@ router.put('/gallery/:id', async (req, res) => {
   }
 });
 
-/**
- * DELETE /api/admin/gallery/:id
- * Delete gallery item
- */
 router.delete('/gallery/:id', async (req, res) => {
   try {
     const result = await deleteGalleryItem(req.params.id);
@@ -395,7 +383,12 @@ router.delete('/gallery/:id', async (req, res) => {
     console.log(`🗑️ Gallery item deleted: ID ${req.params.id} by ${req.user.username}`);
     res.json(result);
   } catch (error) {
-    console.error('Error deleting gallery item:', error);
+    console.error('❌ Error in DELETE /gallery/:id:', {
+      error: error.message,
+      stack: error.stack,
+      body: req.body,
+      params: req.params
+    });
     res.status(500).json({
       success: false,
       error: 'Failed to delete gallery item',
@@ -403,27 +396,24 @@ router.delete('/gallery/:id', async (req, res) => {
   }
 });
 
-// ====================================
-// ANNOUNCEMENTS MANAGEMENT
-// ====================================
-
-/**
- * POST /api/admin/announcements
- * Create new announcement
- * Body: { title, content, priority, date }
- */
 router.post('/announcements', async (req, res) => {
   try {
-    // Validate required fields
-    const { title, content, date } = req.body;
-    if (!title || !content || !date) {
+    const { title, content } = req.body;
+    
+    if (!title || !content) {
       return res.status(400).json({
         success: false,
-        error: 'Required fields: title, content, date',
+        error: 'Required fields: title, content',
       });
     }
 
-    const result = await createAnnouncement(req.body);
+    const announcementData = {
+      ...req.body,
+      date: req.body.date || new Date().toISOString().split('T')[0],
+      priority: req.body.priority || 'normal'
+    };
+
+    const result = await createAnnouncement(announcementData);
     
     if (!result.success) {
       return res.status(400).json(result);
@@ -432,7 +422,12 @@ router.post('/announcements', async (req, res) => {
     console.log(`➕ Announcement created: ${title} by ${req.user.username}`);
     res.status(201).json(result);
   } catch (error) {
-    console.error('Error creating announcement:', error);
+    console.error('❌ Error in POST /announcements:', {
+      error: error.message,
+      stack: error.stack,
+      body: req.body,
+      params: req.params
+    });
     res.status(500).json({
       success: false,
       error: 'Failed to create announcement',
@@ -440,11 +435,6 @@ router.post('/announcements', async (req, res) => {
   }
 });
 
-/**
- * PUT /api/admin/announcements/:id
- * Update announcement
- * Body: Partial announcement data
- */
 router.put('/announcements/:id', async (req, res) => {
   try {
     const result = await updateAnnouncement(req.params.id, req.body);
@@ -456,7 +446,12 @@ router.put('/announcements/:id', async (req, res) => {
     console.log(`✏️ Announcement updated: ID ${req.params.id} by ${req.user.username}`);
     res.json(result);
   } catch (error) {
-    console.error('Error updating announcement:', error);
+    console.error('❌ Error in PUT /announcements/:id:', {
+      error: error.message,
+      stack: error.stack,
+      body: req.body,
+      params: req.params
+    });
     res.status(500).json({
       success: false,
       error: 'Failed to update announcement',
@@ -464,10 +459,6 @@ router.put('/announcements/:id', async (req, res) => {
   }
 });
 
-/**
- * DELETE /api/admin/announcements/:id
- * Delete announcement
- */
 router.delete('/announcements/:id', async (req, res) => {
   try {
     const result = await deleteAnnouncement(req.params.id);
@@ -479,7 +470,12 @@ router.delete('/announcements/:id', async (req, res) => {
     console.log(`🗑️ Announcement deleted: ID ${req.params.id} by ${req.user.username}`);
     res.json(result);
   } catch (error) {
-    console.error('Error deleting announcement:', error);
+    console.error('❌ Error in DELETE /announcements/:id:', {
+      error: error.message,
+      stack: error.stack,
+      body: req.body,
+      params: req.params
+    });
     res.status(500).json({
       success: false,
       error: 'Failed to delete announcement',
@@ -487,20 +483,17 @@ router.delete('/announcements/:id', async (req, res) => {
   }
 });
 
-// ====================================
-// ADMINS MANAGEMENT
-// ====================================
-
-/**
- * GET /api/admin/admins
- * Get all admins (without passwords)
- */
 router.get('/admins', async (req, res) => {
   try {
     const result = await getAllAdmins();
     res.json(result);
   } catch (error) {
-    console.error('Error fetching admins:', error);
+    console.error('❌ Error in GET /admins:', {
+      error: error.message,
+      stack: error.stack,
+      body: req.body,
+      params: req.params
+    });
     res.status(500).json({
       success: false,
       error: 'Failed to fetch admins',
@@ -508,16 +501,10 @@ router.get('/admins', async (req, res) => {
   }
 });
 
-/**
- * POST /api/admin/admins
- * Create new admin
- * Body: { username, password, role }
- */
 router.post('/admins', async (req, res) => {
   try {
     const { username, password, role } = req.body;
     
-    // Validate required fields
     if (!username || !password) {
       return res.status(400).json({
         success: false,
@@ -525,7 +512,6 @@ router.post('/admins', async (req, res) => {
       });
     }
 
-    // Hash password
     const saltRounds = 10;
     const password_hash = await bcrypt.hash(password, saltRounds);
 
@@ -542,7 +528,12 @@ router.post('/admins', async (req, res) => {
     console.log(`➕ Admin created: ${username} by ${req.user.username}`);
     res.status(201).json(result);
   } catch (error) {
-    console.error('Error creating admin:', error);
+    console.error('❌ Error in POST /admins:', {
+      error: error.message,
+      stack: error.stack,
+      body: req.body,
+      params: req.params
+    });
     res.status(500).json({
       success: false,
       error: 'Failed to create admin',
@@ -550,17 +541,11 @@ router.post('/admins', async (req, res) => {
   }
 });
 
-/**
- * PUT /api/admin/admins/:id
- * Update admin
- * Body: { username, password (optional), role }
- */
 router.put('/admins/:id', async (req, res) => {
   try {
     const { username, password, role } = req.body;
     const updateData = { username, role };
 
-    // If password is provided, hash it
     if (password) {
       const saltRounds = 10;
       updateData.password_hash = await bcrypt.hash(password, saltRounds);
@@ -575,7 +560,12 @@ router.put('/admins/:id', async (req, res) => {
     console.log(`✏️ Admin updated: ID ${req.params.id} by ${req.user.username}`);
     res.json(result);
   } catch (error) {
-    console.error('Error updating admin:', error);
+    console.error('❌ Error in PUT /admins/:id:', {
+      error: error.message,
+      stack: error.stack,
+      body: req.body,
+      params: req.params
+    });
     res.status(500).json({
       success: false,
       error: 'Failed to update admin',
@@ -583,13 +573,16 @@ router.put('/admins/:id', async (req, res) => {
   }
 });
 
-/**
- * DELETE /api/admin/admins/:id
- * Delete admin
- */
 router.delete('/admins/:id', async (req, res) => {
   try {
-    // Prevent self-deletion
+    const adminCheck = await getAdminById(req.params.id);
+    if (!adminCheck.success || !adminCheck.data) {
+      return res.status(404).json({
+        success: false,
+        error: 'Admin not found',
+      });
+    }
+
     if (parseInt(req.params.id) === req.user.id) {
       return res.status(400).json({
         success: false,
@@ -606,7 +599,12 @@ router.delete('/admins/:id', async (req, res) => {
     console.log(`🗑️ Admin deleted: ID ${req.params.id} by ${req.user.username}`);
     res.json(result);
   } catch (error) {
-    console.error('Error deleting admin:', error);
+    console.error('❌ Error in DELETE /admins/:id:', {
+      error: error.message,
+      stack: error.stack,
+      body: req.body,
+      params: req.params
+    });
     res.status(500).json({
       success: false,
       error: 'Failed to delete admin',

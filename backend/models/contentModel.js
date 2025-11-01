@@ -1,38 +1,15 @@
-/**
- * ====================================
- * Content Model - Database Operations
- * ====================================
- * Purpose: All database query functions for CRUD operations
- * Uses parameterized queries to prevent SQL injection
- * Returns consistent format: { success, data, error }
- * ====================================
- */
-
 const pool = require('../db/pool');
 
-// ====================================
-// CLUB CONFIGURATION
-// ====================================
-
-/**
- * Get club configuration
- * @returns {Promise<Object>} { success, data, error }
- */
 async function getClubConfig() {
   try {
     const result = await pool.query('SELECT * FROM club_config LIMIT 1');
     return { success: true, data: result.rows[0] || null, error: null };
   } catch (error) {
-    console.error('Error in getClubConfig:', error);
+    console.error('❌ Error in getClubConfig:', error.message);
     return { success: false, data: null, error: error.message };
   }
 }
 
-/**
- * Update club configuration
- * @param {Object} data - Configuration data to update
- * @returns {Promise<Object>} { success, data, error }
- */
 async function updateClubConfig(data) {
   try {
     const { logo, club_name, club_motto, club_description, social_links } = data;
@@ -51,20 +28,11 @@ async function updateClubConfig(data) {
     const result = await pool.query(query, values);
     return { success: true, data: result.rows[0], error: null };
   } catch (error) {
-    console.error('Error in updateClubConfig:', error);
+    console.error('❌ Error in updateClubConfig:', error.message);
     return { success: false, data: null, error: error.message };
   }
 }
 
-// ====================================
-// MEMBERS
-// ====================================
-
-/**
- * Get all members with optional filters
- * @param {Object} filters - { role, department, year }
- * @returns {Promise<Object>} { success, data, error }
- */
 async function getAllMembers(filters = {}) {
   try {
     let query = 'SELECT * FROM members WHERE 1=1';
@@ -94,54 +62,54 @@ async function getAllMembers(filters = {}) {
     const result = await pool.query(query, params);
     return { success: true, data: result.rows, error: null };
   } catch (error) {
-    console.error('Error in getAllMembers:', error);
+    console.error('❌ Error in getAllMembers:', error.message);
     return { success: false, data: null, error: error.message };
   }
 }
 
-/**
- * Get member by ID
- * @param {number} id - Member ID
- * @returns {Promise<Object>} { success, data, error }
- */
 async function getMemberById(id) {
   try {
     const result = await pool.query('SELECT * FROM members WHERE id = $1', [id]);
     return { success: true, data: result.rows[0] || null, error: null };
   } catch (error) {
-    console.error('Error in getMemberById:', error);
+    console.error('❌ Error in getMemberById:', error.message);
     return { success: false, data: null, error: error.message };
   }
 }
 
-/**
- * Create new member
- * @param {Object} data - Member data
- * @returns {Promise<Object>} { success, data, error }
- */
 async function createMember(data) {
   try {
-    const { name, photo, department, year, role, position, email, phone, bio, skills, joined_date } = data;
+    const { 
+      name, photo, department, year, role, position, 
+      email, phone, bio, skills, 
+      joined_date, joinedDate 
+    } = data;
+    
+    const memberJoinedDate = joined_date || joinedDate;
+    
     const query = `
       INSERT INTO members (name, photo, department, year, role, position, email, phone, bio, skills, joined_date)
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
       RETURNING *
     `;
-    const values = [name, photo, department, year, role, position, email, phone, bio, JSON.stringify(skills || []), joined_date];
+    const values = [
+      name, photo, department, year, role, position, 
+      email, phone, bio, 
+      JSON.stringify(skills || []), 
+      memberJoinedDate
+    ];
+    
     const result = await pool.query(query, values);
     return { success: true, data: result.rows[0], error: null };
   } catch (error) {
-    console.error('Error in createMember:', error);
+    console.error('❌ Error in createMember:', {
+      error: error.message,
+      data: data
+    });
     return { success: false, data: null, error: error.message };
   }
 }
 
-/**
- * Update member
- * @param {number} id - Member ID
- * @param {Object} data - Updated member data
- * @returns {Promise<Object>} { success, data, error }
- */
 async function updateMember(id, data) {
   try {
     const { name, photo, department, year, role, position, email, phone, bio, skills, joined_date } = data;
@@ -168,16 +136,11 @@ async function updateMember(id, data) {
     }
     return { success: true, data: result.rows[0], error: null };
   } catch (error) {
-    console.error('Error in updateMember:', error);
+    console.error('❌ Error in updateMember:', error.message);
     return { success: false, data: null, error: error.message };
   }
 }
 
-/**
- * Delete member
- * @param {number} id - Member ID
- * @returns {Promise<Object>} { success, data, error }
- */
 async function deleteMember(id) {
   try {
     const result = await pool.query('DELETE FROM members WHERE id = $1 RETURNING id', [id]);
@@ -186,16 +149,11 @@ async function deleteMember(id) {
     }
     return { success: true, data: { id: result.rows[0].id }, error: null };
   } catch (error) {
-    console.error('Error in deleteMember:', error);
+    console.error('❌ Error in deleteMember:', error.message);
     return { success: false, data: null, error: error.message };
   }
 }
 
-/**
- * Search members by name, department, or email
- * @param {string} query - Search query
- * @returns {Promise<Object>} { success, data, error }
- */
 async function searchMembers(searchQuery) {
   try {
     const query = `
@@ -206,20 +164,11 @@ async function searchMembers(searchQuery) {
     const result = await pool.query(query, [`%${searchQuery}%`]);
     return { success: true, data: result.rows, error: null };
   } catch (error) {
-    console.error('Error in searchMembers:', error);
+    console.error('❌ Error in searchMembers:', error.message);
     return { success: false, data: null, error: error.message };
   }
 }
 
-// ====================================
-// EVENTS
-// ====================================
-
-/**
- * Get all events with optional filters
- * @param {Object} filters - { status, category }
- * @returns {Promise<Object>} { success, data, error }
- */
 async function getAllEvents(filters = {}) {
   try {
     let query = 'SELECT * FROM events WHERE 1=1';
@@ -243,54 +192,63 @@ async function getAllEvents(filters = {}) {
     const result = await pool.query(query, params);
     return { success: true, data: result.rows, error: null };
   } catch (error) {
-    console.error('Error in getAllEvents:', error);
+    console.error('❌ Error in getAllEvents:', error.message);
     return { success: false, data: null, error: error.message };
   }
 }
 
-/**
- * Get event by ID
- * @param {number} id - Event ID
- * @returns {Promise<Object>} { success, data, error }
- */
 async function getEventById(id) {
   try {
     const result = await pool.query('SELECT * FROM events WHERE id = $1', [id]);
     return { success: true, data: result.rows[0] || null, error: null };
   } catch (error) {
-    console.error('Error in getEventById:', error);
+    console.error('❌ Error in getEventById:', error.message);
     return { success: false, data: null, error: error.message };
   }
 }
 
-/**
- * Create new event
- * @param {Object} data - Event data
- * @returns {Promise<Object>} { success, data, error }
- */
 async function createEvent(data) {
   try {
-    const { title, description, category, date, time, venue, image, status, registration_link, details, organizer } = data;
+    const { 
+      title, description, category, date, time, 
+      venue, location,
+      image, image_url,
+      status, registration_link, details, organizer 
+    } = data;
+    
+    const eventLocation = location || venue;
+    const eventImage = image_url || image;
+    
     const query = `
-      INSERT INTO events (title, description, category, date, time, venue, image, status, registration_link, details, organizer)
+      INSERT INTO events (title, description, category, date, time, location, image, status, registration_link, details, organizer)
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
       RETURNING *
     `;
-    const values = [title, description, category, date, time, venue, image, status || 'upcoming', registration_link, details, organizer];
+    const values = [
+      title, 
+      description, 
+      category || 'General',
+      date, 
+      time || null,
+      eventLocation, 
+      eventImage, 
+      status || 'upcoming', 
+      registration_link, 
+      details, 
+      organizer
+    ];
+    
     const result = await pool.query(query, values);
     return { success: true, data: result.rows[0], error: null };
   } catch (error) {
-    console.error('Error in createEvent:', error);
+    console.error('❌ Error in createEvent:', {
+      error: error.message,
+      data: data
+    });
     return { success: false, data: null, error: error.message };
   }
 }
 
-/**
- * Update event
- * @param {number} id - Event ID
- * @param {Object} data - Updated event data
- * @returns {Promise<Object>} { success, data, error }
- */
 async function updateEvent(id, data) {
   try {
     const { title, description, category, date, time, venue, image, status, registration_link, details, organizer } = data;
@@ -317,16 +275,11 @@ async function updateEvent(id, data) {
     }
     return { success: true, data: result.rows[0], error: null };
   } catch (error) {
-    console.error('Error in updateEvent:', error);
+    console.error('❌ Error in updateEvent:', error.message);
     return { success: false, data: null, error: error.message };
   }
 }
 
-/**
- * Delete event
- * @param {number} id - Event ID
- * @returns {Promise<Object>} { success, data, error }
- */
 async function deleteEvent(id) {
   try {
     const result = await pool.query('DELETE FROM events WHERE id = $1 RETURNING id', [id]);
@@ -335,16 +288,11 @@ async function deleteEvent(id) {
     }
     return { success: true, data: { id: result.rows[0].id }, error: null };
   } catch (error) {
-    console.error('Error in deleteEvent:', error);
+    console.error('❌ Error in deleteEvent:', error.message);
     return { success: false, data: null, error: error.message };
   }
 }
 
-/**
- * Search events by title or description
- * @param {string} query - Search query
- * @returns {Promise<Object>} { success, data, error }
- */
 async function searchEvents(searchQuery) {
   try {
     const query = `
@@ -355,20 +303,11 @@ async function searchEvents(searchQuery) {
     const result = await pool.query(query, [`%${searchQuery}%`]);
     return { success: true, data: result.rows, error: null };
   } catch (error) {
-    console.error('Error in searchEvents:', error);
+    console.error('❌ Error in searchEvents:', error.message);
     return { success: false, data: null, error: error.message };
   }
 }
 
-// ====================================
-// PROJECTS
-// ====================================
-
-/**
- * Get all projects with optional filters
- * @param {Object} filters - { status, category }
- * @returns {Promise<Object>} { success, data, error }
- */
 async function getAllProjects(filters = {}) {
   try {
     let query = 'SELECT * FROM projects WHERE 1=1';
@@ -392,34 +331,32 @@ async function getAllProjects(filters = {}) {
     const result = await pool.query(query, params);
     return { success: true, data: result.rows, error: null };
   } catch (error) {
-    console.error('Error in getAllProjects:', error);
+    console.error('❌ Error in getAllProjects:', error.message);
     return { success: false, data: null, error: error.message };
   }
 }
 
-/**
- * Get project by ID
- * @param {number} id - Project ID
- * @returns {Promise<Object>} { success, data, error }
- */
 async function getProjectById(id) {
   try {
     const result = await pool.query('SELECT * FROM projects WHERE id = $1', [id]);
     return { success: true, data: result.rows[0] || null, error: null };
   } catch (error) {
-    console.error('Error in getProjectById:', error);
+    console.error('❌ Error in getProjectById:', error.message);
     return { success: false, data: null, error: error.message };
   }
 }
 
-/**
- * Create new project
- * @param {Object} data - Project data
- * @returns {Promise<Object>} { success, data, error }
- */
 async function createProject(data) {
   try {
-    const { title, description, category, status, image, technologies, team_members, github_link, live_link, completion_date, features, achievements } = data;
+    const { 
+      title, description, category, status, 
+      image, image_url,
+      technologies, team_members, 
+      github_link, github_url,
+      live_link, demo_url,
+      completion_date, features, achievements 
+    } = data;
+    
     const query = `
       INSERT INTO projects (title, description, category, status, image, technologies, team_members, github_link, live_link, completion_date, features, achievements)
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
@@ -428,31 +365,29 @@ async function createProject(data) {
     const values = [
       title,
       description,
-      category,
+      category || 'Other',
       status || 'ongoing',
-      image,
+      image_url || image,
       JSON.stringify(technologies || []),
       JSON.stringify(team_members || []),
-      github_link,
-      live_link,
+      github_link || github_url,
+      live_link || demo_url,
       completion_date,
       features,
       achievements
     ];
+    
     const result = await pool.query(query, values);
     return { success: true, data: result.rows[0], error: null };
   } catch (error) {
-    console.error('Error in createProject:', error);
+    console.error('❌ Error in createProject:', {
+      error: error.message,
+      data: data
+    });
     return { success: false, data: null, error: error.message };
   }
 }
 
-/**
- * Update project
- * @param {number} id - Project ID
- * @param {Object} data - Updated project data
- * @returns {Promise<Object>} { success, data, error }
- */
 async function updateProject(id, data) {
   try {
     const { title, description, category, status, image, technologies, team_members, github_link, live_link, completion_date, features, achievements } = data;
@@ -494,16 +429,11 @@ async function updateProject(id, data) {
     }
     return { success: true, data: result.rows[0], error: null };
   } catch (error) {
-    console.error('Error in updateProject:', error);
+    console.error('❌ Error in updateProject:', error.message);
     return { success: false, data: null, error: error.message };
   }
 }
 
-/**
- * Delete project
- * @param {number} id - Project ID
- * @returns {Promise<Object>} { success, data, error }
- */
 async function deleteProject(id) {
   try {
     const result = await pool.query('DELETE FROM projects WHERE id = $1 RETURNING id', [id]);
@@ -512,16 +442,11 @@ async function deleteProject(id) {
     }
     return { success: true, data: { id: result.rows[0].id }, error: null };
   } catch (error) {
-    console.error('Error in deleteProject:', error);
+    console.error('❌ Error in deleteProject:', error.message);
     return { success: false, data: null, error: error.message };
   }
 }
 
-/**
- * Search projects by title or description
- * @param {string} query - Search query
- * @returns {Promise<Object>} { success, data, error }
- */
 async function searchProjects(searchQuery) {
   try {
     const query = `
@@ -532,20 +457,11 @@ async function searchProjects(searchQuery) {
     const result = await pool.query(query, [`%${searchQuery}%`]);
     return { success: true, data: result.rows, error: null };
   } catch (error) {
-    console.error('Error in searchProjects:', error);
+    console.error('❌ Error in searchProjects:', error.message);
     return { success: false, data: null, error: error.message };
   }
 }
 
-// ====================================
-// GALLERY
-// ====================================
-
-/**
- * Get all gallery items with optional filters
- * @param {Object} filters - { category }
- * @returns {Promise<Object>} { success, data, error }
- */
 async function getAllGalleryItems(filters = {}) {
   try {
     let query = 'SELECT * FROM gallery WHERE 1=1';
@@ -563,31 +479,21 @@ async function getAllGalleryItems(filters = {}) {
     const result = await pool.query(query, params);
     return { success: true, data: result.rows, error: null };
   } catch (error) {
-    console.error('Error in getAllGalleryItems:', error);
+    console.error('❌ Error in getAllGalleryItems:', error.message);
     return { success: false, data: null, error: error.message };
   }
 }
 
-/**
- * Get gallery item by ID
- * @param {number} id - Gallery item ID
- * @returns {Promise<Object>} { success, data, error }
- */
 async function getGalleryItemById(id) {
   try {
     const result = await pool.query('SELECT * FROM gallery WHERE id = $1', [id]);
     return { success: true, data: result.rows[0] || null, error: null };
   } catch (error) {
-    console.error('Error in getGalleryItemById:', error);
+    console.error('❌ Error in getGalleryItemById:', error.message);
     return { success: false, data: null, error: error.message };
   }
 }
 
-/**
- * Create new gallery item
- * @param {Object} data - Gallery item data
- * @returns {Promise<Object>} { success, data, error }
- */
 async function createGalleryItem(data) {
   try {
     const { image, title, description, category, date, photographer } = data;
@@ -600,17 +506,11 @@ async function createGalleryItem(data) {
     const result = await pool.query(query, values);
     return { success: true, data: result.rows[0], error: null };
   } catch (error) {
-    console.error('Error in createGalleryItem:', error);
+    console.error('❌ Error in createGalleryItem:', error.message);
     return { success: false, data: null, error: error.message };
   }
 }
 
-/**
- * Update gallery item
- * @param {number} id - Gallery item ID
- * @param {Object} data - Updated gallery item data
- * @returns {Promise<Object>} { success, data, error }
- */
 async function updateGalleryItem(id, data) {
   try {
     const { image, title, description, category, date, photographer } = data;
@@ -632,16 +532,11 @@ async function updateGalleryItem(id, data) {
     }
     return { success: true, data: result.rows[0], error: null };
   } catch (error) {
-    console.error('Error in updateGalleryItem:', error);
+    console.error('❌ Error in updateGalleryItem:', error.message);
     return { success: false, data: null, error: error.message };
   }
 }
 
-/**
- * Delete gallery item
- * @param {number} id - Gallery item ID
- * @returns {Promise<Object>} { success, data, error }
- */
 async function deleteGalleryItem(id) {
   try {
     const result = await pool.query('DELETE FROM gallery WHERE id = $1 RETURNING id', [id]);
@@ -650,20 +545,11 @@ async function deleteGalleryItem(id) {
     }
     return { success: true, data: { id: result.rows[0].id }, error: null };
   } catch (error) {
-    console.error('Error in deleteGalleryItem:', error);
+    console.error('❌ Error in deleteGalleryItem:', error.message);
     return { success: false, data: null, error: error.message };
   }
 }
 
-// ====================================
-// ANNOUNCEMENTS
-// ====================================
-
-/**
- * Get all announcements
- * @param {Object} filters - { priority }
- * @returns {Promise<Object>} { success, data, error }
- */
 async function getAllAnnouncements(filters = {}) {
   try {
     let query = 'SELECT * FROM announcements WHERE 1=1';
@@ -681,54 +567,50 @@ async function getAllAnnouncements(filters = {}) {
     const result = await pool.query(query, params);
     return { success: true, data: result.rows, error: null };
   } catch (error) {
-    console.error('Error in getAllAnnouncements:', error);
+    console.error('❌ Error in getAllAnnouncements:', error.message);
     return { success: false, data: null, error: error.message };
   }
 }
 
-/**
- * Get announcement by ID
- * @param {number} id - Announcement ID
- * @returns {Promise<Object>} { success, data, error }
- */
 async function getAnnouncementById(id) {
   try {
     const result = await pool.query('SELECT * FROM announcements WHERE id = $1', [id]);
     return { success: true, data: result.rows[0] || null, error: null };
   } catch (error) {
-    console.error('Error in getAnnouncementById:', error);
+    console.error('❌ Error in getAnnouncementById:', error.message);
     return { success: false, data: null, error: error.message };
   }
 }
 
-/**
- * Create new announcement
- * @param {Object} data - Announcement data
- * @returns {Promise<Object>} { success, data, error }
- */
 async function createAnnouncement(data) {
   try {
     const { title, content, priority, date } = data;
+    
+    const announcementDate = date || new Date().toISOString().split('T')[0];
+    
     const query = `
       INSERT INTO announcements (title, content, priority, date)
       VALUES ($1, $2, $3, $4)
       RETURNING *
     `;
-    const values = [title, content, priority || 'normal', date];
+    const values = [
+      title, 
+      content, 
+      priority || 'normal', 
+      announcementDate
+    ];
+    
     const result = await pool.query(query, values);
     return { success: true, data: result.rows[0], error: null };
   } catch (error) {
-    console.error('Error in createAnnouncement:', error);
+    console.error('❌ Error in createAnnouncement:', {
+      error: error.message,
+      data: data
+    });
     return { success: false, data: null, error: error.message };
   }
 }
 
-/**
- * Update announcement
- * @param {number} id - Announcement ID
- * @param {Object} data - Updated announcement data
- * @returns {Promise<Object>} { success, data, error }
- */
 async function updateAnnouncement(id, data) {
   try {
     const { title, content, priority, date } = data;
@@ -748,16 +630,11 @@ async function updateAnnouncement(id, data) {
     }
     return { success: true, data: result.rows[0], error: null };
   } catch (error) {
-    console.error('Error in updateAnnouncement:', error);
+    console.error('❌ Error in updateAnnouncement:', error.message);
     return { success: false, data: null, error: error.message };
   }
 }
 
-/**
- * Delete announcement
- * @param {number} id - Announcement ID
- * @returns {Promise<Object>} { success, data, error }
- */
 async function deleteAnnouncement(id) {
   try {
     const result = await pool.query('DELETE FROM announcements WHERE id = $1 RETURNING id', [id]);
@@ -766,64 +643,41 @@ async function deleteAnnouncement(id) {
     }
     return { success: true, data: { id: result.rows[0].id }, error: null };
   } catch (error) {
-    console.error('Error in deleteAnnouncement:', error);
+    console.error('❌ Error in deleteAnnouncement:', error.message);
     return { success: false, data: null, error: error.message };
   }
 }
 
-// ====================================
-// ADMINS
-// ====================================
-
-/**
- * Get all admins (without passwords)
- * @returns {Promise<Object>} { success, data, error }
- */
 async function getAllAdmins() {
   try {
     const result = await pool.query('SELECT id, username, role, created_at, last_login FROM admins ORDER BY created_at DESC');
     return { success: true, data: result.rows, error: null };
   } catch (error) {
-    console.error('Error in getAllAdmins:', error);
+    console.error('❌ Error in getAllAdmins:', error.message);
     return { success: false, data: null, error: error.message };
   }
 }
 
-/**
- * Get admin by ID (without password)
- * @param {number} id - Admin ID
- * @returns {Promise<Object>} { success, data, error }
- */
 async function getAdminById(id) {
   try {
     const result = await pool.query('SELECT id, username, role, created_at, last_login FROM admins WHERE id = $1', [id]);
     return { success: true, data: result.rows[0] || null, error: null };
   } catch (error) {
-    console.error('Error in getAdminById:', error);
+    console.error('❌ Error in getAdminById:', error.message);
     return { success: false, data: null, error: error.message };
   }
 }
 
-/**
- * Get admin by username (includes password for authentication)
- * @param {string} username - Admin username
- * @returns {Promise<Object>} { success, data, error }
- */
 async function getAdminByUsername(username) {
   try {
     const result = await pool.query('SELECT * FROM admins WHERE username = $1', [username]);
     return { success: true, data: result.rows[0] || null, error: null };
   } catch (error) {
-    console.error('Error in getAdminByUsername:', error);
+    console.error('❌ Error in getAdminByUsername:', error.message);
     return { success: false, data: null, error: error.message };
   }
 }
 
-/**
- * Create new admin
- * @param {Object} data - Admin data (password should be already hashed)
- * @returns {Promise<Object>} { success, data, error }
- */
 async function createAdmin(data) {
   try {
     const { username, password_hash, role } = data;
@@ -836,17 +690,11 @@ async function createAdmin(data) {
     const result = await pool.query(query, values);
     return { success: true, data: result.rows[0], error: null };
   } catch (error) {
-    console.error('Error in createAdmin:', error);
+    console.error('❌ Error in createAdmin:', error.message);
     return { success: false, data: null, error: error.message };
   }
 }
 
-/**
- * Update admin
- * @param {number} id - Admin ID
- * @param {Object} data - Updated admin data
- * @returns {Promise<Object>} { success, data, error }
- */
 async function updateAdmin(id, data) {
   try {
     const { username, password_hash, role } = data;
@@ -865,53 +713,39 @@ async function updateAdmin(id, data) {
     }
     return { success: true, data: result.rows[0], error: null };
   } catch (error) {
-    console.error('Error in updateAdmin:', error);
+    console.error('❌ Error in updateAdmin:', error.message);
     return { success: false, data: null, error: error.message };
   }
 }
 
-/**
- * Delete admin
- * @param {number} id - Admin ID
- * @returns {Promise<Object>} { success, data, error }
- */
 async function deleteAdmin(id) {
   try {
-    const result = await pool.query('DELETE FROM admins WHERE id = $1 RETURNING id', [id]);
-    if (result.rows.length === 0) {
+    const checkResult = await pool.query('SELECT id FROM admins WHERE id = $1', [id]);
+    if (checkResult.rows.length === 0) {
       return { success: false, data: null, error: 'Admin not found' };
     }
+    
+    const result = await pool.query('DELETE FROM admins WHERE id = $1 RETURNING id', [id]);
+    
+    console.log(`✅ Admin deleted: ID ${id}`);
     return { success: true, data: { id: result.rows[0].id }, error: null };
   } catch (error) {
-    console.error('Error in deleteAdmin:', error);
+    console.error('❌ Error in deleteAdmin:', error.message);
     return { success: false, data: null, error: error.message };
   }
 }
 
-/**
- * Update admin last login timestamp
- * @param {number} id - Admin ID
- * @returns {Promise<Object>} { success, data, error }
- */
 async function updateLastLogin(id) {
   try {
     const query = 'UPDATE admins SET last_login = CURRENT_TIMESTAMP WHERE id = $1 RETURNING id, last_login';
     const result = await pool.query(query, [id]);
     return { success: true, data: result.rows[0], error: null };
   } catch (error) {
-    console.error('Error in updateLastLogin:', error);
+    console.error('❌ Error in updateLastLogin:', error.message);
     return { success: false, data: null, error: error.message };
   }
 }
 
-// ====================================
-// STATISTICS
-// ====================================
-
-/**
- * Get statistics for dashboard
- * @returns {Promise<Object>} { success, data, error }
- */
 async function getStatistics() {
   try {
     const query = `
@@ -928,59 +762,42 @@ async function getStatistics() {
     const result = await pool.query(query);
     return { success: true, data: result.rows[0], error: null };
   } catch (error) {
-    console.error('Error in getStatistics:', error);
+    console.error('❌ Error in getStatistics:', error.message);
     return { success: false, data: null, error: error.message };
   }
 }
 
-// ====================================
-// EXPORTS
-// ====================================
-
 module.exports = {
-  // Club Config
   getClubConfig,
   updateClubConfig,
-  
-  // Members
   getAllMembers,
   getMemberById,
   createMember,
   updateMember,
   deleteMember,
   searchMembers,
-  
-  // Events
   getAllEvents,
   getEventById,
   createEvent,
   updateEvent,
   deleteEvent,
   searchEvents,
-  
-  // Projects
   getAllProjects,
   getProjectById,
   createProject,
   updateProject,
   deleteProject,
   searchProjects,
-  
-  // Gallery
   getAllGalleryItems,
   getGalleryItemById,
   createGalleryItem,
   updateGalleryItem,
   deleteGalleryItem,
-  
-  // Announcements
   getAllAnnouncements,
   getAnnouncementById,
   createAnnouncement,
   updateAnnouncement,
   deleteAnnouncement,
-  
-  // Admins
   getAllAdmins,
   getAdminById,
   getAdminByUsername,
@@ -988,7 +805,5 @@ module.exports = {
   updateAdmin,
   deleteAdmin,
   updateLastLogin,
-  
-  // Statistics
   getStatistics,
 };

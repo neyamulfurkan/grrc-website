@@ -315,8 +315,13 @@ async function getMembers(filters = {}) {
         const response = await window.apiClient.getMembers();
         
         if (response.success && Array.isArray(response.data)) {
-          localStorage.setItem(STORAGE_KEYS.MEMBERS, JSON.stringify(response.data));
-          let result = response.data;
+          const mappedData = response.data.map(member => ({
+            ...member,
+            joinedDate: member.joined_date || member.joinedDate,
+            createdAt: member.created_at || member.createdAt
+          }));
+          localStorage.setItem(STORAGE_KEYS.MEMBERS, JSON.stringify(mappedData));
+          let result = mappedData;
           
           if (filters.role) {
             result = result.filter(m => m.role === filters.role);
@@ -357,6 +362,13 @@ async function getMembers(filters = {}) {
 
 async function addMember(memberData) {
   if (!memberData.name || !memberData.email || !memberData.department || !memberData.year || !memberData.role) {
+    console.error('❌ Missing required fields:', {
+      name: !!memberData.name,
+      email: !!memberData.email,
+      department: !!memberData.department,
+      year: !!memberData.year,
+      role: !!memberData.role
+    });
     throw new Error('Required fields missing: name, email, department, year, role');
   }
   
@@ -388,17 +400,19 @@ async function addMember(memberData) {
       createdAt: getCurrentTimestamp()
     };
     
+    console.log('📝 Creating member with data:', newMember);
+    
     if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady) {
       try {
-        const backendMember = { ...newMember };
-        if (backendMember.joinedDate) {
-          backendMember.joined_date = backendMember.joinedDate;
-          delete backendMember.joinedDate;
-        }
-        if (backendMember.createdAt) {
-          backendMember.created_at = backendMember.createdAt;
-          delete backendMember.createdAt;
-        }
+        const backendMember = {
+          ...newMember,
+          joined_date: newMember.joinedDate,
+          created_at: newMember.createdAt
+        };
+        delete backendMember.joinedDate;
+        delete backendMember.createdAt;
+        
+        console.log('🔄 Sending to backend:', backendMember);
         
         const apiResult = await window.apiClient.createMember(backendMember);
         
@@ -454,15 +468,13 @@ async function updateMember(memberId, updates) {
     
     if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady) {
       try {
-        const backendMember = { ...updatedMember };
-        if (backendMember.joinedDate) {
-          backendMember.joined_date = backendMember.joinedDate;
-          delete backendMember.joinedDate;
-        }
-        if (backendMember.createdAt) {
-          backendMember.created_at = backendMember.createdAt;
-          delete backendMember.createdAt;
-        }
+        const backendMember = {
+          ...updatedMember,
+          joined_date: updatedMember.joinedDate,
+          created_at: updatedMember.createdAt
+        };
+        delete backendMember.joinedDate;
+        delete backendMember.createdAt;
         
         const apiResult = await window.apiClient.updateMember(memberId, backendMember);
         
@@ -549,7 +561,8 @@ async function getEvents(filters = {}) {
             ...event,
             venue: event.location || event.venue,
             image: event.image_url || event.image,
-            registrationLink: event.registration_link || event.registrationLink
+            registrationLink: event.registration_link || event.registrationLink,
+            createdAt: event.created_at || event.createdAt
           }));
           localStorage.setItem(STORAGE_KEYS.EVENTS, JSON.stringify(mappedData));
           let result = mappedData;
@@ -587,6 +600,12 @@ async function getEvents(filters = {}) {
 
 async function addEvent(eventData) {
   if (!eventData.title || !eventData.description || !eventData.date || !eventData.venue) {
+    console.error('❌ Missing required fields:', {
+      title: !!eventData.title,
+      description: !!eventData.description,
+      date: !!eventData.date,
+      venue: !!eventData.venue
+    });
     throw new Error('Required fields missing: title, description, date, venue');
   }
   
@@ -612,6 +631,8 @@ async function addEvent(eventData) {
       createdAt: getCurrentTimestamp()
     };
     
+    console.log('📝 Creating event with data:', newEvent);
+    
     if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady) {
       try {
         const backendEvent = {
@@ -625,6 +646,8 @@ async function addEvent(eventData) {
           registration_link: newEvent.registrationLink,
           created_at: newEvent.createdAt
         };
+        
+        console.log('🔄 Sending to backend:', backendEvent);
         
         const apiResult = await window.apiClient.createEvent(backendEvent);
         
@@ -681,18 +704,16 @@ async function updateEvent(eventId, updates) {
     if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady) {
       try {
         const backendEvent = {
-          ...updatedEvent,
+          id: updatedEvent.id,
+          title: updatedEvent.title,
+          description: updatedEvent.description,
+          date: updatedEvent.date,
           location: updatedEvent.venue,
           image_url: updatedEvent.image,
+          status: updatedEvent.status,
           registration_link: updatedEvent.registrationLink,
           created_at: updatedEvent.createdAt
         };
-        delete backendEvent.venue;
-        delete backendEvent.image;
-        delete backendEvent.registrationLink;
-        delete backendEvent.time;
-        delete backendEvent.category;
-        delete backendEvent.createdAt;
         
         const apiResult = await window.apiClient.updateEvent(eventId, backendEvent);
         
@@ -780,7 +801,8 @@ async function getProjects(filters = {}) {
             image: project.image_url || project.image,
             githubLink: project.github_url || project.githubLink,
             liveLink: project.demo_url || project.liveLink,
-            teamMembers: project.team_members || project.teamMembers
+            teamMembers: project.team_members || project.teamMembers,
+            createdAt: project.created_at || project.createdAt
           }));
           localStorage.setItem(STORAGE_KEYS.PROJECTS, JSON.stringify(mappedData));
           let result = mappedData;
@@ -818,6 +840,12 @@ async function getProjects(filters = {}) {
 
 async function addProject(projectData) {
   if (!projectData.title || !projectData.description || !projectData.category || !projectData.status) {
+    console.error('❌ Missing required fields:', {
+      title: !!projectData.title,
+      description: !!projectData.description,
+      category: !!projectData.category,
+      status: !!projectData.status
+    });
     throw new Error('Required fields missing: title, description, category, status');
   }
   
@@ -844,6 +872,8 @@ async function addProject(projectData) {
       createdAt: getCurrentTimestamp()
     };
     
+    console.log('📝 Creating project with data:', newProject);
+    
     if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady) {
       try {
         const backendProject = {
@@ -858,6 +888,8 @@ async function addProject(projectData) {
           demo_url: newProject.liveLink,
           created_at: newProject.createdAt
         };
+        
+        console.log('🔄 Sending to backend:', backendProject);
         
         const apiResult = await window.apiClient.createProject(backendProject);
         
@@ -914,20 +946,17 @@ async function updateProject(projectId, updates) {
     if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady) {
       try {
         const backendProject = {
-          ...updatedProject,
+          id: updatedProject.id,
+          title: updatedProject.title,
+          description: updatedProject.description,
+          status: updatedProject.status,
           image_url: updatedProject.image,
+          technologies: updatedProject.technologies,
+          team_members: updatedProject.teamMembers,
           github_url: updatedProject.githubLink,
           demo_url: updatedProject.liveLink,
-          team_members: updatedProject.teamMembers,
           created_at: updatedProject.createdAt
         };
-        delete backendProject.image;
-        delete backendProject.githubLink;
-        delete backendProject.liveLink;
-        delete backendProject.teamMembers;
-        delete backendProject.category;
-        delete backendProject.completionDate;
-        delete backendProject.createdAt;
         
         const apiResult = await window.apiClient.updateProject(projectId, backendProject);
         
@@ -1010,8 +1039,12 @@ async function getGallery(filters = {}) {
         const response = await window.apiClient.getGallery();
         
         if (response.success && Array.isArray(response.data)) {
-          localStorage.setItem(STORAGE_KEYS.GALLERY, JSON.stringify(response.data));
-          let result = response.data;
+          const mappedData = response.data.map(item => ({
+            ...item,
+            createdAt: item.created_at || item.createdAt
+          }));
+          localStorage.setItem(STORAGE_KEYS.GALLERY, JSON.stringify(mappedData));
+          let result = mappedData;
           
           if (filters.category) {
             result = result.filter(g => g.category === filters.category);
@@ -1162,7 +1195,8 @@ async function getAnnouncements(filters = {}) {
         if (response.success && Array.isArray(response.data)) {
           const mappedData = response.data.map(announcement => ({
             ...announcement,
-            date: announcement.created_at || announcement.date
+            date: announcement.created_at || announcement.date,
+            createdAt: announcement.created_at || announcement.createdAt
           }));
           localStorage.setItem(STORAGE_KEYS.ANNOUNCEMENTS, JSON.stringify(mappedData));
           let result = mappedData;
@@ -1280,12 +1314,13 @@ async function updateAnnouncement(announcementId, updates) {
     if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady) {
       try {
         const backendAnnouncement = {
-          ...updatedAnnouncement,
+          id: updatedAnnouncement.id,
+          title: updatedAnnouncement.title,
+          content: updatedAnnouncement.content,
+          priority: updatedAnnouncement.priority,
           is_active: true,
           created_at: updatedAnnouncement.createdAt || updatedAnnouncement.date
         };
-        delete backendAnnouncement.date;
-        delete backendAnnouncement.createdAt;
         
         const apiResult = await window.apiClient.updateAnnouncement(announcementId, backendAnnouncement);
         
