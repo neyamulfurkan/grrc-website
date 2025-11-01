@@ -676,6 +676,8 @@
         
         async function loadGalleryForSlideshow() {
     try {
+        console.log('🎬 Starting slideshow load...');
+        
         let galleryItems = [];
         
         // ✅ CRITICAL FIX: Clear cache first to force fresh data
@@ -683,7 +685,10 @@
         
         if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady) {
             try {
+                console.log('📡 Calling API for gallery...');
                 const response = await window.apiClient.getGallery();
+                console.log('📊 API response:', response);
+                
                 if (response.success && Array.isArray(response.data) && response.data.length > 0) {
                     galleryItems = response.data;
                     console.log('✅ Slideshow loaded', galleryItems.length, 'images from API');
@@ -691,32 +696,44 @@
                     localStorage.setItem('gallery', JSON.stringify(galleryItems));
                 }
             } catch (apiError) {
-                console.warn('API call failed, using cached gallery:', apiError.message);
+                console.error('❌ API call failed:', apiError);
             }
         }
         
         if (galleryItems.length === 0) {
+            console.log('📦 Trying cache...');
             const cached = localStorage.getItem('gallery');
             if (cached) {
                 galleryItems = JSON.parse(cached);
                 console.log('✅ Slideshow loaded', galleryItems.length, 'images from cache');
             }
         }
-                
-                if (galleryItems.length > 0) {
-                    slideshowImages = galleryItems
-                        .filter(item => item.image)
-                        .map(item => item.image)
-                        .slice(0, 10);
-                    
-                    if (slideshowImages.length > 0) {
-                        initializeSlideshow();
-                    }
-                }
-            } catch (error) {
-                console.error('Error loading gallery for slideshow:', error);
+        
+        console.log('🔍 Total gallery items:', galleryItems.length);
+        
+        if (galleryItems.length > 0) {
+            // ✅ CRITICAL FIX: Filter valid images
+            slideshowImages = galleryItems
+                .filter(item => item && item.image && item.image.trim() !== '')
+                .map(item => item.image)
+                .slice(0, 10);
+            
+            console.log('✅ Valid slideshow images:', slideshowImages.length);
+            console.log('🖼️ Image URLs:', slideshowImages);
+            
+            if (slideshowImages.length > 0) {
+                console.log('🎬 Initializing slideshow with', slideshowImages.length, 'images');
+                initializeSlideshow();
+            } else {
+                console.warn('⚠️ No valid images found in gallery');
             }
+        } else {
+            console.warn('⚠️ No gallery items found');
         }
+    } catch (error) {
+        console.error('❌ Error loading gallery for slideshow:', error);
+    }
+}
         
         function initializeSlideshow() {
             const slideshowContainer = document.getElementById('heroSlideshow');
