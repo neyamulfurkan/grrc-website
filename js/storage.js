@@ -134,25 +134,11 @@ async function setClubConfig(configData) {
       try {
         const backendConfig = {
           club_name: updatedConfig.name,
-          description: updatedConfig.description,
-          logo_url: updatedConfig.logo || updatedConfig.logo_url,
-          contact_email: updatedConfig.email,
-          contact_phone: updatedConfig.phone,
-          address: updatedConfig.address,
-          facebook_url: null,
-          instagram_url: null,
-          youtube_url: null,
-          github_url: null
+          club_motto: updatedConfig.motto,
+          club_description: updatedConfig.description,
+          logo: updatedConfig.logo,
+          social_links: updatedConfig.socialLinks || []
         };
-        
-        if (updatedConfig.socialLinks && Array.isArray(updatedConfig.socialLinks)) {
-          updatedConfig.socialLinks.forEach(link => {
-            if (link.platform === 'facebook') backendConfig.facebook_url = link.url;
-            if (link.platform === 'instagram') backendConfig.instagram_url = link.url;
-            if (link.platform === 'youtube') backendConfig.youtube_url = link.url;
-            if (link.platform === 'github') backendConfig.github_url = link.url;
-          });
-        }
         
         const apiResult = await window.apiClient.updateConfig(backendConfig);
         
@@ -639,9 +625,11 @@ async function addEvent(eventData) {
           id: newEvent.id,
           title: newEvent.title,
           description: newEvent.description,
+          category: newEvent.category,
           date: newEvent.date,
-          location: newEvent.venue,
-          image_url: newEvent.image,
+          time: newEvent.time,
+          venue: newEvent.venue,
+          image: newEvent.image,
           status: newEvent.status,
           registration_link: newEvent.registrationLink,
           created_at: newEvent.createdAt
@@ -707,9 +695,11 @@ async function updateEvent(eventId, updates) {
           id: updatedEvent.id,
           title: updatedEvent.title,
           description: updatedEvent.description,
+          category: updatedEvent.category,
           date: updatedEvent.date,
-          location: updatedEvent.venue,
-          image_url: updatedEvent.image,
+          time: updatedEvent.time,
+          venue: updatedEvent.venue,
+          image: updatedEvent.image,
           status: updatedEvent.status,
           registration_link: updatedEvent.registrationLink,
           created_at: updatedEvent.createdAt
@@ -799,9 +789,10 @@ async function getProjects(filters = {}) {
           const mappedData = response.data.map(project => ({
             ...project,
             image: project.image_url || project.image,
-            githubLink: project.github_url || project.githubLink,
-            liveLink: project.demo_url || project.liveLink,
+            githubLink: project.github_link || project.github_url || project.githubLink,
+            liveLink: project.live_link || project.demo_url || project.liveLink,
             teamMembers: project.team_members || project.teamMembers,
+            completionDate: project.completion_date || project.completionDate,
             createdAt: project.created_at || project.createdAt
           }));
           localStorage.setItem(STORAGE_KEYS.PROJECTS, JSON.stringify(mappedData));
@@ -838,15 +829,15 @@ async function getProjects(filters = {}) {
   }
 }
 
+// ✅ CRITICAL FIX: Ensure arrays are always arrays, never strings
 async function addProject(projectData) {
-  if (!projectData.title || !projectData.description || !projectData.category || !projectData.status) {
+  if (!projectData.title || !projectData.description || !projectData.category) {
     console.error('❌ Missing required fields:', {
       title: !!projectData.title,
       description: !!projectData.description,
-      category: !!projectData.category,
-      status: !!projectData.status
+      category: !!projectData.category
     });
-    throw new Error('Required fields missing: title, description, category, status');
+    throw new Error('Required fields missing: title, description, category');
   }
   
   if (!isAuthenticated()) {
@@ -857,15 +848,28 @@ async function addProject(projectData) {
     const projectsResult = await getProjects();
     const projects = projectsResult.data || [];
     
+    // ✅ CRITICAL: Ensure technologies and teamMembers are ALWAYS arrays
+    const technologies = Array.isArray(projectData.technologies) 
+      ? projectData.technologies 
+      : (typeof projectData.technologies === 'string' 
+        ? projectData.technologies.split(',').map(t => t.trim()).filter(Boolean)
+        : []);
+    
+    const teamMembers = Array.isArray(projectData.teamMembers) 
+      ? projectData.teamMembers 
+      : (typeof projectData.teamMembers === 'string'
+        ? projectData.teamMembers.split('\n').map(t => t.trim()).filter(Boolean)
+        : []);
+    
     const newProject = {
       id: generateUniqueId('project'),
       title: projectData.title.trim(),
       description: projectData.description.trim(),
       category: projectData.category,
-      status: projectData.status,
+      status: projectData.status || 'ongoing',
       image: projectData.image || '',
-      technologies: Array.isArray(projectData.technologies) ? projectData.technologies : [],
-      teamMembers: Array.isArray(projectData.teamMembers) ? projectData.teamMembers : [],
+      technologies: technologies,
+      teamMembers: teamMembers,
       githubLink: projectData.githubLink || '',
       liveLink: projectData.liveLink || '',
       completionDate: projectData.completionDate || '',
@@ -873,24 +877,30 @@ async function addProject(projectData) {
     };
     
     console.log('📝 Creating project with data:', newProject);
+    console.log('📊 Technologies type:', typeof newProject.technologies, 'Array?', Array.isArray(newProject.technologies));
+    console.log('📊 Team members type:', typeof newProject.teamMembers, 'Array?', Array.isArray(newProject.teamMembers));
     
     if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady) {
       try {
+        // ✅ SEND ARRAYS DIRECTLY - DO NOT STRINGIFY
         const backendProject = {
-  id: newProject.id,
-  title: newProject.title,
-  description: newProject.description,
-  category: newProject.category,
-  status: newProject.status,
-  image_url: newProject.image,
-  technologies: Array.isArray(newProject.technologies) ? newProject.technologies : [],
-  team_members: Array.isArray(newProject.teamMembers) ? newProject.teamMembers : [],
-  github_url: newProject.githubLink,
-          demo_url: newProject.liveLink,
+          id: newProject.id,
+          title: newProject.title,
+          description: newProject.description,
+          category: newProject.category,
+          status: newProject.status,
+          image: newProject.image,
+          technologies: newProject.technologies, // ✅ Array stays as array
+          team_members: newProject.teamMembers, // ✅ Array stays as array
+          github_link: newProject.githubLink,
+          live_link: newProject.liveLink,
+          completion_date: newProject.completionDate,
           created_at: newProject.createdAt
         };
         
         console.log('🔄 Sending to backend:', backendProject);
+        console.log('🔍 Backend technologies:', backendProject.technologies);
+        console.log('🔍 Backend team_members:', backendProject.team_members);
         
         const apiResult = await window.apiClient.createProject(backendProject);
         
@@ -942,21 +952,35 @@ async function updateProject(projectId, updates) {
   }
   
   try {
+    // ✅ CRITICAL: Ensure arrays in updates
+    if (updates.technologies && !Array.isArray(updates.technologies)) {
+      updates.technologies = typeof updates.technologies === 'string'
+        ? updates.technologies.split(',').map(t => t.trim()).filter(Boolean)
+        : [];
+    }
+    
+    if (updates.teamMembers && !Array.isArray(updates.teamMembers)) {
+      updates.teamMembers = typeof updates.teamMembers === 'string'
+        ? updates.teamMembers.split('\n').map(t => t.trim()).filter(Boolean)
+        : [];
+    }
+    
     const updatedProject = { ...projects[index], ...updates };
     
     if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady) {
       try {
         const backendProject = {
-  id: newProject.id,
-  title: newProject.title,
-  description: newProject.description,
-  category: newProject.category,
-  status: newProject.status,
-  image_url: newProject.image,
-  technologies: Array.isArray(newProject.technologies) ? newProject.technologies : [],
-  team_members: Array.isArray(newProject.teamMembers) ? newProject.teamMembers : [],
-  github_url: newProject.githubLink,
-          demo_url: updatedProject.liveLink,
+          id: updatedProject.id,
+          title: updatedProject.title,
+          description: updatedProject.description,
+          category: updatedProject.category,
+          status: updatedProject.status,
+          image: updatedProject.image,
+          technologies: Array.isArray(updatedProject.technologies) ? updatedProject.technologies : [],
+          team_members: Array.isArray(updatedProject.teamMembers) ? updatedProject.teamMembers : [],
+          github_link: updatedProject.githubLink,
+          live_link: updatedProject.liveLink,
+          completion_date: updatedProject.completionDate,
           created_at: updatedProject.createdAt
         };
         
@@ -1258,6 +1282,7 @@ async function addAnnouncement(announcementData) {
           content: newAnnouncement.content,
           priority: newAnnouncement.priority,
           is_active: true,
+          date: newAnnouncement.date,
           created_at: newAnnouncement.createdAt
         };
         
@@ -1321,6 +1346,7 @@ async function updateAnnouncement(announcementId, updates) {
           content: updatedAnnouncement.content,
           priority: updatedAnnouncement.priority,
           is_active: true,
+          date: updatedAnnouncement.date,
           created_at: updatedAnnouncement.createdAt || updatedAnnouncement.date
         };
         
@@ -1578,7 +1604,7 @@ async function exportAllData() {
       gallery: galleryResult.data || [],
       announcements: announcementsResult.data || [],
       exportDate: getCurrentTimestamp(),
-      version: '2.1.0'
+      version: '2.2.0'
     };
     
     const dataStr = JSON.stringify(exportData, null, 2);
@@ -1681,6 +1707,7 @@ window.searchEvents = searchEvents;
 window.searchProjects = searchProjects;
 window.exportAllData = exportAllData;
 
-console.log('✅ storage.js v2.1.0 loaded successfully');
+console.log('✅ storage.js v2.2.0 loaded - ARRAY FIX APPLIED');
 console.log('📦 Storage API available at window.storage');
+console.log('🔧 CRITICAL FIX: Arrays are now properly handled (no double stringify)');
 console.log('🌐 Global function aliases created for backward compatibility');
