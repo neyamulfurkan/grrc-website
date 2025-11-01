@@ -913,35 +913,45 @@
 
         /* MODIFIED - Added API integration with localStorage fallback */
         async function loadGallery() {
-            try {
-                // NEW - Try API first
-                const result = await getGallery();
-                if (result.success && result.data) {
-                    const gallery = result.data;
-                    allPhotos = gallery;
-                    
-                    // EXISTING - Sort photos by date (newest first by default)
-                    allPhotos.sort((a, b) => new Date(b.date) - new Date(a.date));
-                    
-                    updateStatistics();
-                    applyFilters();
-                    return;
-                }
-                
-                // EXISTING - Fallback to localStorage
-                const gallery = JSON.parse(localStorage.getItem('gallery') || '[]');
-                allPhotos = gallery;
-                
-                // Sort photos by date (newest first by default)
-                allPhotos.sort((a, b) => new Date(b.date) - new Date(a.date));
-                
-                updateStatistics();
-                applyFilters();
-            } catch (error) {
-                console.error('Error loading gallery:', error);
-                showEmptyState();
-            }
+    try {
+        // ✅ CRITICAL FIX: Clear cache first to force fresh data
+        localStorage.removeItem('cache_gallery');
+        
+        // NEW - Try API first
+        const result = await getGallery();
+        if (result.success && result.data) {
+            const gallery = result.data;
+            allPhotos = gallery;
+            
+            console.log('✅ Gallery page loaded', allPhotos.length, 'images from API');
+            
+            // Save to cache
+            localStorage.setItem('gallery', JSON.stringify(allPhotos));
+            
+            // EXISTING - Sort photos by date (newest first by default)
+            allPhotos.sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            updateStatistics();
+            applyFilters();
+            return;
         }
+        
+        // EXISTING - Fallback to localStorage
+        const gallery = JSON.parse(localStorage.getItem('gallery') || '[]');
+        allPhotos = gallery;
+        
+        console.log('✅ Gallery page loaded', allPhotos.length, 'images from cache');
+        
+        // Sort photos by date (newest first by default)
+        allPhotos.sort((a, b) => new Date(b.date) - new Date(a.date));
+        
+        updateStatistics();
+        applyFilters();
+    } catch (error) {
+        console.error('Error loading gallery:', error);
+        showEmptyState();
+    }
+}
 
         // Update statistics
         function updateStatistics() {

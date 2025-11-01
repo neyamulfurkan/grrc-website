@@ -675,26 +675,33 @@
         });
         
         async function loadGalleryForSlideshow() {
+    try {
+        let galleryItems = [];
+        
+        // ✅ CRITICAL FIX: Clear cache first to force fresh data
+        localStorage.removeItem('cache_gallery');
+        
+        if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady) {
             try {
-                let galleryItems = [];
-                
-                if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady) {
-                    try {
-                        const response = await window.apiClient.getGallery();
-                        if (response.success && Array.isArray(response.data) && response.data.length > 0) {
-                            galleryItems = response.data;
-                        }
-                    } catch (apiError) {
-                        console.warn('API call failed, using cached gallery:', apiError.message);
-                    }
+                const response = await window.apiClient.getGallery();
+                if (response.success && Array.isArray(response.data) && response.data.length > 0) {
+                    galleryItems = response.data;
+                    console.log('✅ Slideshow loaded', galleryItems.length, 'images from API');
+                    // Save to cache
+                    localStorage.setItem('gallery', JSON.stringify(galleryItems));
                 }
-                
-                if (galleryItems.length === 0) {
-                    const cached = localStorage.getItem('gallery');
-                    if (cached) {
-                        galleryItems = JSON.parse(cached);
-                    }
-                }
+            } catch (apiError) {
+                console.warn('API call failed, using cached gallery:', apiError.message);
+            }
+        }
+        
+        if (galleryItems.length === 0) {
+            const cached = localStorage.getItem('gallery');
+            if (cached) {
+                galleryItems = JSON.parse(cached);
+                console.log('✅ Slideshow loaded', galleryItems.length, 'images from cache');
+            }
+        }
                 
                 if (galleryItems.length > 0) {
                     slideshowImages = galleryItems

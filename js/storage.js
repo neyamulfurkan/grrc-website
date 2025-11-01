@@ -1125,13 +1125,18 @@ async function getGallery(filters = {}) {
             ...item,
             createdAt: item.created_at || item.createdAt
           }));
+          
+          // ✅ CRITICAL FIX: Save to ALL cache keys
           localStorage.setItem(STORAGE_KEYS.GALLERY, JSON.stringify(mappedData));
+          localStorage.setItem('gallery', JSON.stringify(mappedData));
+          
           let result = mappedData;
           
           if (filters.category) {
             result = result.filter(g => g.category === filters.category);
           }
           
+          console.log('✅ getGallery() returned', result.length, 'items from API');
           return { success: true, data: result };
         }
       } catch (apiError) {
@@ -1139,8 +1144,9 @@ async function getGallery(filters = {}) {
       }
     }
     
-    const cached = localStorage.getItem(STORAGE_KEYS.GALLERY);
+    const cached = localStorage.getItem(STORAGE_KEYS.GALLERY) || localStorage.getItem('gallery');
     let result = cached ? JSON.parse(cached) : [];
+    console.log('✅ getGallery() returned', result.length, 'items from cache');
     
     if (filters.category) {
       result = result.filter(g => g.category === filters.category);

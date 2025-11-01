@@ -2123,39 +2123,41 @@
         }
 
         async function saveGalleryItem() {
-            try {
-                if (!isAuthenticated()) {
-                    showToast('Please log in again', 'error');
-                    setTimeout(() => window.location.href = 'admin.html', 1000);
-                    return;
-                }
+    try {
+        if (!isAuthenticated()) {
+            showToast('Please log in again', 'error');
+            setTimeout(() => window.location.href = 'admin.html', 1000);
+            return;
+        }
 
-                const imageFile = document.getElementById('galleryImage').files[0];
-                const imageUrl = document.getElementById('galleryImageUrl').value.trim();
-                let image = imageUrl;
+        const imageFile = document.getElementById('galleryImage').files[0];
+        const imageUrl = document.getElementById('galleryImageUrl').value.trim();
+        let image = imageUrl;
 
-                if (imageFile) {
-                    image = await imageToBase64(imageFile);
-                }
+        if (imageFile) {
+            image = await imageToBase64(imageFile);
+        }
 
-                if (!image) {
-                    showToast('Image is required', 'error');
-                    return;
-                }
+        if (!image) {
+            showToast('Image is required', 'error');
+            return;
+        }
 
-                const galleryData = {
-                    image: image,
-                    title: document.getElementById('galleryTitle').value.trim(),
-                    description: document.getElementById('galleryDescription').value.trim(),
-                    category: document.getElementById('galleryCategory').value,
-                    date: document.getElementById('galleryDate').value,
-                    photographer: document.getElementById('galleryPhotographer').value.trim()
-                };
+        const galleryData = {
+            image: image,
+            title: document.getElementById('galleryTitle').value.trim(),
+            description: document.getElementById('galleryDescription').value.trim(),
+            category: document.getElementById('galleryCategory').value,
+            date: document.getElementById('galleryDate').value,
+            photographer: document.getElementById('galleryPhotographer').value.trim()
+        };
 
-                await window.storage.addGalleryItem(galleryData);
-                
-                localStorage.removeItem('cache_gallery');
-                localStorage.removeItem(STORAGE_KEYS.GALLERY);
+        await window.storage.addGalleryItem(galleryData);
+        
+        // ✅ CRITICAL FIX: Clear ALL gallery caches
+        localStorage.removeItem('cache_gallery');
+        localStorage.removeItem(STORAGE_KEYS.GALLERY);
+        localStorage.removeItem('gallery');
                 
                 showToast('Gallery item added successfully!', 'success');
                 resetGalleryForm();
@@ -2178,18 +2180,23 @@
         }
 
         async function loadGallery(searchTerm = '') {
-            try {
-                localStorage.removeItem('cache_gallery');
-                
-                const result = await window.apiClient.getGallery();
-                let gallery = [];
+    try {
+        // ✅ CRITICAL FIX: Clear ALL caches before loading
+        localStorage.removeItem('cache_gallery');
+        localStorage.removeItem(STORAGE_KEYS.GALLERY);
+        localStorage.removeItem('gallery');
+        
+        const result = await window.apiClient.getGallery();
+        let gallery = [];
 
-                if (result.success && Array.isArray(result.data)) {
-                    gallery = result.data;
-                } else {
-                    console.warn('API returned invalid data, using localStorage fallback:', result);
-                    gallery = JSON.parse(localStorage.getItem('gallery')) || [];
-                }
+        if (result.success && Array.isArray(result.data)) {
+            gallery = result.data;
+            // ✅ Force update cache with fresh data
+            localStorage.setItem('gallery', JSON.stringify(gallery));
+        } else {
+            console.warn('API returned invalid data, using localStorage fallback:', result);
+            gallery = JSON.parse(localStorage.getItem('gallery')) || [];
+        }
                 
                 if (searchTerm) {
                     gallery = gallery.filter(g => 
