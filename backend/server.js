@@ -26,13 +26,16 @@ const NODE_ENV = process.env.NODE_ENV || 'development';
 
 const corsOptions = {
     origin: function (origin, callback) {
-        // Allow all origins in development or if no origin (file://, Postman, etc.)
-        if (!origin || NODE_ENV === 'development') {
+        // Always allow requests with no origin (mobile apps, curl, Postman)
+        if (!origin) {
             return callback(null, true);
         }
 
-        // Allow localhost
-        if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
+        // Allow localhost and GitHub Pages
+        if (origin.includes('localhost') || 
+            origin.includes('127.0.0.1') ||
+            origin.includes('github.io') ||
+            origin.includes('neyamulfurkan.github.io')) {
             return callback(null, true);
         }
 
@@ -47,12 +50,8 @@ const corsOptions = {
             return callback(null, true);
         }
 
-        // Production mode - allow all for now (can be restricted later)
-        if (NODE_ENV === 'production') {
-            return callback(null, true);
-        }
-
-        callback(new Error(`Origin ${origin} not allowed by CORS policy`));
+        // Allow all origins in development and production (can restrict later)
+        return callback(null, true);
     },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],

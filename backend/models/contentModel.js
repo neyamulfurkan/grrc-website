@@ -35,19 +35,19 @@ async function getClubConfig() {
  */
 async function updateClubConfig(data) {
   try {
-    const { logo, name, motto, description, social_links } = data;
+    const { logo, club_name, club_motto, club_description, social_links } = data;
     const query = `
       UPDATE club_config 
       SET logo = COALESCE($1, logo),
-          name = COALESCE($2, name),
-          motto = COALESCE($3, motto),
-          description = COALESCE($4, description),
+          club_name = COALESCE($2, club_name),
+          club_motto = COALESCE($3, club_motto),
+          club_description = COALESCE($4, club_description),
           social_links = COALESCE($5, social_links),
           updated_at = CURRENT_TIMESTAMP
       WHERE id = 1
       RETURNING *
     `;
-    const values = [logo, name, motto, description, JSON.stringify(social_links)];
+    const values = [logo, club_name, club_motto, club_description, JSON.stringify(social_links)];
     const result = await pool.query(query, values);
     return { success: true, data: result.rows[0], error: null };
   } catch (error) {
