@@ -80,23 +80,34 @@ function isAuthenticated() {
 
 async function getClubConfig() {
   try {
+    // ✅ ALWAYS try API first, don't use cache immediately
     if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady) {
       console.log('🔄 Fetching club config from API...');
       try {
         const response = await Promise.race([
           window.apiClient.getConfig(),
           new Promise((_, reject) => 
-            setTimeout(() => reject(new Error('API timeout')), 8000)
+            setTimeout(() => reject(new Error('API timeout')), 5000)
           )
         ]);
         
         if (response.success && response.data) {
-          console.log('✅ Club config fetched from API');
-          const mappedData = { ...response.data };
-          if (mappedData.logo_url) {
-            mappedData.logo = mappedData.logo_url;
-          }
+          console.log('✅ Club config fetched from API:', response.data);
+          
+          // ✅ Map backend fields to frontend format
+          const mappedData = {
+            name: response.data.club_name || response.data.name,
+            motto: response.data.club_motto || response.data.motto,
+            description: response.data.club_description || response.data.description,
+            logo: response.data.logo_url || response.data.logo,
+            socialLinks: response.data.social_links || response.data.socialLinks || []
+          };
+          
+          // Clear old cache and save new data
+          localStorage.removeItem('cache_clubConfig');
           localStorage.setItem(STORAGE_KEYS.CLUB_CONFIG, JSON.stringify(mappedData));
+          localStorage.setItem('clubConfig', JSON.stringify(mappedData));
+          
           return { success: true, data: mappedData };
         }
       } catch (apiError) {
@@ -104,14 +115,18 @@ async function getClubConfig() {
       }
     }
     
-    const cached = localStorage.getItem(STORAGE_KEYS.CLUB_CONFIG);
+    // Fallback to cache only if API fails
+    const cached = localStorage.getItem(STORAGE_KEYS.CLUB_CONFIG) || 
+                   localStorage.getItem('clubConfig');
     if (cached) {
+      console.log('📦 Using cached config');
       return { success: true, data: JSON.parse(cached) };
     }
     
+    console.log('⚠️ No config found, using defaults');
     return { success: true, data: CLUB_DEFAULTS };
   } catch (error) {
-    console.error('Error getting club config:', error);
+    console.error('❌ Error getting club config:', error);
     return { success: true, data: CLUB_DEFAULTS };
   }
 }

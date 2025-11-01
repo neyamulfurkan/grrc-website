@@ -779,13 +779,16 @@
 
         // Initialize page
         document.addEventListener('DOMContentLoaded', async () => {
-            // Wait for API client
-            let retries = 0;
-            while ((!window.apiClient || !window.apiClient.isReady) && retries < 50) {
-                await new Promise(resolve => setTimeout(resolve, 100));
-                retries++;
-            }
-            await loadClubConfig();
+    // ✅ CRITICAL: Clear cache to force fresh API fetch
+    localStorage.removeItem('cache_clubConfig');
+    
+    // Wait for API client
+    let retries = 0;
+    while ((!window.apiClient || !window.apiClient.isReady) && retries < 50) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+        retries++;
+    }
+    await loadClubConfig();
             await loadMembers();
             initializeFilters();
             initializeSearch();
