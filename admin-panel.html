@@ -1332,19 +1332,20 @@
             
             console.log('📦 Fresh config loaded:', config);
             
-            if (logo && config.logo) {
-                // Add timestamp to force cache bypass
-                const logoUrl = config.logo.includes('?') 
-                    ? config.logo + '&t=' + Date.now()
-                    : config.logo + '?t=' + Date.now();
-                    
-                logo.src = logoUrl;
-                logo.onerror = function() {
-                    console.warn('Logo failed to load, using default');
-                    this.src = 'assets/default-logo.jpg';
-                };
-                console.log('✅ Logo updated to:', logoUrl);
-            }
+            if (logo && (config.logo || config.logo_url)) {
+    const logoUrl = config.logo || config.logo_url;
+    // Add timestamp to force cache bypass
+    const cacheBustedUrl = logoUrl.includes('?') 
+        ? logoUrl + '&t=' + Date.now()
+        : logoUrl + '?t=' + Date.now();
+        
+    logo.src = cacheBustedUrl;
+    logo.onerror = function() {
+        console.warn('Logo failed to load, using default');
+        this.src = 'assets/default-logo.jpg';
+    };
+    console.log('✅ Logo updated to:', cacheBustedUrl);
+}
             
             if (subtitle) {
                 const nameValue = config.name || config.club_name;
