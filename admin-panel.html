@@ -1359,7 +1359,7 @@
         async function loadClubConfigToSidebar() {
             try {
                 // NEW - Try to load from API first
-               const result = await window.apiClient.getConfig();
+               const result = await getClubConfig();
                 if (result.success && result.data) {
                     const config = result.data;
                     const logo = document.getElementById('sidebarLogo');
@@ -1532,9 +1532,11 @@ window.apiClient.getGallery()
             await window.storage.updateMember(currentEditMemberId, memberData);
             showToast('Member updated successfully!', 'success');
         } else {
-            await window.storage.addMember(memberData);
-            showToast('Member added successfully!', 'success');
-            localStorage.removeItem('cache_members');
+            await addMember(memberData);
+showToast('Member added successfully!', 'success');
+// CRITICAL: Clear ALL member caches
+localStorage.removeItem('cache_members');
+localStorage.removeItem(STORAGE_KEYS.MEMBERS);
         }
 
         resetMemberForm();
@@ -1744,8 +1746,11 @@ window.apiClient.getGallery()
             await window.storage.updateEvent(currentEditEventId, eventData);
             showToast('Event updated successfully!', 'success');
         } else {
-            await window.storage.addEvent(eventData);
-            showToast('Event added successfully!', 'success');
+            await addEvent(eventData);
+showToast('Event added successfully!', 'success');
+// CRITICAL: Clear event caches
+localStorage.removeItem('cache_events');
+localStorage.removeItem(STORAGE_KEYS.EVENTS);
         }
 
         resetEventForm();
@@ -1934,8 +1939,11 @@ window.apiClient.getGallery()
             await window.storage.updateProject(currentEditProjectId, projectData);
             showToast('Project updated successfully!', 'success');
         } else {
-            await window.storage.addProject(projectData);
-            showToast('Project added successfully!', 'success');
+            await addProject(projectData);
+showToast('Project added successfully!', 'success');
+// CRITICAL: Clear project caches
+localStorage.removeItem('cache_projects');
+localStorage.removeItem(STORAGE_KEYS.PROJECTS);
         }
 
         resetProjectForm();
@@ -2800,7 +2808,7 @@ function setupClubConfigForm() {
             });
 
             // Use storage.js which handles API + localStorage
-            await window.storage.setClubConfig(config);
+            await setClubConfig(config);
             showToast('Club configuration saved successfully!', 'success');
             await loadClubConfigToSidebar();
         } catch (error) {
@@ -2825,7 +2833,7 @@ function setupClubConfigForm() {
 async function loadClubConfig() {
     try {
         // Use storage.js which handles API + localStorage
-       const result = await window.apiClient.getConfig();
+       const result = await getClubConfig();
         if (result.success && result.data) {
             const config = result.data;
 

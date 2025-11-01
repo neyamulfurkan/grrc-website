@@ -91,7 +91,7 @@ async function loadClubConfig() {
         updateApiCallTimestamp('config');
 
         // Fetch from API (PRIMARY source)
-        const result = await window.apiClient.getConfig();
+        const result = await getClubConfig();
         
         if (result && result.success && result.data) {
             // Cache for offline access
@@ -1023,7 +1023,7 @@ async function isOfflineMode() {
             return true;
         }
         
-        const result = await window.apiClient.getConfig();
+        const result = await getClubConfig();
         return !(result && result.success);
     } catch (error) {
         return true;

@@ -21,7 +21,7 @@ async function loadClubConfiguration() {
     }
     
     // Cache miss - try API call
-    const result = await window.apiClient.getConfig();
+    const result = await getClubConfig();
     
     if (result.success && result.data) {
       // Save to cache
