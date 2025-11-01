@@ -1444,24 +1444,39 @@ window.apiClient.getGallery()
             return;
         }
 
-        const photoFile = document.getElementById('memberPhoto').files[0];
-        const photoUrl = document.getElementById('memberPhotoUrl').value;
-        let photo = photoUrl;
-
-        if (photoFile) {
-            photo = await imageToBase64(photoFile);
-        }
-
         const email = document.getElementById('memberEmail').value;
         if (!validateEmail(email)) {
             showToast('Invalid email format', 'error');
             return;
         }
 
+        // Check for duplicate email BEFORE making API call
+        const existingMembers = await window.storage.getMembers();
+        const currentEditId = currentEditMemberId;
+        
+        if (existingMembers.success && existingMembers.data) {
+            const isDuplicate = existingMembers.data.some(m => 
+                m.email.toLowerCase() === email.toLowerCase() && m.id !== currentEditId
+            );
+            
+            if (isDuplicate) {
+                showToast('A member with this email already exists', 'error');
+                return;
+            }
+        }
+
         const phone = document.getElementById('memberPhone').value;
         if (phone && !validatePhone(phone)) {
             showToast('Invalid phone format (use +880XXXXXXXXXX or 01XXXXXXXXX)', 'error');
             return;
+        }
+
+        const photoFile = document.getElementById('memberPhoto').files[0];
+        const photoUrl = document.getElementById('memberPhotoUrl').value;
+        let photo = photoUrl;
+
+        if (photoFile) {
+            photo = await imageToBase64(photoFile);
         }
 
         const memberData = {
@@ -1484,6 +1499,7 @@ window.apiClient.getGallery()
         } else {
             await window.storage.addMember(memberData);
             showToast('Member added successfully!', 'success');
+            localStorage.removeItem('cache_members');
         }
 
         resetMemberForm();
@@ -1505,7 +1521,6 @@ window.apiClient.getGallery()
         }
     }
 }
-
         /* MODIFIED - API integration for loading members */
         async function loadMembers(searchTerm = '') {
             try {

@@ -886,4 +886,196 @@ if (document.readyState === 'loading') {
   initializePage();
 }
 
+// Full page load functions for individual pages
+async function loadAllMembers() {
+  try {
+    console.log('Loading all members...');
+    const cached = await loadFromCache('members');
+    if (cached && Array.isArray(cached)) {
+      console.log('Using cached members');
+      displayAllMembers(cached);
+      return true;
+    }
+    
+    if (!window.apiClient) {
+      console.warn('API client not available');
+      displayAllMembers([]);
+      return false;
+    }
+    
+    const result = await window.apiClient.getMembers();
+    if (result.success && Array.isArray(result.data)) {
+      await saveToCache('members', result.data);
+      displayAllMembers(result.data);
+      return true;
+    }
+    
+    displayAllMembers([]);
+    return false;
+  } catch (error) {
+    console.error('Error loading all members:', error);
+    displayAllMembers([]);
+    return false;
+  }
+}
+
+function displayAllMembers(members) {
+  const container = document.getElementById('members-container');
+  if (!container) return;
+  
+  if (members.length === 0) {
+    container.innerHTML = '<p class="no-data">No members found.</p>';
+    return;
+  }
+  
+  container.innerHTML = '';
+  members.forEach(member => {
+    const memberCard = createMemberCard(member);
+    container.appendChild(memberCard);
+  });
+}
+
+async function loadAllEvents() {
+  try {
+    console.log('Loading all events...');
+    const cached = await loadFromCache('events');
+    if (cached && Array.isArray(cached)) {
+      console.log('Using cached events');
+      displayAllEvents(cached);
+      return true;
+    }
+    
+    if (!window.apiClient) {
+      console.warn('API client not available');
+      displayAllEvents([]);
+      return false;
+    }
+    
+    const result = await window.apiClient.getEvents();
+    if (result.success && Array.isArray(result.data)) {
+      await saveToCache('events', result.data);
+      displayAllEvents(result.data);
+      return true;
+    }
+    
+    displayAllEvents([]);
+    return false;
+  } catch (error) {
+    console.error('Error loading all events:', error);
+    displayAllEvents([]);
+    return false;
+  }
+}
+
+function displayAllEvents(events) {
+  const container = document.getElementById('events-container');
+  if (!container) return;
+  
+  if (events.length === 0) {
+    container.innerHTML = '<p class="no-data">No events found.</p>';
+    return;
+  }
+  
+  container.innerHTML = '';
+  events.forEach(event => {
+    const eventCard = createEventCard(event);
+    container.appendChild(eventCard);
+  });
+}
+
+async function loadAllProjects() {
+  try {
+    console.log('Loading all projects...');
+    const cached = await loadFromCache('projects');
+    if (cached && Array.isArray(cached)) {
+      console.log('Using cached projects');
+      displayAllProjects(cached);
+      return true;
+    }
+    
+    if (!window.apiClient) {
+      console.warn('API client not available');
+      displayAllProjects([]);
+      return false;
+    }
+    
+    const result = await window.apiClient.getProjects();
+    if (result.success && Array.isArray(result.data)) {
+      await saveToCache('projects', result.data);
+      displayAllProjects(result.data);
+      return true;
+    }
+    
+    displayAllProjects([]);
+    return false;
+  } catch (error) {
+    console.error('Error loading all projects:', error);
+    displayAllProjects([]);
+    return false;
+  }
+}
+
+function displayAllProjects(projects) {
+  const container = document.getElementById('projects-container');
+  if (!container) return;
+  
+  if (projects.length === 0) {
+    container.innerHTML = '<p class="no-data">No projects found.</p>';
+    return;
+  }
+  
+  container.innerHTML = '';
+  projects.forEach(project => {
+    const projectCard = createProjectCard(project);
+    container.appendChild(projectCard);
+  });
+}
+
+async function loadAllGallery() {
+  try {
+    console.log('Loading all gallery...');
+    const cached = await loadFromCache('gallery');
+    if (cached && Array.isArray(cached)) {
+      console.log('Using cached gallery');
+      displayAllGallery(cached);
+      return true;
+    }
+    
+    if (!window.apiClient) {
+      console.warn('API client not available');
+      displayAllGallery([]);
+      return false;
+    }
+    
+    const result = await window.apiClient.getGallery();
+    if (result.success && Array.isArray(result.data)) {
+      await saveToCache('gallery', result.data);
+      displayAllGallery(result.data);
+      return true;
+    }
+    
+    displayAllGallery([]);
+    return false;
+  } catch (error) {
+    console.error('Error loading all gallery:', error);
+    displayAllGallery([]);
+    return false;
+  }
+}
+
+function displayAllGallery(gallery) {
+  const container = document.getElementById('gallery-container');
+  if (!container) return;
+  
+  if (gallery.length === 0) {
+    container.innerHTML = '<p class="no-data">No gallery items found.</p>';
+    return;
+  }
+  
+  container.innerHTML = '';
+  gallery.forEach(item => {
+    const galleryItem = createGalleryItem(item);
+    container.appendChild(galleryItem);
+  });
+}
 console.log('✅ config.js loaded successfully (CACHE-FIRST with error boundaries)');

@@ -705,7 +705,7 @@ function changePassword(currentPassword, newPassword) {
 function initializeAuth() {
   try {
     // Only create default admin if using localStorage fallback
-    if (!checkAPIAvailable()) {
+    if (!window.apiClient || !window.apiClient.isReady) {
       let admins = JSON.parse(localStorage.getItem(STORAGE.ADMINS) || '[]');
       
       if (admins.length === 0) {
