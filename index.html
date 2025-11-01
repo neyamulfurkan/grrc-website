@@ -23,16 +23,35 @@
         }
         
         .header.transparent {
-            background: rgba(0, 0, 0, 0.3) !important;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1) !important;
-            backdrop-filter: blur(10px);
+            background: rgba(0, 0, 0, 0.4) !important;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15) !important;
+            backdrop-filter: blur(12px);
         }
         
         .header.transparent .nav-link,
         .header.transparent .club-name {
-            color: white;
+            color: white !important;
             text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8), 0 1px 3px rgba(0, 0, 0, 0.9);
             font-weight: 500;
+        }
+        
+        .header.transparent .nav-link:hover {
+            color: rgba(255, 255, 255, 0.8) !important;
+        }
+        
+        .header.transparent .nav-link.active {
+            color: white !important;
+            border-bottom-color: white;
+        }
+        
+        [data-theme="dark"] .header:not(.transparent) .nav-link,
+        [data-theme="dark"] .header:not(.transparent) .club-name {
+            color: white;
+        }
+        
+        [data-theme="light"] .header:not(.transparent) .nav-link,
+        [data-theme="light"] .header:not(.transparent) .club-name {
+            color: #1a202c;
         }
         
         .header.transparent .logo {
@@ -1058,6 +1077,16 @@
 
         document.addEventListener('DOMContentLoaded', async function() {
             document.getElementById('currentYear').textContent = new Date().getFullYear();
+            
+            const htmlElement = document.documentElement;
+            const savedTheme = localStorage.getItem('theme');
+            
+            if (!savedTheme) {
+                htmlElement.setAttribute('data-theme', 'dark');
+                localStorage.setItem('theme', 'dark');
+            } else {
+                htmlElement.setAttribute('data-theme', savedTheme);
+            }
             
             window.addEventListener('scroll', handleScroll);
             handleScroll();
