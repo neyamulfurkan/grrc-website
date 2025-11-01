@@ -7,25 +7,96 @@
     <meta name="keywords" content="GSTU, robotics, research, technology, Gopalganj, university club">
     <title>GSTU Robotics & Research Club - Home</title>
     
-    <!-- CSS Files -->
     <link rel="stylesheet" href="css/variables.css">
     <link rel="stylesheet" href="css/common.css">
     <link rel="stylesheet" href="css/components.css">
     
     <style>
-        /* Page-specific styles for index.html */
-        
-        /* Hero Section */
         .hero {
             min-height: 90vh;
             display: flex;
             align-items: center;
             justify-content: center;
             text-align: center;
-            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
             position: relative;
             overflow: hidden;
             padding: 2rem;
+        }
+        
+        .hero-background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 0;
+        }
+        
+        .hero-background-gradient {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            z-index: 1;
+        }
+        
+        .hero-slideshow {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 0;
+            opacity: 0;
+            transition: opacity 1s ease-in-out;
+        }
+        
+        .hero-slideshow.active {
+            opacity: 1;
+        }
+        
+        .hero-slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            opacity: 0;
+            transition: opacity 1.5s ease-in-out, transform 20s ease-in-out;
+            transform: scale(1);
+        }
+        
+        .hero-slide.active {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+        
+        .hero-slide img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center;
+        }
+        
+        .hero-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, 
+                rgba(29, 78, 216, 0.85) 0%, 
+                rgba(124, 58, 237, 0.85) 100%);
+            z-index: 2;
+            transition: background 0.3s ease;
+        }
+        
+        [data-theme="dark"] .hero-overlay {
+            background: linear-gradient(135deg, 
+                rgba(15, 23, 42, 0.75) 0%, 
+                rgba(30, 41, 59, 0.75) 100%);
         }
         
         .hero::before {
@@ -40,6 +111,7 @@
             background-position: bottom;
             opacity: 0.3;
             animation: wave 15s ease-in-out infinite;
+            z-index: 3;
         }
         
         @keyframes wave {
@@ -49,7 +121,7 @@
         
         .hero-content {
             position: relative;
-            z-index: 1;
+            z-index: 4;
             max-width: 800px;
         }
         
@@ -59,21 +131,24 @@
             color: white;
             margin-bottom: 1rem;
             animation: fadeInUp 0.8s ease-out;
+            text-shadow: 0 2px 12px rgba(0, 0, 0, 0.3), 0 1px 4px rgba(0, 0, 0, 0.2);
         }
         
         .hero .motto {
             font-size: clamp(1.2rem, 3vw, 1.8rem);
-            color: rgba(255, 255, 255, 0.9);
+            color: rgba(255, 255, 255, 0.95);
             margin-bottom: 2rem;
             animation: fadeInUp 0.8s ease-out 0.2s backwards;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
         }
         
         .hero .description {
             font-size: 1.1rem;
-            color: rgba(255, 255, 255, 0.85);
+            color: rgba(255, 255, 255, 0.9);
             margin-bottom: 2rem;
             line-height: 1.6;
             animation: fadeInUp 0.8s ease-out 0.4s backwards;
+            text-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
         }
         
         .hero-buttons {
@@ -95,7 +170,42 @@
             }
         }
         
-        /* Upcoming Events Section */
+        .slideshow-indicators {
+            position: absolute;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 0.5rem;
+            z-index: 5;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .slideshow-indicators.active {
+            opacity: 1;
+        }
+        
+        .slideshow-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.4);
+            border: 2px solid rgba(255, 255, 255, 0.6);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .slideshow-indicator.active {
+            background: rgba(255, 255, 255, 0.9);
+            transform: scale(1.2);
+        }
+        
+        .slideshow-indicator:hover {
+            background: rgba(255, 255, 255, 0.7);
+            transform: scale(1.1);
+        }
+        
         .upcoming-events {
             padding: 5rem 0;
             background: var(--background-color);
@@ -189,7 +299,6 @@
             opacity: 0.5;
         }
         
-        /* Why Join Us Section */
         .why-join {
             padding: 5rem 0;
             background: var(--surface-color);
@@ -234,7 +343,6 @@
             line-height: 1.6;
         }
         
-        /* Executive Committee Section */
         .executive-committee {
             padding: 5rem 0;
             background: var(--background-color);
@@ -291,7 +399,53 @@
             font-size: 0.9rem;
         }
         
-        /* Responsive Design */
+        .social-link-with-name {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: var(--background-color);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            color: var(--text-primary);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            margin: 0.25rem;
+        }
+        
+        .social-link-with-name:hover {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+        
+        .social-icon-svg {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+        }
+        
+        .social-icon-svg svg {
+            width: 24px;
+            height: 24px;
+        }
+        
+        .social-name {
+            font-size: 0.9rem;
+            font-weight: 500;
+            text-transform: capitalize;
+        }
+        
+        .social-links {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+        
         @media (max-width: 768px) {
             .hero {
                 min-height: 80vh;
@@ -312,17 +466,20 @@
             .members-grid {
                 grid-template-columns: 1fr;
             }
+            
+            .slideshow-indicators {
+                bottom: 1rem;
+            }
         }
     </style>
 </head>
 <body>
-    <!-- Header -->
     <header class="header">
         <div class="container">
             <div class="header-content">
                 <div class="logo-container">
                     <img id="clubLogo" src="assets/default-logo.jpg" alt="Club Logo" class="logo">
-                <span id="clubName" class="club-name">GSTU Robotics & Research Club</span>
+                    <span id="clubName" class="club-name">GSTU Robotics & Research Club</span>
                 </div>
                 
                 <nav class="nav-menu" id="navMenu">
@@ -348,7 +505,6 @@
         </div>
     </header>
 
-    <!-- Mobile Navigation Overlay -->
     <div class="mobile-nav-overlay" id="mobileNavOverlay">
         <nav class="mobile-nav">
             <a href="index.html" class="mobile-nav-link active">Home</a>
@@ -360,8 +516,12 @@
         </nav>
     </div>
 
-    <!-- Hero Section -->
     <section class="hero">
+        <div class="hero-background">
+            <div class="hero-background-gradient"></div>
+            <div class="hero-slideshow" id="heroSlideshow"></div>
+        </div>
+        <div class="hero-overlay"></div>
         <div class="hero-content">
             <h1 id="heroClubName">GSTU Robotics & Research Club</h1>
             <p class="motto" id="heroMotto">A Hub of Robothinkers</p>
@@ -374,9 +534,9 @@
                 <a href="projects.html" class="btn btn-outline btn-lg">View Projects</a>
             </div>
         </div>
+        <div class="slideshow-indicators" id="slideshowIndicators"></div>
     </section>
 
-    <!-- Upcoming Events Section -->
     <section class="upcoming-events">
         <div class="container">
             <div class="section-header">
@@ -384,9 +544,7 @@
                 <p class="section-subtitle">Don't miss out on our exciting workshops and competitions</p>
             </div>
             
-            <div id="eventsContainer" class="events-grid">
-                <!-- Events will be loaded here via JavaScript -->
-            </div>
+            <div id="eventsContainer" class="events-grid"></div>
             
             <div style="text-align: center; margin-top: 2rem;">
                 <a href="events.html" class="btn btn-primary">View All Events</a>
@@ -394,7 +552,6 @@
         </div>
     </section>
 
-    <!-- Why Join Us Section -->
     <section class="why-join">
         <div class="container">
             <div class="section-header">
@@ -438,7 +595,6 @@
         </div>
     </section>
 
-    <!-- Executive Committee Section -->
     <section class="executive-committee">
         <div class="container">
             <div class="section-header">
@@ -446,9 +602,7 @@
                 <p class="section-subtitle">Meet the leaders driving our vision forward</p>
             </div>
             
-            <div id="executiveContainer" class="members-grid">
-                <!-- Executive members will be loaded here via JavaScript -->
-            </div>
+            <div id="executiveContainer" class="members-grid"></div>
             
             <div style="text-align: center; margin-top: 2rem;">
                 <a href="members.html" class="btn btn-primary">View All Members</a>
@@ -456,7 +610,6 @@
         </div>
     </section>
 
-    <!-- Footer -->
     <footer class="footer">
         <div class="container">
             <div class="footer-content">
@@ -480,9 +633,7 @@
                 
                 <div class="footer-section">
                     <h4 class="footer-subtitle">Connect With Us</h4>
-                    <div class="social-links" id="socialLinks">
-                        <!-- Social links will be loaded here via JavaScript -->
-                    </div>
+                    <div class="social-links" id="socialLinks"></div>
                 </div>
             </div>
             
@@ -492,8 +643,7 @@
         </div>
     </footer>
 
-    <!-- JavaScript Files -->
-    <script src="js/api-client.js"></script> <!-- NEW - API client -->
+    <script src="js/api-client.js"></script>
     <script src="js/config.js"></script>
     <script src="js/storage.js"></script>
     <script src="js/auth.js"></script>
@@ -503,56 +653,158 @@
     <script src="js/load-config.js"></script>
     
     <script>
-        /* MODIFIED - Added API integration */
-        // Initialize page
+        let slideshowImages = [];
+        let currentSlideIndex = 0;
+        let slideshowInterval = null;
+
         document.addEventListener('DOMContentLoaded', async function() {
-            // Set current year in footer
             document.getElementById('currentYear').textContent = new Date().getFullYear();
             
-            // NEW - Use await for async functions
             await loadClubConfig();
+            await loadGalleryForSlideshow();
             await loadUpcomingEvents();
             await loadExecutiveMembers();
             
-            // Initialize theme
             if (typeof initTheme === 'function') {
                 initTheme();
             }
             
-            // Initialize navigation
             if (typeof initNavigation === 'function') {
                 initNavigation();
             }
         });
         
-        /* MODIFIED - Added API integration */
-        // Load club configuration from API with localStorage fallback
+        async function loadGalleryForSlideshow() {
+            try {
+                let galleryItems = [];
+                
+                if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady) {
+                    try {
+                        const response = await window.apiClient.getGallery();
+                        if (response.success && Array.isArray(response.data) && response.data.length > 0) {
+                            galleryItems = response.data;
+                        }
+                    } catch (apiError) {
+                        console.warn('API call failed, using cached gallery:', apiError.message);
+                    }
+                }
+                
+                if (galleryItems.length === 0) {
+                    const cached = localStorage.getItem('gallery');
+                    if (cached) {
+                        galleryItems = JSON.parse(cached);
+                    }
+                }
+                
+                if (galleryItems.length > 0) {
+                    slideshowImages = galleryItems
+                        .filter(item => item.image)
+                        .map(item => item.image)
+                        .slice(0, 10);
+                    
+                    if (slideshowImages.length > 0) {
+                        initializeSlideshow();
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading gallery for slideshow:', error);
+            }
+        }
+        
+        function initializeSlideshow() {
+            const slideshowContainer = document.getElementById('heroSlideshow');
+            const indicatorsContainer = document.getElementById('slideshowIndicators');
+            
+            slideshowImages.forEach((image, index) => {
+                const slide = document.createElement('div');
+                slide.className = 'hero-slide';
+                if (index === 0) slide.classList.add('active');
+                
+                const img = document.createElement('img');
+                img.src = image;
+                img.alt = 'Gallery Image';
+                img.loading = index === 0 ? 'eager' : 'lazy';
+                
+                slide.appendChild(img);
+                slideshowContainer.appendChild(slide);
+                
+                const indicator = document.createElement('div');
+                indicator.className = 'slideshow-indicator';
+                if (index === 0) indicator.classList.add('active');
+                indicator.addEventListener('click', () => goToSlide(index));
+                indicatorsContainer.appendChild(indicator);
+            });
+            
+            slideshowContainer.classList.add('active');
+            indicatorsContainer.classList.add('active');
+            
+            if (slideshowImages.length > 1) {
+                startSlideshow();
+            }
+        }
+        
+        function startSlideshow() {
+            slideshowInterval = setInterval(() => {
+                nextSlide();
+            }, 5000);
+        }
+        
+        function nextSlide() {
+            const slides = document.querySelectorAll('.hero-slide');
+            const indicators = document.querySelectorAll('.slideshow-indicator');
+            
+            if (slides.length === 0) return;
+            
+            slides[currentSlideIndex].classList.remove('active');
+            indicators[currentSlideIndex].classList.remove('active');
+            
+            currentSlideIndex = (currentSlideIndex + 1) % slides.length;
+            
+            slides[currentSlideIndex].classList.add('active');
+            indicators[currentSlideIndex].classList.add('active');
+        }
+        
+        function goToSlide(index) {
+            const slides = document.querySelectorAll('.hero-slide');
+            const indicators = document.querySelectorAll('.slideshow-indicator');
+            
+            if (slides.length === 0) return;
+            
+            slides[currentSlideIndex].classList.remove('active');
+            indicators[currentSlideIndex].classList.remove('active');
+            
+            currentSlideIndex = index;
+            
+            slides[currentSlideIndex].classList.add('active');
+            indicators[currentSlideIndex].classList.add('active');
+            
+            if (slideshowInterval) {
+                clearInterval(slideshowInterval);
+                startSlideshow();
+            }
+        }
+        
         async function loadClubConfig() {
             try {
-                // NEW - Try API first
-                if (typeof window.apiClient !== 'undefined' && window.apiClient.getConfig) {
+                if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady) {
                     const result = await window.apiClient.getConfig();
                     if (result.success && result.data) {
                         const config = result.data;
                         
-                        // Update club name
                         if (config.name) {
                             document.getElementById('clubName').textContent = config.name;
                             document.getElementById('heroClubName').textContent = config.name;
                         }
                         
-                        // Update motto
                         if (config.motto) {
                             document.getElementById('heroMotto').textContent = config.motto;
                         }
                         
-                        // Update description
                         if (config.description) {
                             document.getElementById('heroDescription').textContent = config.description;
                             document.getElementById('footerDescription').textContent = config.description;
                         }
                         
-                        // Update logo with cache busting
                         const clubLogo = document.getElementById('clubLogo');
                         if (clubLogo && (config.logo || config.logo_url)) {
                             const logoUrl = config.logo || config.logo_url;
@@ -565,13 +817,14 @@
                                 this.src = 'assets/default-logo.jpg';
                             };
                         }
-                        // Update social links
+                        
                         const linksData = config.socialLinks || config.social_links;
                         if (linksData && linksData.length > 0) {
                             const socialContainer = document.getElementById('socialLinks');
                             socialContainer.innerHTML = linksData.map(link =>
-                                `<a href="${link.url}" target="_blank" rel="noopener noreferrer" class="social-link" title="${link.platform}">
-                                    ${getSocialIcon(link.platform)}
+                                `<a href="${link.url}" target="_blank" rel="noopener noreferrer" class="social-link-with-name" title="${link.platform}">
+                                    <span class="social-icon-svg">${getSocialIcon(link.platform)}</span>
+                                    <span class="social-name">${link.platform}</span>
                                 </a>`
                             ).join('');
                         } else {
@@ -581,41 +834,35 @@
                     }
                 }
                 
-                // EXISTING - Fallback to localStorage
                 const config = JSON.parse(localStorage.getItem('clubConfig') || '{}');
                 
-                // Update club name
                 if (config.name) {
                     document.getElementById('clubName').textContent = config.name;
                     document.getElementById('heroClubName').textContent = config.name;
                 }
                 
-                // Update motto
                 if (config.motto) {
                     document.getElementById('heroMotto').textContent = config.motto;
                 }
                 
-                // Update description
                 if (config.description) {
                     document.getElementById('heroDescription').textContent = config.description;
                     document.getElementById('footerDescription').textContent = config.description;
                 }
                 
-                // Update logo
                 if (config.logo) {
                     document.getElementById('clubLogo').src = config.logo;
                 } else {
-                    // Use default logo
                     document.getElementById('clubLogo').src = 'assets/default-logo.jpg';
                 }
                 
-                // Update social links
                 const linksData = config.socialLinks || config.social_links;
                 if (linksData && linksData.length > 0) {
                     const socialContainer = document.getElementById('socialLinks');
                     socialContainer.innerHTML = linksData.map(link =>
-                        `<a href="${link.url}" target="_blank" rel="noopener noreferrer" class="social-link" title="${link.platform}">
-                            ${getSocialIcon(link.platform)}
+                        `<a href="${link.url}" target="_blank" rel="noopener noreferrer" class="social-link-with-name" title="${link.platform}">
+                            <span class="social-icon-svg">${getSocialIcon(link.platform)}</span>
+                            <span class="social-name">${link.platform}</span>
                         </a>`
                     ).join('');
                 } else {
@@ -623,7 +870,6 @@
                 }
             } catch (error) {
                 console.error('Error loading club config:', error);
-                // Fallback to localStorage on error
                 const config = JSON.parse(localStorage.getItem('clubConfig') || '{}');
                 
                 if (config.name) {
@@ -645,8 +891,9 @@
                 if (config.socialLinks && config.socialLinks.length > 0) {
                     const socialContainer = document.getElementById('socialLinks');
                     socialContainer.innerHTML = config.socialLinks.map(link => 
-                        `<a href="${link.url}" target="_blank" rel="noopener noreferrer" class="social-link" title="${link.platform}">
-                            ${getSocialIcon(link.platform)}
+                        `<a href="${link.url}" target="_blank" rel="noopener noreferrer" class="social-link-with-name" title="${link.platform}">
+                            <span class="social-icon-svg">${getSocialIcon(link.platform)}</span>
+                            <span class="social-name">${link.platform}</span>
                         </a>`
                     ).join('');
                 } else {
@@ -655,18 +902,14 @@
             }
         }
         
-        /* MODIFIED - Added API integration */
-        // Load upcoming events (next 3)
         async function loadUpcomingEvents() {
             try {
-                // NEW - Try API first
                 if (typeof getEvents === 'function') {
                     const result = await getEvents({ status: 'upcoming' });
                     if (result.success && result.data) {
                         const events = result.data;
                         const container = document.getElementById('eventsContainer');
                         
-                        // Filter upcoming events
                         const now = new Date();
                         const upcomingEvents = events
                             .filter(event => new Date(event.date) >= now)
@@ -709,11 +952,9 @@
                     }
                 }
                 
-                // EXISTING - Fallback to localStorage
                 const events = JSON.parse(localStorage.getItem('events') || '[]');
                 const container = document.getElementById('eventsContainer');
                 
-                // Filter upcoming events
                 const now = new Date();
                 const upcomingEvents = events
                     .filter(event => event.status === 'upcoming' && new Date(event.date) >= now)
@@ -762,18 +1003,14 @@
             }
         }
         
-        /* MODIFIED - Added API integration */
-        // Load executive committee members (show 4)
         async function loadExecutiveMembers() {
             try {
-                // NEW - Try API first
                 if (typeof getMembers === 'function') {
                     const result = await getMembers({ role: 'Executive Member' });
                     if (result.success && result.data) {
                         const members = result.data;
                         const container = document.getElementById('executiveContainer');
                         
-                        // Filter executive members
                         const executives = members.slice(0, 4);
                         
                         if (executives.length === 0) {
@@ -804,11 +1041,9 @@
                     }
                 }
                 
-                // EXISTING - Fallback to localStorage
                 const members = JSON.parse(localStorage.getItem('members') || '[]');
                 const container = document.getElementById('executiveContainer');
                 
-                // Filter executive members
                 const executives = members
                     .filter(member => member.role && member.role.toLowerCase().includes('executive'))
                     .slice(0, 4);
@@ -847,27 +1082,24 @@
             }
         }
         
-        // Helper function to get social media icons
         function getSocialIcon(platform) {
             const icons = {
-                'facebook': '📘',
-                'twitter': '🐦',
-                'instagram': '📷',
-                'linkedin': '💼',
-                'youtube': '📹',
-                'github': '💻',
-                'email': '✉️'
+                'facebook': '<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>',
+                'twitter': '<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/></svg>',
+                'instagram': '<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C8.74 0 8.333.015 7.053.072 5.775.132 4.905.333 4.14.63c-.789.306-1.459.717-2.126 1.384S.935 3.35.63 4.14C.333 4.905.131 5.775.072 7.053.012 8.333 0 8.74 0 12s.015 3.667.072 4.947c.06 1.277.261 2.148.558 2.913.306.788.717 1.459 1.384 2.126.667.666 1.336 1.079 2.126 1.384.766.296 1.636.499 2.913.558C8.333 23.988 8.74 24 12 24s3.667-.015 4.947-.072c1.277-.06 2.148-.262 2.913-.558.788-.306 1.459-.718 2.126-1.384.666-.667 1.079-1.335 1.384-2.126.296-.765.499-1.636.558-2.913.06-1.28.072-1.687.072-4.947s-.015-3.667-.072-4.947c-.06-1.277-.262-2.149-.558-2.913-.306-.789-.718-1.459-1.384-2.126C21.319 1.347 20.651.935 19.86.63c-.765-.297-1.636-.499-2.913-.558C15.667.012 15.26 0 12 0zm0 2.16c3.203 0 3.585.016 4.85.071 1.17.055 1.805.249 2.227.415.562.217.96.477 1.382.896.419.42.679.819.896 1.381.164.422.36 1.057.413 2.227.057 1.266.07 1.646.07 4.85s-.015 3.585-.074 4.85c-.061 1.17-.256 1.805-.421 2.227-.224.562-.479.96-.899 1.382-.419.419-.824.679-1.38.896-.42.164-1.065.36-2.235.413-1.274.057-1.649.07-4.859.07-3.211 0-3.586-.015-4.859-.074-1.171-.061-1.816-.256-2.236-.421-.569-.224-.96-.479-1.379-.899-.421-.419-.69-.824-.9-1.38-.165-.42-.359-1.065-.42-2.235-.045-1.26-.061-1.649-.061-4.844 0-3.196.016-3.586.061-4.861.061-1.17.255-1.814.42-2.234.21-.57.479-.96.9-1.381.419-.419.81-.689 1.379-.898.42-.166 1.051-.361 2.221-.421 1.275-.045 1.65-.06 4.859-.06l.045.03zm0 3.678c-3.405 0-6.162 2.76-6.162 6.162 0 3.405 2.76 6.162 6.162 6.162 3.405 0 6.162-2.76 6.162-6.162 0-3.405-2.76-6.162-6.162-6.162zM12 16c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4zm7.846-10.405c0 .795-.646 1.44-1.44 1.44-.795 0-1.44-.646-1.44-1.44 0-.794.646-1.439 1.44-1.439.793-.001 1.44.645 1.44 1.439z"/></svg>',
+                'linkedin': '<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>',
+                'youtube': '<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>',
+                'github': '<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>',
+                'email': '<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>'
             };
-            return icons[platform.toLowerCase()] || '🔗';
+            return icons[platform.toLowerCase()] || '<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"/></svg>';
         }
         
-        // Helper function to format date
         function formatDate(dateString) {
             const options = { year: 'numeric', month: 'long', day: 'numeric' };
             return new Date(dateString).toLocaleDateString('en-US', options);
         }
         
-        // Helper function to truncate text
         function truncateText(text, maxLength) {
             if (!text) return '';
             if (text.length <= maxLength) return text;

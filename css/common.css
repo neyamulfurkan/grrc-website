@@ -900,7 +900,7 @@ em {
    13. PAGE-SPECIFIC PATTERNS
    ============================================ */
 
-/* Page Header */
+/* Page Header - Perfect Text Visibility */
 .page-header {
   position: relative;
   padding: var(--space-3xl) 0;
@@ -921,23 +921,39 @@ em {
   pointer-events: none;
 }
 
+/* All text in page header is white with shadow */
+.page-header *,
+.page-header h1,
+.page-header h2,
+.page-header h3,
+.page-header h4,
+.page-header h5,
+.page-header h6,
+.page-header p,
+.page-header span,
+.page-header div {
+  color: #ffffff !important;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.5), 0 1px 4px rgba(0, 0, 0, 0.3);
+}
+
 .page-title {
   position: relative;
   font-size: var(--font-5xl);
   font-weight: var(--font-weight-extrabold);
-  color: white;
+  color: #ffffff !important;
   margin-bottom: var(--space-sm);
   text-align: center;
-  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  text-shadow: 0 3px 15px rgba(0, 0, 0, 0.6), 0 2px 6px rgba(0, 0, 0, 0.4);
 }
 
 .page-description {
   position: relative;
   font-size: var(--font-lg);
-  color: rgba(255, 255, 255, 0.9);
+  color: #ffffff !important;
   text-align: center;
   max-width: 700px;
   margin: 0 auto;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5), 0 1px 4px rgba(0, 0, 0, 0.3);
 }
 
 /* Stats Section */
@@ -1242,8 +1258,60 @@ em {
 }
 
 /* ============================================
+   20. GRADIENT TEXT VISIBILITY FIXES
+   ============================================ */
+
+/* Ensure all gradient backgrounds have white text */
+[style*="background: linear-gradient"],
+[style*="background: var(--gradient"],
+.bg-gradient-primary,
+.bg-gradient-secondary,
+.bg-gradient-accent,
+.bg-gradient-success,
+.bg-gradient-warning {
+  color: #ffffff !important;
+}
+
+[style*="background: linear-gradient"] *,
+[style*="background: var(--gradient"] *,
+.bg-gradient-primary *,
+.bg-gradient-secondary *,
+.bg-gradient-accent *,
+.bg-gradient-success *,
+.bg-gradient-warning * {
+  color: #ffffff !important;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4), 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+/* Hero sections and landing areas */
+.hero,
+.hero-section,
+.landing-section,
+[class*="hero"],
+[class*="banner"] {
+  color: #ffffff;
+}
+
+.hero *,
+.hero-section *,
+.landing-section *,
+[class*="hero"] *,
+[class*="banner"] * {
+  color: #ffffff !important;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5), 0 1px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* Buttons on gradients remain visible */
+.page-header .btn,
+[style*="background: linear-gradient"] .btn,
+.bg-gradient-primary .btn {
+  text-shadow: none;
+  font-weight: var(--font-weight-semibold);
+}
+
+/* ============================================
    END OF COMMON.CSS
-   ============================================ */ 
+   ============================================ */
   /* Small Mobile (< 480px) */
 @media (max-width: 479px) {
   .stats-grid {
