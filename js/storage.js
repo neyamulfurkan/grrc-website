@@ -877,14 +877,15 @@ async function addProject(projectData) {
     if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady) {
       try {
         const backendProject = {
-          id: newProject.id,
-          title: newProject.title,
-          description: newProject.description,
-          status: newProject.status,
-          image_url: newProject.image,
-          technologies: newProject.technologies,
-          team_members: newProject.teamMembers,
-          github_url: newProject.githubLink,
+  id: newProject.id,
+  title: newProject.title,
+  description: newProject.description,
+  category: newProject.category,
+  status: newProject.status,
+  image_url: newProject.image,
+  technologies: Array.isArray(newProject.technologies) ? newProject.technologies : [],
+  team_members: Array.isArray(newProject.teamMembers) ? newProject.teamMembers : [],
+  github_url: newProject.githubLink,
           demo_url: newProject.liveLink,
           created_at: newProject.createdAt
         };
@@ -946,14 +947,15 @@ async function updateProject(projectId, updates) {
     if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady) {
       try {
         const backendProject = {
-          id: updatedProject.id,
-          title: updatedProject.title,
-          description: updatedProject.description,
-          status: updatedProject.status,
-          image_url: updatedProject.image,
-          technologies: updatedProject.technologies,
-          team_members: updatedProject.teamMembers,
-          github_url: updatedProject.githubLink,
+  id: newProject.id,
+  title: newProject.title,
+  description: newProject.description,
+  category: newProject.category,
+  status: newProject.status,
+  image_url: newProject.image,
+  technologies: Array.isArray(newProject.technologies) ? newProject.technologies : [],
+  team_members: Array.isArray(newProject.teamMembers) ? newProject.teamMembers : [],
+  github_url: newProject.githubLink,
           demo_url: updatedProject.liveLink,
           created_at: updatedProject.createdAt
         };
