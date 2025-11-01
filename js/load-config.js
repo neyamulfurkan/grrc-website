@@ -1,1205 +1,1157 @@
 /**
- * load-config.js - Dynamic Club Data Loading Module
- * 
- * FIXED: Infinite loop prevention with proper architecture
- * - getX() functions ONLY read from localStorage cache (NO API calls)
- * - loadX() functions are the ONLY ones that call APIs
- * - Global isLoading flag prevents concurrent API calls
- * - Rate limiting prevents excessive API requests (5 second minimum between calls)
- * - Auto-initialization DISABLED - must call manually
- * - Auto-refresh DISABLED - must start manually
- * 
- * REQUIRES: api-client.js must be loaded before this file
+ * load-config.js - FIXED VERSION
+ * Dynamic content loader with proper cache invalidation
+ * Version: 3.0.0 - Fixed cache invalidation and API integration
  */
 
+// Global flag to prevent duplicate page initialization
+let isPageLoading = false;
+let initializationPromise = null;
+
 // =============================================================================
-// CONFIGURATION
+// CACHE MANAGEMENT WITH PROPER INVALIDATION
 // =============================================================================
-
-// Storage keys for localStorage (MUST match storage.js)
-const LOAD_CONFIG_STORAGE_KEYS = {
-    CLUB_CONFIG: 'clubConfig',
-    MEMBERS: 'clubMembers',
-    EVENTS: 'clubEvents',
-    PROJECTS: 'clubProjects',
-    GALLERY: 'clubGallery',
-    ANNOUNCEMENTS: 'clubAnnouncements',
-    ADMINS: 'clubAdmins'
-};
-
-const REFRESH_INTERVAL = 30000; // Auto-refresh every 30 seconds (when enabled)
-const RATE_LIMIT_INTERVAL = 5000; // Minimum 5 seconds between API calls per endpoint
-
-// Global state management
-let refreshTimer = null;
-let isLoadingGlobal = false; // Prevents concurrent refreshAllData() calls
-
-// Rate limiting: Track last API call timestamp per endpoint
-const lastApiCall = {
-    config: 0,
-    members: 0,
-    events: 0,
-    projects: 0,
-    gallery: 0,
-    announcements: 0,
-    admins: 0
-};
 
 /**
- * Check if enough time has passed since last API call (rate limiting)
- * @param {string} endpoint - Endpoint name (e.g., 'config', 'members')
- * @returns {boolean} True if call is allowed
+ * Load data from cache
+ * @param {string} key - Cache key
+ * @returns {Promise<any|null>} Cached data or null
  */
-function canCallApi(endpoint) {
-    const now = Date.now();
-    const timeSinceLastCall = now - lastApiCall[endpoint];
-    return timeSinceLastCall >= RATE_LIMIT_INTERVAL;
+async function loadFromCache(key) {
+  try {
+    const cached = localStorage.getItem(`cache_${key}`);
+    if (!cached) return null;
+    
+    const data = JSON.parse(cached);
+    console.log(`📦 Loaded ${key} from cache (${data.length || 0} items)`);
+    return data;
+  } catch (error) {
+    console.warn(`⚠️ Error loading ${key} from cache:`, error);
+    return null;
+  }
 }
 
 /**
- * Update last API call timestamp
- * @param {string} endpoint - Endpoint name
+ * Save data to cache
+ * @param {string} key - Cache key
+ * @param {any} data - Data to cache
+ * @returns {Promise<boolean>} Success status
  */
-function updateApiCallTimestamp(endpoint) {
-    lastApiCall[endpoint] = Date.now();
+async function saveToCache(key, data) {
+  try {
+    localStorage.setItem(`cache_${key}`, JSON.stringify(data));
+    console.log(`💾 Saved ${key} to cache (${data.length || 0} items)`);
+    return true;
+  } catch (error) {
+    console.warn(`⚠️ Error saving ${key} to cache:`, error);
+    return false;
+  }
 }
+
+/**
+ * Clear specific cache or all caches
+ * @param {string|null} key - Cache key to clear, or null for all
+ */
+function clearCache(key = null) {
+  try {
+    if (key) {
+      localStorage.removeItem(`cache_${key}`);
+      console.log(`🗑️ Cleared cache: ${key}`);
+    } else {
+      const keys = ['clubConfig', 'members', 'events', 'projects', 'gallery', 'announcements'];
+      keys.forEach(k => {
+        localStorage.removeItem(`cache_${k}`);
+        localStorage.removeItem(k);
+      });
+      console.log('🗑️ Cleared all caches');
+    }
+  } catch (error) {
+    console.error('Error clearing cache:', error);
+  }
+}
+
+// Expose cache clearing function globally
+window.clearCache = clearCache;
 
 // =============================================================================
 // CLUB CONFIGURATION
 // =============================================================================
 
-/**
- * Load club configuration from API (PRIMARY) or localStorage (FALLBACK)
- * THIS IS THE ONLY FUNCTION THAT CALLS THE API FOR CLUB CONFIG
- * @returns {Promise<Object>} Club configuration object
- */
-async function loadClubConfig() {
-    try {
-        // Rate limiting check
-        if (!canCallApi('config')) {
-            console.warn('⚠️ Rate limit: Using cached club config');
-            return getClubConfigFromCache();
-        }
-
-        // Check if API client is available
-        if (typeof window.apiClient === 'undefined') {
-            console.warn('⚠️ API client not available, using cached data');
-            return getClubConfigFromCache();
-        }
-
-        // Update rate limit timestamp
-        updateApiCallTimestamp('config');
-
-        // Fetch from API (PRIMARY source)
-        const result = await getClubConfig();
+async function loadClubConfiguration() {
+  try {
+    console.log('🔄 Loading club configuration...');
+    
+    // Try API first if available
+    if (window.apiClient && window.apiClient.isReady) {
+      try {
+        const result = await window.apiClient.getConfig();
         
-        if (result && result.success && result.data) {
-            // Cache for offline access
-            localStorage.setItem('clubConfig', JSON.stringify(result.data));
-            console.log('✅ Club config loaded from API');
-            return result.data;
+        if (result.success && result.data) {
+          await saveToCache('clubConfig', result.data);
+          updateClubConfigDOM(result.data);
+          console.log('✅ Club configuration loaded from API');
+          return true;
         }
-        
-        // API returned error, use cache
-        console.warn('⚠️ API returned error, using cached club config');
-        return getClubConfigFromCache();
-        
-    } catch (error) {
-        console.error('❌ Error loading club config from API:', error);
-        return getClubConfigFromCache();
-    }
-}
-
-/**
- * Get club config from cache ONLY
- * FIXED: No longer calls loadClubConfig() - prevents infinite loop
- * @returns {Object} Cached club config or default
- */
-function getClubConfig() {
-    // CRITICAL FIX: Only return cached data, NEVER call API
-    return getClubConfigFromCache();
-}
-
-/**
- * Get club config from localStorage cache
- * @returns {Object} Cached club config or default
- */
-function getClubConfigFromCache() {
-    try {
-        const cached = localStorage.getItem('clubConfig');
-        if (cached) {
-            console.log('📦 Loading club config from cache');
-            return JSON.parse(cached);
-        }
-    } catch (error) {
-        console.error('Error reading cached config:', error);
+      } catch (apiError) {
+        console.warn('⚠️ API failed, trying cache:', apiError.message);
+      }
     }
     
-    return getDefaultConfig();
-}
-
-/**
- * Get default club configuration
- * @returns {Object} Default configuration
- */
-function getDefaultConfig() {
-    return {
-        name: 'GSTU Robotics & Research Club',
-        motto: 'A Hub of Robothinkers',
-        description: 'Empowering students to explore robotics, AI, and innovative technologies through hands-on projects and collaborative learning.',
-        logo: 'assets/default-logo.jpg',
-        socialLinks: []
-    };
-}
-
-// =============================================================================
-// MEMBERS
-// =============================================================================
-
-/**
- * Load members from API (PRIMARY) or localStorage (FALLBACK)
- * THIS IS THE ONLY FUNCTION THAT CALLS THE API FOR MEMBERS
- * @returns {Promise<Array>} Array of member objects
- */
-async function loadMembers() {
-    try {
-        // Rate limiting check
-        if (!canCallApi('members')) {
-            console.warn('⚠️ Rate limit: Using cached members');
-            return getMembersFromCache();
-        }
-
-        // Check if API client is available
-        if (typeof window.apiClient === 'undefined') {
-            console.warn('⚠️ API client not available, using cached members');
-            return getMembersFromCache();
-        }
-
-        // Update rate limit timestamp
-        updateApiCallTimestamp('members');
-
-        // Fetch from API (PRIMARY source)
-        const result = await window.apiClient.getMembers();
-        
-        if (result && result.success && result.data) {
-            const members = Array.isArray(result.data) ? result.data : [];
-            // Cache for offline access
-            localStorage.setItem('clubMembers', JSON.stringify(members));
-            console.log(`✅ Loaded ${members.length} members from API`);
-            return members;
-        }
-        
-        // API returned error, use cache
-        console.warn('⚠️ API returned error, using cached members');
-        return getMembersFromCache();
-        
-    } catch (error) {
-        console.error('❌ Error loading members from API:', error);
-        return getMembersFromCache();
-    }
-}
-
-/**
- * Get members from cache ONLY
- * FIXED: No longer calls loadMembers() - prevents infinite loop
- * @returns {Array} Cached members or empty array
- */
-function getMembers() {
-    // CRITICAL FIX: Only return cached data, NEVER call API
-    return getMembersFromCache();
-}
-
-/**
- * Get members from localStorage cache
- * @returns {Array} Cached members or empty array
- */
-function getMembersFromCache() {
-    try {
-        const cached = localStorage.getItem('clubMembers');
-        if (cached) {
-            const members = JSON.parse(cached);
-            console.log(`📦 Loaded ${members.length} members from cache`);
-            return members;
-        }
-    } catch (error) {
-        console.error('Error reading cached members:', error);
+    // Fallback to cache
+    const cached = await loadFromCache('clubConfig');
+    if (cached) {
+      updateClubConfigDOM(cached);
+      console.log('✅ Club configuration loaded from cache');
+      return true;
     }
     
-    return [];
+    console.warn('⚠️ No club configuration available');
+    return false;
+    
+  } catch (error) {
+    console.error('❌ Error loading club configuration:', error);
+    return false;
+  }
 }
 
-/**
- * Load a single member by ID (uses cache)
- * @param {string|number} memberId - Member ID
- * @returns {Object|null} Member object or null
- */
-async function loadMemberById(memberId) {
-    try {
-        const members = getMembersFromCache(); // Use cache only
-        return members.find(m => m.id == memberId) || null;
-    } catch (error) {
-        console.error('Error loading member by ID:', error);
-        return null;
+function updateClubConfigDOM(config) {
+  if (!config) return;
+  
+  // Update logo
+  const logoElements = document.querySelectorAll('.club-logo, #sidebarLogo');
+  logoElements.forEach(el => {
+    if (config.logo) {
+      el.src = config.logo;
+      el.alt = config.shortName || 'Club Logo';
+      el.onerror = function() {
+        this.src = 'assets/default-logo.jpg';
+      };
     }
-}
-
-/**
- * Filter members by role (uses cache)
- * @param {string} role - Member role (e.g., 'Executive', 'General')
- * @returns {Array} Filtered members array
- */
-async function loadMembersByRole(role) {
-    try {
-        const members = getMembersFromCache(); // Use cache only
-        return members.filter(m => m.role === role);
-    } catch (error) {
-        console.error('Error filtering members by role:', error);
-        return [];
+  });
+  
+  // Update club name
+  const clubNameElements = document.querySelectorAll('.club-name, .admin-subtitle');
+  clubNameElements.forEach(el => {
+    el.textContent = config.name || config.club_name || 'Robotics Club';
+  });
+  
+  // Update motto
+  const clubMottoElements = document.querySelectorAll('.club-motto');
+  clubMottoElements.forEach(el => {
+    el.textContent = config.motto || config.club_motto || '';
+  });
+  
+  // Update description
+  const clubDescriptionElements = document.querySelectorAll('.club-description');
+  clubDescriptionElements.forEach(el => {
+    el.textContent = config.description || config.club_description || '';
+  });
+  
+  // Update social links
+  if (config.social_links && Array.isArray(config.social_links) && config.social_links.length > 0) {
+    const socialContainer = document.querySelector('.social-links-container');
+    if (socialContainer) {
+      socialContainer.innerHTML = '';
+      
+      config.social_links.forEach(link => {
+        if (link.url) {
+          const anchor = document.createElement('a');
+          anchor.href = link.url;
+          anchor.target = '_blank';
+          anchor.rel = 'noopener noreferrer';
+          anchor.className = 'social-link';
+          anchor.title = link.platform || 'Social Link';
+          
+          const icon = document.createElement('span');
+          icon.textContent = link.icon || '🔗';
+          anchor.appendChild(icon);
+          
+          socialContainer.appendChild(anchor);
+        }
+      });
     }
-}
-
-/**
- * Filter members by department (uses cache)
- * @param {string} department - Department name
- * @returns {Array} Filtered members array
- */
-async function loadMembersByDepartment(department) {
-    try {
-        const members = getMembersFromCache(); // Use cache only
-        return members.filter(m => m.department === department);
-    } catch (error) {
-        console.error('Error filtering members by department:', error);
-        return [];
-    }
+  }
+  
+  // Update page title
+  document.title = `${config.shortName || 'Club'} - ${config.name || config.club_name || 'Robotics Club'}`;
 }
 
 // =============================================================================
 // EVENTS
 // =============================================================================
 
-/**
- * Load events from API (PRIMARY) or localStorage (FALLBACK)
- * THIS IS THE ONLY FUNCTION THAT CALLS THE API FOR EVENTS
- * @returns {Promise<Array>} Array of event objects
- */
-async function loadEvents() {
-    try {
-        // Rate limiting check
-        if (!canCallApi('events')) {
-            console.warn('⚠️ Rate limit: Using cached events');
-            return getEventsFromCache();
-        }
-
-        // Check if API client is available
-        if (typeof window.apiClient === 'undefined') {
-            console.warn('⚠️ API client not available, using cached events');
-            return getEventsFromCache();
-        }
-
-        // Update rate limit timestamp
-        updateApiCallTimestamp('events');
-
-        // Fetch from API (PRIMARY source)
+async function loadRecentEvents(limit = 3) {
+  try {
+    console.log('🔄 Loading recent events...');
+    
+    // Try API first
+    if (window.apiClient && window.apiClient.isReady) {
+      try {
         const result = await window.apiClient.getEvents();
         
-        if (result && result.success && result.data) {
-            const events = Array.isArray(result.data) ? result.data : [];
-            // Cache for offline access
-            localStorage.setItem('clubEvents', JSON.stringify(events));
-            console.log(`✅ Loaded ${events.length} events from API`);
-            return events;
+        if (result.success && Array.isArray(result.data)) {
+          await saveToCache('events', result.data);
+          displayRecentEvents(result.data, limit);
+          console.log('✅ Events loaded from API');
+          return true;
         }
-        
-        // API returned error, use cache
-        console.warn('⚠️ API returned error, using cached events');
-        return getEventsFromCache();
-        
-    } catch (error) {
-        console.error('❌ Error loading events from API:', error);
-        return getEventsFromCache();
-    }
-}
-
-/**
- * Get events from cache ONLY
- * FIXED: No longer calls loadEvents() - prevents infinite loop
- * @returns {Array} Cached events or empty array
- */
-function getEvents() {
-    // CRITICAL FIX: Only return cached data, NEVER call API
-    return getEventsFromCache();
-}
-
-/**
- * Get events from localStorage cache
- * @returns {Array} Cached events or empty array
- */
-function getEventsFromCache() {
-    try {
-        const cached = localStorage.getItem('clubEvents');
-        if (cached) {
-            const events = JSON.parse(cached);
-            console.log(`📦 Loaded ${events.length} events from cache`);
-            return events;
-        }
-    } catch (error) {
-        console.error('Error reading cached events:', error);
+      } catch (apiError) {
+        console.warn('⚠️ API failed, trying cache:', apiError.message);
+      }
     }
     
-    return [];
+    // Fallback to cache
+    const cached = await loadFromCache('events');
+    if (cached && Array.isArray(cached)) {
+      displayRecentEvents(cached, limit);
+      console.log('✅ Events loaded from cache');
+      return true;
+    }
+    
+    displayEmptyEvents();
+    return false;
+    
+  } catch (error) {
+    console.error('❌ Error loading events:', error);
+    displayEmptyEvents();
+    return false;
+  }
 }
 
-/**
- * Load upcoming events (uses cache)
- * @returns {Array} Array of upcoming events
- */
-async function loadUpcomingEvents() {
-    try {
-        const events = getEventsFromCache(); // Use cache only
-        const now = new Date();
-        
-        return events
-            .filter(e => {
-                if (e.status === 'Cancelled' || e.status === 'cancelled') return false;
-                
-                const eventDate = new Date(e.date);
-                return eventDate >= now || e.status === 'Upcoming' || e.status === 'Ongoing';
-            })
-            .sort((a, b) => new Date(a.date) - new Date(b.date));
-    } catch (error) {
-        console.error('Error loading upcoming events:', error);
-        return [];
-    }
+function displayRecentEvents(events, limit) {
+  const container = document.getElementById('recent-events-container');
+  if (!container) return;
+  
+  const upcomingEvents = events.filter(e => 
+    e.status === 'upcoming' || e.status === 'Upcoming'
+  );
+  
+  if (upcomingEvents.length === 0) {
+    container.innerHTML = '<p class="no-data">No upcoming events at the moment.</p>';
+    return;
+  }
+  
+  container.innerHTML = '';
+  const recentEvents = upcomingEvents.slice(0, limit);
+  
+  recentEvents.forEach(event => {
+    const eventCard = createEventCard(event);
+    container.appendChild(eventCard);
+  });
+  
+  console.log(`✅ Displayed ${recentEvents.length} recent events`);
 }
 
-/**
- * Load past events (uses cache)
- * @returns {Array} Array of past events (sorted newest first)
- */
-async function loadPastEvents() {
-    try {
-        const events = getEventsFromCache(); // Use cache only
-        const now = new Date();
-        
-        return events
-            .filter(e => {
-                if (e.status === 'Completed' || e.status === 'completed') return true;
-                
-                const eventDate = new Date(e.date);
-                return eventDate < now;
-            })
-            .sort((a, b) => new Date(b.date) - new Date(a.date));
-    } catch (error) {
-        console.error('Error loading past events:', error);
-        return [];
-    }
-}
-
-/**
- * Filter events by category (uses cache)
- * @param {string} category - Event category
- * @returns {Array} Filtered events array
- */
-async function loadEventsByCategory(category) {
-    try {
-        const events = getEventsFromCache(); // Use cache only
-        return events.filter(e => e.category === category);
-    } catch (error) {
-        console.error('Error filtering events by category:', error);
-        return [];
-    }
-}
-
-/**
- * Load event by ID (uses cache)
- * @param {string|number} eventId - Event ID
- * @returns {Object|null} Event object or null
- */
-async function loadEventById(eventId) {
-    try {
-        const events = getEventsFromCache(); // Use cache only
-        return events.find(e => e.id == eventId) || null;
-    } catch (error) {
-        console.error('Error loading event by ID:', error);
-        return null;
-    }
+function displayEmptyEvents() {
+  const container = document.getElementById('recent-events-container');
+  if (container) {
+    container.innerHTML = '<p class="no-data">No upcoming events at the moment.</p>';
+  }
 }
 
 // =============================================================================
 // PROJECTS
 // =============================================================================
 
-/**
- * Load projects from API (PRIMARY) or localStorage (FALLBACK)
- * THIS IS THE ONLY FUNCTION THAT CALLS THE API FOR PROJECTS
- * @returns {Promise<Array>} Array of project objects
- */
-async function loadProjects() {
-    try {
-        // Rate limiting check
-        if (!canCallApi('projects')) {
-            console.warn('⚠️ Rate limit: Using cached projects');
-            return getProjectsFromCache();
-        }
-
-        // Check if API client is available
-        if (typeof window.apiClient === 'undefined') {
-            console.warn('⚠️ API client not available, using cached projects');
-            return getProjectsFromCache();
-        }
-
-        // Update rate limit timestamp
-        updateApiCallTimestamp('projects');
-
-        // Fetch from API (PRIMARY source)
+async function loadFeaturedProjects(limit = 6) {
+  try {
+    console.log('🔄 Loading featured projects...');
+    
+    // Try API first
+    if (window.apiClient && window.apiClient.isReady) {
+      try {
         const result = await window.apiClient.getProjects();
         
-        if (result && result.success && result.data) {
-            const projects = Array.isArray(result.data) ? result.data : [];
-            // Cache for offline access
-            localStorage.setItem('clubProjects', JSON.stringify(projects));
-            console.log(`✅ Loaded ${projects.length} projects from API`);
-            return projects;
+        if (result.success && Array.isArray(result.data)) {
+          await saveToCache('projects', result.data);
+          displayFeaturedProjects(result.data, limit);
+          console.log('✅ Projects loaded from API');
+          return true;
         }
-        
-        // API returned error, use cache
-        console.warn('⚠️ API returned error, using cached projects');
-        return getProjectsFromCache();
-        
-    } catch (error) {
-        console.error('❌ Error loading projects from API:', error);
-        return getProjectsFromCache();
-    }
-}
-
-/**
- * Get projects from cache ONLY
- * FIXED: No longer calls loadProjects() - prevents infinite loop
- * @returns {Array} Cached projects or empty array
- */
-function getProjects() {
-    // CRITICAL FIX: Only return cached data, NEVER call API
-    return getProjectsFromCache();
-}
-
-/**
- * Get projects from localStorage cache
- * @returns {Array} Cached projects or empty array
- */
-function getProjectsFromCache() {
-    try {
-        const cached = localStorage.getItem('clubProjects');
-        if (cached) {
-            const projects = JSON.parse(cached);
-            console.log(`📦 Loaded ${projects.length} projects from cache`);
-            return projects;
-        }
-    } catch (error) {
-        console.error('Error reading cached projects:', error);
+      } catch (apiError) {
+        console.warn('⚠️ API failed, trying cache:', apiError.message);
+      }
     }
     
-    return [];
+    // Fallback to cache
+    const cached = await loadFromCache('projects');
+    if (cached && Array.isArray(cached)) {
+      displayFeaturedProjects(cached, limit);
+      console.log('✅ Projects loaded from cache');
+      return true;
+    }
+    
+    displayEmptyProjects();
+    return false;
+    
+  } catch (error) {
+    console.error('❌ Error loading projects:', error);
+    displayEmptyProjects();
+    return false;
+  }
 }
 
-/**
- * Filter projects by status (uses cache)
- * @param {string} status - Project status (e.g., 'Completed', 'Ongoing', 'Planned')
- * @returns {Array} Filtered projects array
- */
-async function loadProjectsByStatus(status) {
-    try {
-        const projects = getProjectsFromCache(); // Use cache only
-        return projects.filter(p => p.status === status);
-    } catch (error) {
-        console.error('Error filtering projects by status:', error);
-        return [];
-    }
+function displayFeaturedProjects(projects, limit) {
+  const container = document.getElementById('featured-projects-container');
+  if (!container) return;
+  
+  if (projects.length === 0) {
+    container.innerHTML = '<p class="no-data">No projects to display yet.</p>';
+    return;
+  }
+  
+  container.innerHTML = '';
+  const featuredProjects = projects.slice(0, limit);
+  
+  featuredProjects.forEach(project => {
+    const projectCard = createProjectCard(project);
+    container.appendChild(projectCard);
+  });
+  
+  console.log(`✅ Displayed ${featuredProjects.length} featured projects`);
 }
 
-/**
- * Filter projects by category (uses cache)
- * @param {string} category - Project category
- * @returns {Array} Filtered projects array
- */
-async function loadProjectsByCategory(category) {
-    try {
-        const projects = getProjectsFromCache(); // Use cache only
-        return projects.filter(p => p.category === category);
-    } catch (error) {
-        console.error('Error filtering projects by category:', error);
-        return [];
-    }
+function displayEmptyProjects() {
+  const container = document.getElementById('featured-projects-container');
+  if (container) {
+    container.innerHTML = '<p class="no-data">No projects to display yet.</p>';
+  }
 }
 
-/**
- * Load project by ID (uses cache)
- * @param {string|number} projectId - Project ID
- * @returns {Object|null} Project object or null
- */
-async function loadProjectById(projectId) {
-    try {
-        const projects = getProjectsFromCache(); // Use cache only
-        return projects.find(p => p.id == projectId) || null;
-    } catch (error) {
-        console.error('Error loading project by ID:', error);
-        return null;
+// =============================================================================
+// MEMBERS
+// =============================================================================
+
+async function loadExecutiveMembers(limit = 4) {
+  try {
+    console.log('🔄 Loading executive members...');
+    
+    // Try API first
+    if (window.apiClient && window.apiClient.isReady) {
+      try {
+        const result = await window.apiClient.getMembers();
+        
+        if (result.success && Array.isArray(result.data)) {
+          await saveToCache('members', result.data);
+          displayExecutiveMembers(result.data, limit);
+          console.log('✅ Members loaded from API');
+          return true;
+        }
+      } catch (apiError) {
+        console.warn('⚠️ API failed, trying cache:', apiError.message);
+      }
     }
+    
+    // Fallback to cache
+    const cached = await loadFromCache('members');
+    if (cached && Array.isArray(cached)) {
+      displayExecutiveMembers(cached, limit);
+      console.log('✅ Members loaded from cache');
+      return true;
+    }
+    
+    displayEmptyMembers();
+    return false;
+    
+  } catch (error) {
+    console.error('❌ Error loading members:', error);
+    displayEmptyMembers();
+    return false;
+  }
+}
+
+function displayExecutiveMembers(members, limit) {
+  const container = document.getElementById('executive-members-container');
+  if (!container) return;
+  
+  const executiveMembers = members.filter(m => 
+    m.role === 'Executive Member' || m.role === 'Executive'
+  );
+  
+  if (executiveMembers.length === 0) {
+    container.innerHTML = '<p class="no-data">No executive members listed yet.</p>';
+    return;
+  }
+  
+  container.innerHTML = '';
+  const displayMembers = executiveMembers.slice(0, limit);
+  
+  displayMembers.forEach(member => {
+    const memberCard = createMemberCard(member);
+    container.appendChild(memberCard);
+  });
+  
+  console.log(`✅ Displayed ${displayMembers.length} executive members`);
+}
+
+function displayEmptyMembers() {
+  const container = document.getElementById('executive-members-container');
+  if (container) {
+    container.innerHTML = '<p class="no-data">No executive members listed yet.</p>';
+  }
 }
 
 // =============================================================================
 // GALLERY
 // =============================================================================
 
-/**
- * Load gallery items from API (PRIMARY) or localStorage (FALLBACK)
- * THIS IS THE ONLY FUNCTION THAT CALLS THE API FOR GALLERY
- * @returns {Promise<Array>} Array of gallery objects
- */
-async function loadGallery() {
-    try {
-        // Rate limiting check
-        if (!canCallApi('gallery')) {
-            console.warn('⚠️ Rate limit: Using cached gallery');
-            return getGalleryFromCache();
-        }
-
-        // Check if API client is available
-        if (typeof window.apiClient === 'undefined') {
-            console.warn('⚠️ API client not available, using cached gallery');
-            return getGalleryFromCache();
-        }
-
-        // Update rate limit timestamp
-        updateApiCallTimestamp('gallery');
-
-        // Fetch from API (PRIMARY source)
-        const result = await window.apiClient.getGalleryItems();
+async function loadGalleryPreview(limit = 8) {
+  try {
+    console.log('🔄 Loading gallery preview...');
+    
+    // Try API first
+    if (window.apiClient && window.apiClient.isReady) {
+      try {
+        const result = await window.apiClient.getGallery();
         
-        if (result && result.success && result.data) {
-            const gallery = Array.isArray(result.data) ? result.data : [];
-            // Cache for offline access
-            localStorage.setItem('clubGallery', JSON.stringify(gallery));
-            console.log(`✅ Loaded ${gallery.length} gallery items from API`);
-            return gallery;
+        if (result.success && Array.isArray(result.data)) {
+          await saveToCache('gallery', result.data);
+          displayGalleryPreview(result.data, limit);
+          console.log('✅ Gallery loaded from API');
+          return true;
         }
-        
-        // API returned error, use cache
-        console.warn('⚠️ API returned error, using cached gallery');
-        return getGalleryFromCache();
-        
-    } catch (error) {
-        console.error('❌ Error loading gallery from API:', error);
-        return getGalleryFromCache();
-    }
-}
-
-/**
- * Get gallery from cache ONLY
- * FIXED: No longer calls loadGallery() - prevents infinite loop
- * @returns {Array} Cached gallery or empty array
- */
-function getGallery() {
-    // CRITICAL FIX: Only return cached data, NEVER call API
-    return getGalleryFromCache();
-}
-
-/**
- * Get gallery from localStorage cache
- * @returns {Array} Cached gallery or empty array
- */
-function getGalleryFromCache() {
-    try {
-        const cached = localStorage.getItem('clubGallery');
-        if (cached) {
-            const gallery = JSON.parse(cached);
-            console.log(`📦 Loaded ${gallery.length} gallery items from cache`);
-            return gallery;
-        }
-    } catch (error) {
-        console.error('Error reading cached gallery:', error);
+      } catch (apiError) {
+        console.warn('⚠️ API failed, trying cache:', apiError.message);
+      }
     }
     
-    return [];
+    // Fallback to cache
+    const cached = await loadFromCache('gallery');
+    if (cached && Array.isArray(cached)) {
+      displayGalleryPreview(cached, limit);
+      console.log('✅ Gallery loaded from cache');
+      return true;
+    }
+    
+    displayEmptyGallery();
+    return false;
+    
+  } catch (error) {
+    console.error('❌ Error loading gallery:', error);
+    displayEmptyGallery();
+    return false;
+  }
 }
 
-/**
- * Filter gallery by category (uses cache)
- * @param {string} category - Gallery category
- * @returns {Array} Filtered gallery array
- */
-async function loadGalleryByCategory(category) {
-    try {
-        const gallery = getGalleryFromCache(); // Use cache only
-        return gallery.filter(g => g.category === category);
-    } catch (error) {
-        console.error('Error filtering gallery by category:', error);
-        return [];
-    }
+function displayGalleryPreview(gallery, limit) {
+  const container = document.getElementById('gallery-preview-container');
+  if (!container) return;
+  
+  if (gallery.length === 0) {
+    container.innerHTML = '<p class="no-data">No photos in gallery yet.</p>';
+    return;
+  }
+  
+  container.innerHTML = '';
+  const previewItems = gallery.slice(0, limit);
+  
+  previewItems.forEach(item => {
+    const galleryItem = createGalleryItem(item);
+    container.appendChild(galleryItem);
+  });
+  
+  console.log(`✅ Displayed ${previewItems.length} gallery items`);
 }
 
-/**
- * Load gallery item by ID (uses cache)
- * @param {string|number} galleryId - Gallery item ID
- * @returns {Object|null} Gallery object or null
- */
-async function loadGalleryItemById(galleryId) {
-    try {
-        const gallery = getGalleryFromCache(); // Use cache only
-        return gallery.find(g => g.id == galleryId) || null;
-    } catch (error) {
-        console.error('Error loading gallery item by ID:', error);
-        return null;
-    }
+function displayEmptyGallery() {
+  const container = document.getElementById('gallery-preview-container');
+  if (container) {
+    container.innerHTML = '<p class="no-data">No photos in gallery yet.</p>';
+  }
 }
 
 // =============================================================================
 // ANNOUNCEMENTS
 // =============================================================================
 
-/**
- * Load announcements from API (PRIMARY) or localStorage (FALLBACK)
- * THIS IS THE ONLY FUNCTION THAT CALLS THE API FOR ANNOUNCEMENTS
- * @returns {Promise<Array>} Array of announcement objects
- */
-async function loadAnnouncements() {
-    try {
-        // Rate limiting check
-        if (!canCallApi('announcements')) {
-            console.warn('⚠️ Rate limit: Using cached announcements');
-            return getAnnouncementsFromCache();
-        }
-
-        // Check if API client is available
-        if (typeof window.apiClient === 'undefined') {
-            console.warn('⚠️ API client not available, using cached announcements');
-            return getAnnouncementsFromCache();
-        }
-
-        // Update rate limit timestamp
-        updateApiCallTimestamp('announcements');
-
-        // Fetch from API (PRIMARY source)
+async function loadAnnouncements(limit = 5) {
+  try {
+    console.log('🔄 Loading announcements...');
+    
+    // Try API first
+    if (window.apiClient && window.apiClient.isReady) {
+      try {
         const result = await window.apiClient.getAnnouncements();
         
-        if (result && result.success && result.data) {
-            const announcements = Array.isArray(result.data) ? result.data : [];
-            // Cache for offline access
-            localStorage.setItem('clubAnnouncements', JSON.stringify(announcements));
-            console.log(`✅ Loaded ${announcements.length} announcements from API`);
-            return announcements;
+        if (result.success && Array.isArray(result.data)) {
+          await saveToCache('announcements', result.data);
+          displayAnnouncements(result.data, limit);
+          console.log('✅ Announcements loaded from API');
+          return true;
         }
-        
-        // API returned error, use cache
-        console.warn('⚠️ API returned error, using cached announcements');
-        return getAnnouncementsFromCache();
-        
-    } catch (error) {
-        console.error('❌ Error loading announcements from API:', error);
-        return getAnnouncementsFromCache();
-    }
-}
-
-/**
- * Get announcements from cache ONLY
- * FIXED: No longer calls loadAnnouncements() - prevents infinite loop
- * @returns {Array} Cached announcements or empty array
- */
-function getAnnouncements() {
-    // CRITICAL FIX: Only return cached data, NEVER call API
-    return getAnnouncementsFromCache();
-}
-
-/**
- * Get announcements from localStorage cache
- * @returns {Array} Cached announcements or empty array
- */
-function getAnnouncementsFromCache() {
-    try {
-        const cached = localStorage.getItem('clubAnnouncements');
-        if (cached) {
-            const announcements = JSON.parse(cached);
-            console.log(`📦 Loaded ${announcements.length} announcements from cache`);
-            return announcements;
-        }
-    } catch (error) {
-        console.error('Error reading cached announcements:', error);
+      } catch (apiError) {
+        console.warn('⚠️ API failed, trying cache:', apiError.message);
+      }
     }
     
-    return [];
-}
-
-/**
- * Load active announcements (uses cache)
- * @returns {Array} Array of active announcements
- */
-async function loadActiveAnnouncements() {
-    try {
-        const announcements = getAnnouncementsFromCache(); // Use cache only
-        
-        return announcements
-            .filter(a => a.priority !== 'archived' && a.priority !== 'Archived')
-            .sort((a, b) => {
-                // Sort by priority first (High > Normal > Low)
-                const priorityOrder = { 
-                    'High': 3, 'high': 3,
-                    'Normal': 2, 'normal': 2, 'Medium': 2, 'medium': 2,
-                    'Low': 1, 'low': 1
-                };
-                const priorityDiff = (priorityOrder[b.priority] || 0) - (priorityOrder[a.priority] || 0);
-                if (priorityDiff !== 0) return priorityDiff;
-                
-                // Then sort by date (newest first)
-                return new Date(b.date || b.createdAt) - new Date(a.date || a.createdAt);
-            });
-    } catch (error) {
-        console.error('Error loading active announcements:', error);
-        return [];
-    }
-}
-
-/**
- * Load announcement by ID (uses cache)
- * @param {string|number} announcementId - Announcement ID
- * @returns {Object|null} Announcement object or null
- */
-async function loadAnnouncementById(announcementId) {
-    try {
-        const announcements = getAnnouncementsFromCache(); // Use cache only
-        return announcements.find(a => a.id == announcementId) || null;
-    } catch (error) {
-        console.error('Error loading announcement by ID:', error);
-        return null;
-    }
-}
-
-// =============================================================================
-// ADMINS
-// =============================================================================
-
-/**
- * Load admins from API (PRIMARY) or localStorage (FALLBACK)
- * THIS IS THE ONLY FUNCTION THAT CALLS THE API FOR ADMINS
- * @returns {Promise<Array>} Array of admin objects
- */
-async function loadAdmins() {
-    try {
-        // Rate limiting check
-        if (!canCallApi('admins')) {
-            console.warn('⚠️ Rate limit: Using cached admins');
-            return getAdminsFromCache();
-        }
-
-        // Check if API client is available
-        if (typeof window.apiClient === 'undefined') {
-            console.warn('⚠️ API client not available, using cached admins');
-            return getAdminsFromCache();
-        }
-
-        // Update rate limit timestamp
-        updateApiCallTimestamp('admins');
-
-        // Fetch from API (PRIMARY source)
-        const result = await window.apiClient.getAdmins();
-        
-        if (result && result.success && result.data) {
-            const admins = Array.isArray(result.data) ? result.data : [];
-            // Cache for offline access
-            localStorage.setItem('clubAdmins', JSON.stringify(admins));
-            console.log(`✅ Loaded ${admins.length} admins from API`);
-            return admins;
-        }
-        
-        // API returned error, use cache
-        console.warn('⚠️ API returned error, using cached admins');
-        return getAdminsFromCache();
-        
-    } catch (error) {
-        console.error('❌ Error loading admins from API:', error);
-        return getAdminsFromCache();
-    }
-}
-
-/**
- * Get admins from cache ONLY
- * FIXED: No longer calls loadAdmins() - prevents infinite loop
- * @returns {Array} Cached admins or empty array
- */
-function getAdmins() {
-    // CRITICAL FIX: Only return cached data, NEVER call API
-    return getAdminsFromCache();
-}
-
-/**
- * Get admins from localStorage cache
- * @returns {Array} Cached admins or empty array
- */
-function getAdminsFromCache() {
-    try {
-        const cached = localStorage.getItem('clubAdmins');
-        if (cached) {
-            const admins = JSON.parse(cached);
-            console.log(`📦 Loaded ${admins.length} admins from cache`);
-            return admins;
-        }
-    } catch (error) {
-        console.error('Error reading cached admins:', error);
+    // Fallback to cache
+    const cached = await loadFromCache('announcements');
+    if (cached && Array.isArray(cached)) {
+      displayAnnouncements(cached, limit);
+      console.log('✅ Announcements loaded from cache');
+      return true;
     }
     
-    return [];
+    displayEmptyAnnouncements();
+    return false;
+    
+  } catch (error) {
+    console.error('❌ Error loading announcements:', error);
+    displayEmptyAnnouncements();
+    return false;
+  }
+}
+
+function displayAnnouncements(announcements, limit) {
+  const container = document.getElementById('announcements-container');
+  if (!container) return;
+  
+  if (announcements.length === 0) {
+    container.innerHTML = '<p class="no-data">No announcements at the moment.</p>';
+    return;
+  }
+  
+  container.innerHTML = '';
+  const recentAnnouncements = announcements.slice(0, limit);
+  
+  recentAnnouncements.forEach(announcement => {
+    const announcementItem = createAnnouncementItem(announcement);
+    container.appendChild(announcementItem);
+  });
+  
+  console.log(`✅ Displayed ${recentAnnouncements.length} announcements`);
+}
+
+function displayEmptyAnnouncements() {
+  const container = document.getElementById('announcements-container');
+  if (container) {
+    container.innerHTML = '<p class="no-data">No announcements at the moment.</p>';
+  }
 }
 
 // =============================================================================
-// REAL-TIME SYNCHRONIZATION
+// CARD CREATION FUNCTIONS
 // =============================================================================
 
-/**
- * Refresh all cached data from API
- * FIXED: Added global isLoading flag to prevent concurrent calls
- * Forces fresh data load from backend
- * @returns {Promise<Object>} Status of all refresh operations
- */
-async function refreshAllData() {
-    // CRITICAL FIX: Prevent concurrent refresh calls
-    if (isLoadingGlobal) {
-        console.warn('⚠️ Refresh already in progress, skipping...');
-        return {
-            clubConfig: false,
-            members: false,
-            events: false,
-            projects: false,
-            gallery: false,
-            announcements: false,
-            admins: false,
-            timestamp: new Date().toISOString(),
-            skipped: true
-        };
-    }
-
-    isLoadingGlobal = true;
-    console.log('🔄 Refreshing all data from API...');
-    
-    const results = {
-        clubConfig: false,
-        members: false,
-        events: false,
-        projects: false,
-        gallery: false,
-        announcements: false,
-        admins: false,
-        timestamp: new Date().toISOString()
+function createEventCard(event) {
+  const card = document.createElement('div');
+  card.className = 'event-card';
+  card.dataset.eventId = event.id;
+  
+  if (event.image) {
+    const img = document.createElement('img');
+    img.src = event.image;
+    img.alt = event.title;
+    img.className = 'event-image';
+    img.onerror = function() {
+      this.src = 'assets/default-event.jpg';
     };
-    
-    try {
-        // Check API availability
-        if (typeof window.apiClient === 'undefined') {
-            console.warn('⚠️ API client not available, cannot refresh');
-            return results;
-        }
-
-        // Refresh all data in parallel for better performance
-        const [configRes, membersRes, eventsRes, projectsRes, galleryRes, announcementsRes, adminsRes] = 
-            await Promise.allSettled([
-                window.apiClient.getConfig(),
-                window.apiClient.getMembers(),
-                window.apiClient.getEvents(),
-                window.apiClient.getProjects(),
-                window.apiClient.getGalleryItems(),
-                window.apiClient.getAnnouncements(),
-                window.apiClient.getAdmins()
-            ]);
-
-        // Update club config
-        if (configRes.status === 'fulfilled' && configRes.value && configRes.value.success) {
-            localStorage.setItem('clubConfig', JSON.stringify(configRes.value.data));
-            updateApiCallTimestamp('config');
-            results.clubConfig = true;
-        }
-
-        // Update members
-        if (membersRes.status === 'fulfilled' && membersRes.value && membersRes.value.success) {
-            const members = Array.isArray(membersRes.value.data) ? membersRes.value.data : [];
-            localStorage.setItem('clubMembers', JSON.stringify(members));
-            updateApiCallTimestamp('members');
-            results.members = true;
-        }
-
-        // Update events
-        if (eventsRes.status === 'fulfilled' && eventsRes.value && eventsRes.value.success) {
-            const events = Array.isArray(eventsRes.value.data) ? eventsRes.value.data : [];
-            localStorage.setItem('clubEvents', JSON.stringify(events));
-            updateApiCallTimestamp('events');
-            results.events = true;
-        }
-
-        // Update projects
-        if (projectsRes.status === 'fulfilled' && projectsRes.value && projectsRes.value.success) {
-            const projects = Array.isArray(projectsRes.value.data) ? projectsRes.value.data : [];
-            localStorage.setItem('clubProjects', JSON.stringify(projects));
-            updateApiCallTimestamp('projects');
-            results.projects = true;
-        }
-
-        // Update gallery
-        if (galleryRes.status === 'fulfilled' && galleryRes.value && galleryRes.value.success) {
-            const gallery = Array.isArray(galleryRes.value.data) ? galleryRes.value.data : [];
-            localStorage.setItem('clubGallery', JSON.stringify(gallery));
-            updateApiCallTimestamp('gallery');
-            results.gallery = true;
-        }
-
-        // Update announcements
-        if (announcementsRes.status === 'fulfilled' && announcementsRes.value && announcementsRes.value.success) {
-            const announcements = Array.isArray(announcementsRes.value.data) ? announcementsRes.value.data : [];
-            localStorage.setItem('clubAnnouncements', JSON.stringify(announcements));
-            updateApiCallTimestamp('announcements');
-            results.announcements = true;
-        }
-
-        // Update admins
-        if (adminsRes.status === 'fulfilled' && adminsRes.value && adminsRes.value.success) {
-            const admins = Array.isArray(adminsRes.value.data) ? adminsRes.value.data : [];
-            localStorage.setItem('clubAdmins', JSON.stringify(admins));
-            updateApiCallTimestamp('admins');
-            results.admins = true;
-        }
-
-        const successCount = Object.values(results).filter(v => v === true).length;
-        console.log(`✅ Data refresh complete: ${successCount}/7 successful`);
-        
-        // Trigger custom event for UI updates
-        window.dispatchEvent(new CustomEvent('dataRefreshed', { detail: results }));
-        
-        return results;
-    } catch (error) {
-        console.error('❌ Error during data refresh:', error);
-        return results;
-    } finally {
-        // CRITICAL FIX: Always release the lock
-        isLoadingGlobal = false;
-    }
+    card.appendChild(img);
+  }
+  
+  const content = document.createElement('div');
+  content.className = 'event-content';
+  
+  const title = document.createElement('h3');
+  title.className = 'event-title';
+  title.textContent = event.title;
+  content.appendChild(title);
+  
+  const category = document.createElement('span');
+  category.className = 'event-category';
+  category.textContent = event.category;
+  content.appendChild(category);
+  
+  const date = document.createElement('p');
+  date.className = 'event-date';
+  date.innerHTML = `<strong>Date:</strong> ${formatDateDisplay(event.date)}`;
+  content.appendChild(date);
+  
+  const venue = document.createElement('p');
+  venue.className = 'event-venue';
+  venue.innerHTML = `<strong>Venue:</strong> ${event.venue}`;
+  content.appendChild(venue);
+  
+  const description = document.createElement('p');
+  description.className = 'event-description';
+  description.textContent = truncateText(event.description, 120);
+  content.appendChild(description);
+  
+  const actions = document.createElement('div');
+  actions.className = 'event-actions';
+  
+  const detailsBtn = document.createElement('button');
+  detailsBtn.className = 'btn-primary';
+  detailsBtn.textContent = 'View Details';
+  detailsBtn.onclick = () => viewEventDetails(event.id);
+  actions.appendChild(detailsBtn);
+  
+  if (event.registrationLink) {
+    const registerBtn = document.createElement('a');
+    registerBtn.href = event.registrationLink;
+    registerBtn.className = 'btn-secondary';
+    registerBtn.textContent = 'Register';
+    registerBtn.target = '_blank';
+    registerBtn.rel = 'noopener noreferrer';
+    actions.appendChild(registerBtn);
+  }
+  
+  content.appendChild(actions);
+  card.appendChild(content);
+  
+  return card;
 }
 
-/**
- * Start automatic data refresh
- * FIXED: No longer starts automatically - must be called manually
- * Refreshes data every REFRESH_INTERVAL milliseconds
- */
-function startAutoRefresh() {
-    if (refreshTimer) {
-        console.log('⚠️ Auto-refresh already running');
-        return;
-    }
+function createProjectCard(project) {
+  const card = document.createElement('div');
+  card.className = 'project-card';
+  card.dataset.projectId = project.id;
+  
+  if (project.image) {
+    const img = document.createElement('img');
+    img.src = project.image;
+    img.alt = project.title;
+    img.className = 'project-image';
+    img.onerror = function() {
+      this.src = 'assets/default-project.jpg';
+    };
+    card.appendChild(img);
+  }
+  
+  const content = document.createElement('div');
+  content.className = 'project-content';
+  
+  const title = document.createElement('h3');
+  title.className = 'project-title';
+  title.textContent = project.title;
+  content.appendChild(title);
+  
+  const category = document.createElement('span');
+  category.className = 'project-category';
+  category.textContent = project.category;
+  content.appendChild(category);
+  
+  const description = document.createElement('p');
+  description.className = 'project-description';
+  description.textContent = truncateText(project.description, 120);
+  content.appendChild(description);
+  
+  if (project.technologies && project.technologies.length > 0) {
+    const techContainer = document.createElement('div');
+    techContainer.className = 'project-technologies';
     
-    console.log(`🔄 Starting auto-refresh (every ${REFRESH_INTERVAL / 1000}s)`);
+    project.technologies.slice(0, 5).forEach(tech => {
+      const techBadge = document.createElement('span');
+      techBadge.className = 'tech-badge';
+      techBadge.textContent = tech;
+      techContainer.appendChild(techBadge);
+    });
     
-    refreshTimer = setInterval(async () => {
-        console.log('⏰ Auto-refresh triggered');
-        await refreshAllData();
-    }, REFRESH_INTERVAL);
+    content.appendChild(techContainer);
+  }
+  
+  const actions = document.createElement('div');
+  actions.className = 'project-actions';
+  
+  const detailsBtn = document.createElement('button');
+  detailsBtn.className = 'btn-primary';
+  detailsBtn.textContent = 'View Details';
+  detailsBtn.onclick = () => viewProjectDetails(project.id);
+  actions.appendChild(detailsBtn);
+  
+  if (project.githubLink) {
+    const githubBtn = document.createElement('a');
+    githubBtn.href = project.githubLink;
+    githubBtn.className = 'btn-secondary';
+    githubBtn.textContent = 'GitHub';
+    githubBtn.target = '_blank';
+    githubBtn.rel = 'noopener noreferrer';
+    actions.appendChild(githubBtn);
+  }
+  
+  content.appendChild(actions);
+  card.appendChild(content);
+  
+  return card;
 }
 
-/**
- * Stop automatic data refresh
- */
-function stopAutoRefresh() {
-    if (refreshTimer) {
-        clearInterval(refreshTimer);
-        refreshTimer = null;
-        console.log('🛑 Auto-refresh stopped');
-    }
+function createMemberCard(member) {
+  const card = document.createElement('div');
+  card.className = 'member-card';
+  card.dataset.memberId = member.id;
+  
+  if (member.photo) {
+    const img = document.createElement('img');
+    img.src = member.photo;
+    img.alt = member.name;
+    img.className = 'member-photo';
+    img.onerror = function() {
+      this.src = 'assets/default-avatar.jpg';
+    };
+    card.appendChild(img);
+  }
+  
+  const content = document.createElement('div');
+  content.className = 'member-content';
+  
+  const name = document.createElement('h3');
+  name.className = 'member-name';
+  name.textContent = member.name;
+  content.appendChild(name);
+  
+  if (member.position) {
+    const position = document.createElement('p');
+    position.className = 'member-position';
+    position.textContent = member.position;
+    content.appendChild(position);
+  }
+  
+  const department = document.createElement('p');
+  department.className = 'member-department';
+  department.textContent = `${member.department} - ${member.year} Year`;
+  content.appendChild(department);
+  
+  if (member.bio) {
+    const bio = document.createElement('p');
+    bio.className = 'member-bio';
+    bio.textContent = truncateText(member.bio, 100);
+    content.appendChild(bio);
+  }
+  
+  const contact = document.createElement('div');
+  contact.className = 'member-contact';
+  
+  if (member.email) {
+    const email = document.createElement('a');
+    email.href = `mailto:${member.email}`;
+    email.textContent = '📧';
+    email.title = 'Email';
+    contact.appendChild(email);
+  }
+  
+  if (member.phone) {
+    const phone = document.createElement('a');
+    phone.href = `tel:${member.phone}`;
+    phone.textContent = '📞';
+    phone.title = 'Phone';
+    contact.appendChild(phone);
+  }
+  
+  content.appendChild(contact);
+  card.appendChild(content);
+  
+  return card;
+}
+
+function createGalleryItem(item) {
+  const galleryItem = document.createElement('div');
+  galleryItem.className = 'gallery-item';
+  galleryItem.dataset.galleryId = item.id;
+  
+  const img = document.createElement('img');
+  img.src = item.image;
+  img.alt = item.title;
+  img.className = 'gallery-image';
+  img.onclick = () => viewGalleryItem(item.id);
+  img.onerror = function() {
+    this.src = 'assets/default-image.jpg';
+  };
+  galleryItem.appendChild(img);
+  
+  const overlay = document.createElement('div');
+  overlay.className = 'gallery-overlay';
+  
+  const title = document.createElement('h4');
+  title.textContent = item.title;
+  overlay.appendChild(title);
+  
+  if (item.description) {
+    const description = document.createElement('p');
+    description.textContent = truncateText(item.description, 80);
+    overlay.appendChild(description);
+  }
+  
+  galleryItem.appendChild(overlay);
+  
+  return galleryItem;
+}
+
+function createAnnouncementItem(announcement) {
+  const item = document.createElement('div');
+  item.className = `announcement-item priority-${announcement.priority || 'normal'}`;
+  item.dataset.announcementId = announcement.id;
+  
+  const header = document.createElement('div');
+  header.className = 'announcement-header';
+  
+  const title = document.createElement('h4');
+  title.className = 'announcement-title';
+  title.textContent = announcement.title;
+  header.appendChild(title);
+  
+  const date = document.createElement('span');
+  date.className = 'announcement-date';
+  date.textContent = formatDateShort(announcement.date);
+  header.appendChild(date);
+  
+  item.appendChild(header);
+  
+  const content = document.createElement('p');
+  content.className = 'announcement-content';
+  content.textContent = truncateText(announcement.content, 150);
+  item.appendChild(content);
+  
+  return item;
 }
 
 // =============================================================================
-// UTILITY FUNCTIONS
+// NAVIGATION FUNCTIONS
 // =============================================================================
 
-/**
- * Check if running in offline mode
- * @returns {Promise<boolean>} True if offline, false if online
- */
-async function isOfflineMode() {
-    try {
-        if (typeof window.apiClient === 'undefined') {
-            return true;
-        }
-        
-        const result = await getClubConfig();
-        return !(result && result.success);
-    } catch (error) {
+function viewEventDetails(eventId) {
+  window.location.href = `events.html?id=${eventId}`;
+}
+
+function viewProjectDetails(projectId) {
+  window.location.href = `projects.html?id=${projectId}`;
+}
+
+function viewGalleryItem(galleryId) {
+  window.location.href = `gallery.html?id=${galleryId}`;
+}
+
+// =============================================================================
+// HELPER FUNCTIONS
+// =============================================================================
+
+function truncateText(text, maxLength) {
+  if (!text) return '';
+  if (text.length <= maxLength) return text;
+  return text.substring(0, maxLength) + '...';
+}
+
+function formatDateDisplay(dateString) {
+  if (!dateString) return 'Date TBA';
+  try {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    });
+  } catch (error) {
+    return dateString;
+  }
+}
+
+function formatDateShort(dateString) {
+  if (!dateString) return 'TBA';
+  try {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { 
+      month: 'short', 
+      day: 'numeric' 
+    });
+  } catch (error) {
+    return dateString;
+  }
+}
+
+function delay(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+// =============================================================================
+// FULL PAGE LOAD FUNCTIONS
+// =============================================================================
+
+async function loadAllMembers() {
+  try {
+    console.log('Loading all members...');
+    
+    if (window.apiClient && window.apiClient.isReady) {
+      const result = await window.apiClient.getMembers();
+      if (result.success && Array.isArray(result.data)) {
+        await saveToCache('members', result.data);
+        displayAllMembers(result.data);
         return true;
-    }
-}
-
-/**
- * Clear all cached data from localStorage
- * Use with caution - data will be lost if API is unavailable
- */
-function clearCache() {
-    const keys = [
-        'clubConfig',
-        'clubMembers',
-        'clubEvents',
-        'clubProjects',
-        'clubGallery',
-        'clubAnnouncements',
-        'clubAdmins'
-    ];
-    
-    keys.forEach(key => localStorage.removeItem(key));
-    console.log('🗑️ All cached data cleared');
-}
-
-/**
- * Get cache status for all data types
- * @returns {Object} Cache status information
- */
-function getCacheStatus() {
-    const status = {
-        clubConfig: !!localStorage.getItem('clubConfig'),
-        members: !!localStorage.getItem('clubMembers'),
-        events: !!localStorage.getItem('clubEvents'),
-        projects: !!localStorage.getItem('clubProjects'),
-        gallery: !!localStorage.getItem('clubGallery'),
-        announcements: !!localStorage.getItem('clubAnnouncements'),
-        admins: !!localStorage.getItem('clubAdmins')
-    };
-    
-    status.allCached = Object.values(status).every(v => v === true);
-    status.noneCached = Object.values(status).every(v => v === false);
-    
-    return status;
-}
-
-/**
- * Get rate limit status for all endpoints
- * @returns {Object} Rate limit information
- */
-function getRateLimitStatus() {
-    const now = Date.now();
-    const status = {};
-    
-    for (const [endpoint, timestamp] of Object.entries(lastApiCall)) {
-        const timeSinceCall = now - timestamp;
-        status[endpoint] = {
-            lastCall: timestamp,
-            timeSinceCall: timeSinceCall,
-            canCall: timeSinceCall >= RATE_LIMIT_INTERVAL,
-            cooldownRemaining: Math.max(0, RATE_LIMIT_INTERVAL - timeSinceCall)
-        };
+      }
     }
     
-    return status;
+    const cached = await loadFromCache('members');
+    if (cached && Array.isArray(cached)) {
+      displayAllMembers(cached);
+      return true;
+    }
+    
+    displayAllMembers([]);
+    return false;
+  } catch (error) {
+    console.error('Error loading all members:', error);
+    displayAllMembers([]);
+    return false;
+  }
+}
+
+function displayAllMembers(members) {
+  const container = document.getElementById('members-container');
+  if (!container) return;
+  
+  if (members.length === 0) {
+    container.innerHTML = '<p class="no-data">No members found.</p>';
+    return;
+  }
+  
+  container.innerHTML = '';
+  members.forEach(member => {
+    const memberCard = createMemberCard(member);
+    container.appendChild(memberCard);
+  });
+}
+
+async function loadAllEvents() {
+  try {
+    console.log('Loading all events...');
+    
+    if (window.apiClient && window.apiClient.isReady) {
+      const result = await window.apiClient.getEvents();
+      if (result.success && Array.isArray(result.data)) {
+        await saveToCache('events', result.data);
+        displayAllEvents(result.data);
+        return true;
+      }
+    }
+    
+    const cached = await loadFromCache('events');
+    if (cached && Array.isArray(cached)) {
+      displayAllEvents(cached);
+      return true;
+    }
+    
+    displayAllEvents([]);
+    return false;
+  } catch (error) {
+    console.error('Error loading all events:', error);
+    displayAllEvents([]);
+    return false;
+  }
+}
+
+function displayAllEvents(events) {
+  const container = document.getElementById('events-container');
+  if (!container) return;
+  
+  if (events.length === 0) {
+    container.innerHTML = '<p class="no-data">No events found.</p>';
+    return;
+  }
+  
+  container.innerHTML = '';
+  events.forEach(event => {
+    const eventCard = createEventCard(event);
+    container.appendChild(eventCard);
+  });
+}
+
+async function loadAllProjects() {
+  try {
+    console.log('Loading all projects...');
+    
+    if (window.apiClient && window.apiClient.isReady) {
+      const result = await window.apiClient.getProjects();
+      if (result.success && Array.isArray(result.data)) {
+        await saveToCache('projects', result.data);
+        displayAllProjects(result.data);
+        return true;
+      }
+    }
+    
+    const cached = await loadFromCache('projects');
+    if (cached && Array.isArray(cached)) {
+      displayAllProjects(cached);
+      return true;
+    }
+    
+    displayAllProjects([]);
+    return false;
+  } catch (error) {
+    console.error('Error loading all projects:', error);
+    displayAllProjects([]);
+    return false;
+  }
+}
+
+function displayAllProjects(projects) {
+  const container = document.getElementById('projects-container');
+  if (!container) return;
+  
+  if (projects.length === 0) {
+    container.innerHTML = '<p class="no-data">No projects found.</p>';
+    return;
+  }
+  
+  container.innerHTML = '';
+  projects.forEach(project => {
+    const projectCard = createProjectCard(project);
+    container.appendChild(projectCard);
+  });
+}
+
+async function loadAllGallery() {
+  try {
+    console.log('Loading all gallery...');
+    
+    if (window.apiClient && window.apiClient.isReady) {
+      const result = await window.apiClient.getGallery();
+      if (result.success && Array.isArray(result.data)) {
+        await saveToCache('gallery', result.data);
+        displayAllGallery(result.data);
+        return true;
+      }
+    }
+    
+    const cached = await loadFromCache('gallery');
+    if (cached && Array.isArray(cached)) {
+      displayAllGallery(cached);
+      return true;
+    }
+    
+    displayAllGallery([]);
+    return false;
+  } catch (error) {
+    console.error('Error loading all gallery:', error);
+    displayAllGallery([]);
+    return false;
+  }
+}
+
+function displayAllGallery(gallery) {
+  const container = document.getElementById('gallery-container');
+  if (!container) return;
+  
+  if (gallery.length === 0) {
+    container.innerHTML = '<p class="no-data">No gallery items found.</p>';
+    return;
+  }
+  
+  container.innerHTML = '';
+  gallery.forEach(item => {
+    const galleryItem = createGalleryItem(item);
+    container.appendChild(galleryItem);
+  });
 }
 
 // =============================================================================
-// INITIALIZATION
+// PAGE INITIALIZATION
 // =============================================================================
 
-/**
- * Initialize data loading on page load
- * FIXED: No longer runs automatically - must be called manually
- * Pre-loads all data and optionally starts auto-refresh
- * @param {boolean} enableAutoRefresh - Whether to start auto-refresh (default: false)
- */
-async function initializeDataLoading(enableAutoRefresh = false) {
-    console.log('🚀 Initializing dynamic data loading...');
-    
+async function initializePage() {
+  // Prevent duplicate initialization
+  if (isPageLoading) {
+    console.log('⏳ Page already loading, waiting for completion...');
+    return initializationPromise;
+  }
+  
+  isPageLoading = true;
+  
+  // Create a promise for this initialization
+  initializationPromise = (async () => {
     try {
-        // Load all data from API (will cache automatically)
-        await refreshAllData();
+      console.log('🚀 Initializing page...');
+      
+      // Always load club configuration first
+      await loadClubConfiguration();
+      await delay(100);
+      
+      const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+      
+      if (currentPage === 'index.html' || currentPage === '') {
+        // Home page - load all sections
+        await loadRecentEvents(3);
+        await delay(100);
         
-        // FIXED: Only start auto-refresh if explicitly requested
-        if (enableAutoRefresh) {
-            startAutoRefresh();
-            console.log('✅ Data initialization complete (auto-refresh enabled)');
-        } else {
-            console.log('✅ Data initialization complete (auto-refresh disabled)');
-        }
+        await loadFeaturedProjects(6);
+        await delay(100);
+        
+        await loadExecutiveMembers(4);
+        await delay(100);
+        
+        await loadGalleryPreview(8);
+        await delay(100);
+        
+        await loadAnnouncements(5);
+      } else if (currentPage === 'events.html') {
+        await loadAllEvents();
+      } else if (currentPage === 'projects.html') {
+        await loadAllProjects();
+      } else if (currentPage === 'members.html') {
+        await loadAllMembers();
+      } else if (currentPage === 'gallery.html') {
+        await loadAllGallery();
+      }
+      
+      console.log('✅ Page initialized successfully');
+      
     } catch (error) {
-        console.error('❌ Error during data initialization:', error);
+      console.error('❌ Error during page initialization:', error);
+    } finally {
+      isPageLoading = false;
+      initializationPromise = null;
     }
+  })();
+  
+  return initializationPromise;
 }
 
-// CRITICAL FIX: Removed auto-initialization on DOMContentLoaded
-// Applications must manually call initializeDataLoading() when needed
-// Example usage:
-// - Call initializeDataLoading() to load data once
-// - Call initializeDataLoading(true) to load data and enable auto-refresh
-// - Call refreshAllData() to manually refresh data
-// - Call startAutoRefresh() to enable periodic updates
-
-console.log('✅ load-config.js loaded (Manual initialization mode)');
-console.log('ℹ️  Call initializeDataLoading() to load data');
-console.log('ℹ️  Call initializeDataLoading(true) to enable auto-refresh');
-
-// CRITICAL FIX: Removed visibility change auto-refresh
-// Applications can add their own visibility handlers if needed
-// Example:
-// document.addEventListener('visibilitychange', () => {
-//     if (!document.hidden) {
-//         refreshAllData();
-//     }
-// });
-
 // =============================================================================
-// EXPORTS (for module systems if needed)
+// AUTO-INITIALIZATION
 // =============================================================================
 
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = {
-        // Club Config
-        loadClubConfig,
-        getClubConfig,
-        getDefaultConfig,
-        
-        // Members
-        loadMembers,
-        getMembers,
-        loadMemberById,
-        loadMembersByRole,
-        loadMembersByDepartment,
-        
-        // Events
-        loadEvents,
-        getEvents,
-        loadEventById,
-        loadUpcomingEvents,
-        loadPastEvents,
-        loadEventsByCategory,
-        
-        // Projects
-        loadProjects,
-        getProjects,
-        loadProjectById,
-        loadProjectsByStatus,
-        loadProjectsByCategory,
-        
-        // Gallery
-        loadGallery,
-        getGallery,
-        loadGalleryItemById,
-        loadGalleryByCategory,
-        
-        // Announcements
-        loadAnnouncements,
-        getAnnouncements,
-        loadAnnouncementById,
-        loadActiveAnnouncements,
-        
-        // Admins
-        loadAdmins,
-        getAdmins,
-        
-        // Synchronization
-        refreshAllData,
-        startAutoRefresh,
-        stopAutoRefresh,
-        initializeDataLoading,
-        
-        // Utilities
-        isOfflineMode,
-        clearCache,
-        getCacheStatus,
-        getRateLimitStatus
+// Wait for both DOM and API client to be ready
+function waitForDependencies() {
+  return new Promise((resolve) => {
+    let domReady = document.readyState !== 'loading';
+    let apiReady = window.apiClient && window.apiClient.isReady;
+    
+    if (domReady && apiReady) {
+      resolve();
+      return;
+    }
+    
+    const checkReady = () => {
+      domReady = document.readyState !== 'loading';
+      apiReady = window.apiClient && window.apiClient.isReady;
+      
+      if (domReady && apiReady) {
+        resolve();
+      }
     };
+    
+    if (!domReady) {
+      document.addEventListener('DOMContentLoaded', checkReady);
+    }
+    
+    // Check API readiness every 100ms
+    const apiCheckInterval = setInterval(() => {
+      if (window.apiClient && window.apiClient.isReady) {
+        clearInterval(apiCheckInterval);
+        checkReady();
+      }
+    }, 100);
+    
+    // Timeout after 5 seconds
+    setTimeout(() => {
+      clearInterval(apiCheckInterval);
+      console.warn('⚠️ API client not ready after 5 seconds, initializing anyway');
+      resolve();
+    }, 5000);
+  });
 }
+
+// Initialize when ready
+waitForDependencies().then(() => {
+  console.log('✅ Dependencies ready, initializing page');
+  initializePage();
+});
+
+console.log('✅ load-config.js v3.0.0 loaded successfully');

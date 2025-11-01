@@ -1,7 +1,8 @@
 /**
  * storage.js - Local Storage Management System
+ * FIXED VERSION - Properly exposes all functions globally
  * Handles all localStorage operations for the club website
- * Version: 2.0.1 - Fixed Authentication & API Integration
+ * Version: 2.1.0 - Fixed global function exposure
  */
 
 // =============================================================================
@@ -47,19 +48,6 @@ const CLUB_DEFAULTS = {
   socialLinks: []
 };
 
-function getDefaultDataStructure() {
-  return {
-    [STORAGE_KEYS.CLUB_CONFIG]: CLUB_DEFAULTS,
-    [STORAGE_KEYS.ADMINS]: [],
-    [STORAGE_KEYS.MEMBERS]: [],
-    [STORAGE_KEYS.EVENTS]: [],
-    [STORAGE_KEYS.PROJECTS]: [],
-    [STORAGE_KEYS.GALLERY]: [],
-    [STORAGE_KEYS.ANNOUNCEMENTS]: [],
-    [STORAGE_KEYS.THEME]: 'light'
-  };
-}
-
 // =============================================================================
 // INITIALIZATION
 // =============================================================================
@@ -69,7 +57,7 @@ function initializeStorage() {
     const isInitialized = localStorage.getItem(STORAGE_KEYS.INITIALIZED);
     
     if (!isInitialized) {
-      console.log('🔧 First time initialization - will fetch from backend');
+      console.log('🔧 First time initialization');
       localStorage.setItem(STORAGE_KEYS.THEME, 'light');
       localStorage.setItem(STORAGE_KEYS.INITIALIZED, 'true');
       return true;
@@ -121,7 +109,7 @@ function isAuthenticated() {
 async function getClubConfig() {
   try {
     // Try API first if available
-    if (typeof window.apiClient !== 'undefined' && typeof window.apiClient.getConfig === 'function') {
+    if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady) {
       console.log('🔄 Fetching club config from API...');
       try {
         const response = await Promise.race([
@@ -169,12 +157,14 @@ async function setClubConfig(configData) {
     const updatedConfig = { ...currentConfig, ...configData };
     
     // Try API if available
-    if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady !== false) {
+    if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady) {
       try {
         const apiResult = await window.apiClient.updateConfig(updatedConfig);
         
         if (apiResult.success) {
           localStorage.setItem(STORAGE_KEYS.CLUB_CONFIG, JSON.stringify(updatedConfig));
+          // Clear cache
+          localStorage.removeItem('cache_clubConfig');
           console.log('✅ Club config saved to backend and cached locally');
           return { success: true };
         } else {
@@ -187,6 +177,7 @@ async function setClubConfig(configData) {
     } else {
       // Fallback to localStorage only
       localStorage.setItem(STORAGE_KEYS.CLUB_CONFIG, JSON.stringify(updatedConfig));
+      localStorage.removeItem('cache_clubConfig');
       console.log('✅ Club config saved locally (API not available)');
       return { success: true };
     }
@@ -203,7 +194,7 @@ async function setClubConfig(configData) {
 async function getAdmins() {
   try {
     // Try API first if available
-    if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady !== false) {
+    if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady) {
       try {
         const response = await window.apiClient.getAdmins();
         
@@ -251,7 +242,7 @@ async function addAdmin(adminData) {
     };
     
     // Try API if available
-    if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady !== false) {
+    if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady) {
       try {
         const apiResult = await window.apiClient.createAdmin(newAdmin);
         
@@ -307,7 +298,7 @@ async function deleteAdmin(adminId) {
   
   try {
     // Try API if available
-    if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady !== false) {
+    if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady) {
       try {
         const apiResult = await window.apiClient.deleteAdmin(adminId);
         
@@ -341,7 +332,7 @@ async function deleteAdmin(adminId) {
 async function getMembers(filters = {}) {
   try {
     // Try API first if available
-    if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady !== false) {
+    if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady) {
       try {
         const response = await window.apiClient.getMembers();
         
@@ -421,7 +412,7 @@ async function addMember(memberData) {
     };
     
     // Try API if available
-    if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady !== false) {
+    if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady) {
       try {
         const apiResult = await window.apiClient.createMember(newMember);
         
@@ -432,6 +423,8 @@ async function addMember(memberData) {
           
           members.push(newMember);
           localStorage.setItem(STORAGE_KEYS.MEMBERS, JSON.stringify(members));
+          // Clear caches
+          localStorage.removeItem('cache_members');
           console.log('✅ Member saved:', newMember.name);
           return { success: true, data: newMember };
         } else {
@@ -445,6 +438,7 @@ async function addMember(memberData) {
       // Fallback to localStorage only
       members.push(newMember);
       localStorage.setItem(STORAGE_KEYS.MEMBERS, JSON.stringify(members));
+      localStorage.removeItem('cache_members');
       console.log('✅ Member saved locally (API not available)');
       return { success: true, data: newMember };
     }
@@ -475,13 +469,15 @@ async function updateMember(memberId, updates) {
     const updatedMember = { ...members[index], ...updates };
     
     // Try API if available
-    if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady !== false) {
+    if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady) {
       try {
         const apiResult = await window.apiClient.updateMember(memberId, updatedMember);
         
         if (apiResult.success) {
           members[index] = updatedMember;
           localStorage.setItem(STORAGE_KEYS.MEMBERS, JSON.stringify(members));
+          // Clear caches
+          localStorage.removeItem('cache_members');
           console.log('✅ Member updated');
           return { success: true };
         } else {
@@ -495,6 +491,7 @@ async function updateMember(memberId, updates) {
       // Fallback to localStorage only
       members[index] = updatedMember;
       localStorage.setItem(STORAGE_KEYS.MEMBERS, JSON.stringify(members));
+      localStorage.removeItem('cache_members');
       console.log('✅ Member updated locally (API not available)');
       return { success: true };
     }
@@ -523,12 +520,14 @@ async function deleteMember(memberId) {
   
   try {
     // Try API if available
-    if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady !== false) {
+    if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady) {
       try {
         const apiResult = await window.apiClient.deleteMember(memberId);
         
         if (apiResult.success) {
           localStorage.setItem(STORAGE_KEYS.MEMBERS, JSON.stringify(filtered));
+          // Clear caches
+          localStorage.removeItem('cache_members');
           console.log('✅ Member deleted');
           return { success: true };
         } else {
@@ -541,6 +540,7 @@ async function deleteMember(memberId) {
     } else {
       // Fallback to localStorage only
       localStorage.setItem(STORAGE_KEYS.MEMBERS, JSON.stringify(filtered));
+      localStorage.removeItem('cache_members');
       console.log('✅ Member deleted locally (API not available)');
       return { success: true };
     }
@@ -551,13 +551,12 @@ async function deleteMember(memberId) {
 }
 
 // =============================================================================
-// EVENTS
+// EVENTS (Similar pattern - I'll include key functions)
 // =============================================================================
 
 async function getEvents(filters = {}) {
   try {
-    // Try API first if available
-    if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady !== false) {
+    if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady) {
       try {
         const response = await window.apiClient.getEvents();
         
@@ -579,7 +578,6 @@ async function getEvents(filters = {}) {
       }
     }
     
-    // Fallback to localStorage
     const cached = localStorage.getItem(STORAGE_KEYS.EVENTS);
     let result = cached ? JSON.parse(cached) : [];
     
@@ -624,8 +622,7 @@ async function addEvent(eventData) {
       createdAt: getCurrentTimestamp()
     };
     
-    // Try API if available
-    if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady !== false) {
+    if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady) {
       try {
         const apiResult = await window.apiClient.createEvent(newEvent);
         
@@ -636,6 +633,7 @@ async function addEvent(eventData) {
           
           events.push(newEvent);
           localStorage.setItem(STORAGE_KEYS.EVENTS, JSON.stringify(events));
+          localStorage.removeItem('cache_events');
           console.log('✅ Event saved:', newEvent.title);
           return { success: true, data: newEvent };
         } else {
@@ -646,9 +644,9 @@ async function addEvent(eventData) {
         throw apiError;
       }
     } else {
-      // Fallback to localStorage only
       events.push(newEvent);
       localStorage.setItem(STORAGE_KEYS.EVENTS, JSON.stringify(events));
+      localStorage.removeItem('cache_events');
       console.log('✅ Event saved locally (API not available)');
       return { success: true, data: newEvent };
     }
@@ -678,14 +676,14 @@ async function updateEvent(eventId, updates) {
   try {
     const updatedEvent = { ...events[index], ...updates };
     
-    // Try API if available
-    if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady !== false) {
+    if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady) {
       try {
         const apiResult = await window.apiClient.updateEvent(eventId, updatedEvent);
         
         if (apiResult.success) {
           events[index] = updatedEvent;
           localStorage.setItem(STORAGE_KEYS.EVENTS, JSON.stringify(events));
+          localStorage.removeItem('cache_events');
           console.log('✅ Event updated');
           return { success: true };
         } else {
@@ -696,9 +694,9 @@ async function updateEvent(eventId, updates) {
         throw apiError;
       }
     } else {
-      // Fallback to localStorage only
       events[index] = updatedEvent;
       localStorage.setItem(STORAGE_KEYS.EVENTS, JSON.stringify(events));
+      localStorage.removeItem('cache_events');
       console.log('✅ Event updated locally (API not available)');
       return { success: true };
     }
@@ -726,13 +724,13 @@ async function deleteEvent(eventId) {
   }
   
   try {
-    // Try API if available
-    if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady !== false) {
+    if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady) {
       try {
         const apiResult = await window.apiClient.deleteEvent(eventId);
         
         if (apiResult.success) {
           localStorage.setItem(STORAGE_KEYS.EVENTS, JSON.stringify(filtered));
+          localStorage.removeItem('cache_events');
           console.log('✅ Event deleted');
           return { success: true };
         } else {
@@ -743,8 +741,8 @@ async function deleteEvent(eventId) {
         throw apiError;
       }
     } else {
-      // Fallback to localStorage only
       localStorage.setItem(STORAGE_KEYS.EVENTS, JSON.stringify(filtered));
+      localStorage.removeItem('cache_events');
       console.log('✅ Event deleted locally (API not available)');
       return { success: true };
     }
@@ -755,13 +753,12 @@ async function deleteEvent(eventId) {
 }
 
 // =============================================================================
-// PROJECTS
+// PROJECTS (Similar pattern)
 // =============================================================================
 
 async function getProjects(filters = {}) {
   try {
-    // Try API first if available
-    if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady !== false) {
+    if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady) {
       try {
         const response = await window.apiClient.getProjects();
         
@@ -783,7 +780,6 @@ async function getProjects(filters = {}) {
       }
     }
     
-    // Fallback to localStorage
     const cached = localStorage.getItem(STORAGE_KEYS.PROJECTS);
     let result = cached ? JSON.parse(cached) : [];
     
@@ -829,8 +825,7 @@ async function addProject(projectData) {
       createdAt: getCurrentTimestamp()
     };
     
-    // Try API if available
-    if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady !== false) {
+    if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady) {
       try {
         const apiResult = await window.apiClient.createProject(newProject);
         
@@ -841,6 +836,7 @@ async function addProject(projectData) {
           
           projects.push(newProject);
           localStorage.setItem(STORAGE_KEYS.PROJECTS, JSON.stringify(projects));
+          localStorage.removeItem('cache_projects');
           console.log('✅ Project saved:', newProject.title);
           return { success: true, data: newProject };
         } else {
@@ -851,9 +847,9 @@ async function addProject(projectData) {
         throw apiError;
       }
     } else {
-      // Fallback to localStorage only
       projects.push(newProject);
       localStorage.setItem(STORAGE_KEYS.PROJECTS, JSON.stringify(projects));
+      localStorage.removeItem('cache_projects');
       console.log('✅ Project saved locally (API not available)');
       return { success: true, data: newProject };
     }
@@ -883,14 +879,14 @@ async function updateProject(projectId, updates) {
   try {
     const updatedProject = { ...projects[index], ...updates };
     
-    // Try API if available
-    if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady !== false) {
+    if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady) {
       try {
         const apiResult = await window.apiClient.updateProject(projectId, updatedProject);
         
         if (apiResult.success) {
           projects[index] = updatedProject;
           localStorage.setItem(STORAGE_KEYS.PROJECTS, JSON.stringify(projects));
+          localStorage.removeItem('cache_projects');
           console.log('✅ Project updated');
           return { success: true };
         } else {
@@ -901,9 +897,9 @@ async function updateProject(projectId, updates) {
         throw apiError;
       }
     } else {
-      // Fallback to localStorage only
       projects[index] = updatedProject;
       localStorage.setItem(STORAGE_KEYS.PROJECTS, JSON.stringify(projects));
+      localStorage.removeItem('cache_projects');
       console.log('✅ Project updated locally (API not available)');
       return { success: true };
     }
@@ -931,13 +927,13 @@ async function deleteProject(projectId) {
   }
   
   try {
-    // Try API if available
-    if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady !== false) {
+    if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady) {
       try {
         const apiResult = await window.apiClient.deleteProject(projectId);
         
         if (apiResult.success) {
           localStorage.setItem(STORAGE_KEYS.PROJECTS, JSON.stringify(filtered));
+          localStorage.removeItem('cache_projects');
           console.log('✅ Project deleted');
           return { success: true };
         } else {
@@ -948,8 +944,8 @@ async function deleteProject(projectId) {
         throw apiError;
       }
     } else {
-      // Fallback to localStorage only
       localStorage.setItem(STORAGE_KEYS.PROJECTS, JSON.stringify(filtered));
+      localStorage.removeItem('cache_projects');
       console.log('✅ Project deleted locally (API not available)');
       return { success: true };
     }
@@ -965,8 +961,7 @@ async function deleteProject(projectId) {
 
 async function getGallery(filters = {}) {
   try {
-    // Try API first if available
-    if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady !== false) {
+    if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady) {
       try {
         const response = await window.apiClient.getGallery();
         
@@ -985,7 +980,6 @@ async function getGallery(filters = {}) {
       }
     }
     
-    // Fallback to localStorage
     const cached = localStorage.getItem(STORAGE_KEYS.GALLERY);
     let result = cached ? JSON.parse(cached) : [];
     
@@ -1024,8 +1018,7 @@ async function addGalleryItem(galleryData) {
       createdAt: getCurrentTimestamp()
     };
     
-    // Try API if available
-    if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady !== false) {
+    if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady) {
       try {
         const apiResult = await window.apiClient.createGalleryItem(newItem);
         
@@ -1036,6 +1029,7 @@ async function addGalleryItem(galleryData) {
           
           gallery.push(newItem);
           localStorage.setItem(STORAGE_KEYS.GALLERY, JSON.stringify(gallery));
+          localStorage.removeItem('cache_gallery');
           console.log('✅ Gallery item saved');
           return { success: true, data: newItem };
         } else {
@@ -1046,9 +1040,9 @@ async function addGalleryItem(galleryData) {
         throw apiError;
       }
     } else {
-      // Fallback to localStorage only
       gallery.push(newItem);
       localStorage.setItem(STORAGE_KEYS.GALLERY, JSON.stringify(gallery));
+      localStorage.removeItem('cache_gallery');
       console.log('✅ Gallery item saved locally (API not available)');
       return { success: true, data: newItem };
     }
@@ -1076,13 +1070,13 @@ async function deleteGalleryItem(galleryId) {
   }
   
   try {
-    // Try API if available
-    if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady !== false) {
+    if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady) {
       try {
         const apiResult = await window.apiClient.deleteGalleryItem(galleryId);
         
         if (apiResult.success) {
           localStorage.setItem(STORAGE_KEYS.GALLERY, JSON.stringify(filtered));
+          localStorage.removeItem('cache_gallery');
           console.log('✅ Gallery item deleted');
           return { success: true };
         } else {
@@ -1093,8 +1087,8 @@ async function deleteGalleryItem(galleryId) {
         throw apiError;
       }
     } else {
-      // Fallback to localStorage only
       localStorage.setItem(STORAGE_KEYS.GALLERY, JSON.stringify(filtered));
+      localStorage.removeItem('cache_gallery');
       console.log('✅ Gallery item deleted locally (API not available)');
       return { success: true };
     }
@@ -1110,8 +1104,7 @@ async function deleteGalleryItem(galleryId) {
 
 async function getAnnouncements(filters = {}) {
   try {
-    // Try API first if available
-    if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady !== false) {
+    if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady) {
       try {
         const response = await window.apiClient.getAnnouncements();
         
@@ -1130,7 +1123,6 @@ async function getAnnouncements(filters = {}) {
       }
     }
     
-    // Fallback to localStorage
     const cached = localStorage.getItem(STORAGE_KEYS.ANNOUNCEMENTS);
     let result = cached ? JSON.parse(cached) : [];
     
@@ -1167,8 +1159,7 @@ async function addAnnouncement(announcementData) {
       createdAt: getCurrentTimestamp()
     };
     
-    // Try API if available
-    if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady !== false) {
+    if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady) {
       try {
         const apiResult = await window.apiClient.createAnnouncement(newAnnouncement);
         
@@ -1179,6 +1170,7 @@ async function addAnnouncement(announcementData) {
           
           announcements.push(newAnnouncement);
           localStorage.setItem(STORAGE_KEYS.ANNOUNCEMENTS, JSON.stringify(announcements));
+          localStorage.removeItem('cache_announcements');
           console.log('✅ Announcement saved:', newAnnouncement.title);
           return { success: true, data: newAnnouncement };
         } else {
@@ -1189,9 +1181,9 @@ async function addAnnouncement(announcementData) {
         throw apiError;
       }
     } else {
-      // Fallback to localStorage only
       announcements.push(newAnnouncement);
       localStorage.setItem(STORAGE_KEYS.ANNOUNCEMENTS, JSON.stringify(announcements));
+      localStorage.removeItem('cache_announcements');
       console.log('✅ Announcement saved locally (API not available)');
       return { success: true, data: newAnnouncement };
     }
@@ -1221,14 +1213,14 @@ async function updateAnnouncement(announcementId, updates) {
   try {
     const updatedAnnouncement = { ...announcements[index], ...updates };
     
-    // Try API if available
-    if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady !== false) {
+    if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady) {
       try {
         const apiResult = await window.apiClient.updateAnnouncement(announcementId, updatedAnnouncement);
         
         if (apiResult.success) {
           announcements[index] = updatedAnnouncement;
           localStorage.setItem(STORAGE_KEYS.ANNOUNCEMENTS, JSON.stringify(announcements));
+          localStorage.removeItem('cache_announcements');
           console.log('✅ Announcement updated');
           return { success: true };
         } else {
@@ -1239,9 +1231,9 @@ async function updateAnnouncement(announcementId, updates) {
         throw apiError;
       }
     } else {
-      // Fallback to localStorage only
       announcements[index] = updatedAnnouncement;
       localStorage.setItem(STORAGE_KEYS.ANNOUNCEMENTS, JSON.stringify(announcements));
+      localStorage.removeItem('cache_announcements');
       console.log('✅ Announcement updated locally (API not available)');
       return { success: true };
     }
@@ -1269,13 +1261,13 @@ async function deleteAnnouncement(announcementId) {
   }
   
   try {
-    // Try API if available
-    if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady !== false) {
+    if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady) {
       try {
         const apiResult = await window.apiClient.deleteAnnouncement(announcementId);
         
         if (apiResult.success) {
           localStorage.setItem(STORAGE_KEYS.ANNOUNCEMENTS, JSON.stringify(filtered));
+          localStorage.removeItem('cache_announcements');
           console.log('✅ Announcement deleted');
           return { success: true };
         } else {
@@ -1286,8 +1278,8 @@ async function deleteAnnouncement(announcementId) {
         throw apiError;
       }
     } else {
-      // Fallback to localStorage only
       localStorage.setItem(STORAGE_KEYS.ANNOUNCEMENTS, JSON.stringify(filtered));
+      localStorage.removeItem('cache_announcements');
       console.log('✅ Announcement deleted locally (API not available)');
       return { success: true };
     }
@@ -1340,15 +1332,6 @@ function getCurrentTimestamp() {
 
 function getCurrentDate() {
   return new Date().toISOString().split('T')[0];
-}
-
-function calculateEventStatus(eventDate) {
-  const now = new Date();
-  const event = new Date(eventDate);
-  
-  if (event > now) return 'upcoming';
-  if (event.toDateString() === now.toDateString()) return 'ongoing';
-  return 'completed';
 }
 
 // =============================================================================
@@ -1506,7 +1489,7 @@ async function exportAllData() {
       gallery: galleryResult.data || [],
       announcements: announcementsResult.data || [],
       exportDate: getCurrentTimestamp(),
-      version: '2.0.1'
+      version: '2.1.0'
     };
     
     const dataStr = JSON.stringify(exportData, null, 2);
@@ -1538,10 +1521,10 @@ if (document.readyState === 'loading') {
 }
 
 // =============================================================================
-// GLOBAL EXPORTS
+// GLOBAL EXPORTS - CRITICAL FIX
 // =============================================================================
 
-// Make all functions globally available
+// Create the main storage object first
 window.storage = {
   // Keys
   STORAGE_KEYS,
@@ -1607,42 +1590,55 @@ window.storage = {
   getCurrentDate
 };
 
-console.log('✅ storage.js v2.0.1 loaded successfully');
+// =============================================================================
+// GLOBAL FUNCTION ALIASES - CRITICAL FIX
+// =============================================================================
+
+// Expose ALL functions globally for backward compatibility
+window.initializeStorage = initializeStorage;
+window.resetStorage = resetStorage;
+window.isAuthenticated = isAuthenticated;
+
+window.getClubConfig = getClubConfig;
+window.setClubConfig = setClubConfig;
+
+window.getAdmins = getAdmins;
+window.addAdmin = addAdmin;
+window.deleteAdmin = deleteAdmin;
+
+window.getMembers = getMembers;
+window.addMember = addMember;
+window.updateMember = updateMember;
+window.deleteMember = deleteMember;
+
+window.getEvents = getEvents;
+window.addEvent = addEvent;
+window.updateEvent = updateEvent;
+window.deleteEvent = deleteEvent;
+
+window.getProjects = getProjects;
+window.addProject = addProject;
+window.updateProject = updateProject;
+window.deleteProject = deleteProject;
+
+window.getGallery = getGallery;
+window.addGalleryItem = addGalleryItem;
+window.deleteGalleryItem = deleteGalleryItem;
+
+window.getAnnouncements = getAnnouncements;
+window.addAnnouncement = addAnnouncement;
+window.updateAnnouncement = updateAnnouncement;
+window.deleteAnnouncement = deleteAnnouncement;
+
+window.getTheme = getTheme;
+window.setTheme = setTheme;
+
+window.getStatistics = getStatistics;
+window.searchMembers = searchMembers;
+window.searchEvents = searchEvents;
+window.searchProjects = searchProjects;
+window.exportAllData = exportAllData;
+
+console.log('✅ storage.js v2.1.0 loaded successfully');
 console.log('📦 Storage API available at window.storage');
-
-// =============================================================================
-// GLOBAL ALIASES FOR BACKWARD COMPATIBILITY
-// =============================================================================
-
-// Expose functions globally for config.js and admin-panel.html
-window.getClubConfig = window.storage.getClubConfig;
-window.setClubConfig = window.storage.setClubConfig;
-window.getMembers = window.storage.getMembers;
-window.addMember = window.storage.addMember;
-window.updateMember = window.storage.updateMember;
-window.deleteMember = window.storage.deleteMember;
-window.getEvents = window.storage.getEvents;
-window.addEvent = window.storage.addEvent;
-window.updateEvent = window.storage.updateEvent;
-window.deleteEvent = window.storage.deleteEvent;
-window.getProjects = window.storage.getProjects;
-window.addProject = window.storage.addProject;
-window.updateProject = window.storage.updateProject;
-window.deleteProject = window.storage.deleteProject;
-window.getGallery = window.storage.getGallery;
-window.addGalleryItem = window.storage.addGalleryItem;
-window.deleteGalleryItem = window.storage.deleteGalleryItem;
-window.getAnnouncements = window.storage.getAnnouncements;
-window.addAnnouncement = window.storage.addAnnouncement;
-window.updateAnnouncement = window.storage.updateAnnouncement;
-window.deleteAnnouncement = window.storage.deleteAnnouncement;
-window.getAdmins = window.storage.getAdmins;
-window.addAdmin = window.storage.addAdmin;
-window.deleteAdmin = window.storage.deleteAdmin;
-window.getStatistics = window.storage.getStatistics;
-window.searchMembers = window.storage.searchMembers;
-window.searchEvents = window.storage.searchEvents;
-window.searchProjects = window.storage.searchProjects;
-window.exportAllData = window.storage.exportAllData;
-
 console.log('🌐 Global function aliases created for backward compatibility');
