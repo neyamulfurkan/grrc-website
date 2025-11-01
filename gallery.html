@@ -795,107 +795,85 @@
 
         /* FIXED - Complete config loading */
         async function loadClubConfig() {
-            try {
-                console.log('🔄 Loading club config for gallery page...');
-                
-                // Try API first
-                let config = null;
-                if (typeof window.apiClient !== 'undefined' && window.apiClient.getConfig) {
-                    const result = await window.apiClient.getConfig();
-                    if (result.success && result.data) {
-                        config = result.data;
-                        console.log('✅ Config from API:', config);
-                    }
-                }
-                
-                // Fallback to localStorage
-                if (!config) {
-                    const cachedConfig = localStorage.getItem('clubConfig') || 
-                                        localStorage.getItem('cache_clubConfig');
-                    config = cachedConfig ? JSON.parse(cachedConfig) : {};
-                    console.log('✅ Config from cache:', config);
-                }
-                
-                // Update header LOGO with cache busting
-                if (config.logo || config.logo_url) {
-                    const logoUrl = config.logo || config.logo_url;
-                    const cacheBustedUrl = logoUrl.includes('?') 
-                        ? logoUrl + '&t=' + Date.now()
-                        : logoUrl + '?t=' + Date.now();
-                    const headerLogo = document.getElementById('headerLogo');
-                    if (headerLogo) {
-                        headerLogo.src = cacheBustedUrl;
-                        headerLogo.onerror = function() {
-                            this.src = 'assets/default-logo.jpg';
-                        };
-                        console.log('✅ Header logo updated');
-                    }
-                }
-                
-                // Update header NAME
-                if (config.name || config.club_name) {
-                    const name = config.name || config.club_name;
-                    const headerName = document.getElementById('headerClubName');
-                    if (headerName) {
-                        headerName.textContent = name;
-                        console.log('✅ Header name updated to:', name);
-                    }
-                }
-                    
-                    // Update footer
-                    if (config.name) {
-                        document.getElementById('footerClubName').textContent = config.name;
-                    }
-                    if (config.description) {
-                        document.getElementById('footerDescription').textContent = config.description;
-                    }
-                    
-                    // Update social links
-                    if (config.social_links && config.social_links.length > 0) {
-                        const socialLinksHTML = config.social_links.map(link => 
-                            `<a href="${link.url}" target="_blank" rel="noopener noreferrer">${getSocialIcon(link.platform)}</a>`
-                        ).join('');
-                        document.getElementById('footerSocialLinks').innerHTML = socialLinksHTML;
-                    }
-                    
-                    // Update year
-                    document.getElementById('currentYear').textContent = new Date().getFullYear();
-                    return;
-                }
-                
-                // EXISTING - Fallback to localStorage
-                const config = JSON.parse(localStorage.getItem('clubConfig') || '{}');
-                
-                // Update header
-                if (config.logo) {
-                    document.getElementById('headerLogo').src = config.logo;
-                }
-                if (config.name) {
-                    document.getElementById('headerClubName').textContent = config.name;
-                }
-                
-                // Update footer
-                if (config.name) {
-                    document.getElementById('footerClubName').textContent = config.name;
-                }
-                if (config.description) {
-                    document.getElementById('footerDescription').textContent = config.description;
-                }
-                
-                // Update social links
-                if (config.socialLinks && config.socialLinks.length > 0) {
-                    const socialLinksHTML = config.socialLinks.map(link => 
-                        `<a href="${link.url}" target="_blank" rel="noopener noreferrer">${getSocialIcon(link.platform)}</a>`
-                    ).join('');
-                    document.getElementById('footerSocialLinks').innerHTML = socialLinksHTML;
-                }
-                
-                // Update year
-                document.getElementById('currentYear').textContent = new Date().getFullYear();
-            } catch (error) {
-                console.error('Error loading club config:', error);
+    try {
+        console.log('🔄 Loading club config for gallery page...');
+        
+        // Try API first
+        let config = null;
+        if (typeof window.apiClient !== 'undefined' && window.apiClient.getConfig) {
+            const result = await window.apiClient.getConfig();
+            if (result.success && result.data) {
+                config = result.data;
+                console.log('✅ Config from API:', config);
             }
         }
+        
+        // Fallback to localStorage
+        if (!config) {
+            const cachedConfig = localStorage.getItem('clubConfig') || 
+                                localStorage.getItem('cache_clubConfig');
+            config = cachedConfig ? JSON.parse(cachedConfig) : {};
+            console.log('✅ Config from cache:', config);
+        }
+        
+        // Update header LOGO with cache busting
+        if (config.logo || config.logo_url) {
+            const logoUrl = config.logo || config.logo_url;
+            const cacheBustedUrl = logoUrl.includes('?') 
+                ? logoUrl + '&t=' + Date.now()
+                : logoUrl + '?t=' + Date.now();
+            const headerLogo = document.getElementById('headerLogo');
+            if (headerLogo) {
+                headerLogo.src = cacheBustedUrl;
+                headerLogo.onerror = function() {
+                    this.src = 'assets/default-logo.jpg';
+                };
+                console.log('✅ Header logo updated');
+            }
+        }
+        
+        // Update header NAME
+        if (config.name || config.club_name) {
+            const name = config.name || config.club_name;
+            const headerName = document.getElementById('headerClubName');
+            if (headerName) {
+                headerName.textContent = name;
+                console.log('✅ Header name updated to:', name);
+            }
+        }
+        
+        // Update footer name
+        if (config.name || config.club_name) {
+            const footerName = document.getElementById('footerClubName');
+            if (footerName) {
+                footerName.textContent = config.name || config.club_name;
+            }
+        }
+        
+        // Update footer description
+        if (config.description || config.club_description) {
+            const footerDesc = document.getElementById('footerDescription');
+            if (footerDesc) {
+                footerDesc.textContent = config.description || config.club_description;
+            }
+        }
+        
+        // Update social links
+        const socialLinks = config.social_links || config.socialLinks;
+        if (socialLinks && socialLinks.length > 0) {
+            const socialLinksHTML = socialLinks.map(link => 
+                `<a href="${link.url}" target="_blank" rel="noopener noreferrer">${getSocialIcon(link.platform)}</a>`
+            ).join('');
+            document.getElementById('footerSocialLinks').innerHTML = socialLinksHTML;
+        }
+        
+        // Update year
+        document.getElementById('currentYear').textContent = new Date().getFullYear();
+        
+    } catch (error) {
+        console.error('Error loading club config:', error);
+    }
+}
 
         // Get social media icon
         function getSocialIcon(platform) {
@@ -913,22 +891,30 @@
 
         /* MODIFIED - Added API integration with localStorage fallback */
         async function loadGallery() {
+    console.log('🔄 loadGallery() called');
+    
     try {
-        // ✅ CRITICAL FIX: Clear cache first to force fresh data
+        // ✅ CRITICAL FIX: Clear cache first
         localStorage.removeItem('cache_gallery');
         
-        // NEW - Try API first
-        const result = await getGallery();
-        if (result.success && result.data) {
-            const gallery = result.data;
-            allPhotos = gallery;
-            
-            console.log('✅ Gallery page loaded', allPhotos.length, 'images from API');
+        // Try API first with timeout
+        const result = await Promise.race([
+            getGallery(),
+            new Promise((_, reject) => 
+                setTimeout(() => reject(new Error('Timeout')), 10000)
+            )
+        ]);
+        
+        console.log('📊 API result:', result);
+        
+        if (result.success && result.data && Array.isArray(result.data)) {
+            allPhotos = result.data;
+            console.log('✅ Loaded', allPhotos.length, 'photos from API');
             
             // Save to cache
             localStorage.setItem('gallery', JSON.stringify(allPhotos));
             
-            // EXISTING - Sort photos by date (newest first by default)
+            // Sort photos by date (newest first by default)
             allPhotos.sort((a, b) => new Date(b.date) - new Date(a.date));
             
             updateStatistics();
@@ -936,20 +922,39 @@
             return;
         }
         
-        // EXISTING - Fallback to localStorage
-        const gallery = JSON.parse(localStorage.getItem('gallery') || '[]');
-        allPhotos = gallery;
+        console.warn('⚠️ API returned no data, trying cache...');
         
-        console.log('✅ Gallery page loaded', allPhotos.length, 'images from cache');
+        // Fallback to localStorage
+        const cached = localStorage.getItem('gallery');
+        if (cached) {
+            allPhotos = JSON.parse(cached);
+            console.log('✅ Loaded', allPhotos.length, 'photos from cache');
+            
+            // Sort photos by date (newest first by default)
+            allPhotos.sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            updateStatistics();
+            applyFilters();
+            return;
+        }
         
-        // Sort photos by date (newest first by default)
-        allPhotos.sort((a, b) => new Date(b.date) - new Date(a.date));
-        
-        updateStatistics();
-        applyFilters();
-    } catch (error) {
-        console.error('Error loading gallery:', error);
+        console.warn('⚠️ No photos in cache either');
         showEmptyState();
+        
+    } catch (error) {
+        console.error('❌ Error loading gallery:', error);
+        
+        // Try cache as last resort
+        const cached = localStorage.getItem('gallery');
+        if (cached) {
+            allPhotos = JSON.parse(cached);
+            console.log('✅ Loaded', allPhotos.length, 'photos from cache (after error)');
+            allPhotos.sort((a, b) => new Date(b.date) - new Date(a.date));
+            updateStatistics();
+            applyFilters();
+        } else {
+            showEmptyState();
+        }
     }
 }
 
@@ -1201,32 +1206,43 @@
         }
 
         /* MODIFIED - Updated to use async/await for API calls */
-        document.addEventListener('DOMContentLoaded', async () => {
-            // Wait for API client
-            let retries = 0;
-            while ((!window.apiClient || !window.apiClient.isReady) && retries < 50) {
-                await new Promise(resolve => setTimeout(resolve, 100));
-                retries++;
-            }
-            // Show loading state
-            document.getElementById('loadingState').style.display = 'block';
+        /* MODIFIED - Updated to use async/await for API calls */
+document.addEventListener('DOMContentLoaded', async () => {
+    // Show loading state FIRST
+    document.getElementById('loadingState').style.display = 'block';
+    document.getElementById('galleryGrid').style.display = 'none';
+    
+    // Wait for API client
+    let retries = 0;
+    while ((!window.apiClient || !window.apiClient.isReady) && retries < 50) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+        retries++;
+    }
+    
+    console.log('🔄 Gallery page initializing...');
 
-            // Initialize theme
-            if (typeof initTheme === 'function') {
-                initTheme();
-            }
+    // Initialize theme
+    if (typeof initTheme === 'function') {
+        initTheme();
+    }
 
-            // Initialize navigation
-            if (typeof initNavigation === 'function') {
-                initNavigation();
-            }
+    // Initialize navigation
+    if (typeof initNavigation === 'function') {
+        initNavigation();
+    }
 
-            // NEW - Use await for async functions
-            await loadClubConfig();
-            await loadGallery();
-            initializeFilters();
-            initializeSearch();
-        });
+    // NEW - Use await for async functions
+    await loadClubConfig();
+    
+    // ✅ CRITICAL FIX: Add delay to ensure API is ready
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    await loadGallery();
+    initializeFilters();
+    initializeSearch();
+    
+    console.log('✅ Gallery page initialization complete');
+});
     </script>
 </body>
 </html>
