@@ -743,12 +743,17 @@ async function deleteEvent(eventId) {
     throw new Error('Authentication required');
   }
   
+  // Clear cache first to force fresh fetch from API
+  localStorage.removeItem('cache_events');
+  localStorage.removeItem(STORAGE_KEYS.EVENTS);
+  
   const eventsResult = await getEvents();
   const events = eventsResult.data || [];
   const filtered = events.filter(e => e.id !== eventId);
   
   if (filtered.length === events.length) {
-    throw new Error('Event not found');
+    console.warn('Event not found in local list, attempting API delete anyway...');
+    // Don't throw error - try API delete anyway
   }
   
   try {
@@ -1024,12 +1029,17 @@ async function deleteProject(projectId) {
     throw new Error('Authentication required');
   }
   
+  // Clear cache first to force fresh fetch from API
+  localStorage.removeItem('cache_projects');
+  localStorage.removeItem(STORAGE_KEYS.PROJECTS);
+  
   const projectsResult = await getProjects();
   const projects = projectsResult.data || [];
   const filtered = projects.filter(p => p.id !== projectId);
   
   if (filtered.length === projects.length) {
-    throw new Error('Project not found');
+    console.warn('Project not found in local list, attempting API delete anyway...');
+    // Don't throw error - try API delete anyway
   }
   
   try {
@@ -1178,12 +1188,17 @@ async function deleteGalleryItem(galleryId) {
     throw new Error('Authentication required');
   }
   
+  // Clear cache first to force fresh fetch from API
+  localStorage.removeItem('cache_gallery');
+  localStorage.removeItem(STORAGE_KEYS.GALLERY);
+  
   const galleryResult = await getGallery();
   const gallery = galleryResult.data || [];
   const filtered = gallery.filter(g => g.id !== galleryId);
   
   if (filtered.length === gallery.length) {
-    throw new Error('Gallery item not found');
+    console.warn('Gallery item not found in local list, attempting API delete anyway...');
+    // Don't throw error - try API delete anyway
   }
   
   try {
@@ -1390,14 +1405,18 @@ async function deleteAnnouncement(announcementId) {
     throw new Error('Authentication required');
   }
   
+  // Clear cache first to force fresh fetch from API
+  localStorage.removeItem('cache_announcements');
+  localStorage.removeItem(STORAGE_KEYS.ANNOUNCEMENTS);
+  
   const announcementsResult = await getAnnouncements();
   const announcements = announcementsResult.data || [];
   const filtered = announcements.filter(a => a.id !== announcementId);
   
   if (filtered.length === announcements.length) {
-    throw new Error('Announcement not found');
+    console.warn('Announcement not found in local list, attempting API delete anyway...');
+    // Don't throw error - try API delete anyway
   }
-  
   try {
     if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady) {
       try {
