@@ -48,11 +48,10 @@
             left: 0;
             right: 0;
             bottom: 0;
-            z-index: 0;
+            z-index: 1;
             opacity: 1;
             transition: opacity 1s ease-in-out;
         }
-        
         .hero-slideshow.active {
             opacity: 1;
         }
@@ -66,11 +65,13 @@
             opacity: 0;
             transition: opacity 1.5s ease-in-out, transform 20s ease-in-out;
             transform: scale(1);
+            z-index: 1;
         }
         
         .hero-slide.active {
             opacity: 1;
             transform: scale(1.1);
+            z-index: 1;
         }
         
         .hero-slide img {
@@ -87,16 +88,17 @@
             right: 0;
             bottom: 0;
             background: linear-gradient(135deg, 
-                rgba(29, 78, 216, 0.4) 0%, 
-                rgba(124, 58, 237, 0.4) 100%);
+                rgba(29, 78, 216, 0.3) 0%, 
+                rgba(124, 58, 237, 0.3) 100%);
             z-index: 2;
             transition: background 0.3s ease;
+            pointer-events: none;
         }
         
-        [data-theme="dark"] .hero-overlay {
+       [data-theme="dark"] .hero-overlay {
             background: linear-gradient(135deg, 
-                rgba(15, 23, 42, 0.4) 0%, 
-                rgba(30, 41, 59, 0.4) 100%);
+                rgba(15, 23, 42, 0.3) 0%, 
+                rgba(30, 41, 59, 0.3) 100%);
         }
         
         .hero::before {
