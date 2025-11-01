@@ -710,13 +710,14 @@
                             window.apiClient.setAuthToken(result.data.token);
                         }
 
-                        // Step 4: Create and save session
+                        // Step 4: Create and save session WITH hasToken flag
                         console.log('💾 Step 3: Creating session in sessionStorage...');
                         const sessionData = {
                             username: result.data.admin.username,
                             role: result.data.admin.role,
                             adminId: result.data.admin.id,
-                            timestamp: new Date().toISOString()
+                            timestamp: new Date().toISOString(),
+                            hasToken: true  // CRITICAL: Mark that this session has a token
                         };
                         sessionStorage.setItem('adminSession', JSON.stringify(sessionData));
 

@@ -554,7 +554,11 @@ function isAuthenticated(redirectIfNot = false) {
     console.log('⚠️ Token missing but session exists - attempting to restore from localStorage');
     const token = localStorage.getItem(AUTH_CONFIG.TOKEN_KEY);
     if (token) {
-      // Token exists in localStorage, keep session valid
+      // Token exists in localStorage, restore to apiClient if available
+      if (typeof window.apiClient !== 'undefined' && window.apiClient.setAuthToken) {
+        console.log('🔄 Restoring token to apiClient from localStorage');
+        window.apiClient.setAuthToken(token);
+      }
       return true;
     } else {
       // No token anywhere, clear session
@@ -564,6 +568,18 @@ function isAuthenticated(redirectIfNot = false) {
         window.location.href = 'admin.html';
       }
       return false;
+    }
+  }
+  
+  // CRITICAL: Always verify apiClient has token if session has one
+  if (session.hasToken && typeof window.apiClient !== 'undefined') {
+    const apiToken = window.apiClient.getAuthToken();
+    if (!apiToken) {
+      const token = localStorage.getItem(AUTH_CONFIG.TOKEN_KEY);
+      if (token && window.apiClient.setAuthToken) {
+        console.log('🔄 Re-syncing token to apiClient');
+        window.apiClient.setAuthToken(token);
+      }
     }
   }
   

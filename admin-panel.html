@@ -1277,38 +1277,73 @@
         let currentEditAnnouncementId = null;
 
         // Initialize on page load
+        // Initialize on page load
         document.addEventListener('DOMContentLoaded', () => {
-            // CRITICAL: Check authentication before anything else
-            const session = sessionStorage.getItem('adminSession');
-            const token = localStorage.getItem('grrc_auth_token');
+            console.log('📱 Admin Panel Loading...');
             
-            if (!session || !token) {
-                console.error('❌ Not authenticated - missing session or token');
-                window.location.href = 'admin.html';
-                return;
-            }
-
-            // Verify token is loaded in api-client
-            if (window.apiClient && window.apiClient.getAuthToken()) {
-                console.log('✅ Authenticated with token');
-            } else {
-                console.error('⚠️ Token not loaded in API client - attempting to restore');
-                if (token && window.apiClient) {
-                    window.apiClient.setAuthToken(token);
-                    console.log('✅ Token restored to API client');
+            // CRITICAL: Wait for apiClient to fully initialize
+            function initializeAdminPanel() {
+                // Check authentication
+                const session = sessionStorage.getItem('adminSession');
+                const token = localStorage.getItem('grrc_auth_token');
+                
+                console.log('🔍 Auth Check:');
+                console.log('   Session:', session ? 'EXISTS' : 'MISSING');
+                console.log('   Token:', token ? 'EXISTS (' + token.substring(0, 20) + '...)' : 'MISSING');
+                
+                if (!session || !token) {
+                    console.error('❌ Not authenticated - redirecting to login');
+                    alert('Please log in to access the admin panel');
+                    window.location.href = 'admin.html';
+                    return;
                 }
+
+                // CRITICAL: Ensure API client exists and is ready
+                if (!window.apiClient || !window.apiClient.isReady) {
+                    console.warn('⏳ API client not ready yet, retrying...');
+                    setTimeout(initializeAdminPanel, 100);
+                    return;
+                }
+
+                // CRITICAL: Force load token into API client
+                const apiToken = window.apiClient.getAuthToken();
+                console.log('   API Token:', apiToken ? 'LOADED' : 'MISSING');
+                
+                if (!apiToken && token) {
+                    console.warn('⚠️ Forcing token into API client...');
+                    window.apiClient.setAuthToken(token);
+                    console.log('✅ Token forcefully loaded');
+                } else if (apiToken) {
+                    console.log('✅ API client already has token');
+                }
+
+                // Verify token is now loaded
+                const verifyToken = window.apiClient.getAuthToken();
+                if (!verifyToken) {
+                    console.error('❌ Failed to load token into API client!');
+                    alert('Authentication error. Please log in again.');
+                    sessionStorage.clear();
+                    localStorage.removeItem('grrc_auth_token');
+                    window.location.href = 'admin.html';
+                    return;
+                }
+
+                console.log('✅ All authentication checks passed!');
+
+                // Now initialize everything else
+                initTheme();
+                loadAdminInfo();
+                loadClubConfigToSidebar();
+                loadDashboardStats();
+                setupNavigation();
+                setupLogoutButton();
+                setupForms();
+                setupMobileSidebar();
+                loadAllData();
             }
 
-            // Now initialize everything else
-            initTheme();
-            loadAdminInfo();
-            loadClubConfigToSidebar();
-            loadDashboardStats();
-            setupNavigation();
-            setupLogoutButton();
-            setupForms();
-            setupMobileSidebar();
-            loadAllData();
+            // Start initialization with small delay to ensure apiClient loads
+            setTimeout(initializeAdminPanel, 200);
         });
         // Load admin info
         function loadAdminInfo() {
