@@ -6,60 +6,516 @@
     <meta name="description" content="Explore innovative robotics projects by GSTU Robotics & Research Club">
     <title>Projects - GSTU Robotics & Research Club</title>
     
-    <!-- CSS Files -->
     <link rel="stylesheet" href="css/variables.css">
     <link rel="stylesheet" href="css/common.css">
     <link rel="stylesheet" href="css/components.css">
     
     <style>
-        /* Page Header */
-        .page-header {
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-            padding: 120px 0 80px;
+        .header {
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            backdrop-filter: blur(10px);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+        }
+        
+        .header.transparent {
+            background: rgba(0, 0, 0, 0.4) !important;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15) !important;
+            backdrop-filter: blur(12px);
+        }
+        
+        .header.transparent .nav-link,
+        .header.transparent .club-name {
+            color: white !important;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8), 0 1px 3px rgba(0, 0, 0, 0.9);
+            font-weight: 500;
+        }
+        
+        .header.transparent .nav-link:hover {
+            color: rgba(255, 255, 255, 0.8) !important;
+        }
+        
+        .header.transparent .nav-link.active {
+            color: white !important;
+            border-bottom-color: white;
+        }
+        
+        [data-theme="dark"] .header:not(.transparent) .nav-link,
+        [data-theme="dark"] .header:not(.transparent) .club-name {
+            color: white;
+        }
+        
+        [data-theme="light"] .header:not(.transparent) .nav-link,
+        [data-theme="light"] .header:not(.transparent) .club-name {
+            color: #1a202c;
+        }
+        
+        .header.transparent .logo {
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
+        }
+        
+        .header.transparent .theme-toggle {
+            background: rgba(255, 255, 255, 0.25);
+            color: white;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .header.transparent .theme-toggle:hover {
+            background: rgba(255, 255, 255, 0.35);
+        }
+        
+        .header.transparent .mobile-menu-toggle span {
+            background: white;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+        }
+        
+        .mobile-menu-toggle {
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            padding: 0.5rem;
+            z-index: 1001;
+        }
+        
+        .mobile-menu-toggle span {
+            display: block;
+            width: 25px;
+            height: 3px;
+            background: var(--text-primary);
+            margin: 5px 0;
+            transition: all 0.3s ease;
+        }
+        
+        .mobile-menu-toggle.active span:nth-child(1) {
+            transform: rotate(45deg) translate(8px, 8px);
+        }
+        
+        .mobile-menu-toggle.active span:nth-child(2) {
+            opacity: 0;
+        }
+        
+        .mobile-menu-toggle.active span:nth-child(3) {
+            transform: rotate(-45deg) translate(7px, -7px);
+        }
+        
+        .mobile-nav-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 999;
+            display: none;
+            backdrop-filter: blur(5px);
+        }
+        
+        .mobile-nav-overlay.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .mobile-nav {
+            background: var(--surface-color);
+            border-radius: var(--radius-lg);
+            padding: 2rem;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: var(--shadow-xl);
+        }
+        
+        .mobile-nav-link {
+            display: block;
+            padding: 1rem;
+            color: var(--text-primary);
+            text-decoration: none;
+            border-radius: var(--radius-md);
+            margin-bottom: 0.5rem;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            text-align: center;
+        }
+        
+        .mobile-nav-link:hover,
+        .mobile-nav-link.active {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             text-align: center;
             position: relative;
             overflow: hidden;
+            padding: 2rem;
         }
-
-        .page-header::before {
+        
+        .hero-background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 0;
+        }
+        
+        .hero-background-gradient {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            z-index: 1;
+        }
+        
+        .hero-slideshow {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 1;
+            opacity: 1;
+            transition: opacity 1s ease-in-out;
+        }
+        
+        .hero-slideshow.active {
+            opacity: 1;
+        }
+        
+        .hero-slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            opacity: 0;
+            transition: opacity 1.5s ease-in-out, transform 20s ease-in-out;
+            transform: scale(1);
+            z-index: 1;
+        }
+        
+        .hero-slide.active {
+            opacity: 1;
+            transform: scale(1.1);
+            z-index: 1;
+        }
+        
+        .hero-slide img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center;
+        }
+        
+        .hero-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, 
+                rgba(29, 78, 216, 0.3) 0%, 
+                rgba(124, 58, 237, 0.3) 100%);
+            z-index: 2;
+            transition: background 0.3s ease;
+            pointer-events: none;
+        }
+        
+        [data-theme="dark"] .hero-overlay {
+            background: linear-gradient(135deg, 
+                rgba(15, 23, 42, 0.3) 0%, 
+                rgba(30, 41, 59, 0.3) 100%);
+        }
+        
+        .hero::before {
             content: '';
             position: absolute;
             top: 0;
             left: 0;
             right: 0;
             bottom: 0;
-            background: 
-                linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.1) 50%, transparent 100%),
-                repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,0.03) 2px, rgba(255,255,255,0.03) 4px);
-            animation: gridMove 20s linear infinite;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="%23ffffff" fill-opacity="0.05" d="M0,96L48,112C96,128,192,160,288,160C384,160,480,128,576,122.7C672,117,768,139,864,138.7C960,139,1056,117,1152,106.7C1248,96,1344,96,1392,96L1440,96L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path></svg>');
+            background-size: cover;
+            background-position: bottom;
+            opacity: 0.3;
+            animation: wave 15s ease-in-out infinite;
+            z-index: 3;
         }
-
-        @keyframes gridMove {
-            0% { transform: translateX(-50px); }
-            100% { transform: translateX(50px); }
+        
+        @keyframes wave {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
         }
-
-        .page-header-content {
+        
+        .hero-content {
             position: relative;
-            z-index: 1;
-            animation: fadeInUp 0.6s ease-out;
+            z-index: 4;
+            max-width: 800px;
         }
-
-        .page-header h1 {
-            font-size: 3rem;
+        
+        .hero h1 {
+            font-size: clamp(2.5rem, 6vw, 4rem);
+            font-weight: 700;
             color: white;
             margin-bottom: 1rem;
-            font-weight: 700;
+            text-shadow: 0 2px 12px rgba(0, 0, 0, 0.3), 0 1px 4px rgba(0, 0, 0, 0.2);
+            transition: all 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
         }
-
-        .page-header p {
-            font-size: 1.25rem;
+        
+        .hero .motto {
+            font-size: clamp(1.2rem, 3vw, 1.8rem);
+            color: rgba(255, 255, 255, 0.95);
+            margin-bottom: 2rem;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+            transition: all 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+        
+        .hero h1.animate-fadeInUp {
+            animation: textFadeInUp 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+        
+        .hero .motto.animate-fadeInUp {
+            animation: textFadeInUp 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55) 0.15s;
+        }
+        
+        .hero h1.animate-slideFromLeft {
+            animation: slideFromLeft 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+        
+        .hero .motto.animate-slideFromLeft {
+            animation: slideFromLeft 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55) 0.15s;
+        }
+        
+        .hero h1.animate-slideFromRight {
+            animation: slideFromRight 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+        
+        .hero .motto.animate-slideFromRight {
+            animation: slideFromRight 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55) 0.15s;
+        }
+        
+        .hero h1.animate-zoomIn {
+            animation: zoomIn 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+        
+        .hero .motto.animate-zoomIn {
+            animation: zoomIn 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55) 0.15s;
+        }
+        
+        .hero h1.animate-rotateIn {
+            animation: rotateIn 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+        
+        .hero .motto.animate-rotateIn {
+            animation: rotateIn 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55) 0.15s;
+        }
+        
+        .hero h1.animate-butterfly {
+            animation: butterfly 1s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+        
+        .hero .motto.animate-butterfly {
+            animation: butterfly 1s cubic-bezier(0.68, -0.55, 0.265, 1.55) 0.15s;
+        }
+        
+        .hero h1.animate-bounce {
+            animation: bounceIn 0.9s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+        
+        .hero .motto.animate-bounce {
+            animation: bounceIn 0.9s cubic-bezier(0.68, -0.55, 0.265, 1.55) 0.15s;
+        }
+        
+        .hero h1.animate-flipIn {
+            animation: flipIn 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+        
+        .hero .motto.animate-flipIn {
+            animation: flipIn 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55) 0.15s;
+        }
+        
+        @keyframes textFadeInUp {
+            0% {
+                opacity: 0;
+                transform: translateY(40px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes slideFromLeft {
+            0% {
+                opacity: 0;
+                transform: translateX(-100px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        @keyframes slideFromRight {
+            0% {
+                opacity: 0;
+                transform: translateX(100px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        @keyframes zoomIn {
+            0% {
+                opacity: 0;
+                transform: scale(0.3);
+            }
+            50% {
+                opacity: 1;
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+        
+        @keyframes rotateIn {
+            0% {
+                opacity: 0;
+                transform: rotate(-200deg) scale(0);
+            }
+            100% {
+                opacity: 1;
+                transform: rotate(0) scale(1);
+            }
+        }
+        
+        @keyframes butterfly {
+            0% {
+                opacity: 0;
+                transform: scale(0) rotate(-180deg);
+            }
+            50% {
+                transform: scale(1.1) rotate(10deg);
+            }
+            70% {
+                transform: scale(0.95) rotate(-5deg);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1) rotate(0);
+            }
+        }
+        
+        @keyframes bounceIn {
+            0% {
+                opacity: 0;
+                transform: scale(0.3) translateY(-50px);
+            }
+            50% {
+                opacity: 1;
+                transform: scale(1.05) translateY(5px);
+            }
+            70% {
+                transform: scale(0.9) translateY(-5px);
+            }
+            100% {
+                transform: scale(1) translateY(0);
+            }
+        }
+        
+        @keyframes flipIn {
+            0% {
+                opacity: 0;
+                transform: perspective(400px) rotateX(-90deg);
+            }
+            40% {
+                transform: perspective(400px) rotateX(20deg);
+            }
+            60% {
+                opacity: 1;
+                transform: perspective(400px) rotateX(-10deg);
+            }
+            100% {
+                transform: perspective(400px) rotateX(0deg);
+            }
+        }
+        
+        .hero .description {
+            font-size: 1.1rem;
             color: rgba(255, 255, 255, 0.9);
-            max-width: 600px;
-            margin: 0 auto;
+            margin-bottom: 2rem;
+            line-height: 1.6;
+            animation: fadeInUp 0.8s ease-out 0.4s backwards;
+            text-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        .hero-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            animation: fadeInUp 0.8s ease-out 0.6s backwards;
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .slideshow-indicators {
+            position: absolute;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 0.5rem;
+            z-index: 5;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .slideshow-indicators.active {
+            opacity: 1;
+        }
+        
+        .slideshow-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.4);
+            border: 2px solid rgba(255, 255, 255, 0.6);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .slideshow-indicator.active {
+            background: rgba(255, 255, 255, 0.9);
+            transform: scale(1.2);
+        }
+        
+        .slideshow-indicator:hover {
+            background: rgba(255, 255, 255, 0.7);
+            transform: scale(1.1);
         }
 
-        /* Statistics Section */
         .stats-section {
             padding: 3rem 0;
             background: var(--background-color);
@@ -100,7 +556,6 @@
             font-weight: 500;
         }
 
-        /* Filter Section */
         .filter-section {
             padding: 2rem 0;
             background: var(--background-color);
@@ -167,7 +622,6 @@
             border-color: var(--primary-color);
         }
 
-        /* Projects Section */
         .projects-section {
             padding: 3rem 0;
             background: var(--background-color);
@@ -321,7 +775,6 @@
             color: white;
         }
 
-        /* Project Modal */
         .project-modal {
             display: none;
             position: fixed;
@@ -548,7 +1001,6 @@
             color: var(--primary-color);
         }
 
-        /* Empty State */
         .empty-state {
             text-align: center;
             padding: 4rem 2rem;
@@ -573,7 +1025,6 @@
             margin-bottom: 2rem;
         }
 
-        /* Loading State */
         .loading-state {
             text-align: center;
             padding: 4rem 2rem;
@@ -593,24 +1044,12 @@
             to { transform: rotate(360deg); }
         }
 
-        /* Animations */
         @keyframes fadeIn {
             from {
                 opacity: 0;
             }
             to {
                 opacity: 1;
-            }
-        }
-
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
             }
         }
 
@@ -625,18 +1064,15 @@
             }
         }
 
-        /* Responsive Design */
         @media (max-width: 768px) {
-            .page-header {
-                padding: 100px 0 60px;
+            .hero {
+                min-height: 100vh;
+                padding: 1rem;
             }
-
-            .page-header h1 {
-                font-size: 2rem;
-            }
-
-            .page-header p {
-                font-size: 1rem;
+            
+            .hero-buttons {
+                flex-direction: column;
+                align-items: stretch;
             }
 
             .stats-grid {
@@ -689,6 +1125,10 @@
             .team-members-list {
                 grid-template-columns: repeat(2, 1fr);
             }
+            
+            .slideshow-indicators {
+                bottom: 1rem;
+            }
         }
 
         @media (max-width: 480px) {
@@ -708,57 +1148,68 @@
     </style>
 </head>
 <body>
-    <!-- Header -->
-    <header class="header">
-        <div class="header-content container">
-            <div class="logo-container">
-                <img src="assets/default-logo.jpg" alt="Club Logo" class="logo" id="headerLogo">
-                <span class="club-name" id="headerClubName">GSTU Robotics & Research Club</span>
-            </div>
-            
-            <nav class="nav-menu" id="navMenu">
-                <a href="index.html" class="nav-link">Home</a>
-                <a href="members.html" class="nav-link">Members</a>
-                <a href="events.html" class="nav-link">Events</a>
-                <a href="projects.html" class="nav-link active">Projects</a>
-                <a href="gallery.html" class="nav-link">Gallery</a>
-                <a href="admin.html" class="nav-link">Admin</a>
-            </nav>
-
-            <div class="header-actions">
-                <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
-                    <span class="theme-icon">🌙</span>
-                </button>
-                <button class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Toggle menu">
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                </button>
+    <header class="header transparent" id="mainHeader">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo-container">
+                    <img id="clubLogo" src="assets/default-logo.jpg" alt="Club Logo" class="logo">
+                    <span id="clubName" class="club-name">GSTU Robotics & Research Club</span>
+                </div>
+                
+                <nav class="nav-menu" id="navMenu">
+                    <a href="index.html" class="nav-link">Home</a>
+                    <a href="members.html" class="nav-link">Members</a>
+                    <a href="events.html" class="nav-link">Events</a>
+                    <a href="projects.html" class="nav-link active">Projects</a>
+                    <a href="gallery.html" class="nav-link">Gallery</a>
+                    <a href="admin.html" class="nav-link">Admin</a>
+                </nav>
+                
+                <div class="header-actions">
+                    <button id="themeToggle" class="theme-toggle" aria-label="Toggle theme">
+                        <span class="theme-icon">🌙</span>
+                    </button>
+                    <button class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Toggle menu">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </button>
+                </div>
             </div>
         </div>
     </header>
 
-    <!-- Mobile Navigation Overlay -->
     <div class="mobile-nav-overlay" id="mobileNavOverlay">
         <nav class="mobile-nav">
-            <a href="index.html" class="nav-link">Home</a>
-            <a href="members.html" class="nav-link">Members</a>
-            <a href="events.html" class="nav-link">Events</a>
-            <a href="projects.html" class="nav-link active">Projects</a>
-            <a href="gallery.html" class="nav-link">Gallery</a>
-            <a href="admin.html" class="nav-link">Admin</a>
+            <a href="index.html" class="mobile-nav-link">Home</a>
+            <a href="members.html" class="mobile-nav-link">Members</a>
+            <a href="events.html" class="mobile-nav-link">Events</a>
+            <a href="projects.html" class="mobile-nav-link active">Projects</a>
+            <a href="gallery.html" class="mobile-nav-link">Gallery</a>
+            <a href="admin.html" class="mobile-nav-link">Admin</a>
         </nav>
     </div>
 
-    <!-- Page Header -->
-    <section class="page-header">
-        <div class="page-header-content container">
-            <h1>Our Projects</h1>
-            <p>Innovative robotics and technology projects built by our talented team</p>
+    <section class="hero">
+        <div class="hero-background">
+            <div class="hero-background-gradient"></div>
+            <div class="hero-slideshow" id="heroSlideshow"></div>
         </div>
+        <div class="hero-overlay"></div>
+        <div class="hero-content">
+            <h1 id="heroTitle">Our Innovative Projects</h1>
+            <p class="motto" id="heroSubtitle">Building the Future with Technology</p>
+            <p class="description" id="heroDescription">
+                Explore our cutting-edge robotics and technology projects that push the boundaries of innovation.
+            </p>
+            <div class="hero-buttons">
+                <a href="#projects" class="btn btn-primary btn-lg">View Projects</a>
+                <a href="members.html" class="btn btn-secondary btn-lg">Our Team</a>
+            </div>
+        </div>
+        <div class="slideshow-indicators" id="slideshowIndicators"></div>
     </section>
 
-    <!-- Statistics Section -->
     <section class="stats-section">
         <div class="container">
             <div class="stats-grid">
@@ -782,8 +1233,7 @@
         </div>
     </section>
 
-    <!-- Filter Section -->
-    <section class="filter-section">
+    <section class="filter-section" id="projects">
         <div class="container">
             <div class="filter-controls">
                 <div class="search-box">
@@ -801,14 +1251,12 @@
 
                 <div>
                     <div class="filter-buttons" id="categoryFilters">
-                        <!-- Categories will be populated dynamically -->
                     </div>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Projects Section -->
     <section class="projects-section">
         <div class="container">
             <div class="loading-state" id="loadingState">
@@ -817,7 +1265,6 @@
             </div>
 
             <div class="projects-grid" id="projectsGrid" style="display: none;">
-                <!-- Projects will be loaded here -->
             </div>
 
             <div class="empty-state" id="emptyState" style="display: none;">
@@ -835,19 +1282,16 @@
         </div>
     </section>
 
-    <!-- Project Detail Modal -->
     <div class="project-modal" id="projectModal">
         <div class="modal-content">
             <div class="modal-header" id="modalHeader">
                 <button class="modal-close" id="modalClose">×</button>
             </div>
             <div class="modal-body" id="modalBody">
-                <!-- Modal content will be populated dynamically -->
             </div>
         </div>
     </div>
 
-    <!-- Footer -->
     <footer class="footer">
         <div class="footer-content container">
             <div class="footer-section">
@@ -882,8 +1326,7 @@
         </div>
     </footer>
 
-    <!-- JavaScript Files -->
-    <script src="js/api-client.js"></script> <!-- NEW - API client -->
+    <script src="js/api-client.js"></script>
     <script src="js/config.js"></script>
     <script src="js/storage.js"></script>
     <script src="js/auth.js"></script>
@@ -893,7 +1336,6 @@
     <script src="js/load-config.js"></script>
 
     <script>
-        // Global variables
         let allProjects = [];
         let filteredProjects = [];
         let currentFilters = {
@@ -901,116 +1343,406 @@
             status: 'all',
             category: 'all'
         };
+        let slideshowImages = [];
+        let currentSlideIndex = 0;
+        let slideshowInterval = null;
 
-        // Initialize page
-        document.addEventListener('DOMContentLoaded', async () => {
-    // ✅ CRITICAL: Clear cache to force fresh API fetch
-    localStorage.removeItem('cache_clubConfig');
-    
-    // Wait for API client
-    let retries = 0;
-    while ((!window.apiClient || !window.apiClient.isReady) && retries < 50) {
-        await new Promise(resolve => setTimeout(resolve, 100));
-        retries++;
-    }
-    await loadClubConfig();
+        function handleScroll() {
+            const header = document.getElementById('mainHeader');
+            const hero = document.querySelector('.hero');
+            const heroHeight = hero ? hero.offsetHeight : 0;
+            const scrollPosition = window.scrollY;
+            
+            if (scrollPosition < heroHeight - 100) {
+                header.classList.add('transparent');
+            } else {
+                header.classList.remove('transparent');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', async function() {
+            document.getElementById('currentYear').textContent = new Date().getFullYear();
+            
+            const htmlElement = document.documentElement;
+            const savedTheme = localStorage.getItem('theme');
+            
+            if (!savedTheme) {
+                htmlElement.setAttribute('data-theme', 'dark');
+                localStorage.setItem('theme', 'dark');
+            } else {
+                htmlElement.setAttribute('data-theme', savedTheme);
+            }
+            
+            window.addEventListener('scroll', handleScroll);
+            handleScroll();
+            
+            initializeMobileMenu();
+            
+            let retries = 0;
+            while ((!window.apiClient || !window.apiClient.isReady) && retries < 50) {
+                await new Promise(resolve => setTimeout(resolve, 100));
+                retries++;
+            }
+            
+            await loadClubConfig();
+            await new Promise(resolve => setTimeout(resolve, 500));
+            await loadProjectsForSlideshow();
             await loadProjects();
             initializeFilters();
             initializeSearch();
             initializeModal();
             
-            // Set current year in footer
-            document.getElementById('currentYear').textContent = new Date().getFullYear();
+            if (typeof initTheme === 'function') {
+                initTheme();
+            }
+            
+            if (typeof initNavigation === 'function') {
+                initNavigation();
+            }
         });
-
-        /* MODIFIED - Added API integration */
+        
+        function initializeMobileMenu() {
+            const mobileMenuToggle = document.getElementById('mobileMenuToggle');
+            const mobileNavOverlay = document.getElementById('mobileNavOverlay');
+            const mobileNavLinks = document.querySelectorAll('.mobile-nav-link');
+            
+            if (mobileMenuToggle && mobileNavOverlay) {
+                mobileMenuToggle.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    mobileNavOverlay.classList.toggle('active');
+                    mobileMenuToggle.classList.toggle('active');
+                    document.body.style.overflow = mobileNavOverlay.classList.contains('active') ? 'hidden' : '';
+                });
+                
+                mobileNavLinks.forEach(link => {
+                    link.addEventListener('click', function() {
+                        mobileNavOverlay.classList.remove('active');
+                        mobileMenuToggle.classList.remove('active');
+                        document.body.style.overflow = '';
+                    });
+                });
+                
+                mobileNavOverlay.addEventListener('click', function(e) {
+                    if (e.target === mobileNavOverlay) {
+                        mobileNavOverlay.classList.remove('active');
+                        mobileMenuToggle.classList.remove('active');
+                        document.body.style.overflow = '';
+                    }
+                });
+            }
+        }
+        
+        async function loadProjectsForSlideshow() {
+            try {
+                console.log('🎬 Starting slideshow load...');
+                
+                let projectItems = [];
+                
+                if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady) {
+                    try {
+                        console.log('📡 Calling API for projects...');
+                        const response = await window.apiClient.getProjects();
+                        console.log('📊 API response:', response);
+                        
+                        if (response.success && Array.isArray(response.data) && response.data.length > 0) {
+                            projectItems = response.data;
+                            console.log('✅ Slideshow loaded', projectItems.length, 'projects from API');
+                            try {
+                                localStorage.setItem('projects', JSON.stringify(projectItems));
+                            } catch (e) {
+                                console.warn('⚠️ Could not save to cache (quota exceeded):', e.message);
+                            }
+                        }
+                    } catch (apiError) {
+                        console.error('❌ API call failed:', apiError);
+                    }
+                }
+                
+                if (projectItems.length === 0) {
+                    console.log('📦 Trying cache...');
+                    const cached = localStorage.getItem('projects');
+                    if (cached) {
+                        projectItems = JSON.parse(cached);
+                        console.log('✅ Slideshow loaded', projectItems.length, 'projects from cache');
+                    }
+                }
+                
+                console.log('🔍 Total project items:', projectItems.length);
+                
+                if (projectItems.length > 0) {
+                    slideshowImages = projectItems
+                        .filter(item => {
+                            const imageUrl = item.image || item.image_url;
+                            return imageUrl && imageUrl.trim() !== '';
+                        })
+                        .map(item => ({
+                            url: item.image || item.image_url,
+                            title: item.title || 'Untitled Project',
+                            description: item.description || item.category || 'Innovation in Progress'
+                        }))
+                        .slice(0, 10);
+                    
+                    console.log('✅ Valid slideshow images:', slideshowImages.length);
+                    console.log('🖼️ Image data:', slideshowImages);
+                    
+                    if (slideshowImages.length > 0) {
+                        console.log('🎬 Initializing slideshow with', slideshowImages.length, 'images');
+                        initializeSlideshow();
+                    } else {
+                        console.warn('⚠️ No valid images found in projects');
+                    }
+                } else {
+                    console.warn('⚠️ No project items found');
+                }
+            } catch (error) {
+                console.error('❌ Error loading projects for slideshow:', error);
+            }
+        }
+        
+        function initializeSlideshow() {
+            const slideshowContainer = document.getElementById('heroSlideshow');
+            const indicatorsContainer = document.getElementById('slideshowIndicators');
+            
+            slideshowImages.forEach((imageData, index) => {
+                const slide = document.createElement('div');
+                slide.className = 'hero-slide';
+                if (index === 0) slide.classList.add('active');
+                
+                const img = document.createElement('img');
+                img.src = imageData.url;
+                img.alt = imageData.title;
+                img.loading = index === 0 ? 'eager' : 'lazy';
+                
+                img.onerror = function() {
+                    console.error('❌ Failed to load image:', imageData.url);
+                    this.style.display = 'none';
+                };
+                
+                img.onload = function() {
+                    console.log('✅ Image loaded successfully:', imageData.url.substring(0, 50) + '...');
+                };
+                
+                slide.appendChild(img);
+                slideshowContainer.appendChild(slide);
+                
+                const indicator = document.createElement('div');
+                indicator.className = 'slideshow-indicator';
+                if (index === 0) indicator.classList.add('active');
+                indicator.addEventListener('click', () => goToSlide(index));
+                indicatorsContainer.appendChild(indicator);
+            });
+            
+            slideshowContainer.classList.add('active');
+            indicatorsContainer.classList.add('active');
+            
+            updateHeroText(0);
+            
+            if (slideshowImages.length > 1) {
+                startSlideshow();
+            }
+        }
+        
+        function updateHeroText(index) {
+            const imageData = slideshowImages[index];
+            const titleElement = document.getElementById('heroTitle');
+            const subtitleElement = document.getElementById('heroSubtitle');
+            
+            if (titleElement && subtitleElement) {
+                const animations = [
+                    'animate-fadeInUp',
+                    'animate-slideFromLeft',
+                    'animate-slideFromRight',
+                    'animate-zoomIn',
+                    'animate-rotateIn',
+                    'animate-butterfly',
+                    'animate-bounce',
+                    'animate-flipIn'
+                ];
+                
+                const randomAnimation = animations[Math.floor(Math.random() * animations.length)];
+                
+                animations.forEach(anim => {
+                    titleElement.classList.remove(anim);
+                    subtitleElement.classList.remove(anim);
+                });
+                
+                titleElement.style.opacity = '0';
+                subtitleElement.style.opacity = '0';
+                
+                setTimeout(() => {
+                    titleElement.textContent = imageData.title;
+                    subtitleElement.textContent = imageData.description;
+                    
+                    titleElement.style.opacity = '1';
+                    subtitleElement.style.opacity = '1';
+                    
+                    titleElement.classList.add(randomAnimation);
+                    subtitleElement.classList.add(randomAnimation);
+                    
+                    setTimeout(() => {
+                        titleElement.classList.remove(randomAnimation);
+                        subtitleElement.classList.remove(randomAnimation);
+                    }, 1000);
+                }, 300);
+            }
+        }
+        
+        function startSlideshow() {
+            slideshowInterval = setInterval(() => {
+                nextSlide();
+            }, 5000);
+        }
+        
+        function nextSlide() {
+            const slides = document.querySelectorAll('.hero-slide');
+            const indicators = document.querySelectorAll('.slideshow-indicator');
+            
+            if (slides.length === 0) return;
+            
+            slides[currentSlideIndex].classList.remove('active');
+            indicators[currentSlideIndex].classList.remove('active');
+            
+            currentSlideIndex = (currentSlideIndex + 1) % slides.length;
+            
+            slides[currentSlideIndex].classList.add('active');
+            indicators[currentSlideIndex].classList.add('active');
+            
+            updateHeroText(currentSlideIndex);
+        }
+        
+        function goToSlide(index) {
+            const slides = document.querySelectorAll('.hero-slide');
+            const indicators = document.querySelectorAll('.slideshow-indicator');
+            
+            if (slides.length === 0) return;
+            
+            slides[currentSlideIndex].classList.remove('active');
+            indicators[currentSlideIndex].classList.remove('active');
+            
+            currentSlideIndex = index;
+            
+            slides[currentSlideIndex].classList.add('active');
+            indicators[currentSlideIndex].classList.add('active');
+            
+            updateHeroText(currentSlideIndex);
+            
+            if (slideshowInterval) {
+                clearInterval(slideshowInterval);
+                startSlideshow();
+            }
+        }
+        
         async function loadClubConfig() {
             try {
-                // NEW - Try API first
-                const result = await getClubConfig();
-                
-                if (result.success && result.data) {
-                    const config = result.data;
-                    
-                    // Update header logo and name
-                    if (config.logo) {
-                        document.getElementById('headerLogo').src = config.logo;
+                if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady) {
+                    const result = await window.apiClient.getConfig();
+                    if (result.success && result.data) {
+                        const config = result.data;
+                        
+                        if (config.name) {
+                            document.getElementById('clubName').textContent = config.name;
+                        }
+                        
+                        if (config.description) {
+                            document.getElementById('footerDescription').textContent = config.description;
+                        }
+                        
+                        const clubLogo = document.getElementById('clubLogo');
+                        if (clubLogo && (config.logo || config.logo_url)) {
+                            const logoUrl = config.logo || config.logo_url;
+                            const cacheBustedUrl = logoUrl.includes('?') 
+                                ? logoUrl + '&t=' + Date.now()
+                                : logoUrl + '?t=' + Date.now();
+                            clubLogo.src = cacheBustedUrl;
+                            clubLogo.style.display = 'block';
+                            clubLogo.onerror = function() {
+                                this.src = 'assets/default-logo.jpg';
+                            };
+                        }
+                        
+                        const linksData = config.socialLinks || config.social_links;
+                        if (linksData && linksData.length > 0) {
+                            const socialContainer = document.getElementById('footerSocialLinks');
+                            socialContainer.innerHTML = linksData.map(link =>
+                                `<a href="${link.url}" target="_blank" rel="noopener noreferrer" class="social-link">${getSocialIcon(link.platform)}</a>`
+                            ).join('');
+                        } else {
+                            document.getElementById('footerSocialLinks').innerHTML = '<p style="color: var(--text-secondary);">No social links added yet</p>';
+                        }
+                        return;
                     }
-                    if (config.name) {
-                        document.getElementById('headerClubName').textContent = config.name;
-                    }
-                    
-                    // Update footer
-                    if (config.description) {
-                        document.getElementById('footerDescription').textContent = config.description;
-                    }
-                    
-                    // Update social links
-                    if (config.social_links && config.social_links.length > 0) {
-                        const socialLinksHTML = config.social_links.map(link => 
-                            `<a href="${link.url}" target="_blank" rel="noopener noreferrer">${getSocialIcon(link.platform)}</a>`
-                        ).join('');
-                        document.getElementById('footerSocialLinks').innerHTML = socialLinksHTML;
-                    }
-                    return;
                 }
                 
-                // EXISTING - Fallback to localStorage
                 const config = JSON.parse(localStorage.getItem('clubConfig') || '{}');
                 
-                // Update header logo and name
-                if (config.logo) {
-                    document.getElementById('headerLogo').src = config.logo;
-                }
                 if (config.name) {
-                    document.getElementById('headerClubName').textContent = config.name;
+                    document.getElementById('clubName').textContent = config.name;
                 }
                 
-                // Update footer
                 if (config.description) {
                     document.getElementById('footerDescription').textContent = config.description;
                 }
                 
-                // Update social links
-                if (config.socialLinks && config.socialLinks.length > 0) {
-                    const socialLinksHTML = config.socialLinks.map(link => 
-                        `<a href="${link.url}" target="_blank" rel="noopener noreferrer">${getSocialIcon(link.platform)}</a>`
+                if (config.logo) {
+                    document.getElementById('clubLogo').src = config.logo;
+                } else {
+                    document.getElementById('clubLogo').src = 'assets/default-logo.jpg';
+                }
+                
+                const linksData = config.socialLinks || config.social_links;
+                if (linksData && linksData.length > 0) {
+                    const socialContainer = document.getElementById('footerSocialLinks');
+                    socialContainer.innerHTML = linksData.map(link =>
+                        `<a href="${link.url}" target="_blank" rel="noopener noreferrer" class="social-link">${getSocialIcon(link.platform)}</a>`
                     ).join('');
-                    document.getElementById('footerSocialLinks').innerHTML = socialLinksHTML;
+                } else {
+                    document.getElementById('footerSocialLinks').innerHTML = '<p style="color: var(--text-secondary);">No social links added yet</p>';
                 }
             } catch (error) {
                 console.error('Error loading club config:', error);
             }
         }
 
-        /* MODIFIED - Added API integration */
+        function getSocialIcon(platform) {
+            const icons = {
+                facebook: '📘',
+                twitter: '🐦',
+                instagram: '📷',
+                linkedin: '💼',
+                youtube: '📺',
+                github: '🔗',
+                email: '📧'
+            };
+            return icons[platform.toLowerCase()] || '🔗';
+        }
+
         async function loadProjects() {
             try {
-                // NEW - Try API first
-                const result = await getProjects();
-                
-                if (result.success && result.data) {
-                    const projects = result.data;
-                    allProjects = projects.sort((a, b) => {
-                        const statusOrder = { ongoing: 1, planned: 2, completed: 3 };
-                        return (statusOrder[a.status] || 999) - (statusOrder[b.status] || 999);
-                    });
+                if (typeof getProjects === 'function') {
+                    const result = await getProjects();
+                    if (result.success && result.data) {
+                        const projects = result.data;
+                        allProjects = projects.sort((a, b) => {
+                            const statusOrder = { ongoing: 1, planned: 2, completed: 3 };
+                            return (statusOrder[a.status] || 999) - (statusOrder[b.status] || 999);
+                        });
 
-                    updateStatistics();
-                    populateCategoryFilters();applyFilters();
-                    
-                    // Hide loading state
-                    document.getElementById('loadingState').style.display = 'none';
-                    
-                    if (allProjects.length === 0) {
-                        document.getElementById('emptyState').style.display = 'block';
-                    } else {
-                        document.getElementById('projectsGrid').style.display = 'grid';
+                        updateStatistics();
+                        populateCategoryFilters();
+                        applyFilters();
+                        
+                        document.getElementById('loadingState').style.display = 'none';
+                        
+                        if (allProjects.length === 0) {
+                            document.getElementById('emptyState').style.display = 'block';
+                        } else {
+                            document.getElementById('projectsGrid').style.display = 'grid';
+                        }
+                        return;
                     }
-                    return;
                 }
                 
-                // EXISTING - Fallback to localStorage
                 const projects = JSON.parse(localStorage.getItem('projects') || '[]');
                 allProjects = projects.sort((a, b) => {
                     const statusOrder = { ongoing: 1, planned: 2, completed: 3 };
@@ -1021,7 +1753,6 @@
                 populateCategoryFilters();
                 applyFilters();
                 
-                // Hide loading state
                 document.getElementById('loadingState').style.display = 'none';
                 
                 if (allProjects.length === 0) {
@@ -1036,13 +1767,11 @@
             }
         }
 
-        // Update statistics
         function updateStatistics() {
             const total = allProjects.length;
             const completed = allProjects.filter(p => p.status === 'completed').length;
             const ongoing = allProjects.filter(p => p.status === 'ongoing').length;
             
-            // Get unique technologies
             const allTechnologies = new Set();
             allProjects.forEach(project => {
                 if (project.technologies && Array.isArray(project.technologies)) {
@@ -1056,7 +1785,6 @@
             document.getElementById('technologies').textContent = allTechnologies.size;
         }
 
-        // Populate category filters
         function populateCategoryFilters() {
             const categories = new Set();
             allProjects.forEach(project => {
@@ -1075,9 +1803,7 @@
             categoryFiltersContainer.innerHTML = categoryHTML;
         }
 
-        // Initialize filters
         function initializeFilters() {
-            // Status filter buttons
             document.getElementById('statusFilters').addEventListener('click', (e) => {
                 if (e.target.classList.contains('filter-btn')) {
                     document.querySelectorAll('#statusFilters .filter-btn').forEach(btn => {
@@ -1089,7 +1815,6 @@
                 }
             });
 
-            // Category filter buttons (event delegation)
             document.getElementById('categoryFilters').addEventListener('click', (e) => {
                 if (e.target.classList.contains('filter-btn')) {
                     document.querySelectorAll('#categoryFilters .filter-btn').forEach(btn => {
@@ -1102,7 +1827,6 @@
             });
         }
 
-        // Initialize search
         function initializeSearch() {
             const searchInput = document.getElementById('searchInput');
             let debounceTimer;
@@ -1116,10 +1840,8 @@
             });
         }
 
-        // Apply all filters
         function applyFilters() {
             filteredProjects = allProjects.filter(project => {
-                // Search filter
                 const searchMatch = !currentFilters.search || 
                     project.title.toLowerCase().includes(currentFilters.search) ||
                     project.description.toLowerCase().includes(currentFilters.search) ||
@@ -1127,11 +1849,9 @@
                         tech.toLowerCase().includes(currentFilters.search)
                     ));
 
-                // Status filter
                 const statusMatch = currentFilters.status === 'all' || 
                     project.status === currentFilters.status;
 
-                // Category filter
                 const categoryMatch = currentFilters.category === 'all' || 
                     project.category === currentFilters.category;
 
@@ -1141,7 +1861,6 @@
             displayProjects();
         }
 
-        // Display projects
         function displayProjects() {
             const projectsGrid = document.getElementById('projectsGrid');
             const noResultsState = document.getElementById('noResultsState');
@@ -1157,7 +1876,6 @@
             projectsGrid.innerHTML = filteredProjects.map(project => createProjectCard(project)).join('');
         }
 
-        // Create project card HTML
         function createProjectCard(project) {
             const truncatedDesc = truncateText(project.description, 120);
             const techBadges = (project.technologies || []).slice(0, 3).map(tech => 
@@ -1210,7 +1928,6 @@
             `;
         }
 
-        // Show project modal
         function showProjectModal(projectId) {
             const project = allProjects.find(p => p.id === projectId);
             if (!project) return;
@@ -1219,7 +1936,6 @@
             const modalHeader = document.getElementById('modalHeader');
             const modalBody = document.getElementById('modalBody');
 
-            // Populate header
             const headerImageHTML = project.image 
                 ? `<img src="${project.image}" alt="${project.title}">` 
                 : `<span style="color: white; font-size: 5rem;">🤖</span>`;
@@ -1229,14 +1945,12 @@
                 <button class="modal-close" id="modalClose">×</button>
             `;
 
-            // Handle both snake_case (API) and camelCase (localStorage) field names
             const teamMembers = project.team_members || project.teamMembers || [];
             const technologies = project.technologies || [];
             const githubLink = project.github_link || project.githubLink;
             const liveLink = project.live_link || project.liveLink;
             const completionDate = project.completion_date || project.completionDate;
 
-            // Populate body
             const technologiesHTML = technologies.map(tech => 
                 `<span class="tech-item">${tech}</span>`
             ).join('');
@@ -1327,22 +2041,18 @@
             modal.classList.add('active');
             document.body.style.overflow = 'hidden';
 
-            // Re-attach close button event
             document.getElementById('modalClose').addEventListener('click', closeModal);
         }
 
-        // Initialize modal
         function initializeModal() {
             const modal = document.getElementById('projectModal');
             
-            // Close on backdrop click
             modal.addEventListener('click', (e) => {
                 if (e.target === modal) {
                     closeModal();
                 }
             });
 
-            // Close on Escape key
             document.addEventListener('keydown', (e) => {
                 if (e.key === 'Escape' && modal.classList.contains('active')) {
                     closeModal();
@@ -1350,28 +2060,12 @@
             });
         }
 
-        // Close modal
         function closeModal() {
             const modal = document.getElementById('projectModal');
             modal.classList.remove('active');
             document.body.style.overflow = '';
         }
 
-        // Get social icon
-        function getSocialIcon(platform) {
-            const icons = {
-                facebook: '📘',
-                twitter: '🐦',
-                instagram: '📷',
-                linkedin: '💼',
-                youtube: '📺',
-                github: '🔗',
-                email: '📧'
-            };
-            return icons[platform.toLowerCase()] || '🔗';
-        }
-
-        // Format date
         function formatDate(dateString) {
             if (!dateString) return 'N/A';
             try {
@@ -1383,7 +2077,6 @@
             }
         }
 
-        // Truncate text
         function truncateText(text, maxLength) {
             if (!text) return '';
             if (text.length <= maxLength) return text;
