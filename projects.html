@@ -1469,13 +1469,13 @@
                 if (projectItems.length > 0) {
                     slideshowImages = projectItems
                         .filter(item => {
-                            const imageUrl = item.image || item.image_url;
+                            const imageUrl = item.image_url || item.image;
                             const hasImage = imageUrl && imageUrl.trim() !== '';
                             console.log('Project:', item.title, 'Has image:', hasImage, 'URL:', imageUrl);
                             return hasImage;
                         })
                         .map(item => ({
-                            url: item.image || item.image_url,
+                            url: item.image_url || item.image,
                             title: item.title || 'Untitled Project',
                             description: item.description ? item.description.substring(0, 150) : 'Innovation in Progress'
                         }))
