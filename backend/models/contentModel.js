@@ -12,49 +12,79 @@ async function getClubConfig() {
 
 async function updateClubConfig(data) {
   try {
-    const { logo, club_name, club_motto, club_description, social_links } = data;
+    console.log('🔍 updateClubConfig received data:', JSON.stringify(data, null, 2));
+    
+    const { logo, club_name, club_motto, club_description, social_links, logo_url } = data;
+    
+    // Handle both 'logo' and 'logo_url' field names
+    const finalLogo = logo_url || logo;
+    
+    // ✅ FIX: Convert social_links to JSON string if it's an object/array
+    let finalSocialLinks = social_links;
+    if (social_links && typeof social_links === 'object') {
+      finalSocialLinks = JSON.stringify(social_links);
+      console.log('🔄 Converted social_links to JSON string:', finalSocialLinks);
+    }
     
     // Check if config row exists
     const checkResult = await pool.query('SELECT id FROM club_config LIMIT 1');
     
     if (checkResult.rows.length === 0) {
       // Insert if doesn't exist
+      console.log('➕ No config found, inserting new row...');
       const insertQuery = `
         INSERT INTO club_config (logo, club_name, club_motto, club_description, social_links)
-        VALUES ($1, $2, $3, $4, $5)
+        VALUES ($1, $2, $3, $4, $5::jsonb)
         RETURNING *
       `;
       const insertValues = [
-        logo || 'assets/default-logo.jpg',
+        finalLogo || 'assets/default-logo.jpg',
         club_name || 'GSTU Robotics Club',
         club_motto || '',
         club_description || '',
-        social_links || {}
+        finalSocialLinks || '[]'
       ];
+      
+      console.log('📤 Insert values:', insertValues);
       const result = await pool.query(insertQuery, insertValues);
       console.log('✅ Club config inserted:', result.rows[0]);
       return { success: true, data: result.rows[0], error: null };
     }
     
-    // Update existing config - FIXED: removed JSON.stringify
+    // Update existing config
+    console.log('✏️ Updating existing config...');
     const updateQuery = `
       UPDATE club_config 
       SET logo = COALESCE($1, logo),
           club_name = COALESCE($2, club_name),
           club_motto = COALESCE($3, club_motto),
           club_description = COALESCE($4, club_description),
-          social_links = COALESCE($5, social_links),
+          social_links = COALESCE($5::jsonb, social_links),
           updated_at = CURRENT_TIMESTAMP
       WHERE id = (SELECT id FROM club_config LIMIT 1)
       RETURNING *
     `;
-    const values = [logo, club_name, club_motto, club_description, social_links]; // ✅ FIXED
+    
+    const values = [
+      finalLogo, 
+      club_name, 
+      club_motto, 
+      club_description, 
+      finalSocialLinks  // ✅ Now properly stringified
+    ];
+    
+    console.log('📤 Update values:', values);
     const result = await pool.query(updateQuery, values);
     
-    console.log('✅ Club config updated:', result.rows[0]);
+    console.log('✅ Club config updated successfully:', result.rows[0]);
     return { success: true, data: result.rows[0], error: null };
   } catch (error) {
     console.error('❌ Error in updateClubConfig:', error.message);
+    console.error('📋 Error details:', {
+      message: error.message,
+      stack: error.stack,
+      receivedData: data
+    });
     return { success: false, data: null, error: error.message };
   }
 }
