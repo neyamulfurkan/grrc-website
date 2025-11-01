@@ -2822,7 +2822,7 @@
                 logo = await imageToBase64(logoFile);
             }
 
-            const config = {
+             const config = {
                 logo: logo,
                 name: document.getElementById('clubName').value.trim(),
                 motto: document.getElementById('clubMotto').value.trim(),
@@ -2840,15 +2840,29 @@
 
             // Show saving toast
             showToast('Saving configuration...', 'info');
+            
+            console.log('💾 Attempting to save config:', config);
 
-            // ✅ CRITICAL FIX: Clear ALL caches BEFORE saving
+            // Clear ALL caches BEFORE saving
             console.log('🗑️ Clearing all config caches...');
             localStorage.removeItem('cache_clubConfig');
             localStorage.removeItem(STORAGE_KEYS.CLUB_CONFIG);
             localStorage.removeItem('clubConfig');
 
-            // Save to backend
-            await setClubConfig(config);
+            // Save to backend with error handling
+            try {
+                const saveResult = await setClubConfig(config);
+                
+                if (!saveResult || !saveResult.success) {
+                    throw new Error('Backend save returned unsuccessful');
+                }
+                
+                console.log('✅ Config saved successfully to backend');
+            } catch (saveError) {
+                console.error('❌ Save failed:', saveError);
+                showToast(`Failed to save: ${saveError.message}`, 'error');
+                return; // Stop here if save failed
+            }
 
             // ✅ CRITICAL FIX: Force immediate cache update
             console.log('💾 Force-writing config to all cache locations...');

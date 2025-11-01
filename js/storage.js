@@ -126,54 +126,62 @@ async function setClubConfig(configData) {
   }
   
   try {
+    console.log('🔄 Saving club config...', configData);
+    
     const currentResult = await getClubConfig();
     const currentConfig = currentResult.data;
     const updatedConfig = { ...currentConfig, ...configData };
     
     if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady) {
       try {
+        // ✅ CRITICAL FIX: Map ALL fields correctly for backend
         const backendConfig = {
-          club_name: updatedConfig.name,
-          club_motto: updatedConfig.motto,
-          club_description: updatedConfig.description,
-          logo: updatedConfig.logo,
-          social_links: updatedConfig.socialLinks || []
+          club_name: updatedConfig.name || updatedConfig.club_name,
+          club_motto: updatedConfig.motto || updatedConfig.club_motto,
+          club_description: updatedConfig.description || updatedConfig.club_description,
+          logo_url: updatedConfig.logo || updatedConfig.logo_url,
+          social_links: Array.isArray(updatedConfig.socialLinks) 
+            ? updatedConfig.socialLinks 
+            : (Array.isArray(updatedConfig.social_links) ? updatedConfig.social_links : [])
         };
+        
+        console.log('📤 Sending to backend:', backendConfig);
         
         const apiResult = await window.apiClient.updateConfig(backendConfig);
         
         if (apiResult.success) {
-          // ✅ CRITICAL FIX: Clear ALL possible config caches
+          console.log('✅ Backend update successful');
+          
+          // Clear ALL possible config caches
           localStorage.removeItem('cache_clubConfig');
           localStorage.removeItem(STORAGE_KEYS.CLUB_CONFIG);
           localStorage.removeItem('clubConfig');
           
-          // ✅ CRITICAL FIX: Save with BOTH keys for compatibility
-          localStorage.setItem(STORAGE_KEYS.CLUB_CONFIG, JSON.stringify(updatedConfig));
-          localStorage.setItem('clubConfig', JSON.stringify(updatedConfig));
-          localStorage.setItem('cache_clubConfig', JSON.stringify(updatedConfig));
+          // Map backend response back to frontend format
+          const savedConfig = {
+            name: backendConfig.club_name,
+            motto: backendConfig.club_motto,
+            description: backendConfig.club_description,
+            logo: backendConfig.logo_url,
+            socialLinks: backendConfig.social_links
+          };
           
-          console.log('✅ Club config saved to backend and all caches cleared');
-          return { success: true };
+          // Save with BOTH keys for compatibility
+          localStorage.setItem(STORAGE_KEYS.CLUB_CONFIG, JSON.stringify(savedConfig));
+          localStorage.setItem('clubConfig', JSON.stringify(savedConfig));
+          localStorage.setItem('cache_clubConfig', JSON.stringify(savedConfig));
+          
+          console.log('✅ Club config saved to backend and cached locally');
+          return { success: true, data: savedConfig };
         } else {
           throw new Error(apiResult.error || 'Failed to update club configuration');
         }
       } catch (apiError) {
-        console.warn('⚠️ API update failed:', apiError.message);
-        throw apiError;
+        console.error('❌ API update failed:', apiError);
+        throw new Error(`Backend save failed: ${apiError.message}`);
       }
     } else {
-      // ✅ CRITICAL FIX: Clear ALL caches even in fallback mode
-      localStorage.removeItem('cache_clubConfig');
-      localStorage.removeItem(STORAGE_KEYS.CLUB_CONFIG);
-      localStorage.removeItem('clubConfig');
-      
-      localStorage.setItem(STORAGE_KEYS.CLUB_CONFIG, JSON.stringify(updatedConfig));
-      localStorage.setItem('clubConfig', JSON.stringify(updatedConfig));
-      localStorage.setItem('cache_clubConfig', JSON.stringify(updatedConfig));
-      
-      console.log('✅ Club config saved locally (API not available)');
-      return { success: true };
+      throw new Error('API client not available - cannot save to backend');
     }
   } catch (error) {
     console.error('❌ Failed to update club config:', error);
