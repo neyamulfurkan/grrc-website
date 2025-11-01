@@ -117,65 +117,92 @@ async function loadClubConfiguration() {
 function updateClubConfigDOM(config) {
   if (!config) return;
   
-  // Update logo
-  const logoElements = document.querySelectorAll('.club-logo, #sidebarLogo');
+  console.log('🎨 Updating DOM with config:', config);
+  
+  // ✅ CRITICAL FIX: Update ALL possible logo selectors
+  const logoElements = document.querySelectorAll('.club-logo, #sidebarLogo, #headerLogo, #clubLogo, #footerLogo, .logo');
   logoElements.forEach(el => {
-    if (config.logo) {
-      el.src = config.logo;
-      el.alt = config.shortName || 'Club Logo';
+    const logoValue = config.logo || config.logo_url;
+    if (logoValue) {
+      // Add timestamp to force cache bypass
+      const logoUrl = logoValue.includes('?') 
+        ? logoValue + '&t=' + Date.now()
+        : logoValue + '?t=' + Date.now();
+      el.src = logoUrl;
+      el.alt = config.shortName || config.short_name || 'Club Logo';
       el.onerror = function() {
         this.src = 'assets/default-logo.jpg';
       };
+      console.log('✅ Logo updated:', el.id || el.className);
     }
   });
   
-  // Update club name
-  const clubNameElements = document.querySelectorAll('.club-name, .admin-subtitle');
+  // ✅ CRITICAL FIX: Update ALL possible club name selectors
+  const clubNameElements = document.querySelectorAll('.club-name, .admin-subtitle, #headerClubName, #clubName, #heroClubName, #footerClubName, #sidebarTitle');
   clubNameElements.forEach(el => {
-    el.textContent = config.name || config.club_name || 'Robotics Club';
+    const nameValue = config.name || config.club_name;
+    if (nameValue) {
+      el.textContent = nameValue;
+      console.log('✅ Name updated:', el.id || el.className);
+    }
   });
   
-  // Update motto
-  const clubMottoElements = document.querySelectorAll('.club-motto');
+  // ✅ CRITICAL FIX: Update ALL possible motto selectors
+  const clubMottoElements = document.querySelectorAll('.club-motto, #heroMotto, .admin-motto');
   clubMottoElements.forEach(el => {
-    el.textContent = config.motto || config.club_motto || '';
+    const mottoValue = config.motto || config.club_motto;
+    if (mottoValue) {
+      el.textContent = mottoValue;
+      console.log('✅ Motto updated:', el.id || el.className);
+    }
   });
   
-  // Update description
-  const clubDescriptionElements = document.querySelectorAll('.club-description');
+  // ✅ CRITICAL FIX: Update ALL possible description selectors
+  const clubDescriptionElements = document.querySelectorAll('.club-description, #heroDescription, #footerDescription');
   clubDescriptionElements.forEach(el => {
-    el.textContent = config.description || config.club_description || '';
+    const descValue = config.description || config.club_description;
+    if (descValue) {
+      el.textContent = descValue;
+      console.log('✅ Description updated:', el.id || el.className);
+    }
   });
   
   // Update social links
-  if (config.social_links && Array.isArray(config.social_links) && config.social_links.length > 0) {
-    const socialContainer = document.querySelector('.social-links-container');
-    if (socialContainer) {
-      socialContainer.innerHTML = '';
-      
-      config.social_links.forEach(link => {
-        if (link.url) {
-          const anchor = document.createElement('a');
-          anchor.href = link.url;
-          anchor.target = '_blank';
-          anchor.rel = 'noopener noreferrer';
-          anchor.className = 'social-link';
-          anchor.title = link.platform || 'Social Link';
-          
-          const icon = document.createElement('span');
-          icon.textContent = link.icon || '🔗';
-          anchor.appendChild(icon);
-          
-          socialContainer.appendChild(anchor);
-        }
-      });
-    }
+  const socialLinks = config.social_links || config.socialLinks;
+  if (socialLinks && Array.isArray(socialLinks) && socialLinks.length > 0) {
+    const socialContainers = document.querySelectorAll('.social-links-container, .social-links, #socialLinks, #footerSocialLinks');
+    socialContainers.forEach(socialContainer => {
+      if (socialContainer) {
+        socialContainer.innerHTML = '';
+        
+        socialLinks.forEach(link => {
+          if (link.url) {
+            const anchor = document.createElement('a');
+            anchor.href = link.url;
+            anchor.target = '_blank';
+            anchor.rel = 'noopener noreferrer';
+            anchor.className = 'social-link';
+            anchor.title = link.platform || 'Social Link';
+            
+            const icon = document.createElement('span');
+            icon.textContent = link.icon || '🔗';
+            anchor.appendChild(icon);
+            
+            socialContainer.appendChild(anchor);
+          }
+        });
+        console.log('✅ Social links updated:', socialContainer.id || socialContainer.className);
+      }
+    });
   }
   
   // Update page title
-  document.title = `${config.shortName || 'Club'} - ${config.name || config.club_name || 'Robotics Club'}`;
+  const titleName = config.name || config.club_name || 'Robotics Club';
+  const titleShort = config.shortName || config.short_name || 'Club';
+  document.title = `${titleShort} - ${titleName}`;
+  
+  console.log('✅ DOM update complete');
 }
-
 // =============================================================================
 // EVENTS
 // =============================================================================

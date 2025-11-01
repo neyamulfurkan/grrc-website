@@ -839,38 +839,83 @@
             document.getElementById('currentYear').textContent = new Date().getFullYear();
         });
 
-        /* MODIFIED - Added API integration */
+        /* FIXED - Complete config loading with header updates */
         async function loadClubConfig() {
             try {
-                // NEW - Try API first
+                console.log('🔄 Loading club config for events page...');
+                
+                // Try to get fresh config from API
+                let config = null;
+                
                 if (typeof getClubConfig === 'function') {
                     const result = await getClubConfig();
                     if (result.success && result.data) {
-                        const config = result.data;
-                        
-                        // Update footer
-                        if (config.name) {
-                            document.getElementById('footerClubName').textContent = config.name;
-                        }
-                        if (config.description) {
-                            document.getElementById('footerDescription').textContent = config.description;
-                        }
-                        
-                        // Load social links
-                        if (config.social_links && config.social_links.length > 0) {
-                            const socialLinksHtml = config.social_links.map(link => 
-                                `<a href="${link.url}" target="_blank" rel="noopener noreferrer" class="social-link">
-                                    ${getSocialIcon(link.platform)}
-                                </a>`
-                            ).join('');
-                            document.getElementById('footerSocialLinks').innerHTML = socialLinksHtml;
-                        }
-                        return;
+                        config = result.data;
+                        console.log('✅ Config loaded from API:', config);
                     }
                 }
                 
-                // EXISTING - Fallback to localStorage
-                const config = JSON.parse(localStorage.getItem('clubConfig') || '{}');
+                // Fallback to localStorage
+                if (!config) {
+                    const cachedConfig = localStorage.getItem('clubConfig') || 
+                                        localStorage.getItem('cache_clubConfig') ||
+                                        localStorage.getItem('STORAGE_KEYS.CLUB_CONFIG');
+                    config = cachedConfig ? JSON.parse(cachedConfig) : {};
+                    console.log('✅ Config loaded from cache:', config);
+                }
+                
+                // CRITICAL FIX: Update HEADER logo and name
+                const headerLogo = document.getElementById('headerLogo');
+                const headerClubName = document.getElementById('headerClubName');
+                
+                if (headerLogo && (config.logo || config.logo_url)) {
+                    const logoUrl = (config.logo || config.logo_url);
+                    const cacheBustedUrl = logoUrl.includes('?') 
+                        ? logoUrl + '&t=' + Date.now()
+                        : logoUrl + '?t=' + Date.now();
+                    headerLogo.src = cacheBustedUrl;
+                    headerLogo.onerror = function() {
+                        this.src = 'assets/default-logo.jpg';
+                    };
+                    console.log('✅ Header logo updated');
+                }
+                
+                if (headerClubName && (config.name || config.club_name)) {
+                    headerClubName.textContent = config.name || config.club_name;
+                    console.log('✅ Header club name updated to:', config.name || config.club_name);
+                }
+                
+                // Update footer
+                if (config.name || config.club_name) {
+                    const footerName = document.getElementById('footerClubName');
+                    if (footerName) {
+                        footerName.textContent = config.name || config.club_name;
+                    }
+                }
+                
+                if (config.description || config.club_description) {
+                    const footerDesc = document.getElementById('footerDescription');
+                    if (footerDesc) {
+                        footerDesc.textContent = config.description || config.club_description;
+                    }
+                }
+                
+                // Load social links
+                const socialLinks = config.social_links || config.socialLinks;
+                if (socialLinks && socialLinks.length > 0) {
+                    const socialLinksHtml = socialLinks.map(link => 
+                        `<a href="${link.url}" target="_blank" rel="noopener noreferrer" class="social-link">
+                            ${getSocialIcon(link.platform)}
+                        </a>`
+                    ).join('');
+                    const socialContainer = document.getElementById('footerSocialLinks');
+                    if (socialContainer) {
+                        socialContainer.innerHTML = socialLinksHtml;
+                    }
+                }
+                
+                console.log('✅ Club config loaded successfully');
+                return;
                 
                 // Update footer
                 if (config.name) {

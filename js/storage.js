@@ -143,9 +143,17 @@ async function setClubConfig(configData) {
         const apiResult = await window.apiClient.updateConfig(backendConfig);
         
         if (apiResult.success) {
-          localStorage.setItem(STORAGE_KEYS.CLUB_CONFIG, JSON.stringify(updatedConfig));
+          // ✅ CRITICAL FIX: Clear ALL possible config caches
           localStorage.removeItem('cache_clubConfig');
-          console.log('✅ Club config saved to backend and cached locally');
+          localStorage.removeItem(STORAGE_KEYS.CLUB_CONFIG);
+          localStorage.removeItem('clubConfig');
+          
+          // ✅ CRITICAL FIX: Save with BOTH keys for compatibility
+          localStorage.setItem(STORAGE_KEYS.CLUB_CONFIG, JSON.stringify(updatedConfig));
+          localStorage.setItem('clubConfig', JSON.stringify(updatedConfig));
+          localStorage.setItem('cache_clubConfig', JSON.stringify(updatedConfig));
+          
+          console.log('✅ Club config saved to backend and all caches cleared');
           return { success: true };
         } else {
           throw new Error(apiResult.error || 'Failed to update club configuration');
@@ -155,8 +163,15 @@ async function setClubConfig(configData) {
         throw apiError;
       }
     } else {
-      localStorage.setItem(STORAGE_KEYS.CLUB_CONFIG, JSON.stringify(updatedConfig));
+      // ✅ CRITICAL FIX: Clear ALL caches even in fallback mode
       localStorage.removeItem('cache_clubConfig');
+      localStorage.removeItem(STORAGE_KEYS.CLUB_CONFIG);
+      localStorage.removeItem('clubConfig');
+      
+      localStorage.setItem(STORAGE_KEYS.CLUB_CONFIG, JSON.stringify(updatedConfig));
+      localStorage.setItem('clubConfig', JSON.stringify(updatedConfig));
+      localStorage.setItem('cache_clubConfig', JSON.stringify(updatedConfig));
+      
       console.log('✅ Club config saved locally (API not available)');
       return { success: true };
     }

@@ -1318,26 +1318,22 @@
 
        async function loadClubConfigToSidebar() {
     try {
-        // CRITICAL: Clear ALL caches first
-        localStorage.removeItem('cache_clubConfig');
-        localStorage.removeItem('clubConfig');
-        localStorage.removeItem(STORAGE_KEYS.CLUB_CONFIG);
-        
         console.log('🔄 Loading sidebar config...');
         
+        // ✅ CRITICAL FIX: Try getting fresh config WITHOUT clearing cache first
         const result = await getClubConfig();
         if (result.success && result.data) {
             const config = result.data;
             const logo = document.getElementById('sidebarLogo');
             const subtitle = document.querySelector('.admin-subtitle');
             
-            console.log('📦 Config loaded:', config);
+            console.log('📦 Fresh config loaded:', config);
             
             if (logo && config.logo) {
                 // Add timestamp to force cache bypass
                 const logoUrl = config.logo.includes('?') 
-                    ? config.logo + '&cb=' + Date.now()
-                    : config.logo + '?cb=' + Date.now();
+                    ? config.logo + '&t=' + Date.now()
+                    : config.logo + '?t=' + Date.now();
                     
                 logo.src = logoUrl;
                 logo.onerror = function() {
@@ -1347,27 +1343,38 @@
                 console.log('✅ Logo updated to:', logoUrl);
             }
             
-            if (subtitle && config.name) {
-                subtitle.textContent = config.name;
-                console.log('✅ Name updated to:', config.name);
+            if (subtitle) {
+                const nameValue = config.name || config.club_name;
+                if (nameValue) {
+                    subtitle.textContent = nameValue;
+                    console.log('✅ Name updated to:', nameValue);
+                }
             }
             return;
         }
 
-        console.warn('Using fallback config');
-        const config = JSON.parse(localStorage.getItem('clubConfig')) || {};
+        // Fallback
+        console.warn('Using fallback config from localStorage');
+        const cachedConfig = localStorage.getItem('clubConfig') || localStorage.getItem('cache_clubConfig');
+        const config = cachedConfig ? JSON.parse(cachedConfig) : {};
         const logo = document.getElementById('sidebarLogo');
         const subtitle = document.querySelector('.admin-subtitle');
         
         if (logo && config.logo) {
-            logo.src = config.logo;
+            const logoUrl = config.logo.includes('?') 
+                ? config.logo + '&t=' + Date.now()
+                : config.logo + '?t=' + Date.now();
+            logo.src = logoUrl;
             logo.onerror = function() {
                 this.src = 'assets/default-logo.jpg';
             };
         }
         
-        if (subtitle && config.name) {
-            subtitle.textContent = config.name;
+        if (subtitle) {
+            const nameValue = config.name || config.club_name;
+            if (nameValue) {
+                subtitle.textContent = nameValue;
+            }
         }
     } catch (error) {
         console.error('Error loading sidebar config:', error);
@@ -2795,7 +2802,7 @@
             });
         }
 
-        function setupClubConfigForm() {
+       function setupClubConfigForm() {
     const form = document.getElementById('clubConfigForm');
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -2834,50 +2841,52 @@
             // Show saving toast
             showToast('Saving configuration...', 'info');
 
-            // Save to backend
-            await setClubConfig(config);
-
-            // Clear ALL config caches everywhere
+            // ✅ CRITICAL FIX: Clear ALL caches BEFORE saving
+            console.log('🗑️ Clearing all config caches...');
             localStorage.removeItem('cache_clubConfig');
             localStorage.removeItem(STORAGE_KEYS.CLUB_CONFIG);
             localStorage.removeItem('clubConfig');
 
-            // CRITICAL: Store config immediately BEFORE updating UI
-localStorage.setItem(STORAGE_KEYS.CLUB_CONFIG, JSON.stringify(config));
-localStorage.setItem('clubConfig', JSON.stringify(config));
+            // Save to backend
+            await setClubConfig(config);
 
-// Update sidebar UI immediately
-const sidebarLogo = document.getElementById('sidebarLogo');
-const sidebarSubtitle = document.querySelector('.admin-subtitle');
+            // ✅ CRITICAL FIX: Force immediate cache update
+            console.log('💾 Force-writing config to all cache locations...');
+            localStorage.setItem(STORAGE_KEYS.CLUB_CONFIG, JSON.stringify(config));
+            localStorage.setItem('clubConfig', JSON.stringify(config));
+            localStorage.setItem('cache_clubConfig', JSON.stringify(config));
 
-console.log('🎯 Updating sidebar with:', config);
+            // ✅ CRITICAL FIX: Update sidebar UI with cache-busting
+            const sidebarLogo = document.getElementById('sidebarLogo');
+            const sidebarSubtitle = document.querySelector('.admin-subtitle');
 
-if (sidebarLogo && config.logo) {
-    // Force cache-busting by adding timestamp
-    const logoUrl = config.logo.includes('?') 
-        ? config.logo + '&cb=' + Date.now()
-        : config.logo + '?cb=' + Date.now();
-    sidebarLogo.src = logoUrl;
-    console.log('✅ Sidebar logo set to:', logoUrl);
-}
+            if (sidebarLogo && config.logo) {
+                const logoUrl = config.logo.includes('?') 
+                    ? config.logo + '&t=' + Date.now()
+                    : config.logo + '?t=' + Date.now();
+                sidebarLogo.src = logoUrl;
+                console.log('✅ Sidebar logo updated');
+            }
 
-if (sidebarSubtitle && config.name) {
-    sidebarSubtitle.textContent = config.name;
-    console.log('✅ Sidebar name set to:', config.name);
-}
+            if (sidebarSubtitle && config.name) {
+                sidebarSubtitle.textContent = config.name;
+                console.log('✅ Sidebar name updated');
+            }
 
-showToast('Configuration saved! Changes will apply on page reload.', 'success');
+            showToast('Configuration saved! Reloading page...', 'success');
 
-// Wait 1 second to show changes, then reload
-setTimeout(async () => {
-    console.log('🔄 Reloading page...');
-    // Clear service worker cache if exists
-    if ('caches' in window) {
-        const cacheNames = await caches.keys();
-        await Promise.all(cacheNames.map(name => caches.delete(name)));
-    }
-    window.location.reload(true);
-}, 1000);
+            // ✅ CRITICAL FIX: Wait longer and clear service worker cache
+            setTimeout(async () => {
+                console.log('🔄 Clearing service worker caches...');
+                if ('caches' in window) {
+                    const cacheNames = await caches.keys();
+                    await Promise.all(cacheNames.map(name => caches.delete(name)));
+                }
+                
+                console.log('🔄 Performing hard reload...');
+                // Hard reload - bypasses cache
+                window.location.reload(true);
+            }, 1500);
         } catch (error) {
             console.error('Error saving config:', error);
             

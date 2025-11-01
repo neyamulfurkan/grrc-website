@@ -793,21 +793,54 @@
         let searchQuery = '';
         let currentLightboxIndex = 0;
 
-        /* MODIFIED - Added API integration with localStorage fallback */
+        /* FIXED - Complete config loading */
         async function loadClubConfig() {
             try {
-                // NEW - Try API first
-                const result = await getConfig();
-                if (result.success && result.data) {
-                    const config = result.data;
-                    
-                    // Update header
-                    if (config.logo) {
-                        document.getElementById('headerLogo').src = config.logo;
+                console.log('🔄 Loading club config for gallery page...');
+                
+                // Try API first
+                let config = null;
+                if (typeof getClubConfig === 'function') {
+                    const result = await getClubConfig();
+                    if (result.success && result.data) {
+                        config = result.data;
+                        console.log('✅ Config from API:', config);
                     }
-                    if (config.name) {
-                        document.getElementById('headerClubName').textContent = config.name;
+                }
+                
+                // Fallback to localStorage
+                if (!config) {
+                    const cachedConfig = localStorage.getItem('clubConfig') || 
+                                        localStorage.getItem('cache_clubConfig');
+                    config = cachedConfig ? JSON.parse(cachedConfig) : {};
+                    console.log('✅ Config from cache:', config);
+                }
+                
+                // Update header LOGO with cache busting
+                if (config.logo || config.logo_url) {
+                    const logoUrl = config.logo || config.logo_url;
+                    const cacheBustedUrl = logoUrl.includes('?') 
+                        ? logoUrl + '&t=' + Date.now()
+                        : logoUrl + '?t=' + Date.now();
+                    const headerLogo = document.getElementById('headerLogo');
+                    if (headerLogo) {
+                        headerLogo.src = cacheBustedUrl;
+                        headerLogo.onerror = function() {
+                            this.src = 'assets/default-logo.jpg';
+                        };
+                        console.log('✅ Header logo updated');
                     }
+                }
+                
+                // Update header NAME
+                if (config.name || config.club_name) {
+                    const name = config.name || config.club_name;
+                    const headerName = document.getElementById('headerClubName');
+                    if (headerName) {
+                        headerName.textContent = name;
+                        console.log('✅ Header name updated to:', name);
+                    }
+                }
                     
                     // Update footer
                     if (config.name) {
