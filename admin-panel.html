@@ -1318,40 +1318,43 @@
 
        async function loadClubConfigToSidebar() {
     try {
-        // Clear cache first to force fresh data
+        // CRITICAL: Clear ALL caches first
         localStorage.removeItem('cache_clubConfig');
         localStorage.removeItem('clubConfig');
+        localStorage.removeItem(STORAGE_KEYS.CLUB_CONFIG);
+        
+        console.log('🔄 Loading sidebar config...');
         
         const result = await getClubConfig();
         if (result.success && result.data) {
             const config = result.data;
             const logo = document.getElementById('sidebarLogo');
             const subtitle = document.querySelector('.admin-subtitle');
-            const titleEl = document.getElementById('sidebarTitle');
+            
+            console.log('📦 Config loaded:', config);
             
             if (logo && config.logo) {
-                // Force reload by adding timestamp to prevent cache
+                // Add timestamp to force cache bypass
                 const logoUrl = config.logo.includes('?') 
-                    ? config.logo + '&t=' + Date.now()
-                    : config.logo + '?t=' + Date.now();
+                    ? config.logo + '&cb=' + Date.now()
+                    : config.logo + '?cb=' + Date.now();
+                    
                 logo.src = logoUrl;
                 logo.onerror = function() {
+                    console.warn('Logo failed to load, using default');
                     this.src = 'assets/default-logo.jpg';
                 };
+                console.log('✅ Logo updated to:', logoUrl);
             }
             
             if (subtitle && config.name) {
                 subtitle.textContent = config.name;
+                console.log('✅ Name updated to:', config.name);
             }
-            
-            if (titleEl && config.shortName) {
-                titleEl.textContent = config.shortName + ' Admin Panel';
-            }
-            
-            console.log('✅ Sidebar updated with:', config.name, config.logo);
             return;
         }
 
+        console.warn('Using fallback config');
         const config = JSON.parse(localStorage.getItem('clubConfig')) || {};
         const logo = document.getElementById('sidebarLogo');
         const subtitle = document.querySelector('.admin-subtitle');
@@ -1370,7 +1373,6 @@
         console.error('Error loading sidebar config:', error);
     }
 }
-
         async function loadDashboardStats() {
             try {
                 const [membersResult, eventsResult, projectsResult, galleryResult] = await Promise.all([
@@ -2840,33 +2842,42 @@
             localStorage.removeItem(STORAGE_KEYS.CLUB_CONFIG);
             localStorage.removeItem('clubConfig');
 
-            // CRITICAL: Manually update sidebar IMMEDIATELY with new values
-            const sidebarLogo = document.getElementById('sidebarLogo');
-            const sidebarSubtitle = document.querySelector('.admin-subtitle');
-            
-            if (sidebarLogo && config.logo) {
-                // Force cache-busting by adding timestamp
-                const logoUrl = config.logo.includes('?') 
-                    ? config.logo + '&t=' + Date.now()
-                    : config.logo + '?t=' + Date.now();
-                sidebarLogo.src = logoUrl;
-                console.log('✅ Sidebar logo updated to:', logoUrl);
-            }
-            
-            if (sidebarSubtitle && config.name) {
-                sidebarSubtitle.textContent = config.name;
-                console.log('✅ Sidebar name updated to:', config.name);
-            }
+            // CRITICAL: Store config immediately BEFORE updating UI
+localStorage.setItem(STORAGE_KEYS.CLUB_CONFIG, JSON.stringify(config));
+localStorage.setItem('clubConfig', JSON.stringify(config));
 
-            // Store new config locally for immediate use
-            localStorage.setItem(STORAGE_KEYS.CLUB_CONFIG, JSON.stringify(config));
+// Update sidebar UI immediately
+const sidebarLogo = document.getElementById('sidebarLogo');
+const sidebarSubtitle = document.querySelector('.admin-subtitle');
 
-            showToast('Configuration saved! Reloading page in 2 seconds...', 'success');
+console.log('🎯 Updating sidebar with:', config);
 
-            // Force full page reload after 2 seconds to refresh everything
-            setTimeout(() => {
-                window.location.reload(true);
-            }, 2000);
+if (sidebarLogo && config.logo) {
+    // Force cache-busting by adding timestamp
+    const logoUrl = config.logo.includes('?') 
+        ? config.logo + '&cb=' + Date.now()
+        : config.logo + '?cb=' + Date.now();
+    sidebarLogo.src = logoUrl;
+    console.log('✅ Sidebar logo set to:', logoUrl);
+}
+
+if (sidebarSubtitle && config.name) {
+    sidebarSubtitle.textContent = config.name;
+    console.log('✅ Sidebar name set to:', config.name);
+}
+
+showToast('Configuration saved! Changes will apply on page reload.', 'success');
+
+// Wait 1 second to show changes, then reload
+setTimeout(async () => {
+    console.log('🔄 Reloading page...');
+    // Clear service worker cache if exists
+    if ('caches' in window) {
+        const cacheNames = await caches.keys();
+        await Promise.all(cacheNames.map(name => caches.delete(name)));
+    }
+    window.location.reload(true);
+}, 1000);
         } catch (error) {
             console.error('Error saving config:', error);
             
