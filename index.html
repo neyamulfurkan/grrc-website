@@ -566,9 +566,10 @@
                             };
                         }
                         // Update social links
-                        if (config.socialLinks && config.socialLinks.length > 0) {
+                        const linksData = config.socialLinks || config.social_links;
+                        if (linksData && linksData.length > 0) {
                             const socialContainer = document.getElementById('socialLinks');
-                            socialContainer.innerHTML = config.socialLinks.map(link => 
+                            socialContainer.innerHTML = linksData.map(link =>
                                 `<a href="${link.url}" target="_blank" rel="noopener noreferrer" class="social-link" title="${link.platform}">
                                     ${getSocialIcon(link.platform)}
                                 </a>`
@@ -609,9 +610,10 @@
                 }
                 
                 // Update social links
-                if (config.socialLinks && config.socialLinks.length > 0) {
+                const linksData = config.socialLinks || config.social_links;
+                if (linksData && linksData.length > 0) {
                     const socialContainer = document.getElementById('socialLinks');
-                    socialContainer.innerHTML = config.socialLinks.map(link => 
+                    socialContainer.innerHTML = linksData.map(link =>
                         `<a href="${link.url}" target="_blank" rel="noopener noreferrer" class="social-link" title="${link.platform}">
                             ${getSocialIcon(link.platform)}
                         </a>`
