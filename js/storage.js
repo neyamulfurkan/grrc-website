@@ -1,14 +1,3 @@
-/**
- * storage.js - Local Storage Management System
- * FIXED VERSION - Properly exposes all functions globally
- * Handles all localStorage operations for the club website
- * Version: 2.1.0 - Fixed global function exposure
- */
-
-// =============================================================================
-// STORAGE KEYS CONFIGURATION
-// =============================================================================
-
 const STORAGE_KEYS = {
   CLUB_CONFIG: 'clubConfig',
   ADMINS: 'admins',
@@ -26,13 +15,8 @@ const SESSION_KEYS = {
   REMEMBERED_ADMIN: 'rememberedAdmin'
 };
 
-// Make globally available
 window.STORAGE_KEYS = STORAGE_KEYS;
 window.SESSION_KEYS = SESSION_KEYS;
-
-// =============================================================================
-// DEFAULT DATA STRUCTURES
-// =============================================================================
 
 const CLUB_DEFAULTS = {
   name: 'GSTU Robotics & Research Club',
@@ -44,13 +28,9 @@ const CLUB_DEFAULTS = {
   phone: '+880123456789',
   address: 'Dhaka, Bangladesh',
   foundedYear: '2020',
-  logo_url: 'assets/default-logo.jpg',
+  logo: 'assets/default-logo.jpg',
   socialLinks: []
 };
-
-// =============================================================================
-// INITIALIZATION
-// =============================================================================
 
 function initializeStorage() {
   try {
@@ -87,10 +67,6 @@ function resetStorage() {
   }
 }
 
-// =============================================================================
-// AUTHENTICATION HELPERS
-// =============================================================================
-
 function isAuthenticated() {
   try {
     const session = sessionStorage.getItem('adminSession');
@@ -102,13 +78,8 @@ function isAuthenticated() {
   }
 }
 
-// =============================================================================
-// CLUB CONFIGURATION
-// =============================================================================
-
 async function getClubConfig() {
   try {
-    // Try API first if available
     if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady) {
       console.log('🔄 Fetching club config from API...');
       try {
@@ -121,7 +92,6 @@ async function getClubConfig() {
         
         if (response.success && response.data) {
           console.log('✅ Club config fetched from API');
-          // Map backend logo_url to frontend logo
           const mappedData = { ...response.data };
           if (mappedData.logo_url) {
             mappedData.logo = mappedData.logo_url;
@@ -134,7 +104,6 @@ async function getClubConfig() {
       }
     }
     
-    // Fallback to localStorage
     const cached = localStorage.getItem(STORAGE_KEYS.CLUB_CONFIG);
     if (cached) {
       return { success: true, data: JSON.parse(cached) };
@@ -161,21 +130,18 @@ async function setClubConfig(configData) {
     const currentConfig = currentResult.data;
     const updatedConfig = { ...currentConfig, ...configData };
     
-    // Try API if available
     if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady) {
       try {
-        // Map frontend 'logo' to backend 'logo_url'
-    const backendConfig = { ...updatedConfig };
-    if (backendConfig.logo) {
-      backendConfig.logo_url = backendConfig.logo;
-      delete backendConfig.logo;
-    }
-    
-    const apiResult = await window.apiClient.updateConfig(backendConfig);
+        const backendConfig = { ...updatedConfig };
+        if (backendConfig.logo) {
+          backendConfig.logo_url = backendConfig.logo;
+          delete backendConfig.logo;
+        }
+        
+        const apiResult = await window.apiClient.updateConfig(backendConfig);
         
         if (apiResult.success) {
           localStorage.setItem(STORAGE_KEYS.CLUB_CONFIG, JSON.stringify(updatedConfig));
-          // Clear cache
           localStorage.removeItem('cache_clubConfig');
           console.log('✅ Club config saved to backend and cached locally');
           return { success: true };
@@ -187,7 +153,6 @@ async function setClubConfig(configData) {
         throw apiError;
       }
     } else {
-      // Fallback to localStorage only
       localStorage.setItem(STORAGE_KEYS.CLUB_CONFIG, JSON.stringify(updatedConfig));
       localStorage.removeItem('cache_clubConfig');
       console.log('✅ Club config saved locally (API not available)');
@@ -199,13 +164,8 @@ async function setClubConfig(configData) {
   }
 }
 
-// =============================================================================
-// ADMINS
-// =============================================================================
-
 async function getAdmins() {
   try {
-    // Try API first if available
     if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady) {
       try {
         const response = await window.apiClient.getAdmins();
@@ -219,7 +179,6 @@ async function getAdmins() {
       }
     }
     
-    // Fallback to localStorage
     const cached = localStorage.getItem(STORAGE_KEYS.ADMINS);
     return { success: true, data: cached ? JSON.parse(cached) : [] };
   } catch (error) {
@@ -253,7 +212,6 @@ async function addAdmin(adminData) {
       createdAt: getCurrentTimestamp()
     };
     
-    // Try API if available
     if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady) {
       try {
         const apiResult = await window.apiClient.createAdmin(newAdmin);
@@ -275,7 +233,6 @@ async function addAdmin(adminData) {
         throw apiError;
       }
     } else {
-      // Fallback to localStorage only
       admins.push(newAdmin);
       localStorage.setItem(STORAGE_KEYS.ADMINS, JSON.stringify(admins));
       console.log('✅ Admin saved locally (API not available)');
@@ -309,7 +266,6 @@ async function deleteAdmin(adminId) {
   }
   
   try {
-    // Try API if available
     if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady) {
       try {
         const apiResult = await window.apiClient.deleteAdmin(adminId);
@@ -326,7 +282,6 @@ async function deleteAdmin(adminId) {
         throw apiError;
       }
     } else {
-      // Fallback to localStorage only
       localStorage.setItem(STORAGE_KEYS.ADMINS, JSON.stringify(filtered));
       console.log('✅ Admin deleted locally (API not available)');
       return { success: true };
@@ -337,13 +292,8 @@ async function deleteAdmin(adminId) {
   }
 }
 
-// =============================================================================
-// MEMBERS
-// =============================================================================
-
 async function getMembers(filters = {}) {
   try {
-    // Try API first if available
     if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady) {
       try {
         const response = await window.apiClient.getMembers();
@@ -369,7 +319,6 @@ async function getMembers(filters = {}) {
       }
     }
     
-    // Fallback to localStorage
     const cached = localStorage.getItem(STORAGE_KEYS.MEMBERS);
     let result = cached ? JSON.parse(cached) : [];
     
@@ -423,10 +372,19 @@ async function addMember(memberData) {
       createdAt: getCurrentTimestamp()
     };
     
-    // Try API if available
     if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady) {
       try {
-        const apiResult = await window.apiClient.createMember(newMember);
+        const backendMember = { ...newMember };
+        if (backendMember.joinedDate) {
+          backendMember.joined_date = backendMember.joinedDate;
+          delete backendMember.joinedDate;
+        }
+        if (backendMember.createdAt) {
+          backendMember.created_at = backendMember.createdAt;
+          delete backendMember.createdAt;
+        }
+        
+        const apiResult = await window.apiClient.createMember(backendMember);
         
         if (apiResult.success) {
           if (apiResult.data && apiResult.data.id) {
@@ -435,7 +393,6 @@ async function addMember(memberData) {
           
           members.push(newMember);
           localStorage.setItem(STORAGE_KEYS.MEMBERS, JSON.stringify(members));
-          // Clear caches
           localStorage.removeItem('cache_members');
           console.log('✅ Member saved:', newMember.name);
           return { success: true, data: newMember };
@@ -447,7 +404,6 @@ async function addMember(memberData) {
         throw apiError;
       }
     } else {
-      // Fallback to localStorage only
       members.push(newMember);
       localStorage.setItem(STORAGE_KEYS.MEMBERS, JSON.stringify(members));
       localStorage.removeItem('cache_members');
@@ -480,15 +436,23 @@ async function updateMember(memberId, updates) {
   try {
     const updatedMember = { ...members[index], ...updates };
     
-    // Try API if available
     if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady) {
       try {
-        const apiResult = await window.apiClient.updateMember(memberId, updatedMember);
+        const backendMember = { ...updatedMember };
+        if (backendMember.joinedDate) {
+          backendMember.joined_date = backendMember.joinedDate;
+          delete backendMember.joinedDate;
+        }
+        if (backendMember.createdAt) {
+          backendMember.created_at = backendMember.createdAt;
+          delete backendMember.createdAt;
+        }
+        
+        const apiResult = await window.apiClient.updateMember(memberId, backendMember);
         
         if (apiResult.success) {
           members[index] = updatedMember;
           localStorage.setItem(STORAGE_KEYS.MEMBERS, JSON.stringify(members));
-          // Clear caches
           localStorage.removeItem('cache_members');
           console.log('✅ Member updated');
           return { success: true };
@@ -500,7 +464,6 @@ async function updateMember(memberId, updates) {
         throw apiError;
       }
     } else {
-      // Fallback to localStorage only
       members[index] = updatedMember;
       localStorage.setItem(STORAGE_KEYS.MEMBERS, JSON.stringify(members));
       localStorage.removeItem('cache_members');
@@ -531,14 +494,12 @@ async function deleteMember(memberId) {
   }
   
   try {
-    // Try API if available
     if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady) {
       try {
         const apiResult = await window.apiClient.deleteMember(memberId);
         
         if (apiResult.success) {
           localStorage.setItem(STORAGE_KEYS.MEMBERS, JSON.stringify(filtered));
-          // Clear caches
           localStorage.removeItem('cache_members');
           console.log('✅ Member deleted');
           return { success: true };
@@ -550,7 +511,6 @@ async function deleteMember(memberId) {
         throw apiError;
       }
     } else {
-      // Fallback to localStorage only
       localStorage.setItem(STORAGE_KEYS.MEMBERS, JSON.stringify(filtered));
       localStorage.removeItem('cache_members');
       console.log('✅ Member deleted locally (API not available)');
@@ -562,10 +522,6 @@ async function deleteMember(memberId) {
   }
 }
 
-// =============================================================================
-// EVENTS (Similar pattern - I'll include key functions)
-// =============================================================================
-
 async function getEvents(filters = {}) {
   try {
     if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady) {
@@ -573,8 +529,14 @@ async function getEvents(filters = {}) {
         const response = await window.apiClient.getEvents();
         
         if (response.success && Array.isArray(response.data)) {
-          localStorage.setItem(STORAGE_KEYS.EVENTS, JSON.stringify(response.data));
-          let result = response.data;
+          const mappedData = response.data.map(event => ({
+            ...event,
+            venue: event.location || event.venue,
+            image: event.image_url || event.image,
+            registrationLink: event.registration_link || event.registrationLink
+          }));
+          localStorage.setItem(STORAGE_KEYS.EVENTS, JSON.stringify(mappedData));
+          let result = mappedData;
           
           if (filters.status) {
             result = result.filter(e => e.status === filters.status);
@@ -636,7 +598,19 @@ async function addEvent(eventData) {
     
     if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady) {
       try {
-        const apiResult = await window.apiClient.createEvent(newEvent);
+        const backendEvent = {
+          id: newEvent.id,
+          title: newEvent.title,
+          description: newEvent.description,
+          date: newEvent.date,
+          location: newEvent.venue,
+          image_url: newEvent.image,
+          status: newEvent.status,
+          registration_link: newEvent.registrationLink,
+          created_at: newEvent.createdAt
+        };
+        
+        const apiResult = await window.apiClient.createEvent(backendEvent);
         
         if (apiResult.success) {
           if (apiResult.data && apiResult.data.id) {
@@ -690,7 +664,21 @@ async function updateEvent(eventId, updates) {
     
     if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady) {
       try {
-        const apiResult = await window.apiClient.updateEvent(eventId, updatedEvent);
+        const backendEvent = {
+          ...updatedEvent,
+          location: updatedEvent.venue,
+          image_url: updatedEvent.image,
+          registration_link: updatedEvent.registrationLink,
+          created_at: updatedEvent.createdAt
+        };
+        delete backendEvent.venue;
+        delete backendEvent.image;
+        delete backendEvent.registrationLink;
+        delete backendEvent.time;
+        delete backendEvent.category;
+        delete backendEvent.createdAt;
+        
+        const apiResult = await window.apiClient.updateEvent(eventId, backendEvent);
         
         if (apiResult.success) {
           events[index] = updatedEvent;
@@ -764,10 +752,6 @@ async function deleteEvent(eventId) {
   }
 }
 
-// =============================================================================
-// PROJECTS (Similar pattern)
-// =============================================================================
-
 async function getProjects(filters = {}) {
   try {
     if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady) {
@@ -775,8 +759,15 @@ async function getProjects(filters = {}) {
         const response = await window.apiClient.getProjects();
         
         if (response.success && Array.isArray(response.data)) {
-          localStorage.setItem(STORAGE_KEYS.PROJECTS, JSON.stringify(response.data));
-          let result = response.data;
+          const mappedData = response.data.map(project => ({
+            ...project,
+            image: project.image_url || project.image,
+            githubLink: project.github_url || project.githubLink,
+            liveLink: project.demo_url || project.liveLink,
+            teamMembers: project.team_members || project.teamMembers
+          }));
+          localStorage.setItem(STORAGE_KEYS.PROJECTS, JSON.stringify(mappedData));
+          let result = mappedData;
           
           if (filters.status) {
             result = result.filter(p => p.status === filters.status);
@@ -839,7 +830,20 @@ async function addProject(projectData) {
     
     if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady) {
       try {
-        const apiResult = await window.apiClient.createProject(newProject);
+        const backendProject = {
+          id: newProject.id,
+          title: newProject.title,
+          description: newProject.description,
+          status: newProject.status,
+          image_url: newProject.image,
+          technologies: newProject.technologies,
+          team_members: newProject.teamMembers,
+          github_url: newProject.githubLink,
+          demo_url: newProject.liveLink,
+          created_at: newProject.createdAt
+        };
+        
+        const apiResult = await window.apiClient.createProject(backendProject);
         
         if (apiResult.success) {
           if (apiResult.data && apiResult.data.id) {
@@ -893,7 +897,23 @@ async function updateProject(projectId, updates) {
     
     if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady) {
       try {
-        const apiResult = await window.apiClient.updateProject(projectId, updatedProject);
+        const backendProject = {
+          ...updatedProject,
+          image_url: updatedProject.image,
+          github_url: updatedProject.githubLink,
+          demo_url: updatedProject.liveLink,
+          team_members: updatedProject.teamMembers,
+          created_at: updatedProject.createdAt
+        };
+        delete backendProject.image;
+        delete backendProject.githubLink;
+        delete backendProject.liveLink;
+        delete backendProject.teamMembers;
+        delete backendProject.category;
+        delete backendProject.completionDate;
+        delete backendProject.createdAt;
+        
+        const apiResult = await window.apiClient.updateProject(projectId, backendProject);
         
         if (apiResult.success) {
           projects[index] = updatedProject;
@@ -967,10 +987,6 @@ async function deleteProject(projectId) {
   }
 }
 
-// =============================================================================
-// GALLERY
-// =============================================================================
-
 async function getGallery(filters = {}) {
   try {
     if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady) {
@@ -1032,7 +1048,18 @@ async function addGalleryItem(galleryData) {
     
     if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady) {
       try {
-        const apiResult = await window.apiClient.createGalleryItem(newItem);
+        const backendItem = {
+          id: newItem.id,
+          image: newItem.image,
+          title: newItem.title,
+          description: newItem.description,
+          category: newItem.category,
+          date: newItem.date,
+          photographer: newItem.photographer,
+          created_at: newItem.createdAt
+        };
+        
+        const apiResult = await window.apiClient.createGalleryItem(backendItem);
         
         if (apiResult.success) {
           if (apiResult.data && apiResult.data.id) {
@@ -1110,10 +1137,6 @@ async function deleteGalleryItem(galleryId) {
   }
 }
 
-// =============================================================================
-// ANNOUNCEMENTS
-// =============================================================================
-
 async function getAnnouncements(filters = {}) {
   try {
     if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady) {
@@ -1121,8 +1144,12 @@ async function getAnnouncements(filters = {}) {
         const response = await window.apiClient.getAnnouncements();
         
         if (response.success && Array.isArray(response.data)) {
-          localStorage.setItem(STORAGE_KEYS.ANNOUNCEMENTS, JSON.stringify(response.data));
-          let result = response.data;
+          const mappedData = response.data.map(announcement => ({
+            ...announcement,
+            date: announcement.created_at || announcement.date
+          }));
+          localStorage.setItem(STORAGE_KEYS.ANNOUNCEMENTS, JSON.stringify(mappedData));
+          let result = mappedData;
           
           if (filters.priority) {
             result = result.filter(a => a.priority === filters.priority);
@@ -1173,7 +1200,16 @@ async function addAnnouncement(announcementData) {
     
     if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady) {
       try {
-        const apiResult = await window.apiClient.createAnnouncement(newAnnouncement);
+        const backendAnnouncement = {
+          id: newAnnouncement.id,
+          title: newAnnouncement.title,
+          content: newAnnouncement.content,
+          priority: newAnnouncement.priority,
+          is_active: true,
+          created_at: newAnnouncement.createdAt
+        };
+        
+        const apiResult = await window.apiClient.createAnnouncement(backendAnnouncement);
         
         if (apiResult.success) {
           if (apiResult.data && apiResult.data.id) {
@@ -1227,7 +1263,15 @@ async function updateAnnouncement(announcementId, updates) {
     
     if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady) {
       try {
-        const apiResult = await window.apiClient.updateAnnouncement(announcementId, updatedAnnouncement);
+        const backendAnnouncement = {
+          ...updatedAnnouncement,
+          is_active: true,
+          created_at: updatedAnnouncement.createdAt || updatedAnnouncement.date
+        };
+        delete backendAnnouncement.date;
+        delete backendAnnouncement.createdAt;
+        
+        const apiResult = await window.apiClient.updateAnnouncement(announcementId, backendAnnouncement);
         
         if (apiResult.success) {
           announcements[index] = updatedAnnouncement;
@@ -1301,10 +1345,6 @@ async function deleteAnnouncement(announcementId) {
   }
 }
 
-// =============================================================================
-// THEME
-// =============================================================================
-
 function getTheme() {
   try {
     return localStorage.getItem(STORAGE_KEYS.THEME) || 'light';
@@ -1330,10 +1370,6 @@ function setTheme(theme) {
   }
 }
 
-// =============================================================================
-// UTILITY FUNCTIONS
-// =============================================================================
-
 function generateUniqueId(prefix = 'item') {
   return `${prefix}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 }
@@ -1345,10 +1381,6 @@ function getCurrentTimestamp() {
 function getCurrentDate() {
   return new Date().toISOString().split('T')[0];
 }
-
-// =============================================================================
-// STATISTICS
-// =============================================================================
 
 async function getStatistics() {
   try {
@@ -1406,10 +1438,6 @@ async function getStatistics() {
   }
 }
 
-// =============================================================================
-// SEARCH FUNCTIONS
-// =============================================================================
-
 async function searchMembers(query) {
   try {
     if (!query) {
@@ -1449,7 +1477,7 @@ async function searchEvents(query) {
       e.title.toLowerCase().includes(searchTerm) ||
       e.description.toLowerCase().includes(searchTerm) ||
       e.venue.toLowerCase().includes(searchTerm) ||
-      e.category.toLowerCase().includes(searchTerm)
+      (e.category && e.category.toLowerCase().includes(searchTerm))
     );
   } catch (error) {
     console.error('Error searching events:', error);
@@ -1471,7 +1499,7 @@ async function searchProjects(query) {
     return projects.filter(p => 
       p.title.toLowerCase().includes(searchTerm) ||
       p.description.toLowerCase().includes(searchTerm) ||
-      p.category.toLowerCase().includes(searchTerm) ||
+      (p.category && p.category.toLowerCase().includes(searchTerm)) ||
       (p.technologies && p.technologies.some(tech => tech.toLowerCase().includes(searchTerm)))
     );
   } catch (error) {
@@ -1479,10 +1507,6 @@ async function searchProjects(query) {
     return [];
   }
 }
-
-// =============================================================================
-// EXPORT FUNCTIONS
-// =============================================================================
 
 async function exportAllData() {
   try {
@@ -1521,77 +1545,44 @@ async function exportAllData() {
   }
 }
 
-// =============================================================================
-// INITIALIZATION ON LOAD
-// =============================================================================
-
-// Auto-initialize storage when script loads
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', initializeStorage);
 } else {
   initializeStorage();
 }
 
-// =============================================================================
-// GLOBAL EXPORTS - CRITICAL FIX
-// =============================================================================
-
-// Create the main storage object first
 window.storage = {
-  // Keys
   STORAGE_KEYS,
   SESSION_KEYS,
-  
-  // Initialization
   initializeStorage,
   resetStorage,
-  
-  // Authentication
   isAuthenticated,
-  
-  // Club Config
   getClubConfig,
   setClubConfig,
-  
-  // Admins
   getAdmins,
   addAdmin,
   deleteAdmin,
-  
-  // Members
   getMembers,
   addMember,
   updateMember,
   deleteMember,
-  
-  // Events
   getEvents,
   addEvent,
   updateEvent,
   deleteEvent,
-  
-  // Projects
   getProjects,
   addProject,
   updateProject,
   deleteProject,
-  
-  // Gallery
   getGallery,
   addGalleryItem,
   deleteGalleryItem,
-  
-  // Announcements
   getAnnouncements,
   addAnnouncement,
   updateAnnouncement,
   deleteAnnouncement,
-  
-  // Theme
   getTheme,
   setTheme,
-  
-  // Utilities
   getStatistics,
   searchMembers,
   searchEvents,
@@ -1602,49 +1593,35 @@ window.storage = {
   getCurrentDate
 };
 
-// =============================================================================
-// GLOBAL FUNCTION ALIASES - CRITICAL FIX
-// =============================================================================
-
-// Expose ALL functions globally for backward compatibility
 window.initializeStorage = initializeStorage;
 window.resetStorage = resetStorage;
 window.isAuthenticated = isAuthenticated;
-
 window.getClubConfig = getClubConfig;
 window.setClubConfig = setClubConfig;
-
 window.getAdmins = getAdmins;
 window.addAdmin = addAdmin;
 window.deleteAdmin = deleteAdmin;
-
 window.getMembers = getMembers;
 window.addMember = addMember;
 window.updateMember = updateMember;
 window.deleteMember = deleteMember;
-
 window.getEvents = getEvents;
 window.addEvent = addEvent;
 window.updateEvent = updateEvent;
 window.deleteEvent = deleteEvent;
-
 window.getProjects = getProjects;
 window.addProject = addProject;
 window.updateProject = updateProject;
 window.deleteProject = deleteProject;
-
 window.getGallery = getGallery;
 window.addGalleryItem = addGalleryItem;
 window.deleteGalleryItem = deleteGalleryItem;
-
 window.getAnnouncements = getAnnouncements;
 window.addAnnouncement = addAnnouncement;
 window.updateAnnouncement = updateAnnouncement;
 window.deleteAnnouncement = deleteAnnouncement;
-
 window.getTheme = getTheme;
 window.setTheme = setTheme;
-
 window.getStatistics = getStatistics;
 window.searchMembers = searchMembers;
 window.searchEvents = searchEvents;
