@@ -882,7 +882,9 @@ async function addProject(projectData) {
     
     if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady) {
       try {
-        // ✅ SEND ARRAYS DIRECTLY - DO NOT STRINGIFY
+        // ✅ CRITICAL FIX: Stringify arrays BEFORE sending to api-client
+        // Because api-client.js does JSON.stringify(body) and PostgreSQL
+        // needs the arrays as JSON strings in the query parameters
         const backendProject = {
           id: newProject.id,
           title: newProject.title,
@@ -890,8 +892,8 @@ async function addProject(projectData) {
           category: newProject.category,
           status: newProject.status,
           image: newProject.image,
-          technologies: newProject.technologies, // ✅ Array stays as array
-          team_members: newProject.teamMembers, // ✅ Array stays as array
+          technologies: JSON.stringify(newProject.technologies), // ✅ Stringify here
+          team_members: JSON.stringify(newProject.teamMembers), // ✅ Stringify here
           github_link: newProject.githubLink,
           live_link: newProject.liveLink,
           completion_date: newProject.completionDate,
@@ -899,8 +901,8 @@ async function addProject(projectData) {
         };
         
         console.log('🔄 Sending to backend:', backendProject);
-        console.log('🔍 Backend technologies:', backendProject.technologies);
-        console.log('🔍 Backend team_members:', backendProject.team_members);
+        console.log('🔍 Backend technologies (stringified):', backendProject.technologies);
+        console.log('🔍 Backend team_members (stringified):', backendProject.team_members);
         
         const apiResult = await window.apiClient.createProject(backendProject);
         
