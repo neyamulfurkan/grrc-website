@@ -832,50 +832,56 @@
 
         // Apply club configuration to page
         function applyClubConfig(config) {
-            // Update header LOGO with cache busting
-            if (config.logo || config.logo_url) {
-                const logoUrl = config.logo || config.logo_url;
-                const cacheBustedUrl = logoUrl.includes('?') 
-                    ? logoUrl + '&t=' + Date.now()
-                    : logoUrl + '?t=' + Date.now();
-                const headerLogo = document.getElementById('headerLogo');
-                if (headerLogo) {
-                    headerLogo.src = cacheBustedUrl;
-                    headerLogo.style.display = 'block';
-                    headerLogo.onerror = function() {
-                        this.src = 'assets/default-logo.jpg';
-                    };
-                    console.log('✅ Header logo updated');
-                }
-            }
-            
-            // Update header and footer NAMES
-            if (config.name || config.club_name) {
-                const name = config.name || config.club_name;
-                const headerName = document.getElementById('headerClubName');
-                const footerName = document.getElementById('footerClubName');
-                if (headerName) {
-                    headerName.textContent = name;
-                    console.log('✅ Header name updated to:', name);
-                }
-                if (footerName) {
-                    footerName.textContent = name;
-                }
-            }
-            
-            // Update footer
-            if (config.description) {
-                document.getElementById('footerDescription').textContent = config.description;
-            }
-            
-            // Load social links
-            if (config.socialLinks && config.socialLinks.length > 0) {
-                const socialLinksHTML = config.socialLinks.map(link => 
-                    `<a href="${link.url}" target="_blank" rel="noopener noreferrer" class="social-link">${getSocialIcon(link.platform)}</a>`
-                ).join('');
-                document.getElementById('footerSocialLinks').innerHTML = socialLinksHTML;
-            }
+    // Update header LOGO with cache busting
+    if (config.logo || config.logo_url) {
+        const logoUrl = config.logo || config.logo_url;
+        const cacheBustedUrl = logoUrl.includes('?') 
+            ? logoUrl + '&t=' + Date.now()
+            : logoUrl + '?t=' + Date.now();
+        const headerLogo = document.getElementById('headerLogo');
+        if (headerLogo) {
+            headerLogo.src = cacheBustedUrl;
+            headerLogo.style.display = 'block';
+            headerLogo.onerror = function() {
+                this.src = 'assets/default-logo.jpg';
+            };
+            console.log('✅ Header logo updated to:', cacheBustedUrl);
         }
+    }
+    
+    // Update header and footer NAMES
+    if (config.name || config.club_name) {
+        const name = config.name || config.club_name;
+        const headerName = document.getElementById('headerClubName');
+        const footerName = document.getElementById('footerClubName');
+        if (headerName) {
+            headerName.textContent = name;
+            console.log('✅ Header name updated to:', name);
+        }
+        if (footerName) {
+            footerName.textContent = name;
+        }
+    }
+    
+    // Update footer description
+    if (config.description) {
+        const footerDesc = document.getElementById('footerDescription');
+        if (footerDesc) {
+            footerDesc.textContent = config.description;
+        }
+    }
+    
+    // Update social links
+    if (config.socialLinks && config.socialLinks.length > 0) {
+        const socialLinksHTML = config.socialLinks.map(link => 
+            `<a href="${link.url}" target="_blank" rel="noopener noreferrer" class="social-link">${getSocialIcon(link.platform)}</a>`
+        ).join('');
+        const socialContainer = document.getElementById('footerSocialLinks');
+        if (socialContainer) {
+            socialContainer.innerHTML = socialLinksHTML;
+        }
+    }
+}
 
         // Get social media icon
         function getSocialIcon(platform) {

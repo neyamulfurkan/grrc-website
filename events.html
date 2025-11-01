@@ -875,22 +875,27 @@
                     console.log('⚠️ Using fallback cache:', config);
                 }
                 
-                // CRITICAL FIX: Update HEADER logo and name
-                const headerLogo = document.getElementById('headerLogo');
-                const headerClubName = document.getElementById('headerClubName');
-                
-                if (headerLogo && (config.logo || config.logo_url)) {
-                    const logoUrl = (config.logo || config.logo_url);
-                    const cacheBustedUrl = logoUrl.includes('?') 
-                        ? logoUrl + '&t=' + Date.now()
-                        : logoUrl + '?t=' + Date.now();
-                    headerLogo.src = cacheBustedUrl;
-                    headerLogo.style.display = 'block';
-                    headerLogo.onerror = function() {
-                        this.src = 'assets/default-logo.jpg';
-                    };
-                    console.log('✅ Header logo updated');
-                }
+                /// Update header LOGO
+const headerLogo = document.getElementById('headerLogo');
+const headerClubName = document.getElementById('headerClubName');
+
+if (headerLogo && (config.logo || config.logo_url)) {
+    const logoUrl = config.logo || config.logo_url;
+    const cacheBustedUrl = logoUrl.includes('?') 
+        ? logoUrl + '&t=' + Date.now()
+        : logoUrl + '?t=' + Date.now();
+    headerLogo.src = cacheBustedUrl;
+    headerLogo.style.display = 'block';
+    headerLogo.onerror = function() {
+        this.src = 'assets/default-logo.jpg';
+    };
+    console.log('✅ Header logo updated');
+}
+
+if (headerClubName && (config.name || config.club_name)) {
+    headerClubName.textContent = config.name || config.club_name;
+    console.log('✅ Header name updated');
+}
                 
                 if (headerClubName && (config.name || config.club_name)) {
                     headerClubName.textContent = config.name || config.club_name;
