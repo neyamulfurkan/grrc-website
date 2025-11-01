@@ -148,7 +148,7 @@
         }
 
         .hero {
-            min-height: 100vh;
+            min-height: 60vh;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -156,6 +156,7 @@
             position: relative;
             overflow: hidden;
             padding: 2rem;
+            margin-top: 70px;
         }
         
         .hero-background {
@@ -1448,11 +1449,6 @@
                         if (response.success && Array.isArray(response.data) && response.data.length > 0) {
                             projectItems = response.data;
                             console.log('✅ Slideshow loaded', projectItems.length, 'projects from API');
-                            try {
-                                localStorage.setItem('projects', JSON.stringify(projectItems));
-                            } catch (e) {
-                                console.warn('⚠️ Could not save to cache (quota exceeded):', e.message);
-                            }
                         }
                     } catch (apiError) {
                         console.error('❌ API call failed:', apiError);
@@ -1474,30 +1470,41 @@
                     slideshowImages = projectItems
                         .filter(item => {
                             const imageUrl = item.image || item.image_url;
-                            return imageUrl && imageUrl.trim() !== '';
+                            const hasImage = imageUrl && imageUrl.trim() !== '';
+                            console.log('Project:', item.title, 'Has image:', hasImage, 'URL:', imageUrl);
+                            return hasImage;
                         })
                         .map(item => ({
                             url: item.image || item.image_url,
                             title: item.title || 'Untitled Project',
-                            description: item.description || item.category || 'Innovation in Progress'
+                            description: item.description ? item.description.substring(0, 150) : 'Innovation in Progress'
                         }))
                         .slice(0, 10);
                     
                     console.log('✅ Valid slideshow images:', slideshowImages.length);
-                    console.log('🖼️ Image data:', slideshowImages);
                     
                     if (slideshowImages.length > 0) {
                         console.log('🎬 Initializing slideshow with', slideshowImages.length, 'images');
+                        console.log('First image URL:', slideshowImages[0].url);
                         initializeSlideshow();
                     } else {
                         console.warn('⚠️ No valid images found in projects');
+                        showFallbackHero();
                     }
                 } else {
                     console.warn('⚠️ No project items found');
+                    showFallbackHero();
                 }
             } catch (error) {
                 console.error('❌ Error loading projects for slideshow:', error);
+                showFallbackHero();
             }
+        }
+        
+        function showFallbackHero() {
+            const slideshowContainer = document.getElementById('heroSlideshow');
+            slideshowContainer.style.display = 'none';
+            document.querySelector('.hero-background-gradient').style.opacity = '1';
         }
         
         function initializeSlideshow() {
