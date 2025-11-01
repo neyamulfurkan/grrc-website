@@ -1127,10 +1127,13 @@ async function getGallery(filters = {}) {
             createdAt: item.created_at || item.createdAt
           }));
           
-          // ✅ CRITICAL FIX: Save to ALL cache keys
-          localStorage.setItem(STORAGE_KEYS.GALLERY, JSON.stringify(mappedData));
-          localStorage.setItem('gallery', JSON.stringify(mappedData));
-          localStorage.setItem('cache_gallery', JSON.stringify(mappedData));
+          // Save to cache (with error handling)
+          try {
+            localStorage.setItem(STORAGE_KEYS.GALLERY, JSON.stringify(mappedData));
+            localStorage.setItem('gallery', JSON.stringify(mappedData));
+          } catch (e) {
+            console.warn('⚠️ Could not save gallery to localStorage:', e.message);
+          }
           
           let result = mappedData;
           
