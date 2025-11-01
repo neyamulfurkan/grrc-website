@@ -800,32 +800,35 @@
 
         // Load club configuration
         async function loadClubConfig() {
-            try {
-                console.log('🔄 Loading club config for members page...');
-                
-                // Try API first
-                let config = null;
-               if (typeof window.apiClient !== 'undefined' && window.apiClient.getConfig) {
-                    const result = await window.apiClient.getConfig();
-                    if (result.success && result.data) {
-                        config = result.data;
-                        console.log('✅ Config from API:', config);
-                    }
-                }
-                
-                // Fallback to localStorage
-                if (!config) {
-                    const cachedConfig = localStorage.getItem('clubConfig') || 
-                                        localStorage.getItem('cache_clubConfig');
-                    config = cachedConfig ? JSON.parse(cachedConfig) : {};
-                    console.log('✅ Config from cache:', config);
-                }
-                
-                applyClubConfig(config);
-            } catch (error) {
-                console.error('Error loading club config:', error);
+    try {
+        console.log('📄 Loading club config for members page...');
+        
+        // ✅ CRITICAL: Clear cache FIRST to force fresh API fetch
+        localStorage.removeItem('cache_clubConfig');
+        localStorage.removeItem('clubConfig');
+        
+        // Try API first
+        let config = null;
+        if (typeof window.apiClient !== 'undefined' && window.apiClient.getConfig) {
+            const result = await window.apiClient.getConfig();
+            if (result.success && result.data) {
+                config = result.data;
+                console.log('✅ Config from API:', config);
             }
         }
+        
+        // Fallback to localStorage only if API fails
+        if (!config) {
+            const cachedConfig = localStorage.getItem('clubConfig');
+            config = cachedConfig ? JSON.parse(cachedConfig) : {};
+            console.log('⚠️ Using fallback cache:', config);
+        }
+        
+        applyClubConfig(config);
+    } catch (error) {
+        console.error('Error loading club config:', error);
+    }
+}
 
         // Apply club configuration to page
         function applyClubConfig(config) {

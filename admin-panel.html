@@ -1318,9 +1318,12 @@
 
        async function loadClubConfigToSidebar() {
     try {
-        console.log('🔄 Loading sidebar config...');
+        console.log('📄 Loading sidebar config...');
         
-        // ✅ CRITICAL FIX: Try getting fresh config WITHOUT clearing cache first
+        // ✅ CRITICAL: Clear cache FIRST to force fresh API fetch
+        localStorage.removeItem('cache_clubConfig');
+        localStorage.removeItem('clubConfig');
+        
         const result = await getClubConfig();
         if (result.success && result.data) {
             const config = result.data;

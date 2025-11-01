@@ -851,12 +851,16 @@
         /* FIXED - Complete config loading with header updates */
         async function loadClubConfig() {
             try {
-                console.log('🔄 Loading club config for events page...');
+                console.log('📄 Loading club config for events page...');
+                
+                // ✅ CRITICAL: Clear cache FIRST to force fresh API fetch
+                localStorage.removeItem('cache_clubConfig');
+                localStorage.removeItem('clubConfig');
                 
                 // Try to get fresh config from API
                 let config = null;
                 
-               if (typeof window.apiClient !== 'undefined' && window.apiClient.getConfig) {
+                if (typeof window.apiClient !== 'undefined' && window.apiClient.getConfig) {
                     const result = await window.apiClient.getConfig();
                     if (result.success && result.data) {
                         config = result.data;
@@ -864,13 +868,11 @@
                     }
                 }
                 
-                // Fallback to localStorage
+                // Fallback to localStorage only if API fails
                 if (!config) {
-                    const cachedConfig = localStorage.getItem('clubConfig') || 
-                                        localStorage.getItem('cache_clubConfig') ||
-                                        localStorage.getItem('STORAGE_KEYS.CLUB_CONFIG');
+                    const cachedConfig = localStorage.getItem('clubConfig');
                     config = cachedConfig ? JSON.parse(cachedConfig) : {};
-                    console.log('✅ Config loaded from cache:', config);
+                    console.log('⚠️ Using fallback cache:', config);
                 }
                 
                 // CRITICAL FIX: Update HEADER logo and name

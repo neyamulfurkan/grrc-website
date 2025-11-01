@@ -796,7 +796,11 @@
         /* FIXED - Complete config loading */
         async function loadClubConfig() {
     try {
-        console.log('🔄 Loading club config for gallery page...');
+        console.log('📄 Loading club config for gallery page...');
+        
+        // ✅ CRITICAL: Clear cache FIRST to force fresh API fetch
+        localStorage.removeItem('cache_clubConfig');
+        localStorage.removeItem('clubConfig');
         
         // Try API first
         let config = null;
@@ -808,12 +812,11 @@
             }
         }
         
-        // Fallback to localStorage
+        // Fallback to localStorage only if API fails
         if (!config) {
-            const cachedConfig = localStorage.getItem('clubConfig') || 
-                                localStorage.getItem('cache_clubConfig');
+            const cachedConfig = localStorage.getItem('clubConfig');
             config = cachedConfig ? JSON.parse(cachedConfig) : {};
-            console.log('✅ Config from cache:', config);
+            console.log('⚠️ Using fallback cache:', config);
         }
         
         // Update header LOGO with cache busting
