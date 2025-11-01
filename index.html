@@ -132,16 +132,190 @@
             font-weight: 700;
             color: white;
             margin-bottom: 1rem;
-            animation: fadeInUp 0.8s ease-out;
             text-shadow: 0 2px 12px rgba(0, 0, 0, 0.3), 0 1px 4px rgba(0, 0, 0, 0.2);
+            transition: all 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
         }
         
         .hero .motto {
             font-size: clamp(1.2rem, 3vw, 1.8rem);
             color: rgba(255, 255, 255, 0.95);
             margin-bottom: 2rem;
-            animation: fadeInUp 0.8s ease-out 0.2s backwards;
             text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+            transition: all 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+        
+        /* Text animation classes */
+        .hero h1.animate-fadeInUp {
+            animation: textFadeInUp 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+        
+        .hero .motto.animate-fadeInUp {
+            animation: textFadeInUp 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55) 0.15s;
+        }
+        
+        .hero h1.animate-slideFromLeft {
+            animation: slideFromLeft 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+        
+        .hero .motto.animate-slideFromLeft {
+            animation: slideFromLeft 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55) 0.15s;
+        }
+        
+        .hero h1.animate-slideFromRight {
+            animation: slideFromRight 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+        
+        .hero .motto.animate-slideFromRight {
+            animation: slideFromRight 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55) 0.15s;
+        }
+        
+        .hero h1.animate-zoomIn {
+            animation: zoomIn 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+        
+        .hero .motto.animate-zoomIn {
+            animation: zoomIn 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55) 0.15s;
+        }
+        
+        .hero h1.animate-rotateIn {
+            animation: rotateIn 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+        
+        .hero .motto.animate-rotateIn {
+            animation: rotateIn 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55) 0.15s;
+        }
+        
+        .hero h1.animate-butterfly {
+            animation: butterfly 1s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+        
+        .hero .motto.animate-butterfly {
+            animation: butterfly 1s cubic-bezier(0.68, -0.55, 0.265, 1.55) 0.15s;
+        }
+        
+        .hero h1.animate-bounce {
+            animation: bounceIn 0.9s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+        
+        .hero .motto.animate-bounce {
+            animation: bounceIn 0.9s cubic-bezier(0.68, -0.55, 0.265, 1.55) 0.15s;
+        }
+        
+        .hero h1.animate-flipIn {
+            animation: flipIn 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+        
+        .hero .motto.animate-flipIn {
+            animation: flipIn 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55) 0.15s;
+        }
+        
+        /* Animation keyframes */
+        @keyframes textFadeInUp {
+            0% {
+                opacity: 0;
+                transform: translateY(40px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes slideFromLeft {
+            0% {
+                opacity: 0;
+                transform: translateX(-100px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        @keyframes slideFromRight {
+            0% {
+                opacity: 0;
+                transform: translateX(100px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        @keyframes zoomIn {
+            0% {
+                opacity: 0;
+                transform: scale(0.3);
+            }
+            50% {
+                opacity: 1;
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+        
+        @keyframes rotateIn {
+            0% {
+                opacity: 0;
+                transform: rotate(-200deg) scale(0);
+            }
+            100% {
+                opacity: 1;
+                transform: rotate(0) scale(1);
+            }
+        }
+        
+        @keyframes butterfly {
+            0% {
+                opacity: 0;
+                transform: scale(0) rotate(-180deg);
+            }
+            50% {
+                transform: scale(1.1) rotate(10deg);
+            }
+            70% {
+                transform: scale(0.95) rotate(-5deg);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1) rotate(0);
+            }
+        }
+        
+        @keyframes bounceIn {
+            0% {
+                opacity: 0;
+                transform: scale(0.3) translateY(-50px);
+            }
+            50% {
+                opacity: 1;
+                transform: scale(1.05) translateY(5px);
+            }
+            70% {
+                transform: scale(0.9) translateY(-5px);
+            }
+            100% {
+                transform: scale(1) translateY(0);
+            }
+        }
+        
+        @keyframes flipIn {
+            0% {
+                opacity: 0;
+                transform: perspective(400px) rotateX(-90deg);
+            }
+            40% {
+                transform: perspective(400px) rotateX(20deg);
+            }
+            60% {
+                opacity: 1;
+                transform: perspective(400px) rotateX(-10deg);
+            }
+            100% {
+                transform: perspective(400px) rotateX(0deg);
+            }
         }
         
         .hero .description {
@@ -802,19 +976,48 @@
             const subtitleElement = document.getElementById('heroSubtitle');
             
             if (titleElement && subtitleElement) {
+                // Array of animation classes
+                const animations = [
+                    'animate-fadeInUp',
+                    'animate-slideFromLeft',
+                    'animate-slideFromRight',
+                    'animate-zoomIn',
+                    'animate-rotateIn',
+                    'animate-butterfly',
+                    'animate-bounce',
+                    'animate-flipIn'
+                ];
+                
+                // Pick a random animation for variety
+                const randomAnimation = animations[Math.floor(Math.random() * animations.length)];
+                
+                // Remove all animation classes first
+                animations.forEach(anim => {
+                    titleElement.classList.remove(anim);
+                    subtitleElement.classList.remove(anim);
+                });
+                
                 // Fade out
                 titleElement.style.opacity = '0';
                 subtitleElement.style.opacity = '0';
                 
                 setTimeout(() => {
+                    // Update text content
                     titleElement.textContent = imageData.title;
                     subtitleElement.textContent = imageData.description;
                     
-                    // Fade in
-                    titleElement.style.transition = 'opacity 0.5s ease-in-out';
-                    subtitleElement.style.transition = 'opacity 0.5s ease-in-out';
+                    // Reset opacity and add animation class
                     titleElement.style.opacity = '1';
                     subtitleElement.style.opacity = '1';
+                    
+                    titleElement.classList.add(randomAnimation);
+                    subtitleElement.classList.add(randomAnimation);
+                    
+                    // Remove animation class after animation completes to allow re-triggering
+                    setTimeout(() => {
+                        titleElement.classList.remove(randomAnimation);
+                        subtitleElement.classList.remove(randomAnimation);
+                    }, 1000);
                 }, 300);
             }
         }
