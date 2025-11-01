@@ -525,8 +525,8 @@
         </div>
         <div class="hero-overlay"></div>
         <div class="hero-content">
-            <h1 id="heroClubName">GSTU Robotics & Research Club</h1>
-            <p class="motto" id="heroMotto">A Hub of Robothinkers</p>
+            <h1 id="heroTitle">GSTU Robotics & Research Club</h1>
+            <p class="motto" id="heroSubtitle">A Hub of Robothinkers</p>
             <p class="description" id="heroDescription">
                 Join us in exploring the fascinating world of robotics, automation, and innovation at Gopalganj Science and Technology University.
             </p>
@@ -670,7 +670,7 @@
             }
             
             await loadClubConfig();
-            await new Promise(resolve => setTimeout(resolve, 500)); // Wait for config
+            await new Promise(resolve => setTimeout(resolve, 500));
             await loadGalleryForSlideshow();
             await loadUpcomingEvents();
             await loadExecutiveMembers();
@@ -685,94 +685,94 @@
         });
         
         async function loadGalleryForSlideshow() {
-    try {
-        console.log('🎬 Starting slideshow load...');
-        
-        let galleryItems = [];
-        
-        // Try API first WITHOUT clearing cache
-        if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady) {
             try {
-                console.log('📡 Calling API for gallery...');
-                const response = await window.apiClient.getGallery();
-                console.log('📊 API response:', response);
+                console.log('🎬 Starting slideshow load...');
                 
-                if (response.success && Array.isArray(response.data) && response.data.length > 0) {
-                    galleryItems = response.data;
-                    console.log('✅ Slideshow loaded', galleryItems.length, 'images from API');
-                    // Save to cache (with error handling)
+                let galleryItems = [];
+                
+                if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady) {
                     try {
-                        localStorage.setItem('gallery', JSON.stringify(galleryItems));
-                    } catch (e) {
-                        console.warn('⚠️ Could not save to cache (quota exceeded):', e.message);
+                        console.log('📡 Calling API for gallery...');
+                        const response = await window.apiClient.getGallery();
+                        console.log('📊 API response:', response);
+                        
+                        if (response.success && Array.isArray(response.data) && response.data.length > 0) {
+                            galleryItems = response.data;
+                            console.log('✅ Slideshow loaded', galleryItems.length, 'images from API');
+                            try {
+                                localStorage.setItem('gallery', JSON.stringify(galleryItems));
+                            } catch (e) {
+                                console.warn('⚠️ Could not save to cache (quota exceeded):', e.message);
+                            }
+                        }
+                    } catch (apiError) {
+                        console.error('❌ API call failed:', apiError);
                     }
                 }
-            } catch (apiError) {
-                console.error('❌ API call failed:', apiError);
+                
+                if (galleryItems.length === 0) {
+                    console.log('📦 Trying cache...');
+                    const cached = localStorage.getItem('gallery');
+                    if (cached) {
+                        galleryItems = JSON.parse(cached);
+                        console.log('✅ Slideshow loaded', galleryItems.length, 'images from cache');
+                    }
+                }
+                
+                console.log('🔍 Total gallery items:', galleryItems.length);
+                
+                if (galleryItems.length > 0) {
+                    // Filter and prepare slideshow data with titles and descriptions
+                    slideshowImages = galleryItems
+                        .filter(item => {
+                            const imageUrl = item.image || item.image_url;
+                            return imageUrl && imageUrl.trim() !== '';
+                        })
+                        .map(item => ({
+                            url: item.image || item.image_url,
+                            title: item.title || 'Untitled',
+                            description: item.description || item.category || ''
+                        }))
+                        .slice(0, 10);
+                    
+                    console.log('✅ Valid slideshow images:', slideshowImages.length);
+                    console.log('🖼️ Image data:', slideshowImages);
+                    
+                    if (slideshowImages.length > 0) {
+                        console.log('🎬 Initializing slideshow with', slideshowImages.length, 'images');
+                        initializeSlideshow();
+                    } else {
+                        console.warn('⚠️ No valid images found in gallery');
+                    }
+                } else {
+                    console.warn('⚠️ No gallery items found');
+                }
+            } catch (error) {
+                console.error('❌ Error loading gallery for slideshow:', error);
             }
         }
-        
-        if (galleryItems.length === 0) {
-            console.log('📦 Trying cache...');
-            const cached = localStorage.getItem('gallery');
-            if (cached) {
-                galleryItems = JSON.parse(cached);
-                console.log('✅ Slideshow loaded', galleryItems.length, 'images from cache');
-            }
-        }
-        
-        console.log('🔍 Total gallery items:', galleryItems.length);
-        
-        if (galleryItems.length > 0) {
-            // ✅ FIXED: Check both image and image_url fields
-            slideshowImages = galleryItems
-                .filter(item => {
-                    const imageUrl = item.image || item.image_url;
-                    return imageUrl && imageUrl.trim() !== '';
-                })
-                .map(item => item.image || item.image_url)
-                .slice(0, 10);
-            
-            console.log('✅ Valid slideshow images:', slideshowImages.length);
-            console.log('🖼️ Image URLs:', slideshowImages);
-            
-            if (slideshowImages.length > 0) {
-                console.log('🎬 Initializing slideshow with', slideshowImages.length, 'images');
-                initializeSlideshow();
-            } else {
-                console.warn('⚠️ No valid images found in gallery');
-                console.warn('📋 Gallery items:', galleryItems);
-            }
-        } else {
-            console.warn('⚠️ No gallery items found');
-        }
-    } catch (error) {
-        console.error('❌ Error loading gallery for slideshow:', error);
-    }
-}
         
         function initializeSlideshow() {
             const slideshowContainer = document.getElementById('heroSlideshow');
             const indicatorsContainer = document.getElementById('slideshowIndicators');
             
-            slideshowImages.forEach((image, index) => {
+            slideshowImages.forEach((imageData, index) => {
                 const slide = document.createElement('div');
                 slide.className = 'hero-slide';
                 if (index === 0) slide.classList.add('active');
                 
                 const img = document.createElement('img');
-                img.src = image;
-                img.alt = 'Gallery Image';
+                img.src = imageData.url;
+                img.alt = imageData.title;
                 img.loading = index === 0 ? 'eager' : 'lazy';
                 
-                // Add error handler
                 img.onerror = function() {
-                    console.error('❌ Failed to load image:', image);
+                    console.error('❌ Failed to load image:', imageData.url);
                     this.style.display = 'none';
                 };
                 
                 img.onload = function() {
-                    console.log('✅ Image loaded successfully:', image.substring(0, 50) + '...');
+                    console.log('✅ Image loaded successfully:', imageData.url.substring(0, 50) + '...');
                 };
                 
                 slide.appendChild(img);
@@ -788,8 +788,34 @@
             slideshowContainer.classList.add('active');
             indicatorsContainer.classList.add('active');
             
+            // Set initial title and description
+            updateHeroText(0);
+            
             if (slideshowImages.length > 1) {
                 startSlideshow();
+            }
+        }
+        
+        function updateHeroText(index) {
+            const imageData = slideshowImages[index];
+            const titleElement = document.getElementById('heroTitle');
+            const subtitleElement = document.getElementById('heroSubtitle');
+            
+            if (titleElement && subtitleElement) {
+                // Fade out
+                titleElement.style.opacity = '0';
+                subtitleElement.style.opacity = '0';
+                
+                setTimeout(() => {
+                    titleElement.textContent = imageData.title;
+                    subtitleElement.textContent = imageData.description;
+                    
+                    // Fade in
+                    titleElement.style.transition = 'opacity 0.5s ease-in-out';
+                    subtitleElement.style.transition = 'opacity 0.5s ease-in-out';
+                    titleElement.style.opacity = '1';
+                    subtitleElement.style.opacity = '1';
+                }, 300);
             }
         }
         
@@ -812,6 +838,9 @@
             
             slides[currentSlideIndex].classList.add('active');
             indicators[currentSlideIndex].classList.add('active');
+            
+            // Update hero text with new image data
+            updateHeroText(currentSlideIndex);
         }
         
         function goToSlide(index) {
@@ -828,6 +857,9 @@
             slides[currentSlideIndex].classList.add('active');
             indicators[currentSlideIndex].classList.add('active');
             
+            // Update hero text with new image data
+            updateHeroText(currentSlideIndex);
+            
             if (slideshowInterval) {
                 clearInterval(slideshowInterval);
                 startSlideshow();
@@ -843,11 +875,6 @@
                         
                         if (config.name) {
                             document.getElementById('clubName').textContent = config.name;
-                            document.getElementById('heroClubName').textContent = config.name;
-                        }
-                        
-                        if (config.motto) {
-                            document.getElementById('heroMotto').textContent = config.motto;
                         }
                         
                         if (config.description) {
@@ -888,11 +915,6 @@
                 
                 if (config.name) {
                     document.getElementById('clubName').textContent = config.name;
-                    document.getElementById('heroClubName').textContent = config.name;
-                }
-                
-                if (config.motto) {
-                    document.getElementById('heroMotto').textContent = config.motto;
                 }
                 
                 if (config.description) {
@@ -924,10 +946,6 @@
                 
                 if (config.name) {
                     document.getElementById('clubName').textContent = config.name;
-                    document.getElementById('heroClubName').textContent = config.name;
-                }
-                if (config.motto) {
-                    document.getElementById('heroMotto').textContent = config.motto;
                 }
                 if (config.description) {
                     document.getElementById('heroDescription').textContent = config.description;
