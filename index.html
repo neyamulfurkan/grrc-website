@@ -530,8 +530,8 @@
         async function loadClubConfig() {
             try {
                 // NEW - Try API first
-                if (typeof getClubConfig === 'function') {
-                    const result = await getClubConfig();
+                if (typeof window.apiClient !== 'undefined' && window.apiClient.getConfig) {
+                    const result = await window.apiClient.getConfig();
                     if (result.success && result.data) {
                         const config = result.data;
                         
@@ -552,13 +552,19 @@
                             document.getElementById('footerDescription').textContent = config.description;
                         }
                         
-                        // Update logo
-                        if (config.logo) {
-                            document.getElementById('clubLogo').src = config.logo;
-                        } else {
-                            document.getElementById('clubLogo').src = 'assets/default-logo.jpg';
+                        // Update logo with cache busting
+                        const clubLogo = document.getElementById('clubLogo');
+                        if (clubLogo && (config.logo || config.logo_url)) {
+                            const logoUrl = config.logo || config.logo_url;
+                            const cacheBustedUrl = logoUrl.includes('?') 
+                                ? logoUrl + '&t=' + Date.now()
+                                : logoUrl + '?t=' + Date.now();
+                            clubLogo.src = cacheBustedUrl;
+                            clubLogo.style.display = 'block';
+                            clubLogo.onerror = function() {
+                                this.src = 'assets/default-logo.jpg';
+                            };
                         }
-                        
                         // Update social links
                         if (config.socialLinks && config.socialLinks.length > 0) {
                             const socialContainer = document.getElementById('socialLinks');

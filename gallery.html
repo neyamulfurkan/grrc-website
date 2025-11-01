@@ -800,8 +800,8 @@
                 
                 // Try API first
                 let config = null;
-                if (typeof getClubConfig === 'function') {
-                    const result = await getClubConfig();
+                if (typeof window.apiClient !== 'undefined' && window.apiClient.getConfig) {
+                    const result = await window.apiClient.getConfig();
                     if (result.success && result.data) {
                         config = result.data;
                         console.log('✅ Config from API:', config);
@@ -1192,6 +1192,12 @@
 
         /* MODIFIED - Updated to use async/await for API calls */
         document.addEventListener('DOMContentLoaded', async () => {
+            // Wait for API client
+            let retries = 0;
+            while ((!window.apiClient || !window.apiClient.isReady) && retries < 50) {
+                await new Promise(resolve => setTimeout(resolve, 100));
+                retries++;
+            }
             // Show loading state
             document.getElementById('loadingState').style.display = 'block';
 

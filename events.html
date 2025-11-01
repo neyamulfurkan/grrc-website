@@ -829,6 +829,12 @@
 
         // Initialize page
         document.addEventListener('DOMContentLoaded', async () => {
+            // Wait for API client
+            let retries = 0;
+            while ((!window.apiClient || !window.apiClient.isReady) && retries < 50) {
+                await new Promise(resolve => setTimeout(resolve, 100));
+                retries++;
+            }
             await loadClubConfig();
             await loadEvents();
             initializeFilters();
@@ -847,8 +853,8 @@
                 // Try to get fresh config from API
                 let config = null;
                 
-                if (typeof getClubConfig === 'function') {
-                    const result = await getClubConfig();
+               if (typeof window.apiClient !== 'undefined' && window.apiClient.getConfig) {
+                    const result = await window.apiClient.getConfig();
                     if (result.success && result.data) {
                         config = result.data;
                         console.log('✅ Config loaded from API:', config);
@@ -874,6 +880,7 @@
                         ? logoUrl + '&t=' + Date.now()
                         : logoUrl + '?t=' + Date.now();
                     headerLogo.src = cacheBustedUrl;
+                    headerLogo.style.display = 'block';
                     headerLogo.onerror = function() {
                         this.src = 'assets/default-logo.jpg';
                     };
@@ -882,6 +889,7 @@
                 
                 if (headerClubName && (config.name || config.club_name)) {
                     headerClubName.textContent = config.name || config.club_name;
+                    headerClubName.style.display = 'inline-block';
                     console.log('✅ Header club name updated to:', config.name || config.club_name);
                 }
                 

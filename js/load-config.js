@@ -133,6 +133,7 @@ function updateClubConfigDOM(config) {
       el.onerror = function() {
         this.src = 'assets/default-logo.jpg';
       };
+      el.style.display = 'block';
       console.log('✅ Logo updated:', el.id || el.className);
     }
   });
@@ -147,6 +148,7 @@ function updateClubConfigDOM(config) {
         el.textContent = 'Admin Panel';
       } else {
         el.textContent = nameValue;
+        el.style.display = 'inline-block';
       }
       console.log('✅ Name updated:', el.id || el.className);
     }
