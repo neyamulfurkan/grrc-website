@@ -220,10 +220,10 @@ async function createEvent(data) {
     const eventImage = image_url || image;
     
     const query = `
-      INSERT INTO events (title, description, category, date, time, location, image, status, registration_link, details, organizer)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
-      RETURNING *
-    `;
+  INSERT INTO events (title, description, category, date, time, venue, image, status, registration_link, details, organizer)
+  VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+  RETURNING *
+`;
     const values = [
       title, 
       description, 
