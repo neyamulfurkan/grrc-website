@@ -90,15 +90,46 @@
         });
 
         async function initializeApplications() {
-            // Wait for API client
+            console.log('🔄 Initializing membership applications iframe...');
+            
+            // Wait for API client from parent or current window
             let retries = 0;
-            while ((!window.apiClient || !window.apiClient.isReady) && retries < 50) {
+            while (retries < 50) {
+                // Try parent window first
+                if (window.parent && window.parent.apiClient && window.parent.apiClient.isReady) {
+                    window.apiClient = window.parent.apiClient;
+                    console.log('✅ Using parent window API client');
+                    break;
+                }
+                // Fallback to own window
+                if (window.apiClient && window.apiClient.isReady) {
+                    console.log('✅ Using own window API client');
+                    break;
+                }
                 await new Promise(resolve => setTimeout(resolve, 100));
                 retries++;
             }
-
+            
+            if (!window.apiClient || !window.apiClient.isReady) {
+                console.error('❌ API client not available after 5 seconds');
+                document.getElementById('applicationsTableBody').innerHTML = 
+                    '<tr><td colspan="7" style="text-align: center; padding: var(--space-xl); color: var(--error-color);">Failed to initialize API client</td></tr>';
+                return;
+            }
+            
+            console.log('🔐 API client ready, checking authentication...');
+            const token = window.apiClient.getAuthToken();
+            if (!token) {
+                console.error('❌ No authentication token found');
+                document.getElementById('applicationsTableBody').innerHTML = 
+                    '<tr><td colspan="7" style="text-align: center; padding: var(--space-xl); color: var(--error-color);">Not authenticated. Please reload the page.</td></tr>';
+                return;
+            }
+            
+            console.log('✅ Authentication token found');
+            
             await loadApplicationStatistics();
-            await loadMembershipApplications('pending');
+            await loadMembershipApplications(null); // Load ALL applications first
             initializeApplicationFilters();
         }
 
@@ -121,15 +152,33 @@
             }
         }
 
-        async function loadMembershipApplications(status = null) {
+                async function loadMembershipApplications(status = null) {
             try {
+                console.log('📋 Loading applications with status:', status);
+                
+                if (!window.apiClient || !window.apiClient.isReady) {
+                    console.error('❌ API client not ready');
+                    return;
+                }
+                
                 const result = await window.apiClient.getMembershipApplications(status);
+                console.log('📦 API response:', result);
+                
                 const tbody = document.getElementById('applicationsTableBody');
                 
-                if (!result.success || !result.data || result.data.length === 0) {
+                if (!result.success) {
+                    console.error('❌ API call failed:', result.error);
+                    tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: var(--space-xl); color: var(--error-color);">Error: ${result.error || 'Failed to load applications'}</td></tr>`;
+                    return;
+                }
+                
+                if (!result.data || result.data.length === 0) {
+                    console.log('ℹ️ No applications found');
                     tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: var(--space-xl);">No applications found</td></tr>';
                     return;
                 }
+                
+                console.log(`✅ Loaded ${result.data.length} applications`);
                 
                 tbody.innerHTML = result.data.map(app => `
                     <tr>
