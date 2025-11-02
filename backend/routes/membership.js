@@ -6,8 +6,8 @@ const router = express.Router();
 const membershipModel = require('../models/membershipModel');
 const contentModel = require('../models/contentModel');
 
-// Import middleware
-const authMiddleware = require('../middleware/auth');
+// Import middleware - CORRECTED: Import the specific functions from auth middleware
+const { authenticateToken, isAdmin } = require('../middleware/auth');
 
 // Validation middleware
 const validateRequest = (req, res, next) => {
@@ -134,7 +134,7 @@ router.post(
       console.error('Error submitting application:', error);
 
       // Handle duplicate email error
-      if (error.code === 'SQLITE_CONSTRAINT' || error.message.includes('UNIQUE constraint')) {
+      if (error.code === 'SQLITE_CONSTRAINT' || error.message.includes('UNIQUE constraint') || error.message.includes('Email already used')) {
         return res.status(409).json({
           success: false,
           message: 'An application with this email already exists'
@@ -151,7 +151,7 @@ router.post(
 );
 
 // 2. GET /api/membership/applications (ADMIN - Auth Required)
-router.get('/applications', authMiddleware, async (req, res) => {
+router.get('/applications', authenticateToken, isAdmin, async (req, res) => {
   try {
     const { status } = req.query;
 
@@ -180,7 +180,7 @@ router.get('/applications', authMiddleware, async (req, res) => {
 });
 
 // 3. GET /api/membership/applications/:id (ADMIN - Auth Required)
-router.get('/applications/:id', authMiddleware, async (req, res) => {
+router.get('/applications/:id', authenticateToken, isAdmin, async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -210,7 +210,8 @@ router.get('/applications/:id', authMiddleware, async (req, res) => {
 // 4. POST /api/membership/applications/:id/approve (ADMIN - Auth Required)
 router.post(
   '/applications/:id/approve',
-  authMiddleware,
+  authenticateToken,
+  isAdmin,
   [
     body('admin_notes')
       .optional({ checkFalsy: true })
@@ -242,11 +243,11 @@ router.post(
         });
       }
 
-      // Update application status
+      // Update application status - CORRECTED: Use req.user.id instead of req.admin.id
       await membershipModel.updateApplicationStatus(
         id,
         'approved',
-        req.admin.id,
+        req.user.id,
         admin_notes || null
       );
 
@@ -284,7 +285,8 @@ router.post(
 // 5. POST /api/membership/applications/:id/reject (ADMIN - Auth Required)
 router.post(
   '/applications/:id/reject',
-  authMiddleware,
+  authenticateToken,
+  isAdmin,
   [
     body('admin_notes')
       .trim()
@@ -317,11 +319,11 @@ router.post(
         });
       }
 
-      // Update application status
+      // Update application status - CORRECTED: Use req.user.id instead of req.admin.id
       const updatedApplication = await membershipModel.updateApplicationStatus(
         id,
         'rejected',
-        req.admin.id,
+        req.user.id,
         admin_notes
       );
 
@@ -342,7 +344,7 @@ router.post(
 );
 
 // 6. DELETE /api/membership/applications/:id (ADMIN - Auth Required)
-router.delete('/applications/:id', authMiddleware, async (req, res) => {
+router.delete('/applications/:id', authenticateToken, isAdmin, async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -374,7 +376,7 @@ router.delete('/applications/:id', authMiddleware, async (req, res) => {
 });
 
 // 7. GET /api/membership/statistics (ADMIN - Auth Required)
-router.get('/statistics', authMiddleware, async (req, res) => {
+router.get('/statistics', authenticateToken, isAdmin, async (req, res) => {
   try {
     const statistics = await membershipModel.getApplicationStatistics();
 
