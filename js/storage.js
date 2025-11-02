@@ -80,7 +80,6 @@ function isAuthenticated() {
 
 async function getClubConfig() {
   try {
-    // ✅ ALWAYS try API first, don't use cache immediately
     if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady) {
       console.log('🔄 Fetching club config from API...');
       try {
@@ -94,7 +93,6 @@ async function getClubConfig() {
         if (response.success && response.data) {
           console.log('✅ Club config fetched from API:', response.data);
           
-          // ✅ Map backend fields to frontend format
           const mappedData = {
             name: response.data.club_name || response.data.name,
             motto: response.data.club_motto || response.data.motto,
@@ -103,7 +101,6 @@ async function getClubConfig() {
             socialLinks: response.data.social_links || response.data.socialLinks || []
           };
           
-          // Clear old cache and save new data
           localStorage.removeItem('cache_clubConfig');
           localStorage.setItem(STORAGE_KEYS.CLUB_CONFIG, JSON.stringify(mappedData));
           localStorage.setItem('clubConfig', JSON.stringify(mappedData));
@@ -115,7 +112,6 @@ async function getClubConfig() {
       }
     }
     
-    // Fallback to cache only if API fails
     const cached = localStorage.getItem(STORAGE_KEYS.CLUB_CONFIG) || 
                    localStorage.getItem('clubConfig');
     if (cached) {
@@ -149,7 +145,6 @@ async function setClubConfig(configData) {
     
     if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady) {
       try {
-        // ✅ CRITICAL FIX: Map ALL fields correctly for backend
         const backendConfig = {
           club_name: updatedConfig.name || updatedConfig.club_name,
           club_motto: updatedConfig.motto || updatedConfig.club_motto,
@@ -167,12 +162,10 @@ async function setClubConfig(configData) {
         if (apiResult.success) {
           console.log('✅ Backend update successful');
           
-          // Clear ALL possible config caches
           localStorage.removeItem('cache_clubConfig');
           localStorage.removeItem(STORAGE_KEYS.CLUB_CONFIG);
           localStorage.removeItem('clubConfig');
           
-          // Map backend response back to frontend format
           const savedConfig = {
             name: backendConfig.club_name,
             motto: backendConfig.club_motto,
@@ -181,7 +174,6 @@ async function setClubConfig(configData) {
             socialLinks: backendConfig.social_links
           };
           
-          // Save with BOTH keys for compatibility
           localStorage.setItem(STORAGE_KEYS.CLUB_CONFIG, JSON.stringify(savedConfig));
           localStorage.setItem('clubConfig', JSON.stringify(savedConfig));
           localStorage.setItem('cache_clubConfig', JSON.stringify(savedConfig));
@@ -293,7 +285,6 @@ async function deleteAdmin(adminId) {
     throw new Error('Authentication required');
   }
   
-  // Clear cache first to force fresh fetch from API
   localStorage.removeItem('cache_admins');
   localStorage.removeItem(STORAGE_KEYS.ADMINS);
   
@@ -303,7 +294,6 @@ async function deleteAdmin(adminId) {
   
   if (filtered.length === admins.length) {
     console.warn('Admin not found in local list, attempting API delete anyway...');
-    // Don't throw error - try API delete anyway
   }
   
   if (filtered.length === 0) {
@@ -587,9 +577,9 @@ async function getEvents(filters = {}) {
         
         if (response.success && Array.isArray(response.data)) {
           const mappedData = response.data.map(event => ({
-  ...event,
-  location: event.venue || event.location,
-  venue: event.venue || event.location,
+            ...event,
+            location: event.venue || event.location,
+            venue: event.venue || event.location,
             image: event.image_url || event.image,
             registrationLink: event.registration_link || event.registrationLink,
             createdAt: event.created_at || event.createdAt
@@ -666,18 +656,18 @@ async function addEvent(eventData) {
     if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady) {
       try {
         const backendEvent = {
-  id: newEvent.id,
-  title: newEvent.title,
-  description: newEvent.description,
-  category: newEvent.category,
-  date: newEvent.date,
-  time: newEvent.time,
-  location: newEvent.venue,
-  image: newEvent.image,
-  status: newEvent.status,
-  registration_link: newEvent.registrationLink,
-  created_at: newEvent.createdAt
-};
+          id: newEvent.id,
+          title: newEvent.title,
+          description: newEvent.description,
+          category: newEvent.category,
+          date: newEvent.date,
+          time: newEvent.time,
+          location: newEvent.venue,
+          image: newEvent.image,
+          status: newEvent.status,
+          registration_link: newEvent.registrationLink,
+          created_at: newEvent.createdAt
+        };
         
         console.log('🔄 Sending to backend:', backendEvent);
         
@@ -736,18 +726,18 @@ async function updateEvent(eventId, updates) {
     if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady) {
       try {
         const backendEvent = {
-  id: newEvent.id,
-  title: newEvent.title,
-  description: newEvent.description,
-  category: newEvent.category,
-  date: newEvent.date,
-  time: newEvent.time,
-  location: newEvent.venue,
-  image: newEvent.image,
-  status: newEvent.status,
-  registration_link: newEvent.registrationLink,
-  created_at: newEvent.createdAt
-};
+          id: updatedEvent.id,
+          title: updatedEvent.title,
+          description: updatedEvent.description,
+          category: updatedEvent.category,
+          date: updatedEvent.date,
+          time: updatedEvent.time,
+          location: updatedEvent.venue,
+          image: updatedEvent.image,
+          status: updatedEvent.status,
+          registration_link: updatedEvent.registrationLink,
+          created_at: updatedEvent.createdAt
+        };
         
         const apiResult = await window.apiClient.updateEvent(eventId, backendEvent);
         
@@ -786,7 +776,6 @@ async function deleteEvent(eventId) {
     throw new Error('Authentication required');
   }
   
-  // Clear cache first to force fresh fetch from API
   localStorage.removeItem('cache_events');
   localStorage.removeItem(STORAGE_KEYS.EVENTS);
   
@@ -796,7 +785,6 @@ async function deleteEvent(eventId) {
   
   if (filtered.length === events.length) {
     console.warn('Event not found in local list, attempting API delete anyway...');
-    // Don't throw error - try API delete anyway
   }
   
   try {
@@ -878,7 +866,6 @@ async function getProjects(filters = {}) {
   }
 }
 
-// ✅ CRITICAL FIX: Ensure arrays are always arrays, never strings
 async function addProject(projectData) {
   if (!projectData.title || !projectData.description || !projectData.category) {
     console.error('❌ Missing required fields:', {
@@ -897,7 +884,6 @@ async function addProject(projectData) {
     const projectsResult = await getProjects();
     const projects = projectsResult.data || [];
     
-    // ✅ CRITICAL: Ensure technologies and teamMembers are ALWAYS arrays
     const technologies = Array.isArray(projectData.technologies) 
       ? projectData.technologies 
       : (typeof projectData.technologies === 'string' 
@@ -931,9 +917,6 @@ async function addProject(projectData) {
     
     if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady) {
       try {
-        // ✅ CRITICAL FIX: Stringify arrays BEFORE sending to api-client
-        // Because api-client.js does JSON.stringify(body) and PostgreSQL
-        // needs the arrays as JSON strings in the query parameters
         const backendProject = {
           id: newProject.id,
           title: newProject.title,
@@ -941,8 +924,8 @@ async function addProject(projectData) {
           category: newProject.category,
           status: newProject.status,
           image: newProject.image,
-          technologies: JSON.stringify(newProject.technologies), // ✅ Stringify here
-          team_members: JSON.stringify(newProject.teamMembers), // ✅ Stringify here
+          technologies: JSON.stringify(newProject.technologies),
+          team_members: JSON.stringify(newProject.teamMembers),
           github_link: newProject.githubLink,
           live_link: newProject.liveLink,
           completion_date: newProject.completionDate,
@@ -1003,7 +986,6 @@ async function updateProject(projectId, updates) {
   }
   
   try {
-    // ✅ CRITICAL: Ensure arrays in updates
     if (updates.technologies && !Array.isArray(updates.technologies)) {
       updates.technologies = typeof updates.technologies === 'string'
         ? updates.technologies.split(',').map(t => t.trim()).filter(Boolean)
@@ -1072,7 +1054,6 @@ async function deleteProject(projectId) {
     throw new Error('Authentication required');
   }
   
-  // Clear cache first to force fresh fetch from API
   localStorage.removeItem('cache_projects');
   localStorage.removeItem(STORAGE_KEYS.PROJECTS);
   
@@ -1082,7 +1063,6 @@ async function deleteProject(projectId) {
   
   if (filtered.length === projects.length) {
     console.warn('Project not found in local list, attempting API delete anyway...');
-    // Don't throw error - try API delete anyway
   }
   
   try {
@@ -1127,7 +1107,6 @@ async function getGallery(filters = {}) {
             createdAt: item.created_at || item.createdAt
           }));
           
-          // Save to cache (with error handling)
           try {
             localStorage.setItem(STORAGE_KEYS.GALLERY, JSON.stringify(mappedData));
             localStorage.setItem('gallery', JSON.stringify(mappedData));
@@ -1242,7 +1221,6 @@ async function deleteGalleryItem(galleryId) {
     throw new Error('Authentication required');
   }
   
-  // Clear cache first to force fresh fetch from API
   localStorage.removeItem('cache_gallery');
   localStorage.removeItem(STORAGE_KEYS.GALLERY);
   
@@ -1252,7 +1230,6 @@ async function deleteGalleryItem(galleryId) {
   
   if (filtered.length === gallery.length) {
     console.warn('Gallery item not found in local list, attempting API delete anyway...');
-    // Don't throw error - try API delete anyway
   }
   
   try {
@@ -1459,7 +1436,6 @@ async function deleteAnnouncement(announcementId) {
     throw new Error('Authentication required');
   }
   
-  // Clear cache first to force fresh fetch from API
   localStorage.removeItem('cache_announcements');
   localStorage.removeItem(STORAGE_KEYS.ANNOUNCEMENTS);
   
@@ -1469,8 +1445,8 @@ async function deleteAnnouncement(announcementId) {
   
   if (filtered.length === announcements.length) {
     console.warn('Announcement not found in local list, attempting API delete anyway...');
-    // Don't throw error - try API delete anyway
   }
+  
   try {
     if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady) {
       try {
@@ -1496,6 +1472,171 @@ async function deleteAnnouncement(announcementId) {
     }
   } catch (error) {
     console.error('❌ Failed to delete announcement:', error);
+    throw error;
+  }
+}
+
+async function getMembershipApplications(filters = {}) {
+  try {
+    if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady) {
+      try {
+        const response = await window.apiClient.getMembershipApplications(filters.status);
+        if (response.success && Array.isArray(response.data)) {
+          return { success: true, data: response.data };
+        }
+      } catch (apiError) {
+        console.warn('⚠️ API call failed for membership applications:', apiError.message);
+      }
+    }
+    return { success: true, data: [] };
+  } catch (error) {
+    console.error('Error getting membership applications:', error);
+    return { success: false, data: [], error: error.message };
+  }
+}
+
+async function submitMembershipApplication(applicationData) {
+  try {
+    if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady) {
+      const result = await window.apiClient.submitMembershipApplication(applicationData);
+      return result;
+    }
+    throw new Error('API client not available');
+  } catch (error) {
+    console.error('Error submitting membership application:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+async function approveMembershipApplication(id, notes = '') {
+  if (!isAuthenticated()) {
+    throw new Error('Authentication required');
+  }
+  
+  try {
+    if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady) {
+      const result = await window.apiClient.approveMembershipApplication(id, notes);
+      if (result.success) {
+        localStorage.removeItem('cache_members');
+        localStorage.removeItem(STORAGE_KEYS.MEMBERS);
+      }
+      return result;
+    }
+    throw new Error('API client not available');
+  } catch (error) {
+    console.error('Error approving application:', error);
+    throw error;
+  }
+}
+
+async function rejectMembershipApplication(id, notes) {
+  if (!isAuthenticated()) {
+    throw new Error('Authentication required');
+  }
+  
+  if (!notes || notes.trim() === '') {
+    throw new Error('Rejection reason is required');
+  }
+  
+  try {
+    if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady) {
+      const result = await window.apiClient.rejectMembershipApplication(id, notes);
+      return result;
+    }
+    throw new Error('API client not available');
+  } catch (error) {
+    console.error('Error rejecting application:', error);
+    throw error;
+  }
+}
+
+async function deleteMembershipApplication(id) {
+  if (!isAuthenticated()) {
+    throw new Error('Authentication required');
+  }
+  
+  try {
+    if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady) {
+      const result = await window.apiClient.deleteMembershipApplication(id);
+      return result;
+    }
+    throw new Error('API client not available');
+  } catch (error) {
+    console.error('Error deleting application:', error);
+    throw error;
+  }
+}
+
+async function getAlumniList(filters = {}) {
+  try {
+    if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady) {
+      try {
+        const response = await window.apiClient.getAlumni(filters);
+        if (response.success && Array.isArray(response.data)) {
+          return { success: true, data: response.data };
+        }
+      } catch (apiError) {
+        console.warn('⚠️ API call failed for alumni:', apiError.message);
+      }
+    }
+    return { success: true, data: [] };
+  } catch (error) {
+    console.error('Error getting alumni:', error);
+    return { success: false, data: [], error: error.message };
+  }
+}
+
+async function addAlumni(alumniData) {
+  if (!isAuthenticated()) {
+    throw new Error('Authentication required');
+  }
+  
+  if (!alumniData.name || !alumniData.batch_year || !alumniData.department) {
+    throw new Error('Required fields missing: name, batch_year, department');
+  }
+  
+  try {
+    if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady) {
+      const result = await window.apiClient.createAlumni(alumniData);
+      return result;
+    }
+    throw new Error('API client not available');
+  } catch (error) {
+    console.error('Error adding alumni:', error);
+    throw error;
+  }
+}
+
+async function updateAlumniRecord(id, updates) {
+  if (!isAuthenticated()) {
+    throw new Error('Authentication required');
+  }
+  
+  try {
+    if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady) {
+      const result = await window.apiClient.updateAlumni(id, updates);
+      return result;
+    }
+    throw new Error('API client not available');
+  } catch (error) {
+    console.error('Error updating alumni:', error);
+    throw error;
+  }
+}
+
+async function deleteAlumniRecord(id) {
+  if (!isAuthenticated()) {
+    throw new Error('Authentication required');
+  }
+  
+  try {
+    if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady) {
+      const result = await window.apiClient.deleteAlumni(id);
+      return result;
+    }
+    throw new Error('API client not available');
+  } catch (error) {
+    console.error('Error deleting alumni:', error);
     throw error;
   }
 }
@@ -1680,7 +1821,7 @@ async function exportAllData() {
       gallery: galleryResult.data || [],
       announcements: announcementsResult.data || [],
       exportDate: getCurrentTimestamp(),
-      version: '2.2.0'
+      version: '2.3.0'
     };
     
     const dataStr = JSON.stringify(exportData, null, 2);
@@ -1736,6 +1877,15 @@ window.storage = {
   addAnnouncement,
   updateAnnouncement,
   deleteAnnouncement,
+  getMembershipApplications,
+  submitMembershipApplication,
+  approveMembershipApplication,
+  rejectMembershipApplication,
+  deleteMembershipApplication,
+  getAlumniList,
+  addAlumni,
+  updateAlumniRecord,
+  deleteAlumniRecord,
   getTheme,
   setTheme,
   getStatistics,
@@ -1775,6 +1925,15 @@ window.getAnnouncements = getAnnouncements;
 window.addAnnouncement = addAnnouncement;
 window.updateAnnouncement = updateAnnouncement;
 window.deleteAnnouncement = deleteAnnouncement;
+window.getMembershipApplications = getMembershipApplications;
+window.submitMembershipApplication = submitMembershipApplication;
+window.approveMembershipApplication = approveMembershipApplication;
+window.rejectMembershipApplication = rejectMembershipApplication;
+window.deleteMembershipApplication = deleteMembershipApplication;
+window.getAlumniList = getAlumniList;
+window.addAlumni = addAlumni;
+window.updateAlumniRecord = updateAlumniRecord;
+window.deleteAlumniRecord = deleteAlumniRecord;
 window.getTheme = getTheme;
 window.setTheme = setTheme;
 window.getStatistics = getStatistics;
@@ -1783,7 +1942,4 @@ window.searchEvents = searchEvents;
 window.searchProjects = searchProjects;
 window.exportAllData = exportAllData;
 
-console.log('✅ storage.js v2.2.0 loaded - ARRAY FIX APPLIED');
-console.log('📦 Storage API available at window.storage');
-console.log('🔧 CRITICAL FIX: Arrays are now properly handled (no double stringify)');
-console.log('🌐 Global function aliases created for backward compatibility');
+console.log('✅ storage.js v2.3.0 loaded - Added Membership & Alumni functions');

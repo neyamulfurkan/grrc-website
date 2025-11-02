@@ -16,6 +16,10 @@ const morgan = require('morgan');
 const path = require('path');
 require('dotenv').config();
 
+// ============ ROUTE IMPORTS ============
+
+const membershipRoutes = require('./routes/membership');
+
 // ============ INITIALIZE EXPRESS ============
 
 const app = express();
@@ -171,7 +175,8 @@ app.get('/health', async (req, res) => {
 let routesLoaded = {
     auth: false,
     content: false,
-    admin: false
+    admin: false,
+    membership: false
 };
 
 /**
@@ -234,6 +239,7 @@ function createPlaceholderRoute(mountPath, routeName) {
 loadRoute('auth', './routes/auth', '/api/auth');
 loadRoute('content', './routes/content', '/api/content');
 loadRoute('admin', './routes/admin', '/api/admin');
+app.use('/api/membership', membershipRoutes);
 
 /**
  * API Documentation
@@ -261,6 +267,12 @@ app.get('/api', (req, res) => {
             } : 'Routes not loaded',
             admin: routesLoaded.admin ? {
                 'ALL /api/admin/*': 'Protected admin endpoints'
+            } : 'Routes not loaded',
+            membership: routesLoaded.membership ? {
+                'POST /api/membership/apply': 'Submit membership application',
+                'GET /api/membership/applications': 'Get all applications (admin)',
+                'GET /api/membership/applications/:id': 'Get specific application',
+                'PATCH /api/membership/applications/:id/status': 'Update application status'
             } : 'Routes not loaded'
         }
     });
@@ -354,9 +366,10 @@ async function startServer() {
             console.log(`📝 Environment: ${NODE_ENV}`);
             console.log(`🔒 CORS: ${NODE_ENV === 'development' ? 'Permissive (dev)' : 'Configured'}`);
             console.log(`\n📊 Routes Status:`);
-            console.log(`   Auth:    ${routesLoaded.auth ? '✅' : '❌'}`);
-            console.log(`   Content: ${routesLoaded.content ? '✅' : '❌'}`);
-            console.log(`   Admin:   ${routesLoaded.admin ? '✅' : '❌'}`);
+            console.log(`   Auth:       ${routesLoaded.auth ? '✅' : '❌'}`);
+            console.log(`   Content:    ${routesLoaded.content ? '✅' : '❌'}`);
+            console.log(`   Admin:      ${routesLoaded.admin ? '✅' : '❌'}`);
+            console.log(`   Membership: ${routesLoaded.membership ? '✅' : '❌'}`);
             console.log(`\n💡 Health Check: http://localhost:${PORT}/health`);
             console.log(`💡 API Docs: http://localhost:${PORT}/api`);
             console.log(`\n📖 Server ready!\n`);

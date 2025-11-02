@@ -6,6 +6,8 @@
 -- ====================================
 
 -- Drop existing tables if they exist (in reverse order of dependencies)
+DROP TABLE IF EXISTS membership_applications CASCADE;
+DROP TABLE IF EXISTS alumni CASCADE;
 DROP TABLE IF EXISTS announcements CASCADE;
 DROP TABLE IF EXISTS gallery CASCADE;
 DROP TABLE IF EXISTS projects CASCADE;
@@ -166,6 +168,69 @@ CREATE TABLE announcements (
 -- Index for sorting announcements by date and priority
 CREATE INDEX idx_announcements_date ON announcements(date DESC);
 CREATE INDEX idx_announcements_priority ON announcements(priority);
+
+-- ====================================
+-- Membership Applications Table
+-- Purpose: Stores membership applications from prospective members
+-- ====================================
+CREATE TABLE membership_applications (
+    id SERIAL PRIMARY KEY,
+    full_name VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    phone VARCHAR(20) NOT NULL,
+    student_id VARCHAR(50),
+    department VARCHAR(255) NOT NULL,
+    year VARCHAR(10) NOT NULL CHECK (year IN ('1st', '2nd', '3rd', '4th')),
+    bio TEXT NOT NULL, -- Why they want to join
+    skills JSONB DEFAULT '[]'::jsonb, -- Array of skills as JSON
+    previous_experience TEXT,
+    github_profile VARCHAR(255),
+    linkedin_profile VARCHAR(255),
+    status VARCHAR(20) NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected')),
+    applied_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    reviewed_date TIMESTAMP,
+    reviewed_by INTEGER REFERENCES admins(id) ON DELETE SET NULL,
+    admin_notes TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Indexes for membership applications
+CREATE INDEX idx_membership_applications_status_date ON membership_applications(status, applied_date DESC);
+CREATE INDEX idx_membership_applications_email ON membership_applications(email);
+
+-- ====================================
+-- Alumni Table
+-- Purpose: Stores information about club alumni
+-- ====================================
+CREATE TABLE alumni (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    photo TEXT, -- Base64 or URL
+    batch_year VARCHAR(10) NOT NULL, -- Example: '2020-2021'
+    department VARCHAR(255) NOT NULL,
+    role_in_club VARCHAR(255), -- Their position when active
+    achievements TEXT,
+    current_position VARCHAR(255), -- Current job/study
+    current_company VARCHAR(255),
+    bio TEXT,
+    email VARCHAR(255),
+    phone VARCHAR(20),
+    linkedin VARCHAR(255),
+    github VARCHAR(255),
+    facebook VARCHAR(255),
+    is_featured BOOLEAN DEFAULT FALSE, -- Featured alumni
+    display_order INTEGER DEFAULT 0, -- For sorting
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Create trigger for alumni updated_at timestamp
+CREATE TRIGGER update_alumni_updated_at BEFORE UPDATE ON alumni
+FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- Indexes for alumni
+CREATE INDEX idx_alumni_batch_year_display_order ON alumni(batch_year DESC, display_order ASC);
+CREATE INDEX idx_alumni_featured_display_order ON alumni(is_featured DESC, display_order ASC);
 
 -- ====================================
 -- Database Initialization Complete

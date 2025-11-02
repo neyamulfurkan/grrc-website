@@ -25,6 +25,7 @@ const {
   updateAdmin,
   deleteAdmin,
 } = require('../models/contentModel');
+const alumniModel = require('../models/alumniModel');
 
 router.use(authenticateToken);
 router.use(isAdmin);
@@ -608,6 +609,126 @@ router.delete('/admins/:id', async (req, res) => {
     res.status(500).json({
       success: false,
       error: 'Failed to delete admin',
+    });
+  }
+});
+
+// ====================================
+// ALUMNI (ADMIN ROUTES)
+// ====================================
+
+/**
+ * POST /api/admin/alumni
+ * Create new alumni record
+ * Required fields: name, batch_year, department
+ */
+router.post('/alumni', async (req, res) => {
+  try {
+    const { name, batch_year, department } = req.body;
+    
+    if (!name || !batch_year || !department) {
+      return res.status(400).json({
+        success: false,
+        error: 'Required fields: name, batch_year, department',
+      });
+    }
+
+    const result = await alumniModel.createAlumni(req.body);
+    
+    if (!result.success) {
+      return res.status(400).json(result);
+    }
+    
+    console.log(`➕ Alumni created: ${name} by ${req.user.username}`);
+    res.status(201).json(result);
+  } catch (error) {
+    console.error('❌ Error in POST /alumni:', {
+      error: error.message,
+      stack: error.stack,
+      body: req.body,
+      params: req.params
+    });
+    res.status(500).json({
+      success: false,
+      error: 'Failed to create alumni',
+    });
+  }
+});
+
+/**
+ * PUT /api/admin/alumni/:id
+ * Update alumni record
+ */
+router.put('/alumni/:id', async (req, res) => {
+  try {
+    const result = await alumniModel.updateAlumni(req.params.id, req.body);
+    
+    if (!result.success) {
+      return res.status(404).json(result);
+    }
+    
+    console.log(`✏️ Alumni updated: ID ${req.params.id} by ${req.user.username}`);
+    res.json(result);
+  } catch (error) {
+    console.error('❌ Error in PUT /alumni/:id:', {
+      error: error.message,
+      stack: error.stack,
+      body: req.body,
+      params: req.params
+    });
+    res.status(500).json({
+      success: false,
+      error: 'Failed to update alumni',
+    });
+  }
+});
+
+/**
+ * DELETE /api/admin/alumni/:id
+ * Delete alumni record
+ */
+router.delete('/alumni/:id', async (req, res) => {
+  try {
+    const result = await alumniModel.deleteAlumni(req.params.id);
+    
+    if (!result.success) {
+      return res.status(404).json(result);
+    }
+    
+    console.log(`🗑️ Alumni deleted: ID ${req.params.id} by ${req.user.username}`);
+    res.json(result);
+  } catch (error) {
+    console.error('❌ Error in DELETE /alumni/:id:', {
+      error: error.message,
+      stack: error.stack,
+      body: req.body,
+      params: req.params
+    });
+    res.status(500).json({
+      success: false,
+      error: 'Failed to delete alumni',
+    });
+  }
+});
+
+/**
+ * GET /api/admin/alumni/statistics
+ * Get alumni statistics
+ */
+router.get('/alumni/statistics', async (req, res) => {
+  try {
+    const result = await alumniModel.getAlumniStatistics();
+    res.json(result);
+  } catch (error) {
+    console.error('❌ Error in GET /alumni/statistics:', {
+      error: error.message,
+      stack: error.stack,
+      body: req.body,
+      params: req.params
+    });
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch alumni statistics',
     });
   }
 });

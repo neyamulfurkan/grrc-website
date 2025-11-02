@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alumni Management - Admin Panel</title>
+    
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/common.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/admin-panel.css">
+</head>
+<body>
+    <!-- This file is loaded as an iframe in admin-panel.html -->
+    
+    <div class="section-content active" id="alumniSection">
+        <div class="admin-form">
+            <h2 style="margin-bottom: var(--space-lg);">Add/Edit Alumni</h2>
+            <form id="alumniForm">
+                <input type="hidden" id="alumniId">
+                
+                <div class="form-group">
+                    <label class="form-label">Photo</label>
+                    <div class="file-input-wrapper">
+                        <label for="alumniPhoto" class="file-input-label">📷 Choose Photo</label>
+                        <input type="file" id="alumniPhoto" accept="image/*">
+                    </div>
+                    <input type="url" class="form-input" id="alumniPhotoUrl" placeholder="Or enter image URL" style="margin-top: var(--space-sm);">
+                    <img id="alumniPhotoPreview" class="image-preview" style="display: none;">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Full Name *</label>
+                        <input type="text" class="form-input" id="alumniName" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Batch Year *</label>
+                        <input type="text" class="form-input" id="alumniBatchYear" placeholder="2020-2021" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Department *</label>
+                        <select class="form-select" id="alumniDepartment" required>
+                            <option value="">Select Department</option>
+                            <optgroup label="Faculty of Engineering">
+                                <option value="Computer Science and Engineering (CSE)">Computer Science and Engineering (CSE)</option>
+                                <option value="Electrical and Electronic Engineering (EEE)">Electrical and Electronic Engineering (EEE)</option>
+                                <option value="Electronics and Telecommunication Engineering (ETE)">Electronics and Telecommunication Engineering (ETE)</option>
+                                <option value="Applied Chemistry and Chemical Engineering (ACCE)">Applied Chemistry and Chemical Engineering (ACCE)</option>
+                                <option value="Civil Engineering (CE)">Civil Engineering (CE)</option>
+                                <option value="Food and Agroprocess Engineering (FAE)">Food and Agroprocess Engineering (FAE)</option>
+                                <option value="Architecture (ARCH)">Architecture (ARCH)</option>
+                            </optgroup>
+                            <optgroup label="Faculty of Science">
+                                <option value="Mathematics">Mathematics</option>
+                                <option value="Statistics">Statistics</option>
+                                <option value="Chemistry">Chemistry</option>
+                                <option value="Physics">Physics</option>
+                                <option value="Environmental Science & Disaster Management (ESDM)">Environmental Science & Disaster Management (ESDM)</option>
+                            </optgroup>
+                            <optgroup label="Faculty of Life Science">
+                                <option value="Pharmacy">Pharmacy</option>
+                                <option value="Biotechnology and Genetic Engineering (BGE)">Biotechnology and Genetic Engineering (BGE)</option>
+                                <option value="Biochemistry and Molecular Biology (BMB)">Biochemistry and Molecular Biology (BMB)</option>
+                                <option value="Psychology">Psychology</option>
+                                <option value="Botany">Botany</option>
+                            </optgroup>
+                            <optgroup label="Faculty of Humanities (Arts)">
+                                <option value="English">English</option>
+                                <option value="Bangla">Bangla</option>
+                                <option value="History">History</option>
+                            </optgroup>
+                            <optgroup label="Faculty of Social Science">
+                                <option value="Sociology">Sociology</option>
+                                <option value="Public Administration (PAD)">Public Administration (PAD)</option>
+                                <option value="International Relations (IR)">International Relations (IR)</option>
+                                <option value="Economics">Economics</option>
+                                <option value="Political Science">Political Science</option>
+                            </optgroup>
+                            <optgroup label="Faculty of Business Studies">
+                                <option value="Management Studies">Management Studies</option>
+                                <option value="Accounting and Information Systems (AIS)">Accounting and Information Systems (AIS)</option>
+                                <option value="Marketing">Marketing</option>
+                                <option value="Finance and Banking">Finance and Banking</option>
+                                <option value="Tourism and Hospitality Management (THM)">Tourism and Hospitality Management (THM)</option>
+                            </optgroup>
+                            <optgroup label="Faculty of Law">
+                                <option value="Law">Law</option>
+                            </optgroup>
+                            <optgroup label="Sheikh Hasina Agriculture Institute">
+                                <option value="Agriculture">Agriculture</option>
+                                <option value="Fisheries and Marine Bioscience (FMB)">Fisheries and Marine Bioscience (FMB)</option>
+                                <option value="Livestock Science and Veterinary Medicine (LSVM)">Livestock Science and Veterinary Medicine (LSVM)</option>
+                            </optgroup>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Role in Club</label>
+                        <input type="text" class="form-input" id="alumniRoleInClub" placeholder="e.g., President, Vice President">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Current Position</label>
+                        <input type="text" class="form-input" id="alumniCurrentPosition" placeholder="e.g., Software Engineer">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Current Company</label>
+                        <input type="text" class="form-input" id="alumniCurrentCompany" placeholder="e.g., Google, Microsoft">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Bio</label>
+                    <textarea class="form-textarea" id="alumniBio" placeholder="Brief bio..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Achievements</label>
+                    <textarea class="form-textarea" id="alumniAchievements" placeholder="Notable achievements during club tenure..."></textarea>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Email</label>
+                        <input type="email" class="form-input" id="alumniEmail">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Phone</label>
+                        <input type="tel" class="form-input" id="alumniPhone" placeholder="+8801234567890">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">LinkedIn</label>
+                        <input type="url" class="form-input" id="alumniLinkedin" placeholder="https://linkedin.com/in/...">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">GitHub</label>
+                        <input type="url" class="form-input" id="alumniGithub" placeholder="https://github.com/...">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Facebook</label>
+                        <input type="url" class="form-input" id="alumniFacebook" placeholder="https://facebook.com/...">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Display Order</label>
+                        <input type="number" class="form-input" id="alumniDisplayOrder" value="0" min="0">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                        <input type="checkbox" id="alumniIsFeatured" style="width: 20px; height: 20px;">
+                        <span class="form-label" style="margin: 0;">Featured Alumni (Show on homepage)</span>
+                    </label>
+                </div>
+
+                <div style="display: flex; gap: var(--space-md);">
+                    <button type="submit" class="btn btn-primary">💾 Save Alumni</button>
+                    <button type="button" class="btn btn-secondary" onclick="resetAlumniForm()">🔄 Reset Form</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Alumni Table -->
+        <div class="data-table-wrapper">
+            <div class="table-header">
+                <h3>All Alumni</h3>
+                <input type="text" class="form-input" id="alumniSearch" placeholder="🔍 Search alumni..." style="max-width: 300px;">
+            </div>
+            <div style="overflow-x: auto;">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Batch</th>
+                            <th>Department</th>
+                            <th>Current Position</th>
+                            <th>Featured</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="alumniTableBody">
+                        <tr>
+                            <td colspan="6" style="text-align: center; padding: var(--space-xl);">No alumni added yet</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/api-client.js"></script>
+    <script src="js/config.js"></script>
+    <script src="js/storage.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/theme.js"></script>
+    <script src="js/utils.js"></script>
+    
+    <script>
+        // ========== ALUMNI MANAGEMENT ==========
+        let currentEditAlumniId = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeAlumni();
+        });
+
+        async function initializeAlumni() {
+            // Wait for API client
+            let retries = 0;
+            while ((!window.apiClient || !window.apiClient.isReady) && retries < 50) {
+                await new Promise(resolve => setTimeout(resolve, 100));
+                retries++;
+            }
+
+            setupAlumniForm();
+            await loadAlumniList();
+        }
+
+        function setupAlumniForm() {
+            const form = document.getElementById('alumniForm');
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                await saveAlumni();
+            });
+            
+            // Search functionality
+            const searchInput = document.getElementById('alumniSearch');
+            if (searchInput) {
+                searchInput.addEventListener('input', (e) => {
+                    loadAlumniList(e.target.value);
+                });
+            }
+            
+            // Photo preview
+            setupImagePreview('alumniPhoto', 'alumniPhotoUrl', 'alumniPhotoPreview');
+        }
+
+        async function saveAlumni() {
+            try {
+                if (!window.apiClient || !window.apiClient.getAuthToken()) {
+                    showToast('Please log in again', 'error');
+                    return;
+                }
+                
+                const name = document.getElementById('alumniName').value.trim();
+                const batchYear = document.getElementById('alumniBatchYear').value.trim();
+                const department = document.getElementById('alumniDepartment').value;
+                
+                if (!name || !batchYear || !department) {
+                    showToast('Please fill all required fields', 'error');
+                    return;
+                }
+                
+                const photoFile = document.getElementById('alumniPhoto').files[0];
+                const photoUrl = document.getElementById('alumniPhotoUrl').value.trim();
+                let photo = photoUrl;
+                
+                if (photoFile) {
+                    photo = await imageToBase64(photoFile);
+                }
+                
+                const alumniData = {
+                    name: name,
+                    photo: photo,
+                    batch_year: batchYear,
+                    department: department,
+                    role_in_club: document.getElementById('alumniRoleInClub').value.trim(),
+                    current_position: document.getElementById('alumniCurrentPosition').value.trim(),
+                    current_company: document.getElementById('alumniCurrentCompany').value.trim(),
+                    bio: document.getElementById('alumniBio').value.trim(),
+                    achievements: document.getElementById('alumniAchievements').value.trim(),
+                    email: document.getElementById('alumniEmail').value.trim(),
+                    phone: document.getElementById('alumniPhone').value.trim(),
+                    linkedin: document.getElementById('alumniLinkedin').value.trim(),
+                    github: document.getElementById('alumniGithub').value.trim(),
+                    facebook: document.getElementById('alumniFacebook').value.trim(),
+                    is_featured: document.getElementById('alumniIsFeatured').checked,
+                    display_order: parseInt(document.getElementById('alumniDisplayOrder').value) || 0
+                };
+                
+                if (currentEditAlumniId) {
+                    const result = await window.apiClient.updateAlumni(currentEditAlumniId, alumniData);
+                    if (result.success) {
+                        showToast('Alumni updated successfully!', 'success');
+                    } else {
+                        throw new Error(result.error || 'Failed to update alumni');
+                    }
+                } else {
+                    const result = await window.apiClient.createAlumni(alumniData);
+                    if (result.success) {
+                        showToast('Alumni added successfully!', 'success');
+                    } else {
+                        throw new Error(result.error || 'Failed to add alumni');
+                    }
+                }
+                
+                resetAlumniForm();
+                await loadAlumniList();
+                
+                // Notify parent to refresh dashboard
+                if (window.parent && window.parent.loadDashboardStats) {
+                    window.parent.loadDashboardStats();
+                }
+                
+            } catch (error) {
+                console.error('Error saving alumni:', error);
+                showToast(error.message || 'Error saving alumni', 'error');
+            }
+        }
+
+        async function loadAlumniList(searchTerm = '') {
+            try {
+                const result = await window.apiClient.getAlumni();
+                const tbody = document.getElementById('alumniTableBody');
+                
+                if (!result.success || !result.data || result.data.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: var(--space-xl);">No alumni added yet</td></tr>';
+                    return;
+                }
+                
+                let alumni = result.data;
+                
+                // Apply search filter
+                if (searchTerm) {
+                    alumni = alumni.filter(a =>
+                        a.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                        (a.batch_year && a.batch_year.includes(searchTerm)) ||
+                        (a.current_company && a.current_company.toLowerCase().includes(searchTerm.toLowerCase()))
+                    );
+                }
+                
+                if (alumni.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: var(--space-xl);">No alumni found</td></tr>';
+                    return;
+                }
+                
+                tbody.innerHTML = alumni.map(alum => `
+                    <tr>
+                        <td style="font-weight: 600;">${alum.name}</td>
+                        <td>${alum.batch_year}</td>
+                        <td>${alum.department}</td>
+                        <td>${alum.current_position || 'N/A'}${alum.current_company ? ` @ ${alum.current_company}` : ''}</td>
+                        <td>${alum.is_featured ? '<span class="badge badge-warning">⭐ Featured</span>' : '-'}</td>
+                        <td class="action-buttons">
+                            <button class="btn btn-icon btn-edit" onclick="editAlumni('${alum.id}')">✏️</button>
+                            <button class="btn btn-icon btn-delete" onclick="deleteAlumniRecord('${alum.id}')">🗑️</button>
+                        </td>
+                    </tr>
+                `).join('');
+                
+                // Update parent dashboard stat
+                if (window.parent && window.parent.document.getElementById('statAlumni')) {
+                    window.parent.document.getElementById('statAlumni').textContent = alumni.length;
+                }
+                
+            } catch (error) {
+                console.error('Error loading alumni:', error);
+                document.getElementById('alumniTableBody').innerHTML =
+                    '<tr><td colspan="6" style="text-align: center; padding: var(--space-xl); color: var(--error-color);">Error loading alumni</td></tr>';
+            }
+        }
+
+        async function editAlumni(id) {
+            try {
+                const result = await window.apiClient.getAlumniById(id);
+                if (result.success && result.data) {
+                    const alum = result.data;
+                    currentEditAlumniId = id;
+                    
+                    document.getElementById('alumniName').value = alum.name || '';
+                    document.getElementById('alumniBatchYear').value = alum.batch_year || '';
+                    document.getElementById('alumniDepartment').value = alum.department || '';
+                    document.getElementById('alumniRoleInClub').value = alum.role_in_club || '';
+                    document.getElementById('alumniCurrentPosition').value = alum.current_position || '';
+                    document.getElementById('alumniCurrentCompany').value = alum.current_company || '';
+                    document.getElementById('alumniBio').value = alum.bio || '';
+                    document.getElementById('alumniAchievements').value = alum.achievements || '';
+                    document.getElementById('alumniEmail').value = alum.email || '';
+                    document.getElementById('alumniPhone').value = alum.phone || '';
+                    document.getElementById('alumniLinkedin').value = alum.linkedin || '';
+                    document.getElementById('alumniGithub').value = alum.github || '';
+                    document.getElementById('alumniFacebook').value = alum.facebook || '';
+                    document.getElementById('alumniIsFeatured').checked = alum.is_featured || false;
+                    document.getElementById('alumniDisplayOrder').value = alum.display_order || 0;
+                    
+                    if (alum.photo) {
+                        document.getElementById('alumniPhotoUrl').value = alum.photo;
+                        document.getElementById('alumniPhotoPreview').src = alum.photo;
+                        document.getElementById('alumniPhotoPreview').style.display = 'block';
+                    }
+                    
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                    showToast('Editing alumni', 'info');
+                }
+            } catch (error) {
+                console.error('Error editing alumni:', error);
+                showToast('Error loading alumni details', 'error');
+            }
+        }
+
+        async function deleteAlumniRecord(id) {
+            if (!confirm('Are you sure you want to delete this alumni record?')) return;
+            
+            try {
+                const result = await window.apiClient.deleteAlumni(id);
+                if (result.success) {
+                    showToast('Alumni deleted successfully', 'success');
+                    await loadAlumniList();
+                    
+                    if (window.parent && window.parent.loadDashboardStats) {
+                        window.parent.loadDashboardStats();
+                    }
+                } else {
+                    showToast(result.error || 'Failed to delete alumni', 'error');
+                }
+            } catch (error) {
+                console.error('Error deleting alumni:', error);
+                showToast('Error deleting alumni', 'error');
+            }
+        }
+
+        function resetAlumniForm() {
+            document.getElementById('alumniForm').reset();
+            currentEditAlumniId = null;
+            document.getElementById('alumniPhotoPreview').style.display = 'none';
+            document.getElementById('alumniIsFeatured').checked = false;
+            document.getElementById('alumniDisplayOrder').value = 0;
+        }
+
+        function setupImagePreview(fileInputId, urlInputId, previewId) {
+            const fileInput = document.getElementById(fileInputId);
+            const urlInput = document.getElementById(urlInputId);
+            const preview = document.getElementById(previewId);
+            
+            if (fileInput) {
+                fileInput.addEventListener('change', async (e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                        const base64 = await imageToBase64(file);
+                        if (preview) {
+                            preview.src = base64;
+                            preview.style.display = 'block';
+                        }
+                    }
+                });
+            }
+            
+            if (urlInput && preview) {
+                urlInput.addEventListener('input', (e) => {
+                    if (e.target.value) {
+                        preview.src = e.target.value;
+                        preview.style.display = 'block';
+                    } else {
+                        preview.style.display = 'none';
+                    }
+                });
+            }
+        }
+
+        function showToast(message, type = 'success') {
+            // Try parent window toast first
+            if (window.parent && window.parent.showToast) {
+                window.parent.showToast(message, type);
+            } else {
+                alert(message);
+            }
+        }
+
+        async function imageToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+        }
+    </script>
+</body>
+</html>

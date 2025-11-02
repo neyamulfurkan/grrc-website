@@ -27,6 +27,7 @@ const {
   getAnnouncementById,
   getStatistics,
 } = require('../models/contentModel');
+const alumniModel = require('../models/alumniModel');
 
 // ====================================
 // CLUB CONFIGURATION
@@ -441,6 +442,103 @@ router.get('/statistics', async (req, res) => {
     res.status(500).json({
       success: false,
       error: 'Failed to fetch statistics',
+    });
+  }
+});
+
+// ====================================
+// ALUMNI (PUBLIC ROUTES)
+// ====================================
+
+/**
+ * GET /api/content/alumni
+ * Get all alumni with optional filters
+ * Query params: ?batch_year=2023-2024&is_featured=true&limit=20&offset=0
+ */
+router.get('/alumni', async (req, res) => {
+  try {
+    const filters = {
+      batch_year: req.query.batch_year,
+      is_featured: req.query.is_featured === 'true' ? true : req.query.is_featured === 'false' ? false : undefined,
+      limit: req.query.limit ? parseInt(req.query.limit) : undefined,
+      offset: req.query.offset ? parseInt(req.query.offset) : undefined,
+    };
+    
+    // Remove undefined filters
+    Object.keys(filters).forEach(key => {
+      if (filters[key] === undefined) {
+        delete filters[key];
+      }
+    });
+
+    const result = await alumniModel.getAllAlumni(filters);
+    res.json(result);
+  } catch (error) {
+    console.error('Error fetching alumni:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch alumni',
+    });
+  }
+});
+
+/**
+ * GET /api/content/alumni/featured
+ * Get featured alumni for homepage
+ * Query param: ?limit=6
+ */
+router.get('/alumni/featured', async (req, res) => {
+  try {
+    const limit = req.query.limit ? parseInt(req.query.limit) : 6;
+    const result = await alumniModel.getFeaturedAlumni(limit);
+    res.json(result);
+  } catch (error) {
+    console.error('Error fetching featured alumni:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch featured alumni',
+    });
+  }
+});
+
+/**
+ * GET /api/content/alumni/batches
+ * Get list of batch years for filtering
+ */
+router.get('/alumni/batches', async (req, res) => {
+  try {
+    const result = await alumniModel.getAlumniBatches();
+    res.json(result);
+  } catch (error) {
+    console.error('Error fetching alumni batches:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch alumni batches',
+    });
+  }
+});
+
+/**
+ * GET /api/content/alumni/:id
+ * Get single alumni by ID
+ */
+router.get('/alumni/:id', async (req, res) => {
+  try {
+    const result = await alumniModel.getAlumniById(req.params.id);
+    
+    if (!result.success || !result.data) {
+      return res.status(404).json({
+        success: false,
+        error: 'Alumni not found',
+      });
+    }
+    
+    res.json(result);
+  } catch (error) {
+    console.error('Error fetching alumni:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch alumni',
     });
   }
 });

@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Apply for membership at GSTU Robotics & Research Club">
+    <title>Join Us - GSTU Robotics & Research Club</title>
+    
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/common.css">
+    <link rel="stylesheet" href="css/components.css">
+    
+    <style>
+        .header {
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            backdrop-filter: blur(10px);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+        }
+
+        .hero {
+            min-height: 50vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            padding: 2rem;
+            margin-top: 70px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url("data:image/svg+xml,%3Csvg width='100' height='100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 0h100v100H0z' fill='none'/%3E%3Cpath d='M0 0L50 50L0 100M50 0L100 50L50 100M100 0v100' stroke='rgba(255,255,255,0.05)' stroke-width='1'/%3E%3C/svg%3E");
+            opacity: 0.3;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 1;
+            max-width: 700px;
+            color: white;
+        }
+
+        .hero h1 {
+            font-size: clamp(2rem, 5vw, 3rem);
+            font-weight: 700;
+            margin-bottom: 1rem;
+            text-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .hero p {
+            font-size: clamp(1rem, 2.5vw, 1.2rem);
+            margin-bottom: 1rem;
+            opacity: 0.95;
+            text-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .application-section {
+            padding: 4rem 0;
+            background: var(--background-color);
+        }
+
+        .form-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: var(--surface-color);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg);
+            padding: 3rem;
+        }
+
+        .form-header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+
+        .form-header h2 {
+            font-size: 2rem;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .form-header p {
+            color: var(--text-secondary);
+            font-size: 1rem;
+        }
+
+        .error-message {
+            display: none;
+            background: #fef2f2;
+            border: 2px solid #fecaca;
+            color: #dc2626;
+            padding: 1rem;
+            border-radius: var(--radius-md);
+            margin-bottom: 1.5rem;
+            animation: shake 0.3s ease;
+        }
+
+        [data-theme="dark"] .error-message {
+            background: rgba(220, 38, 38, 0.1);
+            border-color: rgba(220, 38, 38, 0.3);
+            color: #fca5a5;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        .form-section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 2px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--text-primary);
+            font-size: 0.95rem;
+        }
+
+        .form-label .required {
+            color: #dc2626;
+            margin-left: 0.25rem;
+        }
+
+        .form-input,
+        .form-select,
+        .form-textarea {
+            width: 100%;
+            padding: 0.875rem 1rem;
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius-md);
+            font-size: 1rem;
+            background: var(--background-color);
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        .form-input:focus,
+        .form-select:focus,
+        .form-textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.1);
+        }
+
+        .form-textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        .char-count {
+            text-align: right;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-top: 0.25rem;
+        }
+
+        .skills-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            padding: 0.75rem;
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius-md);
+            background: var(--background-color);
+            min-height: 60px;
+            cursor: text;
+            transition: border-color 0.3s ease;
+        }
+
+        .skills-container:focus-within {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.1);
+        }
+
+        .skill-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 0.75rem;
+            background: var(--primary-color);
+            color: white;
+            border-radius: var(--radius-sm);
+            font-size: 0.875rem;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: scale(0.8);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .tag-remove {
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1.2rem;
+            line-height: 1;
+            transition: transform 0.2s ease;
+        }
+
+        .tag-remove:hover {
+            transform: scale(1.2);
+        }
+
+        .skills-input {
+            flex: 1;
+            min-width: 150px;
+            border: none;
+            background: transparent;
+            outline: none;
+            color: var(--text-primary);
+            font-size: 0.95rem;
+            padding: 0.5rem;
+        }
+
+        .skills-input::placeholder {
+            color: var(--text-secondary);
+        }
+
+        .form-help {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-top: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 1rem;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: var(--radius-md);
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .submit-btn:hover:not(:disabled) {
+            background: var(--secondary-color);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .success-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+            z-index: 10000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .success-modal.active {
+            display: flex;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            background: var(--surface-color);
+            border-radius: var(--radius-lg);
+            padding: 3rem;
+            max-width: 500px;
+            text-align: center;
+            animation: slideUp 0.4s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .success-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 1.5rem;
+            background: #10b981;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            font-weight: bold;
+            animation: scaleIn 0.5s ease 0.2s backwards;
+        }
+
+        @keyframes scaleIn {
+            from {
+                transform: scale(0);
+            }
+            to {
+                transform: scale(1);
+            }
+        }
+
+        .modal-content h2 {
+            font-size: 1.8rem;
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+        }
+
+        .modal-content p {
+            color: var(--text-secondary);
+            margin-bottom: 0.75rem;
+            line-height: 1.6;
+        }
+
+        .footer {
+            background: var(--surface-color);
+            padding: 2rem 0;
+            margin-top: 4rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        @media (max-width: 768px) {
+            .form-container {
+                padding: 2rem 1.5rem;
+            }
+
+            .hero {
+                min-height: 40vh;
+            }
+
+            .form-header h2 {
+                font-size: 1.5rem;
+            }
+
+            .section-title {
+                font-size: 1.1rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .form-container {
+                padding: 1.5rem 1rem;
+            }
+
+            .modal-content {
+                padding: 2rem 1.5rem;
+            }
+
+            .success-icon {
+                width: 60px;
+                height: 60px;
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo-container">
+                    <img id="clubLogo" src="assets/default-logo.jpg" alt="Club Logo" class="logo">
+                    <span id="clubName" class="club-name">GSTU Robotics & Research Club</span>
+                </div>
+                
+                <nav class="nav-menu">
+                    <a href="index.html" class="nav-link">Home</a>
+                    <a href="members.html" class="nav-link">Members</a>
+                    <a href="events.html" class="nav-link">Events</a>
+                    <a href="projects.html" class="nav-link">Projects</a>
+                    <a href="gallery.html" class="nav-link">Gallery</a>
+                    <a href="membership.html" class="nav-link active">Membership</a>
+                    <a href="alumni.html" class="nav-link">Alumni</a>
+                    <a href="admin.html" class="nav-link">Admin</a>
+                </nav>
+                
+                <button id="themeToggle" class="theme-toggle" aria-label="Toggle theme">
+                    <span class="theme-icon">🌙</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <section class="hero">
+        <div class="hero-content">
+            <h1>Join Our Club</h1>
+            <p>Become a part of GSTU Robotics & Research Club</p>
+            <p>Fill out the form below to apply for membership. We welcome passionate students interested in robotics, AI, and technology innovation.</p>
+        </div>
+    </section>
+
+    <section class="application-section">
+        <div class="container">
+            <div class="form-container">
+                <div class="form-header">
+                    <h2>Membership Application Form</h2>
+                    <p>All fields marked with <span style="color: #dc2626;">*</span> are required</p>
+                </div>
+
+                <div id="errorMessage" class="error-message"></div>
+
+                <form id="applicationForm">
+                    <!-- Section 1: Personal Information -->
+                    <div class="form-section">
+                        <h3 class="section-title">
+                            <span>👤</span>
+                            <span>Personal Information</span>
+                        </h3>
+
+                        <div class="form-group">
+                            <label class="form-label">
+                                Full Name<span class="required">*</span>
+                            </label>
+                            <input type="text" id="fullName" class="form-input" placeholder="Enter your full name" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">
+                                Email<span class="required">*</span>
+                            </label>
+                            <input type="email" id="email" class="form-input" placeholder="your.email@example.com" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">
+                                Phone Number<span class="required">*</span>
+                            </label>
+                            <input type="tel" id="phone" class="form-input" placeholder="+8801XXXXXXXXX or 01XXXXXXXXX" required>
+                            <div class="form-help">📱 Enter your active mobile number</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Student ID</label>
+                            <input type="text" id="studentId" class="form-input" placeholder="Your student ID (optional)">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">
+                                Department<span class="required">*</span>
+                            </label>
+                            <select id="department" class="form-select" required>
+                                <option value="">Select your department</option>
+                                <optgroup label="Faculty of Engineering">
+                                    <option value="CSE">Computer Science and Engineering (CSE)</option>
+                                    <option value="EEE">Electrical and Electronic Engineering (EEE)</option>
+                                    <option value="ETE">Electronics and Telecommunication Engineering (ETE)</option>
+                                    <option value="ACCE">Applied Chemistry and Chemical Engineering (ACCE)</option>
+                                    <option value="CE">Civil Engineering (CE)</option>
+                                    <option value="FAE">Food and Agroprocess Engineering (FAE)</option>
+                                    <option value="ARCH">Architecture (ARCH)</option>
+                                </optgroup>
+                                <optgroup label="Faculty of Science">
+                                    <option value="Mathematics">Mathematics</option>
+                                    <option value="Statistics">Statistics</option>
+                                    <option value="Chemistry">Chemistry</option>
+                                    <option value="Physics">Physics</option>
+                                    <option value="ESDM">Environmental Science & Disaster Management (ESDM)</option>
+                                </optgroup>
+                                <optgroup label="Faculty of Life Science">
+                                    <option value="Pharmacy">Pharmacy</option>
+                                    <option value="BGE">Biotechnology and Genetic Engineering (BGE)</option>
+                                    <option value="BMB">Biochemistry and Molecular Biology (BMB)</option>
+                                    <option value="Psychology">Psychology</option>
+                                    <option value="Botany">Botany</option>
+                                </optgroup>
+                                <optgroup label="Faculty of Humanities (Arts)">
+                                    <option value="English">English</option>
+                                    <option value="Bangla">Bangla</option>
+                                    <option value="History">History</option>
+                                </optgroup>
+                                <optgroup label="Faculty of Social Science">
+                                    <option value="Sociology">Sociology</option>
+                                    <option value="PAD">Public Administration (PAD)</option>
+                                    <option value="IR">International Relations (IR)</option>
+                                    <option value="Economics">Economics</option>
+                                    <option value="Political Science">Political Science</option>
+                                </optgroup>
+                                <optgroup label="Faculty of Business Studies">
+                                    <option value="Management Studies">Management Studies</option>
+                                    <option value="AIS">Accounting and Information Systems (AIS)</option>
+                                    <option value="Marketing">Marketing</option>
+                                    <option value="Finance and Banking">Finance and Banking</option>
+                                    <option value="THM">Tourism and Hospitality Management (THM)</option>
+                                </optgroup>
+                                <optgroup label="Faculty of Law">
+                                    <option value="Law">Law</option>
+                                </optgroup>
+                                <optgroup label="Sheikh Hasina Agriculture Institute">
+                                    <option value="Agriculture">Agriculture</option>
+                                    <option value="FMB">Fisheries and Marine Bioscience (FMB)</option>
+                                    <option value="LSVM">Livestock Science and Veterinary Medicine (LSVM)</option>
+                                </optgroup>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">
+                                Current Year<span class="required">*</span>
+                            </label>
+                            <select id="year" class="form-select" required>
+                                <option value="">Select your year</option>
+                                <option value="1st Year">1st Year</option>
+                                <option value="2nd Year">2nd Year</option>
+                                <option value="3rd Year">3rd Year</option>
+                                <option value="4th Year">4th Year</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Section 2: About You -->
+                    <div class="form-section">
+                        <h3 class="section-title">
+                            <span>✍️</span>
+                            <span>About You</span>
+                        </h3>
+
+                        <div class="form-group">
+                            <label class="form-label">
+                                Why do you want to join?<span class="required">*</span>
+                            </label>
+                            <textarea id="bio" class="form-textarea" placeholder="Tell us about your interest in robotics and technology..." required></textarea>
+                            <div class="char-count">
+                                <span id="bioCount">0</span> / 100 characters minimum
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">
+                                Skills<span class="required">*</span>
+                            </label>
+                            <div class="skills-container" id="skillsContainer">
+                                <input type="text" id="skillsInput" class="skills-input" placeholder="Type a skill and press Enter">
+                            </div>
+                            <div class="form-help">💡 Add at least 2 skills (e.g., Python, Arduino, CAD Design)</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Previous Experience</label>
+                            <textarea id="previousExperience" class="form-textarea" placeholder="Any previous projects, competitions, or relevant experience... (Optional)"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Section 3: Social Profiles -->
+                    <div class="form-section">
+                        <h3 class="section-title">
+                            <span>🔗</span>
+                            <span>Social Profiles (Optional)</span>
+                        </h3>
+
+                        <div class="form-group">
+                            <label class="form-label">GitHub Profile</label>
+                            <input type="url" id="github" class="form-input" placeholder="https://github.com/yourusername">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">LinkedIn Profile</label>
+                            <input type="url" id="linkedin" class="form-input" placeholder="https://linkedin.com/in/yourusername">
+                        </div>
+                    </div>
+
+                    <button type="submit" id="submitBtn" class="submit-btn">
+                        Submit Application
+                    </button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="container">
+            <p style="text-align: center; color: var(--text-secondary);">
+                &copy; <span id="currentYear"></span> GSTU Robotics & Research Club. All rights reserved.
+            </p>
+        </div>
+    </footer>
+
+    <script src="js/api-client.js"></script>
+    <script src="js/config.js"></script>
+    <script src="js/storage.js"></script>
+    <script src="js/theme.js"></script>
+    <script src="js/navigation.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/load-config.js"></script>
+
+    <script>
+        let skills = [];
+
+        document.addEventListener('DOMContentLoaded', async function() {
+            document.getElementById('currentYear').textContent = new Date().getFullYear();
+            
+            // Wait for API client
+            let retries = 0;
+            while ((!window.apiClient || !window.apiClient.isReady) && retries < 50) {
+                await new Promise(resolve => setTimeout(resolve, 100));
+                retries++;
+            }
+
+            await loadClubConfig();
+            initializeSkillsInput();
+            initializeForm();
+            initializeBioCounter();
+
+            if (typeof initTheme === 'function') {
+                initTheme();
+            }
+
+            if (typeof initNavigation === 'function') {
+                initNavigation();
+            }
+        });
+
+        async function loadClubConfig() {
+            try {
+                if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady) {
+                    const result = await window.apiClient.getConfig();
+                    if (result.success && result.data) {
+                        const config = result.data;
+                        if (config.name) {
+                            document.getElementById('clubName').textContent = config.name;
+                        }
+                        if (config.logo || config.logo_url) {
+                            const logoUrl = config.logo || config.logo_url;
+                            document.getElementById('clubLogo').src = logoUrl + '?t=' + Date.now();
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading club config:', error);
+            }
+        }
+
+        function initializeSkillsInput() {
+            const skillsInput = document.getElementById('skillsInput');
+            const skillsContainer = document.getElementById('skillsContainer');
+
+            skillsInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const value = skillsInput.value.trim();
+                    if (value && !skills.includes(value)) {
+                        skills.push(value);
+                        renderSkills();
+                        skillsInput.value = '';
+                    }
+                }
+            });
+
+            skillsContainer.addEventListener('click', () => {
+                skillsInput.focus();
+            });
+        }
+
+        function renderSkills() {
+            const skillsContainer = document.getElementById('skillsContainer');
+            const skillsInput = document.getElementById('skillsInput');
+            
+            const existingTags = skillsContainer.querySelectorAll('.skill-tag');
+            existingTags.forEach(tag => tag.remove());
+            
+            skills.forEach((skill, index) => {
+                const tag = document.createElement('div');
+                tag.className = 'skill-tag';
+                tag.innerHTML = `${skill} <span class="tag-remove" data-index="${index}">×</span>`;
+                skillsContainer.insertBefore(tag, skillsInput);
+            });
+
+            // Add click handlers to remove buttons
+            document.querySelectorAll('.tag-remove').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const index = parseInt(e.target.dataset.index);
+                    removeSkill(index);
+                });
+            });
+        }
+
+        function removeSkill(index) {
+            skills.splice(index, 1);
+            renderSkills();
+        }
+
+        function initializeBioCounter() {
+            const bioTextarea = document.getElementById('bio');
+            const bioCount = document.getElementById('bioCount');
+
+            bioTextarea.addEventListener('input', () => {
+                const length = bioTextarea.value.length;
+                bioCount.textContent = length;
+                
+                if (length >= 100) {
+                    bioCount.style.color = 'var(--primary-color)';
+                } else {
+                    bioCount.style.color = 'var(--text-secondary)';
+                }
+            });
+        }
+
+        function initializeForm() {
+            const form = document.getElementById('applicationForm');
+            
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                // Gather form data
+                const fullName = document.getElementById('fullName').value.trim();
+                const email = document.getElementById('email').value.trim();
+                const phone = document.getElementById('phone').value.trim();
+                const studentId = document.getElementById('studentId').value.trim();
+                const department = document.getElementById('department').value;
+                const year = document.getElementById('year').value;
+                const bio = document.getElementById('bio').value.trim();
+                const previousExperience = document.getElementById('previousExperience').value.trim();
+                const github = document.getElementById('github').value.trim();
+                const linkedin = document.getElementById('linkedin').value.trim();
+                
+                // Validation
+                if (!fullName || !email || !phone || !department || !year || !bio) {
+                    showError('Please fill all required fields');
+                    return;
+                }
+                
+                if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                    showError('Invalid email format');
+                    return;
+                }
+                
+                if (!/^(\+8801|01)[3-9]\d{8}$/.test(phone)) {
+                    showError('Invalid phone format. Use +8801XXXXXXXXX or 01XXXXXXXXX');
+                    return;
+                }
+                
+                if (bio.length < 100) {
+                    showError('Please write at least 100 characters about why you want to join');
+                    return;
+                }
+                
+                if (skills.length < 2) {
+                    showError('Please add at least 2 skills');
+                    return;
+                }
+                
+                // Prepare data
+                const applicationData = {
+                    full_name: fullName,
+                    email: email,
+                    phone: phone,
+                    student_id: studentId,
+                    department: department,
+                    year: year,
+                    bio: bio,
+                    skills: skills,
+                    previous_experience: previousExperience,
+                    github_profile: github,
+                    linkedin_profile: linkedin
+                };
+                
+                // Show loading
+                setLoadingState(true);
+                hideError();
+                
+                try {
+                    const result = await window.apiClient.submitMembershipApplication(applicationData);
+                    
+                    if (result.success) {
+                        showSuccessModal();
+                        form.reset();
+                        skills = [];
+                        renderSkills();
+                        document.getElementById('bioCount').textContent = '0';
+                    } else {
+                        showError(result.error || 'Failed to submit application');
+                    }
+                } catch (error) {
+                    console.error('Submission error:', error);
+                    showError('Network error. Please try again.');
+                } finally {
+                    setLoadingState(false);
+                }
+            });
+        }
+
+        function setLoadingState(loading) {
+            const submitBtn = document.getElementById('submitBtn');
+            const inputs = document.querySelectorAll('.form-input, .form-select, .form-textarea');
+            
+            submitBtn.disabled = loading;
+            inputs.forEach(input => input.disabled = loading);
+            
+            if (loading) {
+                submitBtn.innerHTML = '<div class="spinner"></div> Submitting...';
+            } else {
+                submitBtn.innerHTML = 'Submit Application';
+            }
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+            errorDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        function hideError() {
+            document.getElementById('errorMessage').style.display = 'none';
+        }
+
+        function showSuccessModal() {
+            const modal = document.createElement('div');
+            modal.className = 'success-modal active';
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <div class="success-icon">✓</div>
+                    <h2>Application Submitted Successfully!</h2>
+                    <p>Thank you for applying to join GSTU Robotics & Research Club.</p>
+                    <p>We'll review your application and contact you via email within 3-5 business days.</p>
+                    <button class="btn btn-primary" onclick="this.closest('.success-modal').remove()">Close</button>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+    </script>
+</body>
+</html>

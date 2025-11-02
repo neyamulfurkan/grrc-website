@@ -375,6 +375,11 @@
             color: var(--info-dark);
         }
 
+        .badge-error {
+            background: #fef2f2;
+            color: #dc2626;
+        }
+
         @media (max-width: 1023px) {
             .admin-sidebar {
                 transform: translateX(-100%);
@@ -553,6 +558,14 @@
                     <span class="nav-item-icon">📢</span>
                     Announcements
                 </a>
+                <a class="nav-item" data-section="membership-applications">
+                    <span class="nav-item-icon">📝</span>
+                    Membership Applications
+                </a>
+                <a class="nav-item" data-section="alumni">
+                    <span class="nav-item-icon">🎓</span>
+                    Alumni Management
+                </a>
                 <a class="nav-item" data-section="admins">
                     <span class="nav-item-icon">🔐</span>
                     Admins
@@ -605,6 +618,20 @@
                         </div>
                         <div class="stat-number" id="statGallery">0</div>
                         <div class="stat-label">Gallery Photos</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div class="stat-icon">📝</div>
+                        </div>
+                        <div class="stat-number" id="statPendingApplications">0</div>
+                        <div class="stat-label">Pending Applications</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div class="stat-icon">🎓</div>
+                        </div>
+                        <div class="stat-number" id="statAlumni">0</div>
+                        <div class="stat-label">Alumni</div>
                     </div>
                 </div>
 
@@ -726,16 +753,56 @@
                                 <label class="form-label">Department *</label>
                                 <select class="form-select" id="memberDepartment" required>
                                     <option value="">Select Department</option>
-                                    <option value="Computer Science & Engineering">Computer Science & Engineering</option>
-                                    <option value="Electrical & Electronic Engineering">Electrical & Electronic Engineering</option>
-                                    <option value="Electronics & Communication Engineering">Electronics & Communication Engineering</option>
-                                    <option value="Mechanical Engineering">Mechanical Engineering</option>
-                                    <option value="Civil Engineering">Civil Engineering</option>
-                                    <option value="Physics">Physics</option>
-                                    <option value="Chemistry">Chemistry</option>
-                                    <option value="Mathematics">Mathematics</option>
-                                    <option value="Statistics">Statistics</option>
-                                    <option value="Other">Other</option>
+                                    <optgroup label="Faculty of Engineering">
+                                        <option value="Computer Science and Engineering (CSE)">Computer Science and Engineering (CSE)</option>
+                                        <option value="Electrical and Electronic Engineering (EEE)">Electrical and Electronic Engineering (EEE)</option>
+                                        <option value="Electronics and Telecommunication Engineering (ETE)">Electronics and Telecommunication Engineering (ETE)</option>
+                                        <option value="Applied Chemistry and Chemical Engineering (ACCE)">Applied Chemistry and Chemical Engineering (ACCE)</option>
+                                        <option value="Civil Engineering (CE)">Civil Engineering (CE)</option>
+                                        <option value="Food and Agroprocess Engineering (FAE)">Food and Agroprocess Engineering (FAE)</option>
+                                        <option value="Architecture (ARCH)">Architecture (ARCH)</option>
+                                    </optgroup>
+                                    <optgroup label="Faculty of Science">
+                                        <option value="Mathematics">Mathematics</option>
+                                        <option value="Statistics">Statistics</option>
+                                        <option value="Chemistry">Chemistry</option>
+                                        <option value="Physics">Physics</option>
+                                        <option value="Environmental Science & Disaster Management (ESDM)">Environmental Science & Disaster Management (ESDM)</option>
+                                    </optgroup>
+                                    <optgroup label="Faculty of Life Science">
+                                        <option value="Pharmacy">Pharmacy</option>
+                                        <option value="Biotechnology and Genetic Engineering (BGE)">Biotechnology and Genetic Engineering (BGE)</option>
+                                        <option value="Biochemistry and Molecular Biology (BMB)">Biochemistry and Molecular Biology (BMB)</option>
+                                        <option value="Psychology">Psychology</option>
+                                        <option value="Botany">Botany</option>
+                                    </optgroup>
+                                    <optgroup label="Faculty of Humanities (Arts)">
+                                        <option value="English">English</option>
+                                        <option value="Bangla">Bangla</option>
+                                        <option value="History">History</option>
+                                    </optgroup>
+                                    <optgroup label="Faculty of Social Science">
+                                        <option value="Sociology">Sociology</option>
+                                        <option value="Public Administration (PAD)">Public Administration (PAD)</option>
+                                        <option value="International Relations (IR)">International Relations (IR)</option>
+                                        <option value="Economics">Economics</option>
+                                        <option value="Political Science">Political Science</option>
+                                    </optgroup>
+                                    <optgroup label="Faculty of Business Studies">
+                                        <option value="Management Studies">Management Studies</option>
+                                        <option value="Accounting and Information Systems (AIS)">Accounting and Information Systems (AIS)</option>
+                                        <option value="Marketing">Marketing</option>
+                                        <option value="Finance and Banking">Finance and Banking</option>
+                                        <option value="Tourism and Hospitality Management (THM)">Tourism and Hospitality Management (THM)</option>
+                                    </optgroup>
+                                    <optgroup label="Faculty of Law">
+                                        <option value="Law">Law</option>
+                                    </optgroup>
+                                    <optgroup label="Sheikh Hasina Agriculture Institute">
+                                        <option value="Agriculture">Agriculture</option>
+                                        <option value="Fisheries and Marine Bioscience (FMB)">Fisheries and Marine Bioscience (FMB)</option>
+                                        <option value="Livestock Science and Veterinary Medicine (LSVM)">Livestock Science and Veterinary Medicine (LSVM)</option>
+                                    </optgroup>
                                 </select>
                             </div>
                             <div class="form-group">
@@ -1221,6 +1288,20 @@
                         </table>
                     </div>
                 </div>
+            </div>
+
+            <!-- Membership Applications Section (Iframe) -->
+            <div class="section-content" id="membershipApplicationsSection">
+                <iframe src="admin-membership.html" 
+                        style="width: 100%; height: calc(100vh - 200px); border: none; display: block;" 
+                        id="membershipIframe"></iframe>
+            </div>
+
+            <!-- Alumni Management Section (Iframe) -->
+            <div class="section-content" id="alumniSection">
+                <iframe src="admin-alumni.html" 
+                        style="width: 100%; height: calc(100vh - 200px); border: none; display: block;" 
+                        id="alumniIframe"></iframe>
             </div>
         </main>
 
@@ -2671,6 +2752,8 @@
                 'projects': 'Manage Projects',
                 'gallery': 'Manage Gallery',
                 'announcements': 'Manage Announcements',
+                'membership-applications': 'Membership Applications',
+                'alumni': 'Alumni Management',
                 'admins': 'Manage Admins'
             };
             document.getElementById('sectionTitle').textContent = titles[section] || 'Admin Panel';
@@ -2679,13 +2762,23 @@
 
             document.getElementById('adminSidebar').classList.remove('mobile-open');
 
-            if (section === 'club-config') loadClubConfig();
+           if (section === 'club-config') loadClubConfig();
             if (section === 'members') loadMembers();
             if (section === 'events') loadEvents();
             if (section === 'projects') loadProjects();
             if (section === 'gallery') loadGallery();
             if (section === 'announcements') loadAnnouncements();
             if (section === 'admins') loadAdmins();
+            
+            // Load iframe content for new sections
+            if (section === 'membership-applications') {
+                const iframe = document.getElementById('membershipIframe');
+                if (iframe) iframe.contentWindow.location.reload();
+            }
+            if (section === 'alumni') {
+                const iframe = document.getElementById('alumniIframe');
+                if (iframe) iframe.contentWindow.location.reload();
+            }
         }
 
         function setupMobileSidebar() {

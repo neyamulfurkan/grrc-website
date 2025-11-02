@@ -1,0 +1,1201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Alumni of GSTU Robotics & Research Club - Honoring the Legacy">
+    <meta name="keywords" content="GSTU, robotics, alumni, graduates, former members">
+    <title>Alumni - GSTU Robotics & Research Club</title>
+    
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/common.css">
+    <link rel="stylesheet" href="css/components.css">
+    
+    <style>
+        .header {
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            backdrop-filter: blur(10px);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+        }
+
+        .page-header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            padding: 120px 0 60px;
+            text-align: center;
+            color: white;
+            position: relative;
+            overflow: hidden;
+            margin-top: 70px;
+        }
+
+        .page-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url("data:image/svg+xml,%3Csvg width='100' height='100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 0h100v100H0z' fill='none'/%3E%3Cpath d='M0 0L50 50L0 100M50 0L100 50L50 100M100 0v100' stroke='rgba(255,255,255,0.05)' stroke-width='1'/%3E%3C/svg%3E");
+            opacity: 0.3;
+        }
+
+        .page-header-content {
+            position: relative;
+            z-index: 1;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        .page-header h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            font-weight: 700;
+            animation: fadeInUp 0.6s ease;
+        }
+
+        .page-header p {
+            font-size: 1.25rem;
+            opacity: 0.95;
+            animation: fadeInUp 0.6s ease 0.2s backwards;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .stats-section {
+            padding: 3rem 0;
+            background: var(--background-color);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--surface-color);
+            padding: 2rem;
+            border-radius: var(--radius-lg);
+            text-align: center;
+            box-shadow: var(--shadow-md);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        .filter-section {
+            background: var(--surface-color);
+            padding: 2rem;
+            border-radius: var(--radius-lg);
+            margin-bottom: 3rem;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .filter-header {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 250px;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius-md);
+            font-size: 1rem;
+            background: var(--background-color);
+            color: var(--text-primary);
+            transition: border-color 0.3s ease;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .sort-select {
+            padding: 0.75rem 1rem;
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius-md);
+            background: var(--background-color);
+            color: var(--text-primary);
+            font-size: 0.95rem;
+            cursor: pointer;
+        }
+
+        .sort-select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .filter-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+        }
+
+        .filter-btn {
+            padding: 0.625rem 1.25rem;
+            border: 2px solid var(--border-color);
+            background: transparent;
+            color: var(--text-primary);
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .filter-btn:hover {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .filter-btn.active {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        .filter-label {
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.75rem;
+            display: block;
+        }
+
+        .alumni-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .alumni-card {
+            background: var(--surface-color);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            box-shadow: var(--shadow-md);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .alumni-card:hover {
+            transform: translateY(-8px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .alumni-photo {
+            width: 100%;
+            height: 280px;
+            position: relative;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        }
+
+        .alumni-photo img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .featured-badge {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: linear-gradient(135deg, #fbbf24, #f59e0b);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: var(--radius-md);
+            font-size: 0.875rem;
+            font-weight: 600;
+            box-shadow: var(--shadow-md);
+        }
+
+        .alumni-content {
+            padding: 1.5rem;
+        }
+
+        .alumni-name {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .alumni-batch {
+            color: var(--primary-color);
+            font-weight: 500;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .alumni-role-in-club {
+            color: var(--accent-color);
+            font-size: 0.95rem;
+            font-weight: 500;
+            margin-bottom: 0.75rem;
+        }
+
+        .alumni-current {
+            margin-bottom: 0.75rem;
+            padding: 0.75rem;
+            background: var(--background-color);
+            border-radius: var(--radius-md);
+            border-left: 3px solid var(--primary-color);
+        }
+
+        .current-position {
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: 0.95rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .current-company {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        .alumni-department {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        .alumni-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            overflow-y: auto;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .alumni-modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .modal-content {
+            background: var(--surface-color);
+            border-radius: var(--radius-lg);
+            max-width: 800px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+            animation: slideUp 0.4s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 1.5rem;
+            right: 1.5rem;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--background-color);
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+            z-index: 10;
+        }
+
+        .modal-close:hover {
+            background: var(--primary-color);
+            color: white;
+            transform: rotate(90deg);
+        }
+
+        .modal-header {
+            position: relative;
+            padding: 3rem;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            text-align: center;
+        }
+
+        .modal-photo {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 5px solid white;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-name {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .modal-batch {
+            font-size: 1.1rem;
+            opacity: 0.95;
+            margin-bottom: 0.5rem;
+        }
+
+        .featured-label {
+            display: inline-block;
+            background: linear-gradient(135deg, #fbbf24, #f59e0b);
+            padding: 0.5rem 1.5rem;
+            border-radius: var(--radius-full);
+            font-weight: 600;
+            margin-top: 1rem;
+        }
+
+        .modal-body {
+            padding: 2.5rem;
+        }
+
+        .modal-section {
+            margin-bottom: 2rem;
+        }
+
+        .modal-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .modal-section-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .modal-info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .modal-info-item {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+            padding: 1rem;
+            background: var(--background-color);
+            border-radius: var(--radius-md);
+            border-left: 3px solid var(--primary-color);
+        }
+
+        .modal-info-label {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .modal-info-value {
+            color: var(--text-primary);
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        .modal-bio {
+            color: var(--text-secondary);
+            line-height: 1.8;
+            font-size: 1rem;
+        }
+
+        .contact-links {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .contact-link {
+            padding: 0.75rem 1.5rem;
+            background: var(--background-color);
+            color: var(--text-primary);
+            border-radius: var(--radius-md);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s ease;
+            border: 2px solid var(--border-color);
+            font-size: 0.95rem;
+        }
+
+        .contact-link:hover {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        .loading-state {
+            text-align: center;
+            padding: 4rem 2rem;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid var(--border-color);
+            border-top-color: var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+        }
+
+        .empty-icon {
+            font-size: 5rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        .empty-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+        }
+
+        .empty-description {
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+        }
+
+        .footer {
+            background: var(--surface-color);
+            color: var(--text-primary);
+        }
+
+        .footer-title {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .footer-subtitle {
+            color: var(--text-primary);
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .footer-description {
+            color: var(--text-secondary);
+            opacity: 0.9;
+        }
+
+        .footer-links {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .footer-links li {
+            margin-bottom: 0.5rem;
+        }
+
+        .footer-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: color 0.3s ease;
+            opacity: 0.9;
+        }
+
+        .footer-links a:hover {
+            color: var(--primary-color);
+            opacity: 1;
+        }
+
+        .footer-bottom {
+            color: var(--text-secondary);
+            opacity: 0.8;
+            border-top: 1px solid var(--border-color);
+            margin-top: 2rem;
+            padding-top: 1.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .page-header {
+                padding: 100px 0 40px;
+            }
+
+            .page-header h1 {
+                font-size: 2rem;
+            }
+
+            .page-header p {
+                font-size: 1rem;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .filter-header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .search-box {
+                min-width: 100%;
+            }
+
+            .alumni-grid {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+
+            .modal-content {
+                margin: 1rem;
+            }
+
+            .modal-header {
+                padding: 2rem;
+            }
+
+            .modal-photo {
+                width: 120px;
+                height: 120px;
+            }
+
+            .modal-name {
+                font-size: 1.5rem;
+            }
+
+            .modal-body {
+                padding: 1.5rem;
+            }
+
+            .modal-info-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content container">
+            <div class="logo-container">
+                <img src="assets/default-logo.jpg" alt="Club Logo" class="logo" id="headerLogo">
+                <span class="club-name" id="headerClubName">GSTU Robotics & Research Club</span>
+            </div>
+            
+            <nav class="nav-menu" id="navMenu">
+                <a href="index.html" class="nav-link">Home</a>
+                <a href="members.html" class="nav-link">Members</a>
+                <a href="events.html" class="nav-link">Events</a>
+                <a href="projects.html" class="nav-link">Projects</a>
+                <a href="gallery.html" class="nav-link">Gallery</a>
+                <a href="membership.html" class="nav-link">Membership</a>
+                <a href="alumni.html" class="nav-link active">Alumni</a>
+                <a href="admin.html" class="nav-link">Admin</a>
+            </nav>
+
+            <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
+                <span class="theme-icon">🌙</span>
+            </button>
+
+            <button class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Toggle menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </header>
+
+    <div class="mobile-nav-overlay" id="mobileNavOverlay">
+        <nav class="mobile-nav">
+            <a href="index.html" class="mobile-nav-link">Home</a>
+            <a href="members.html" class="mobile-nav-link">Members</a>
+            <a href="events.html" class="mobile-nav-link">Events</a>
+            <a href="projects.html" class="mobile-nav-link">Projects</a>
+            <a href="gallery.html" class="mobile-nav-link">Gallery</a>
+            <a href="membership.html" class="mobile-nav-link">Membership</a>
+            <a href="alumni.html" class="mobile-nav-link active">Alumni</a>
+            <a href="admin.html" class="mobile-nav-link">Admin</a>
+        </nav>
+    </div>
+
+    <section class="page-header">
+        <div class="page-header-content">
+            <h1>Our Alumni</h1>
+            <p>Honoring the Legacy of GSTU Robotics & Research Club</p>
+            <p>Meet the brilliant minds who have contributed to our club's journey and are now making their mark in the world.</p>
+        </div>
+    </section>
+
+    <section class="stats-section">
+        <div class="container">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-number" id="totalAlumni">0</div>
+                    <div class="stat-label">Total Alumni</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="totalBatches">0</div>
+                    <div class="stat-label">Total Batches</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="featuredCount">0</div>
+                    <div class="stat-label">Featured Alumni</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="uniqueCompanies">0</div>
+                    <div class="stat-label">Current Companies</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="container" style="padding: 2rem 1rem;">
+        <div class="filter-section">
+            <div class="filter-header">
+                <div class="search-box">
+                    <input type="text" id="searchInput" placeholder="🔍 Search alumni by name or company...">
+                </div>
+                <select id="sortSelect" class="sort-select">
+                    <option value="newest">Newest First</option>
+                    <option value="oldest">Oldest First</option>
+                    <option value="name-asc">Name (A-Z)</option>
+                    <option value="name-desc">Name (Z-A)</option>
+                </select>
+            </div>
+            
+            <div>
+                <label class="filter-label">Filter by Batch:</label>
+                <div class="filter-buttons" id="batchFilters">
+                    <button class="filter-btn active" data-batch="all">All Batches</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="loading-state" id="loadingState">
+            <div class="spinner"></div>
+            <p>Loading alumni...</p>
+        </div>
+        
+        <div class="alumni-grid" id="alumniGrid" style="display: none;"></div>
+        
+        <div class="empty-state" id="emptyState" style="display: none;">
+            <div class="empty-icon">🎓</div>
+            <h2 class="empty-title">No Alumni Added Yet</h2>
+            <p class="empty-description">Alumni profiles will appear here once added.</p>
+            <a href="admin.html" class="btn btn-primary">Go to Admin Panel</a>
+        </div>
+        
+        <div class="empty-state" id="noResultsState" style="display: none;">
+            <div class="empty-icon">🔍</div>
+            <h2 class="empty-title">No Alumni Found</h2>
+            <p class="empty-description">Try adjusting your search or filters.</p>
+        </div>
+    </section>
+
+    <div class="alumni-modal" id="alumniModal">
+        <div id="modalContent"></div>
+    </div>
+
+    <footer class="footer">
+        <div class="footer-content container">
+            <div class="footer-section">
+                <h3 class="footer-title" id="footerClubName">GSTU Robotics & Research Club</h3>
+                <p class="footer-description" id="footerDescription">A Hub of Robothinkers at Gopalganj Science and Technology University</p>
+            </div>
+            
+            <div class="footer-section">
+                <h4 class="footer-subtitle">Quick Links</h4>
+                <ul class="footer-links">
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="members.html">Members</a></li>
+                    <li><a href="events.html">Events</a></li>
+                    <li><a href="projects.html">Projects</a></li>
+                    <li><a href="gallery.html">Gallery</a></li>
+                    <li><a href="membership.html">Membership</a></li>
+                    <li><a href="alumni.html">Alumni</a></li>
+                </ul>
+            </div>
+            
+            <div class="footer-section">
+                <h4 class="footer-subtitle">Connect With Us</h4>
+                <div class="social-links" id="footerSocialLinks">
+                    <p style="color: var(--text-secondary); font-size: 0.9rem;">No social links added yet</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer-bottom container">
+            <p>&copy; <span id="currentYear"></span> GSTU Robotics & Research Club. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="js/api-client.js"></script>
+    <script src="js/config.js"></script>
+    <script src="js/storage.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/theme.js"></script>
+    <script src="js/navigation.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/load-config.js"></script>
+
+    <script>
+        let allAlumni = [];
+        let filteredAlumni = [];
+        let currentBatchFilter = null;
+        let currentSort = 'newest';
+        let searchQuery = '';
+
+        document.addEventListener('DOMContentLoaded', async function() {
+            document.getElementById('currentYear').textContent = new Date().getFullYear();
+            
+            let retries = 0;
+            while ((!window.apiClient || !window.apiClient.isReady) && retries < 50) {
+                await new Promise(resolve => setTimeout(resolve, 100));
+                retries++;
+            }
+            
+            await loadClubConfig();
+            await loadStatistics();
+            await loadBatches();
+            await loadAlumni();
+            initializeFilters();
+            initializeSearch();
+            initializeModal();
+            
+            if (typeof initTheme === 'function') {
+                initTheme();
+            }
+            
+            if (typeof initNavigation === 'function') {
+                initNavigation();
+            }
+        });
+
+        async function loadClubConfig() {
+            try {
+                if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady) {
+                    const result = await window.apiClient.getConfig();
+                    if (result.success && result.data) {
+                        const config = result.data;
+                        
+                        if (config.name) {
+                            document.getElementById('headerClubName').textContent = config.name;
+                            document.getElementById('footerClubName').textContent = config.name;
+                        }
+                        
+                        if (config.description) {
+                            document.getElementById('footerDescription').textContent = config.description;
+                        }
+                        
+                        const headerLogo = document.getElementById('headerLogo');
+                        if (headerLogo && (config.logo || config.logo_url)) {
+                            const logoUrl = config.logo || config.logo_url;
+                            const cacheBustedUrl = logoUrl.includes('?') 
+                                ? logoUrl + '&t=' + Date.now()
+                                : logoUrl + '?t=' + Date.now();
+                            headerLogo.src = cacheBustedUrl;
+                            headerLogo.style.display = 'block';
+                            headerLogo.onerror = function() {
+                                this.src = 'assets/default-logo.jpg';
+                            };
+                        }
+                        
+                        const linksData = config.socialLinks || config.social_links;
+                        if (linksData && linksData.length > 0) {
+                            const socialContainer = document.getElementById('footerSocialLinks');
+                            socialContainer.innerHTML = linksData.map(link =>
+                                `<a href="${link.url}" target="_blank" rel="noopener noreferrer" class="social-link">${getSocialIcon(link.platform)}</a>`
+                            ).join('');
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading club config:', error);
+            }
+        }
+
+        function getSocialIcon(platform) {
+            const icons = {
+                facebook: '📘',
+                twitter: '🐦',
+                instagram: '📷',
+                linkedin: '💼',
+                youtube: '📺',
+                github: '💻',
+                email: '📧'
+            };
+            return icons[platform.toLowerCase()] || '🔗';
+        }
+
+        async function loadStatistics() {
+            try {
+                const result = await window.apiClient.getAlumniStatistics();
+                if (result.success && result.data) {
+                    document.getElementById('totalAlumni').textContent = result.data.total || 0;
+                    document.getElementById('totalBatches').textContent = result.data.total_batches || 0;
+                    document.getElementById('featuredCount').textContent = result.data.featured_count || 0;
+                    
+                    const alumniResult = await window.apiClient.getAlumni();
+                    if (alumniResult.success) {
+                        const companies = new Set(alumniResult.data.filter(a => a.current_company).map(a => a.current_company));
+                        document.getElementById('uniqueCompanies').textContent = companies.size;
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading statistics:', error);
+            }
+        }
+
+        async function loadBatches() {
+            try {
+                const result = await window.apiClient.getAlumniBatches();
+                if (result.success && result.data) {
+                    const batchesContainer = document.getElementById('batchFilters');
+                    const batchesHTML = result.data.map(batch => 
+                        `<button class="filter-btn" data-batch="${batch}">${batch}</button>`
+                    ).join('');
+                    
+                    batchesContainer.innerHTML = `
+                        <button class="filter-btn active" data-batch="all">All Batches</button>
+                        ${batchesHTML}
+                    `;
+                }
+            } catch (error) {
+                console.error('Error loading batches:', error);
+            }
+        }
+
+        async function loadAlumni() {
+            try {
+                const loadingState = document.getElementById('loadingState');
+                const alumniGrid = document.getElementById('alumniGrid');
+                const emptyState = document.getElementById('emptyState');
+                
+                loadingState.style.display = 'block';
+                alumniGrid.style.display = 'none';
+                emptyState.style.display = 'none';
+                
+                const result = await window.apiClient.getAlumni();
+                
+                if (result.success && result.data) {
+                    allAlumni = result.data;
+                    filteredAlumni = [...allAlumni];
+                    applyFilters();
+                    
+                    loadingState.style.display = 'none';
+                    
+                    if (allAlumni.length === 0) {
+                        emptyState.style.display = 'block';
+                    } else {
+                        alumniGrid.style.display = 'grid';
+                    }
+                } else {
+                    loadingState.style.display = 'none';
+                    emptyState.style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Error loading alumni:', error);
+                document.getElementById('loadingState').style.display = 'none';
+                document.getElementById('emptyState').style.display = 'block';
+            }
+        }
+
+        function initializeFilters() {
+            document.getElementById('batchFilters').addEventListener('click', (e) => {
+                if (e.target.classList.contains('filter-btn')) {
+                    document.querySelectorAll('#batchFilters .filter-btn').forEach(btn => {
+                        btn.classList.remove('active');
+                    });
+                    e.target.classList.add('active');
+                    currentBatchFilter = e.target.dataset.batch === 'all' ? null : e.target.dataset.batch;
+                    applyFilters();
+                }
+            });
+            
+            document.getElementById('sortSelect').addEventListener('change', (e) => {
+                currentSort = e.target.value;
+                applyFilters();
+            });
+        }
+
+        function initializeSearch() {
+            const searchInput = document.getElementById('searchInput');
+            let debounceTimer;
+            
+            searchInput.addEventListener('input', (e) => {
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(() => {
+                    searchQuery = e.target.value.toLowerCase().trim();
+                    applyFilters();
+                }, 300);
+            });
+        }
+
+        function applyFilters() {
+            filteredAlumni = allAlumni.filter(alumni => {
+                if (searchQuery) {
+                    const matchesSearch = 
+                        (alumni.name && alumni.name.toLowerCase().includes(searchQuery)) ||
+                        (alumni.current_company && alumni.current_company.toLowerCase().includes(searchQuery)) ||
+                        (alumni.current_position && alumni.current_position.toLowerCase().includes(searchQuery)) ||
+                        (alumni.department && alumni.department.toLowerCase().includes(searchQuery));
+                    
+                    if (!matchesSearch) return false;
+                }
+                
+                if (currentBatchFilter) {
+                    if (alumni.batch_year !== currentBatchFilter) return false;
+                }
+                
+                return true;
+            });
+            
+            switch (currentSort) {
+                case 'newest':
+                    filteredAlumni.sort((a, b) => (b.batch_year || '').localeCompare(a.batch_year || ''));
+                    break;
+                case 'oldest':
+                    filteredAlumni.sort((a, b) => (a.batch_year || '').localeCompare(b.batch_year || ''));
+                    break;
+                case 'name-asc':
+                    filteredAlumni.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+                    break;
+                case 'name-desc':
+                    filteredAlumni.sort((a, b) => (b.name || '').localeCompare(a.name || ''));
+                    break;
+            }
+            
+            displayAlumni();
+        }
+
+        function displayAlumni() {
+            const alumniGrid = document.getElementById('alumniGrid');
+            const noResultsState = document.getElementById('noResultsState');
+            
+            if (filteredAlumni.length === 0 && allAlumni.length > 0) {
+                alumniGrid.style.display = 'none';
+                noResultsState.style.display = 'block';
+                return;
+            }
+            
+            noResultsState.style.display = 'none';
+            alumniGrid.style.display = 'grid';
+            
+            alumniGrid.innerHTML = filteredAlumni.map(alumni => createAlumniCard(alumni)).join('');
+        }
+
+        function createAlumniCard(alumni) {
+            const defaultPhoto = createDefaultAvatar(alumni.name || 'Alumni');
+            const photoSrc = alumni.photo || defaultPhoto;
+            const featuredBadge = alumni.is_featured ? '<div class="featured-badge">⭐ Featured</div>' : '';
+            
+            return `
+                <div class="alumni-card" onclick="showAlumniModal('${alumni.id}')">
+                    <div class="alumni-photo">
+                        <img src="${photoSrc}" alt="${alumni.name || 'Alumni'}" onerror="this.src='${defaultPhoto}'">
+                        ${featuredBadge}
+                    </div>
+                    <div class="alumni-content">
+                        <h3 class="alumni-name">${alumni.name || 'Unknown'}</h3>
+                        <div class="alumni-batch">Batch: ${alumni.batch_year || 'N/A'}</div>
+                        ${alumni.role_in_club ? `<div class="alumni-role-in-club">${alumni.role_in_club}</div>` : ''}
+                        <div class="alumni-current">
+                            ${alumni.current_position ? `<div class="current-position">${alumni.current_position}</div>` : ''}
+                            ${alumni.current_company ? `<div class="current-company">@ ${alumni.current_company}</div>` : ''}
+                        </div>
+                        <div class="alumni-department">${alumni.department || 'N/A'}</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function showAlumniModal(alumniId) {
+            const alumni = allAlumni.find(a => a.id === alumniId);
+            if (!alumni) return;
+            
+            const defaultPhoto = createDefaultAvatar(alumni.name || 'Alumni');
+            const photoSrc = alumni.photo || defaultPhoto;
+            
+            const modalHTML = `
+                <button class="modal-close" onclick="closeAlumniModal()">×</button>
+                <div class="modal-header">
+                    <img src="${photoSrc}" alt="${alumni.name || 'Alumni'}" class="modal-photo" onerror="this.src='${defaultPhoto}'">
+                    <div class="modal-name">${alumni.name || 'Unknown'}</div>
+                    <div class="modal-batch">Batch: ${alumni.batch_year || 'N/A'}</div>
+                    ${alumni.is_featured ? '<div class="featured-label">⭐ Featured Alumni</div>' : ''}
+                </div>
+                <div class="modal-body">
+                    <div class="modal-section">
+                        <div class="modal-section-title">🎓 Academic Background</div>
+                        <div class="modal-info-grid">
+                            <div class="modal-info-item">
+                                <div class="modal-info-label">Department</div>
+                                <div class="modal-info-value">${alumni.department || 'N/A'}</div>
+                            </div>
+                            <div class="modal-info-item">
+                                <div class="modal-info-label">Batch Year</div>
+                                <div class="modal-info-value">${alumni.batch_year || 'N/A'}</div>
+                            </div>
+                            ${alumni.role_in_club ? `
+                            <div class="modal-info-item">
+                                <div class="modal-info-label">Role in Club</div>
+                                <div class="modal-info-value">${alumni.role_in_club}</div>
+                            </div>` : ''}
+                        </div>
+                    </div>
+                    
+                    ${alumni.current_position || alumni.current_company ? `
+                    <div class="modal-section">
+                        <div class="modal-section-title">💼 Current Position</div>
+                        <div class="modal-info-grid">
+                            ${alumni.current_position ? `
+                            <div class="modal-info-item">
+                                <div class="modal-info-label">Position</div>
+                                <div class="modal-info-value">${alumni.current_position}</div>
+                            </div>` : ''}
+                            ${alumni.current_company ? `
+                            <div class="modal-info-item">
+                                <div class="modal-info-label">Company</div>
+                                <div class="modal-info-value">${alumni.current_company}</div>
+                            </div>` : ''}
+                        </div>
+                    </div>` : ''}
+                    
+                    ${alumni.bio ? `
+                    <div class="modal-section">
+                        <div class="modal-section-title">📝 About</div>
+                        <p class="modal-bio">${alumni.bio}</p>
+                    </div>` : ''}
+                    
+                    ${alumni.achievements ? `
+                    <div class="modal-section">
+                        <div class="modal-section-title">🏆 Achievements</div>
+                        <p class="modal-bio">${alumni.achievements}</p>
+                    </div>` : ''}
+                    
+                    ${alumni.email || alumni.phone || alumni.linkedin || alumni.github || alumni.facebook ? `
+                    <div class="modal-section">
+                        <div class="modal-section-title">📞 Connect</div>
+                        <div class="contact-links">
+                            ${alumni.email ? `<a href="mailto:${alumni.email}" class="contact-link">📧 ${alumni.email}</a>` : ''}
+                            ${alumni.phone ? `<a href="tel:${alumni.phone}" class="contact-link">📱 ${alumni.phone}</a>` : ''}
+                            ${alumni.linkedin ? `<a href="${alumni.linkedin}" target="_blank" rel="noopener noreferrer" class="contact-link">💼 LinkedIn</a>` : ''}
+                            ${alumni.github ? `<a href="${alumni.github}" target="_blank" rel="noopener noreferrer" class="contact-link">💻 GitHub</a>` : ''}
+                            ${alumni.facebook ? `<a href="${alumni.facebook}" target="_blank" rel="noopener noreferrer" class="contact-link">📘 Facebook</a>` : ''}
+                        </div>
+                    </div>` : ''}
+                </div>
+            `;
+
+            document.getElementById('modalContent').innerHTML = modalHTML;
+            document.getElementById('alumniModal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeAlumniModal() {
+            document.getElementById('alumniModal').classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        function initializeModal() {
+            const modal = document.getElementById('alumniModal');
+            
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    closeAlumniModal();
+                }
+            });
+
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && modal.classList.contains('active')) {
+                    closeAlumniModal();
+                }
+            });
+        }
+
+        function createDefaultAvatar(name) {
+            const initial = name ? name.charAt(0).toUpperCase() : '?';
+            const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><rect fill="#1a1f3a" width="200" height="200"/><text x="100" y="110" font-family="Arial" font-size="80" fill="#00d4ff" text-anchor="middle">${initial}</text></svg>`;
+            return 'data:image/svg+xml;base64,' + btoa(svg);
+        }
+    </script>
+</body>
+</html>
