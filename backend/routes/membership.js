@@ -6,7 +6,7 @@ const router = express.Router();
 const membershipModel = require('../models/membershipModel');
 const contentModel = require('../models/contentModel');
 
-// Import middleware - CORRECTED: Import the specific functions from auth middleware
+// Import middleware
 const { authenticateToken, isAdmin } = require('../middleware/auth');
 
 // Validation middleware
@@ -14,14 +14,16 @@ const validateRequest = (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     return res.status(400).json({ 
-      success: false, 
-      errors: errors.array() 
+      success: false,
+      error: 'Validation failed',
+      details: errors.array().map(err => err.msg),
+      message: errors.array()[0].msg
     });
   }
   next();
 };
 
-// Bangladesh phone number validation regex
+// Bangladesh phone number validation regex - FIXED to accept both formats
 const bangladeshPhoneRegex = /^(\+8801|01)[3-9]\d{8}$/;
 
 // 1. POST /api/membership/apply (PUBLIC - No Auth Required)
@@ -63,22 +65,26 @@ router.post(
       .isLength({ max: 100 })
       .withMessage('Department must not exceed 100 characters'),
     
+    // FIXED: Accept "1st Year" format from frontend
     body('year')
+      .trim()
       .notEmpty()
       .withMessage('Year is required')
-      .isIn(['1st', '2nd', '3rd', '4th'])
-      .withMessage('Year must be one of: 1st, 2nd, 3rd, 4th'),
+      .isIn(['1st Year', '2nd Year', '3rd Year', '4th Year', '1st', '2nd', '3rd', '4th'])
+      .withMessage('Year must be one of: 1st Year, 2nd Year, 3rd Year, 4th Year'),
     
+    // FIXED: Changed minimum from 50 to 100 to match frontend
     body('bio')
       .trim()
       .notEmpty()
       .withMessage('Bio is required')
-      .isLength({ min: 50, max: 1000 })
-      .withMessage('Bio must be between 50 and 1000 characters'),
+      .isLength({ min: 100, max: 1000 })
+      .withMessage('Bio must be between 100 and 1000 characters'),
     
+    // FIXED: Changed minimum from 1 to 2 to match frontend requirement
     body('skills')
-      .isArray({ min: 1 })
-      .withMessage('Skills must be a non-empty array'),
+      .isArray({ min: 2 })
+      .withMessage('At least 2 skills are required'),
     
     body('skills.*')
       .trim()
@@ -94,18 +100,43 @@ router.post(
     body('github_profile')
       .optional({ checkFalsy: true })
       .trim()
-      .isURL()
-      .withMessage('GitHub profile must be a valid URL'),
+      .custom((value) => {
+        if (value && value.length > 0) {
+          try {
+            new URL(value);
+            return true;
+          } catch (e) {
+            throw new Error('GitHub profile must be a valid URL');
+          }
+        }
+        return true;
+      }),
     
     body('linkedin_profile')
       .optional({ checkFalsy: true })
       .trim()
-      .isURL()
-      .withMessage('LinkedIn profile must be a valid URL')
+      .custom((value) => {
+        if (value && value.length > 0) {
+          try {
+            new URL(value);
+            return true;
+          } catch (e) {
+            throw new Error('LinkedIn profile must be a valid URL');
+          }
+        }
+        return true;
+      })
   ],
   validateRequest,
   async (req, res) => {
     try {
+      console.log('📝 Received membership application');
+      console.log('   Name:', req.body.full_name);
+      console.log('   Email:', req.body.email);
+      console.log('   Phone:', req.body.phone);
+      console.log('   Year:', req.body.year);
+      console.log('   Skills:', req.body.skills);
+
       const applicationData = {
         full_name: req.body.full_name,
         email: req.body.email,
@@ -122,29 +153,40 @@ router.post(
 
       const result = await membershipModel.createApplication(applicationData);
 
+      console.log('✅ Application created successfully');
+      console.log('   ID:', result.id);
+      console.log('   Status:', result.status);
+
       res.status(201).json({
         success: true,
-        message: 'Application submitted successfully',
+        message: 'Application submitted successfully. We will review it and contact you soon.',
         data: {
           id: result.id,
-          status: 'pending'
+          full_name: result.full_name,
+          email: result.email,
+          status: result.status,
+          applied_date: result.applied_date
         }
       });
     } catch (error) {
-      console.error('Error submitting application:', error);
+      console.error('❌ Error submitting application:', error.message);
 
       // Handle duplicate email error
-      if (error.code === 'SQLITE_CONSTRAINT' || error.message.includes('UNIQUE constraint') || error.message.includes('Email already used')) {
+      if (error.code === '23505' || 
+          error.message.includes('UNIQUE constraint') || 
+          error.message.includes('Email already used')) {
         return res.status(409).json({
           success: false,
-          message: 'An application with this email already exists'
+          error: 'Duplicate email',
+          message: 'An application with this email already exists. Please use a different email or contact us if you need help.'
         });
       }
 
       res.status(500).json({
         success: false,
-        message: 'Failed to submit application',
-        error: process.env.NODE_ENV === 'development' ? error.message : undefined
+        error: 'Failed to submit application',
+        message: 'An unexpected error occurred. Please try again later.',
+        details: process.env.NODE_ENV === 'development' ? error.message : undefined
       });
     }
   }
@@ -159,22 +201,27 @@ router.get('/applications', authenticateToken, isAdmin, async (req, res) => {
     if (status && !['pending', 'approved', 'rejected'].includes(status)) {
       return res.status(400).json({
         success: false,
-        message: 'Invalid status. Must be one of: pending, approved, rejected'
+        error: 'Invalid status parameter',
+        message: 'Status must be one of: pending, approved, rejected'
       });
     }
 
     const applications = await membershipModel.getAllApplications(status);
 
+    console.log(`✅ Fetched ${applications.length} applications (status: ${status || 'all'})`);
+
     res.status(200).json({
       success: true,
-      data: applications
+      data: applications,
+      total: applications.length
     });
   } catch (error) {
-    console.error('Error fetching applications:', error);
+    console.error('❌ Error fetching applications:', error.message);
     res.status(500).json({
       success: false,
-      message: 'Failed to fetch applications',
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      error: 'Failed to fetch applications',
+      message: error.message,
+      details: process.env.NODE_ENV === 'development' ? error.stack : undefined
     });
   }
 });
@@ -189,20 +236,24 @@ router.get('/applications/:id', authenticateToken, isAdmin, async (req, res) => 
     if (!application) {
       return res.status(404).json({
         success: false,
-        message: 'Application not found'
+        error: 'Application not found',
+        message: `No application found with ID ${id}`
       });
     }
+
+    console.log(`✅ Fetched application ${id}`);
 
     res.status(200).json({
       success: true,
       data: application
     });
   } catch (error) {
-    console.error('Error fetching application:', error);
+    console.error('❌ Error fetching application:', error.message);
     res.status(500).json({
       success: false,
-      message: 'Failed to fetch application',
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      error: 'Failed to fetch application',
+      message: error.message,
+      details: process.env.NODE_ENV === 'development' ? error.stack : undefined
     });
   }
 });
@@ -225,13 +276,16 @@ router.post(
       const { id } = req.params;
       const { admin_notes } = req.body;
 
+      console.log(`📋 Approving application ${id}`);
+
       // Fetch application
       const application = await membershipModel.getApplicationById(id);
 
       if (!application) {
         return res.status(404).json({
           success: false,
-          message: 'Application not found'
+          error: 'Application not found',
+          message: `No application found with ID ${id}`
         });
       }
 
@@ -239,11 +293,12 @@ router.post(
       if (application.status !== 'pending') {
         return res.status(400).json({
           success: false,
-          message: `Application has already been ${application.status}`
+          error: 'Application already processed',
+          message: `This application has already been ${application.status}`
         });
       }
 
-      // Update application status - CORRECTED: Use req.user.id instead of req.admin.id
+      // Update application status
       await membershipModel.updateApplicationStatus(
         id,
         'approved',
@@ -266,17 +321,24 @@ router.post(
 
       const member = await contentModel.createMember(memberData);
 
+      console.log(`✅ Application ${id} approved and member created`);
+
       res.status(200).json({
         success: true,
-        message: 'Application approved and member created',
-        data: { member }
+        message: 'Application approved successfully and member account created',
+        data: { 
+          application_id: id,
+          member_id: member.id,
+          member_name: member.name
+        }
       });
     } catch (error) {
-      console.error('Error approving application:', error);
+      console.error('❌ Error approving application:', error.message);
       res.status(500).json({
         success: false,
-        message: 'Failed to approve application',
-        error: process.env.NODE_ENV === 'development' ? error.message : undefined
+        error: 'Failed to approve application',
+        message: error.message,
+        details: process.env.NODE_ENV === 'development' ? error.stack : undefined
       });
     }
   }
@@ -301,13 +363,16 @@ router.post(
       const { id } = req.params;
       const { admin_notes } = req.body;
 
+      console.log(`📋 Rejecting application ${id}`);
+
       // Fetch application
       const application = await membershipModel.getApplicationById(id);
 
       if (!application) {
         return res.status(404).json({
           success: false,
-          message: 'Application not found'
+          error: 'Application not found',
+          message: `No application found with ID ${id}`
         });
       }
 
@@ -315,11 +380,12 @@ router.post(
       if (application.status !== 'pending') {
         return res.status(400).json({
           success: false,
-          message: `Application has already been ${application.status}`
+          error: 'Application already processed',
+          message: `This application has already been ${application.status}`
         });
       }
 
-      // Update application status - CORRECTED: Use req.user.id instead of req.admin.id
+      // Update application status
       const updatedApplication = await membershipModel.updateApplicationStatus(
         id,
         'rejected',
@@ -327,17 +393,25 @@ router.post(
         admin_notes
       );
 
+      console.log(`✅ Application ${id} rejected`);
+
       res.status(200).json({
         success: true,
-        message: 'Application rejected',
-        data: updatedApplication
+        message: 'Application rejected successfully',
+        data: {
+          id: updatedApplication.id,
+          status: updatedApplication.status,
+          admin_notes: updatedApplication.admin_notes,
+          reviewed_date: updatedApplication.reviewed_date
+        }
       });
     } catch (error) {
-      console.error('Error rejecting application:', error);
+      console.error('❌ Error rejecting application:', error.message);
       res.status(500).json({
         success: false,
-        message: 'Failed to reject application',
-        error: process.env.NODE_ENV === 'development' ? error.message : undefined
+        error: 'Failed to reject application',
+        message: error.message,
+        details: process.env.NODE_ENV === 'development' ? error.stack : undefined
       });
     }
   }
@@ -348,29 +422,36 @@ router.delete('/applications/:id', authenticateToken, isAdmin, async (req, res) 
   try {
     const { id } = req.params;
 
+    console.log(`🗑️ Deleting application ${id}`);
+
     // Check if application exists
     const application = await membershipModel.getApplicationById(id);
 
     if (!application) {
       return res.status(404).json({
         success: false,
-        message: 'Application not found'
+        error: 'Application not found',
+        message: `No application found with ID ${id}`
       });
     }
 
     // Delete application
     await membershipModel.deleteApplication(id);
 
+    console.log(`✅ Application ${id} deleted`);
+
     res.status(200).json({
       success: true,
-      message: 'Application deleted'
+      message: 'Application deleted successfully',
+      data: { id: parseInt(id) }
     });
   } catch (error) {
-    console.error('Error deleting application:', error);
+    console.error('❌ Error deleting application:', error.message);
     res.status(500).json({
       success: false,
-      message: 'Failed to delete application',
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      error: 'Failed to delete application',
+      message: error.message,
+      details: process.env.NODE_ENV === 'development' ? error.stack : undefined
     });
   }
 });
@@ -380,16 +461,19 @@ router.get('/statistics', authenticateToken, isAdmin, async (req, res) => {
   try {
     const statistics = await membershipModel.getApplicationStatistics();
 
+    console.log('✅ Fetched membership statistics');
+
     res.status(200).json({
       success: true,
       data: statistics
     });
   } catch (error) {
-    console.error('Error fetching statistics:', error);
+    console.error('❌ Error fetching statistics:', error.message);
     res.status(500).json({
       success: false,
-      message: 'Failed to fetch statistics',
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      error: 'Failed to fetch statistics',
+      message: error.message,
+      details: process.env.NODE_ENV === 'development' ? error.stack : undefined
     });
   }
 });
