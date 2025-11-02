@@ -294,7 +294,7 @@ router.post(
         });
       }
 
-      // Update application status
+      // Update application status to approved
       await membershipModel.updateApplicationStatus(
         id,
         'approved',
@@ -302,7 +302,7 @@ router.post(
         admin_notes || null
       );
 
-      // ✅ FIXED: Create member in members table - handle the response object correctly
+      // ✅ CRITICAL FIX: Create member account
       const memberData = {
         name: application.full_name,
         email: application.email,
@@ -316,11 +316,30 @@ router.post(
         joined_date: new Date().toISOString().split('T')[0]
       };
 
+      console.log('📝 Creating member with data:', memberData);
+
+      // ✅ CRITICAL: contentModel.createMember returns {success, data, error}
       const memberResult = await contentModel.createMember(memberData);
 
-      // ✅ FIXED: Check if member creation was successful
+      console.log('📦 createMember response:', memberResult);
+
+      // ✅ CRITICAL: Check if member creation was successful
       if (!memberResult.success) {
         console.error('❌ Failed to create member:', memberResult.error);
+        
+        // Rollback application approval
+        try {
+          await membershipModel.updateApplicationStatus(
+            id,
+            'pending',
+            req.user.id,
+            'Auto-rollback: Member creation failed - ' + memberResult.error
+          );
+          console.log('↩️  Application rolled back to pending');
+        } catch (rollbackError) {
+          console.error('❌ Rollback failed:', rollbackError.message);
+        }
+        
         return res.status(500).json({
           success: false,
           error: 'Failed to create member account',
@@ -328,7 +347,26 @@ router.post(
         });
       }
 
+      // ✅ Extract the actual member data from the wrapper
       const member = memberResult.data;
+
+      if (!member || !member.id) {
+        console.error('❌ Invalid member data returned');
+        
+        // Rollback
+        await membershipModel.updateApplicationStatus(
+          id,
+          'pending',
+          req.user.id,
+          'Auto-rollback: Invalid member data returned'
+        );
+        
+        return res.status(500).json({
+          success: false,
+          error: 'Failed to create member account',
+          message: 'Invalid member data returned from database'
+        });
+      }
 
       console.log(`✅ Application ${id} approved and member created`);
       console.log(`   Member ID: ${member.id}`);
