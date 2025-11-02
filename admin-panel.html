@@ -1292,10 +1292,20 @@
 
             <!-- Membership Applications Section -->
             <div class="section-content" id="membershipApplicationsSection">
-                <iframe src="admin-membership.html" 
-                        style="width: 100%; height: calc(100vh - 200px); border: none; display: block;" 
-                        id="membershipIframe"
-                        onload="this.contentWindow.loadApplicationStatistics?.(); this.contentWindow.loadMembershipApplications?.('pending');"></iframe>
+               <iframe src="admin-membership.html" 
+        style="width: 100%; height: calc(100vh - 200px); border: none; display: block;" 
+        id="membershipIframe"
+        onload="
+            const iframe = this;
+            setTimeout(() => {
+                const token = window.apiClient?.getAuthToken();
+                if (token && iframe.contentWindow.apiClient) {
+                    iframe.contentWindow.apiClient.setAuthToken(token);
+                }
+                iframe.contentWindow.loadApplicationStatistics?.();
+                iframe.contentWindow.loadMembershipApplications?.('pending');
+            }, 500);
+        "></iframe>
             </div>
 
             <!-- Alumni Management Section (Iframe) -->
@@ -2793,10 +2803,19 @@
             if (section === 'admins') loadAdmins();
             
            // Load iframe content for new sections
-            if (section === 'membership-applications') {
-                const iframe = document.getElementById('membershipIframe');
-                if (iframe) {
-                    iframe.contentWindow.location.reload();
+if (section === 'membership-applications') {
+    const iframe = document.getElementById('membershipIframe');
+    if (iframe && iframe.contentWindow) {
+        // ✅ CRITICAL FIX: Pass token to iframe BEFORE reload
+        try {
+            const token = window.apiClient.getAuthToken();
+            if (token && iframe.contentWindow.apiClient) {
+                iframe.contentWindow.apiClient.setAuthToken(token);
+            }
+        } catch (e) {
+            console.warn('Could not set iframe token:', e);
+        }
+        iframe.contentWindow.location.reload();
                     // Update dashboard stat after reload
                     setTimeout(async () => {
                         try {

@@ -89,26 +89,29 @@
             initializeApplications();
         });
 
-        async function initializeApplications() {
-            console.log('🔄 Initializing membership applications iframe...');
-            
-            // Wait for API client from parent or current window
-            let retries = 0;
-            while (retries < 50) {
-                // Try parent window first
-                if (window.parent && window.parent.apiClient && window.parent.apiClient.isReady) {
-                    window.apiClient = window.parent.apiClient;
-                    console.log('✅ Using parent window API client');
-                    break;
-                }
-                // Fallback to own window
-                if (window.apiClient && window.apiClient.isReady) {
-                    console.log('✅ Using own window API client');
-                    break;
-                }
-                await new Promise(resolve => setTimeout(resolve, 100));
-                retries++;
-            }
+       async function initializeApplications() {
+    console.log('🔄 Initializing membership applications iframe...');
+    
+    // ✅ CRITICAL FIX: Force use parent's API client and token
+    if (window.parent && window.parent.apiClient) {
+        window.apiClient = window.parent.apiClient;
+        console.log('✅ Using parent window API client');
+    } else {
+        // Wait for own API client
+        let retries = 0;
+        while ((!window.apiClient || !window.apiClient.isReady) && retries < 30) {
+            await new Promise(resolve => setTimeout(resolve, 100));
+            retries++;
+        }
+    }
+    
+    // ✅ CRITICAL: Verify token exists
+    if (!window.apiClient || !window.apiClient.isReady) {
+        console.error('❌ API client not available');
+        document.getElementById('applicationsTableBody').innerHTML = 
+            '<tr><td colspan="7" style="text-align: center; padding: var(--space-xl); color: var(--error-color);">Failed to initialize. Please refresh the page.</td></tr>';
+        return;
+    }
             
             if (!window.apiClient || !window.apiClient.isReady) {
                 console.error('❌ API client not available after 5 seconds');
@@ -127,11 +130,11 @@
             }
             
             console.log('✅ Authentication token found');
-            
-            await loadApplicationStatistics();
-            await loadMembershipApplications(null); // Load ALL applications first
-            initializeApplicationFilters();
-        }
+    
+    await loadApplicationStatistics();
+    await loadMembershipApplications('pending'); // ✅ FIX: Load pending by default
+    initializeApplicationFilters();
+}
 
         async function loadApplicationStatistics() {
             try {
@@ -153,15 +156,27 @@
         }
 
                 async function loadMembershipApplications(status = null) {
-            try {
-                console.log('📋 Loading applications with status:', status);
-                
-                if (!window.apiClient || !window.apiClient.isReady) {
-                    console.error('❌ API client not ready');
-                    return;
-                }
-                
-                const result = await window.apiClient.getMembershipApplications(status);
+    try {
+        console.log('📋 Loading applications with status:', status);
+        
+        // ✅ CRITICAL FIX: Re-check API client and token before EVERY request
+        if (!window.apiClient || !window.apiClient.isReady) {
+            console.error('❌ API client not ready');
+            document.getElementById('applicationsTableBody').innerHTML = 
+                '<tr><td colspan="7" style="text-align: center; padding: var(--space-xl); color: var(--error-color);">API client not initialized. Please refresh.</td></tr>';
+            return;
+        }
+        
+        const token = window.apiClient.getAuthToken();
+        if (!token) {
+            console.error('❌ No auth token found');
+            document.getElementById('applicationsTableBody').innerHTML = 
+                '<tr><td colspan="7" style="text-align: center; padding: var(--space-xl); color: var(--error-color);">Not authenticated. Please log in again.</td></tr>';
+            return;
+        }
+        
+        console.log('✅ Token verified, making API call...');
+        const result = await window.apiClient.getMembershipApplications(status);
                 console.log('📦 API response:', result);
                 
                 const tbody = document.getElementById('applicationsTableBody');
