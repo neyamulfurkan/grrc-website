@@ -1290,11 +1290,12 @@
                 </div>
             </div>
 
-            <!-- Membership Applications Section (Iframe) -->
+            <!-- Membership Applications Section -->
             <div class="section-content" id="membershipApplicationsSection">
                 <iframe src="admin-membership.html" 
                         style="width: 100%; height: calc(100vh - 200px); border: none; display: block;" 
-                        id="membershipIframe"></iframe>
+                        id="membershipIframe"
+                        onload="this.contentWindow.loadApplicationStatistics?.(); this.contentWindow.loadMembershipApplications?.('pending');"></iframe>
             </div>
 
             <!-- Alumni Management Section (Iframe) -->
@@ -1512,6 +1513,18 @@
                 document.getElementById('statEvents').textContent = events.length;
                 document.getElementById('statProjects').textContent = projects.length;
                 document.getElementById('statGallery').textContent = gallery.length;
+            }
+            
+            // Load membership application stats
+            try {
+                const membershipStatsResult = await window.apiClient.getMembershipStatistics();
+                if (membershipStatsResult.success && membershipStatsResult.data) {
+                    document.getElementById('statPendingApplications').textContent = membershipStatsResult.data.pending || 0;
+                    console.log('✅ Loaded membership stats:', membershipStatsResult.data);
+                }
+            } catch (membershipError) {
+                console.warn('⚠️ Failed to load membership stats:', membershipError);
+                document.getElementById('statPendingApplications').textContent = '0';
             }
         }
 
@@ -2733,12 +2746,21 @@
                 content.classList.remove('active');
             });
 
-            let sectionId = section;
-            if (section.includes('-')) {
-                sectionId = section.replace(/-([a-z])/g, (match, letter) => letter.toUpperCase());
-            }
-            sectionId = sectionId + 'Section';
+            // Fixed section ID mapping
+            const sectionMap = {
+                'dashboard': 'dashboardSection',
+                'club-config': 'clubConfigSection',
+                'members': 'membersSection',
+                'events': 'eventsSection',
+                'projects': 'projectsSection',
+                'gallery': 'gallerySection',
+                'announcements': 'announcementsSection',
+                'membership-applications': 'membershipApplicationsSection',
+                'alumni': 'alumniSection',
+                'admins': 'adminsSection'
+            };
             
+            const sectionId = sectionMap[section] || section + 'Section';
             const sectionElement = document.getElementById(sectionId);
             if (sectionElement) {
                 sectionElement.classList.add('active');
@@ -2770,10 +2792,23 @@
             if (section === 'announcements') loadAnnouncements();
             if (section === 'admins') loadAdmins();
             
-            // Load iframe content for new sections
+           // Load iframe content for new sections
             if (section === 'membership-applications') {
                 const iframe = document.getElementById('membershipIframe');
-                if (iframe) iframe.contentWindow.location.reload();
+                if (iframe) {
+                    iframe.contentWindow.location.reload();
+                    // Update dashboard stat after reload
+                    setTimeout(async () => {
+                        try {
+                            const stats = await window.apiClient.getMembershipStatistics();
+                            if (stats.success && stats.data) {
+                                document.getElementById('statPendingApplications').textContent = stats.data.pending || 0;
+                            }
+                        } catch (error) {
+                            console.error('Error updating pending applications stat:', error);
+                        }
+                    }, 1000);
+                }
             }
             if (section === 'alumni') {
                 const iframe = document.getElementById('alumniIframe');
