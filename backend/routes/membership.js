@@ -150,7 +150,7 @@ router.post(
   }
 );
 
-// 2. GET /api/admin/membership/applications (ADMIN - Auth Required)
+// 2. GET /api/membership/applications (ADMIN - Auth Required)
 router.get('/applications', authMiddleware, async (req, res) => {
   try {
     const { status } = req.query;
@@ -179,7 +179,7 @@ router.get('/applications', authMiddleware, async (req, res) => {
   }
 });
 
-// 3. GET /api/admin/membership/applications/:id (ADMIN - Auth Required)
+// 3. GET /api/membership/applications/:id (ADMIN - Auth Required)
 router.get('/applications/:id', authMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
@@ -207,7 +207,7 @@ router.get('/applications/:id', authMiddleware, async (req, res) => {
   }
 });
 
-// 4. POST /api/admin/membership/applications/:id/approve (ADMIN - Auth Required)
+// 4. POST /api/membership/applications/:id/approve (ADMIN - Auth Required)
 router.post(
   '/applications/:id/approve',
   authMiddleware,
@@ -281,7 +281,7 @@ router.post(
   }
 );
 
-// 5. POST /api/admin/membership/applications/:id/reject (ADMIN - Auth Required)
+// 5. POST /api/membership/applications/:id/reject (ADMIN - Auth Required)
 router.post(
   '/applications/:id/reject',
   authMiddleware,
@@ -341,7 +341,7 @@ router.post(
   }
 );
 
-// 6. DELETE /api/admin/membership/applications/:id (ADMIN - Auth Required)
+// 6. DELETE /api/membership/applications/:id (ADMIN - Auth Required)
 router.delete('/applications/:id', authMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
@@ -373,7 +373,7 @@ router.delete('/applications/:id', authMiddleware, async (req, res) => {
   }
 });
 
-// 7. GET /api/admin/membership/statistics (ADMIN - Auth Required)
+// 7. GET /api/membership/statistics (ADMIN - Auth Required)
 router.get('/statistics', authMiddleware, async (req, res) => {
   try {
     const statistics = await membershipModel.getApplicationStatistics();
