@@ -21,15 +21,47 @@ const createApplication = async (applicationData) => {
   } = applicationData;
 
   try {
-    // Convert skills array to JSON string for JSONB storage
-    const skillsJson = JSON.stringify(skills);
+    console.log('🔍 Creating application for:', email);
+    console.log('📝 Application data:', {
+      full_name,
+      email,
+      phone,
+      department,
+      year,
+      skills_count: Array.isArray(skills) ? skills.length : 0
+    });
+
+    // ✅ CRITICAL: Validate required fields
+    if (!full_name || !email || !phone || !department || !year || !bio) {
+      throw new Error('Missing required fields: full_name, email, phone, department, year, or bio');
+    }
+
+    if (!Array.isArray(skills) || skills.length < 2) {
+      throw new Error('Skills must be an array with at least 2 items');
+    }
+
+    // ✅ CRITICAL: Properly handle skills - ensure it's a valid JSON string
+    let skillsJson;
+    try {
+      skillsJson = JSON.stringify(skills);
+      console.log('✅ Skills serialized:', skillsJson);
+    } catch (jsonError) {
+      console.error('❌ Failed to serialize skills:', jsonError);
+      throw new Error('Invalid skills format');
+    }
+
+    // ✅ CRITICAL: Check if pool is configured
+    if (!pool || typeof pool.query !== 'function') {
+      console.error('❌ Database pool not configured!');
+      throw new Error('Database connection not available');
+    }
 
     const query = `
       INSERT INTO membership_applications (
         full_name, email, phone, student_id, department, year, 
         bio, skills, previous_experience, github_profile, linkedin_profile
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8::jsonb, $9, $10, $11)
       RETURNING id, full_name, email, status, applied_date
     `;
 
@@ -37,24 +69,48 @@ const createApplication = async (applicationData) => {
       full_name,
       email,
       phone,
-      student_id,
+      student_id || null,
       department,
       year,
       bio,
-      skillsJson,
-      previous_experience,
-      github_profile,
-      linkedin_profile
+      skillsJson,  // ✅ Now properly stringified
+      previous_experience || null,
+      github_profile || null,
+      linkedin_profile || null
     ];
 
+    console.log('📤 Executing query with values:', values);
+
     const result = await pool.query(query, values);
+    
+    console.log('✅ Application created successfully:', result.rows[0]);
+    
     return result.rows[0];
   } catch (error) {
+    console.error('❌ Error in createApplication:', {
+      message: error.message,
+      code: error.code,
+      detail: error.detail,
+      stack: error.stack
+    });
+
     // Handle duplicate email error
     if (error.code === '23505') {
       throw new Error('Email already used for an application');
     }
-    throw new Error(error.message);
+
+    // Handle invalid JSON error
+    if (error.message.includes('invalid input syntax for type json')) {
+      throw new Error('Invalid data format for skills');
+    }
+
+    // Handle table not found
+    if (error.code === '42P01') {
+      throw new Error('Database table "membership_applications" does not exist. Please run database migrations.');
+    }
+
+    // Re-throw the error with more context
+    throw new Error(`Failed to create application: ${error.message}`);
   }
 };
 
@@ -65,6 +121,8 @@ const createApplication = async (applicationData) => {
  */
 const getAllApplications = async (status = null) => {
   try {
+    console.log('🔍 Fetching applications with status:', status || 'all');
+
     const query = `
       SELECT 
         ma.*,
@@ -77,13 +135,16 @@ const getAllApplications = async (status = null) => {
 
     const result = await pool.query(query, [status]);
 
+    console.log(`✅ Fetched ${result.rows.length} applications`);
+
     // Parse skills JSON for each application
     return result.rows.map(row => ({
       ...row,
       skills: typeof row.skills === 'string' ? JSON.parse(row.skills) : row.skills
     }));
   } catch (error) {
-    throw new Error(error.message);
+    console.error('❌ Error in getAllApplications:', error.message);
+    throw new Error(`Failed to fetch applications: ${error.message}`);
   }
 };
 
@@ -94,6 +155,8 @@ const getAllApplications = async (status = null) => {
  */
 const getApplicationById = async (id) => {
   try {
+    console.log('🔍 Fetching application by ID:', id);
+
     const query = `
       SELECT 
         ma.*,
@@ -106,11 +169,14 @@ const getApplicationById = async (id) => {
     const result = await pool.query(query, [id]);
 
     if (result.rows.length === 0) {
+      console.warn(`⚠️ Application ${id} not found`);
       return null;
     }
 
     const application = result.rows[0];
     
+    console.log(`✅ Fetched application ${id}`);
+
     // Parse skills JSON
     return {
       ...application,
@@ -119,7 +185,8 @@ const getApplicationById = async (id) => {
         : application.skills
     };
   } catch (error) {
-    throw new Error(error.message);
+    console.error('❌ Error in getApplicationById:', error.message);
+    throw new Error(`Failed to fetch application: ${error.message}`);
   }
 };
 
@@ -133,6 +200,8 @@ const getApplicationById = async (id) => {
  */
 const updateApplicationStatus = async (id, status, adminId, adminNotes = '') => {
   try {
+    console.log('🔄 Updating application status:', { id, status, adminId });
+
     const query = `
       UPDATE membership_applications 
       SET 
@@ -153,6 +222,8 @@ const updateApplicationStatus = async (id, status, adminId, adminNotes = '') => 
 
     const application = result.rows[0];
 
+    console.log(`✅ Application ${id} status updated to ${status}`);
+
     // Parse skills JSON
     return {
       ...application,
@@ -161,11 +232,13 @@ const updateApplicationStatus = async (id, status, adminId, adminNotes = '') => 
         : application.skills
     };
   } catch (error) {
+    console.error('❌ Error in updateApplicationStatus:', error.message);
+
     // Handle foreign key constraint violation for invalid admin ID
     if (error.code === '23503') {
       throw new Error('Invalid admin ID');
     }
-    throw new Error(error.message);
+    throw new Error(`Failed to update application: ${error.message}`);
   }
 };
 
@@ -176,6 +249,8 @@ const updateApplicationStatus = async (id, status, adminId, adminNotes = '') => 
  */
 const deleteApplication = async (id) => {
   try {
+    console.log('🗑️ Deleting application:', id);
+
     const query = `
       DELETE FROM membership_applications 
       WHERE id = $1 
@@ -188,9 +263,12 @@ const deleteApplication = async (id) => {
       throw new Error('Application not found');
     }
 
+    console.log(`✅ Application ${id} deleted`);
+
     return { success: true, deleted: true };
   } catch (error) {
-    throw new Error(error.message);
+    console.error('❌ Error in deleteApplication:', error.message);
+    throw new Error(`Failed to delete application: ${error.message}`);
   }
 };
 
@@ -200,6 +278,8 @@ const deleteApplication = async (id) => {
  */
 const getApplicationStatistics = async () => {
   try {
+    console.log('📊 Fetching application statistics');
+
     const query = `
       SELECT status, COUNT(*) as count 
       FROM membership_applications 
@@ -230,9 +310,12 @@ const getApplicationStatistics = async () => {
       }
     });
 
+    console.log('✅ Statistics fetched:', statistics);
+
     return statistics;
   } catch (error) {
-    throw new Error(error.message);
+    console.error('❌ Error in getApplicationStatistics:', error.message);
+    throw new Error(`Failed to fetch statistics: ${error.message}`);
   }
 };
 
