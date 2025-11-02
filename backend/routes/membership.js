@@ -23,7 +23,7 @@ const validateRequest = (req, res, next) => {
   next();
 };
 
-// Bangladesh phone number validation regex - FIXED to accept both formats
+// Bangladesh phone number validation regex
 const bangladeshPhoneRegex = /^(\+8801|01)[3-9]\d{8}$/;
 
 // 1. POST /api/membership/apply (PUBLIC - No Auth Required)
@@ -65,7 +65,6 @@ router.post(
       .isLength({ max: 100 })
       .withMessage('Department must not exceed 100 characters'),
     
-    // FIXED: Accept "1st Year" format from frontend
     body('year')
       .trim()
       .notEmpty()
@@ -73,7 +72,6 @@ router.post(
       .isIn(['1st Year', '2nd Year', '3rd Year', '4th Year', '1st', '2nd', '3rd', '4th'])
       .withMessage('Year must be one of: 1st Year, 2nd Year, 3rd Year, 4th Year'),
     
-    // FIXED: Changed minimum from 50 to 100 to match frontend
     body('bio')
       .trim()
       .notEmpty()
@@ -81,7 +79,6 @@ router.post(
       .isLength({ min: 100, max: 1000 })
       .withMessage('Bio must be between 100 and 1000 characters'),
     
-    // FIXED: Changed minimum from 1 to 2 to match frontend requirement
     body('skills')
       .isArray({ min: 2 })
       .withMessage('At least 2 skills are required'),
@@ -197,7 +194,6 @@ router.get('/applications', authenticateToken, isAdmin, async (req, res) => {
   try {
     const { status } = req.query;
 
-    // Validate status parameter if provided
     if (status && !['pending', 'approved', 'rejected'].includes(status)) {
       return res.status(400).json({
         success: false,
@@ -306,7 +302,7 @@ router.post(
         admin_notes || null
       );
 
-      // Create member in members table
+      // ✅ FIXED: Create member in members table - handle the response object correctly
       const memberData = {
         name: application.full_name,
         email: application.email,
@@ -316,28 +312,45 @@ router.post(
         bio: application.bio,
         skills: application.skills,
         role: 'General Member',
-        photo: ''
+        photo: '',
+        joined_date: new Date().toISOString().split('T')[0]
       };
 
-      const member = await contentModel.createMember(memberData);
+      const memberResult = await contentModel.createMember(memberData);
+
+      // ✅ FIXED: Check if member creation was successful
+      if (!memberResult.success) {
+        console.error('❌ Failed to create member:', memberResult.error);
+        return res.status(500).json({
+          success: false,
+          error: 'Failed to create member account',
+          message: memberResult.error || 'Could not create member after approving application'
+        });
+      }
+
+      const member = memberResult.data;
 
       console.log(`✅ Application ${id} approved and member created`);
+      console.log(`   Member ID: ${member.id}`);
+      console.log(`   Member Name: ${member.name}`);
 
       res.status(200).json({
         success: true,
         message: 'Application approved successfully and member account created',
         data: { 
-          application_id: id,
+          application_id: parseInt(id),
           member_id: member.id,
-          member_name: member.name
+          member_name: member.name,
+          member_email: member.email
         }
       });
     } catch (error) {
       console.error('❌ Error approving application:', error.message);
+      console.error('   Stack:', error.stack);
       res.status(500).json({
         success: false,
         error: 'Failed to approve application',
-        message: error.message,
+        message: error.message || 'An unexpected error occurred',
         details: process.env.NODE_ENV === 'development' ? error.stack : undefined
       });
     }
