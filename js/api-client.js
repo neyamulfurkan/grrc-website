@@ -433,36 +433,36 @@ async function getAlumniBatches() {
 }
 
 async function getMembershipApplications(status = null) {
-    const endpoint = `/api/admin/membership/applications${status ? '?status=' + status : ''}`;
+    const endpoint = `/api/membership/applications${status ? '?status=' + status : ''}`;
     return request(endpoint);
 }
 
 async function getMembershipApplicationById(id) {
-    return request(`/api/admin/membership/applications/${id}`);
+    return request(`/api/membership/applications/${id}`);
 }
 
 async function approveMembershipApplication(id, adminNotes = '') {
-    return request(`/api/admin/membership/applications/${id}/approve`, {
+    return request(`/api/membership/applications/${id}/approve`, {
         method: 'POST',
         body: JSON.stringify({ admin_notes: adminNotes })
     });
 }
 
 async function rejectMembershipApplication(id, adminNotes) {
-    return request(`/api/admin/membership/applications/${id}/reject`, {
+    return request(`/api/membership/applications/${id}/reject`, {
         method: 'POST',
         body: JSON.stringify({ admin_notes: adminNotes })
     });
 }
 
 async function deleteMembershipApplication(id) {
-    return request(`/api/admin/membership/applications/${id}`, {
+    return request(`/api/membership/applications/${id}`, {
         method: 'DELETE'
     });
 }
 
 async function getMembershipStatistics() {
-    return request('/api/admin/membership/statistics');
+    return request('/api/membership/statistics');
 }
 
 async function createAlumni(data) {
