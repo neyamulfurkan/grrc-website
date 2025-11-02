@@ -4,7 +4,7 @@
  * Production-ready backend API server for Render deployment
  * 
  * @author GSTU Robotics Club
- * @version 2.1.0 - Render Deployment Fix
+ * @version 2.2.0 - Membership Routes Fixed
  */
 
 // ============ DEPENDENCIES ============
@@ -15,10 +15,6 @@ const helmet = require('helmet');
 const morgan = require('morgan');
 const path = require('path');
 require('dotenv').config();
-
-// ============ ROUTE IMPORTS ============
-
-const membershipRoutes = require('./routes/membership');
 
 // ============ INITIALIZE EXPRESS ============
 
@@ -118,7 +114,7 @@ app.get('/', (req, res) => {
     res.json({
         success: true,
         message: 'GSTU Robotics Club API Server',
-        version: '2.1.0',
+        version: '2.2.0',
         environment: NODE_ENV,
         timestamp: new Date().toISOString(),
         uptime: Math.floor(process.uptime()),
@@ -144,7 +140,7 @@ app.get('/health', async (req, res) => {
 
     // Try to check database if configured
     try {
-        if (process.env.DB_HOST && process.env.DB_NAME) {
+        if (process.env.DATABASE_URL || process.env.DB_HOST) {
             const pool = require('./db/pool');
             const result = await Promise.race([
                 pool.query('SELECT NOW() as time'),
@@ -235,11 +231,11 @@ function createPlaceholderRoute(mountPath, routeName) {
     console.log(`⚠️  Placeholder route created for ${mountPath}`);
 }
 
-// Load routes
+// ✅ CRITICAL FIX: Load ALL routes using the dynamic loader
 loadRoute('auth', './routes/auth', '/api/auth');
 loadRoute('content', './routes/content', '/api/content');
 loadRoute('admin', './routes/admin', '/api/admin');
-app.use('/api/membership', membershipRoutes);
+loadRoute('membership', './routes/membership', '/api/membership');  // ✅ FIXED!
 
 /**
  * API Documentation
@@ -248,7 +244,7 @@ app.get('/api', (req, res) => {
     res.json({
         success: true,
         message: 'GSTU Robotics Club API',
-        version: '2.1.0',
+        version: '2.2.0',
         documentation: 'https://github.com/gstu-robotics/grrc-website',
         routesLoaded: routesLoaded,
         endpoints: {
@@ -272,7 +268,10 @@ app.get('/api', (req, res) => {
                 'POST /api/membership/apply': 'Submit membership application',
                 'GET /api/membership/applications': 'Get all applications (admin)',
                 'GET /api/membership/applications/:id': 'Get specific application',
-                'PATCH /api/membership/applications/:id/status': 'Update application status'
+                'POST /api/membership/applications/:id/approve': 'Approve application',
+                'POST /api/membership/applications/:id/reject': 'Reject application',
+                'DELETE /api/membership/applications/:id': 'Delete application',
+                'GET /api/membership/statistics': 'Get application statistics'
             } : 'Routes not loaded'
         }
     });
@@ -327,34 +326,38 @@ async function startServer() {
     try {
         console.log('\n🔍 Validating environment configuration...');
         
-        const requiredEnvVars = ['DB_HOST', 'DB_NAME', 'DB_USER', 'DB_PASSWORD'];
-        const missingVars = requiredEnvVars.filter(v => !process.env[v]);
-        
-        if (missingVars.length > 0) {
-            console.warn('⚠️  Missing environment variables:', missingVars.join(', '));
-            console.warn('   Server will start but database features will be limited');
+        // Check for DATABASE_URL first (Render/Neon uses this)
+        if (process.env.DATABASE_URL) {
+            console.log('✅ DATABASE_URL found - using connection string');
         } else {
-            console.log('✅ All required environment variables present');
+            const requiredEnvVars = ['DB_HOST', 'DB_NAME', 'DB_USER', 'DB_PASSWORD'];
+            const missingVars = requiredEnvVars.filter(v => !process.env[v]);
+            
+            if (missingVars.length > 0) {
+                console.warn('⚠️  Missing environment variables:', missingVars.join(', '));
+                console.warn('   Server will start but database features will be limited');
+            } else {
+                console.log('✅ All required environment variables present');
+            }
         }
 
-        // Test database connection if configured
-        if (!missingVars.length) {
-            console.log('🔍 Testing database connection...');
-            try {
-                const { testConnection } = require('./config/database');
-                const dbTest = await testConnection();
-                
-                if (dbTest.success) {
-                    console.log('✅ Database connected successfully');
-                    console.log(`   Database: ${process.env.DB_NAME}`);
-                    console.log(`   Host: ${process.env.DB_HOST}`);
-                } else {
-                    throw new Error(dbTest.error);
-                }
-            } catch (dbError) {
-                console.error('❌ Database connection failed:', dbError.message);
-                console.warn('   Server will start anyway (degraded mode)');
-            }
+        // Test database connection
+        console.log('🔍 Testing database connection...');
+        try {
+            const pool = require('./db/pool');
+            const result = await Promise.race([
+                pool.query('SELECT NOW() as time, current_database() as db'),
+                new Promise((_, reject) => 
+                    setTimeout(() => reject(new Error('Connection timeout')), 5000)
+                )
+            ]);
+            
+            console.log('✅ Database connected successfully');
+            console.log(`   Database: ${result.rows[0].db}`);
+            console.log(`   Server time: ${result.rows[0].time}`);
+        } catch (dbError) {
+            console.error('❌ Database connection failed:', dbError.message);
+            console.warn('   Server will start anyway (degraded mode)');
         }
 
         // Start HTTP server
@@ -386,17 +389,15 @@ async function startServer() {
                 console.log('✅ HTTP server closed');
                 
                 try {
-                    if (process.env.DB_HOST) {
-                        const pool = require('./db/pool');
-                        await pool.end();
-                        console.log('✅ Database connections closed');
-                    }
-                    console.log('👋 Goodbye!\n');
-                    process.exit(0);
+                    const pool = require('./db/pool');
+                    await pool.end();
+                    console.log('✅ Database connections closed');
                 } catch (error) {
-                    console.error('❌ Error during shutdown:', error.message);
-                    process.exit(1);
+                    console.error('❌ Error closing database:', error.message);
                 }
+                
+                console.log('👋 Goodbye!\n');
+                process.exit(0);
             });
 
             setTimeout(() => {
