@@ -16,21 +16,17 @@ async function updateClubConfig(data) {
     
     const { logo, club_name, club_motto, club_description, social_links, logo_url } = data;
     
-    // Handle both 'logo' and 'logo_url' field names
     const finalLogo = logo_url || logo;
     
-    // ✅ FIX: Convert social_links to JSON string if it's an object/array
     let finalSocialLinks = social_links;
     if (social_links && typeof social_links === 'object') {
       finalSocialLinks = JSON.stringify(social_links);
       console.log('🔄 Converted social_links to JSON string:', finalSocialLinks);
     }
     
-    // Check if config row exists
     const checkResult = await pool.query('SELECT id FROM club_config LIMIT 1');
     
     if (checkResult.rows.length === 0) {
-      // Insert if doesn't exist
       console.log('➕ No config found, inserting new row...');
       const insertQuery = `
         INSERT INTO club_config (logo, club_name, club_motto, club_description, social_links)
@@ -51,7 +47,6 @@ async function updateClubConfig(data) {
       return { success: true, data: result.rows[0], error: null };
     }
     
-    // Update existing config
     console.log('✏️ Updating existing config...');
     const updateQuery = `
       UPDATE club_config 
@@ -70,7 +65,7 @@ async function updateClubConfig(data) {
       club_name, 
       club_motto, 
       club_description, 
-      finalSocialLinks  // ✅ Now properly stringified
+      finalSocialLinks
     ];
     
     console.log('📤 Update values:', values);
@@ -272,9 +267,7 @@ async function createEvent(data) {
       status, registration_link, details, organizer 
     } = data;
     
-    // Handle both 'venue' and 'location' for backwards compatibility
-    const eventVenue = venue || location; // ✅ FIXED: renamed from eventLocation
-    // Handle both 'image' and 'image_url' for backwards compatibility
+    const eventVenue = venue || location;
     const eventImage = image || image_url;
     
     const query = `
@@ -288,7 +281,7 @@ async function createEvent(data) {
       category || 'General',
       date, 
       time || null,
-      eventVenue,  // ✅ FIXED: using eventVenue instead of eventLocation
+      eventVenue,
       eventImage, 
       status || 'upcoming', 
       registration_link, 
@@ -426,8 +419,8 @@ async function createProject(data) {
       category || 'Other',
       status || 'ongoing',
       image_url || image,
-      technologies || [],  // ✅ FIXED: removed JSON.stringify
-      team_members || [],  // ✅ FIXED: removed JSON.stringify
+      technologies || [],
+      team_members || [],
       github_link || github_url,
       live_link || demo_url,
       completion_date,
@@ -480,14 +473,14 @@ async function updateProject(id, data) {
       category,
       status,
       image_url || image,
-      technologies || [],  // ✅ FIXED: removed JSON.stringify
-      team_members || [],  // ✅ FIXED: removed JSON.stringify
+      technologies || [],
+      team_members || [],
       github_link || github_url,
       live_link || demo_url,
       completion_date,
       features,
       achievements,
-      id  // ✅ FIXED: added id parameter
+      id
     ];
     
     const result = await pool.query(query, values);
@@ -715,6 +708,252 @@ async function deleteAnnouncement(id) {
   }
 }
 
+// ============================================
+// ALUMNI FUNCTIONS (ADDED - THIS WAS MISSING!)
+// ============================================
+
+/**
+ * Create a new alumni record
+ * This function is called when an alumni application is approved
+ */
+async function createAlumni(alumniData) {
+  try {
+    console.log('🔍 createAlumni called with data:', alumniData);
+    
+    const {
+      name,
+      photo,
+      batch_year,
+      department,
+      role_in_club,
+      achievements,
+      current_position,
+      current_company,
+      bio,
+      email,
+      phone,
+      linkedin,
+      github,
+      facebook,
+      is_featured = false,
+      display_order = 0
+    } = alumniData;
+
+    const query = `
+      INSERT INTO alumni (
+        name, photo, batch_year, department, role_in_club, achievements,
+        current_position, current_company, bio, email, phone, linkedin,
+        github, facebook, is_featured, display_order
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
+      RETURNING *
+    `;
+
+    const values = [
+      name,
+      photo || '',
+      batch_year,
+      department,
+      role_in_club || null,
+      achievements || null,
+      current_position || null,
+      current_company || null,
+      bio,
+      email,
+      phone,
+      linkedin || null,
+      github || null,
+      facebook || null,
+      is_featured,
+      display_order
+    ];
+
+    console.log('📤 Executing alumni insert query');
+    const result = await pool.query(query, values);
+    
+    console.log('✅ Alumni created successfully:', result.rows[0]);
+    return { success: true, data: result.rows[0], error: null };
+  } catch (error) {
+    console.error('❌ Error in createAlumni:', error.message);
+    console.error('📋 Error details:', error);
+    return { success: false, data: null, error: error.message };
+  }
+}
+
+/**
+ * Get all alumni with optional filtering
+ */
+async function getAllAlumni(filters = {}) {
+  try {
+    let query = 'SELECT * FROM alumni WHERE 1=1';
+    const params = [];
+    let paramIndex = 1;
+
+    if (filters.batch_year) {
+      query += ` AND batch_year = $${paramIndex}`;
+      params.push(filters.batch_year);
+      paramIndex++;
+    }
+
+    if (filters.is_featured !== undefined) {
+      query += ` AND is_featured = $${paramIndex}`;
+      params.push(filters.is_featured);
+      paramIndex++;
+    }
+
+    query += ' ORDER BY is_featured DESC, batch_year DESC, display_order ASC, name ASC';
+
+    const result = await pool.query(query, params);
+    return { success: true, data: result.rows, error: null };
+  } catch (error) {
+    console.error('❌ Error in getAllAlumni:', error.message);
+    return { success: false, data: null, error: error.message };
+  }
+}
+
+/**
+ * Get alumni by ID
+ */
+async function getAlumniById(id) {
+  try {
+    const result = await pool.query('SELECT * FROM alumni WHERE id = $1', [id]);
+    return { success: true, data: result.rows[0] || null, error: null };
+  } catch (error) {
+    console.error('❌ Error in getAlumniById:', error.message);
+    return { success: false, data: null, error: error.message };
+  }
+}
+
+/**
+ * Update an alumni record
+ */
+async function updateAlumni(id, updates) {
+  try {
+    const { id: _, created_at, updated_at, ...validUpdates } = updates;
+
+    const fields = Object.keys(validUpdates);
+    
+    if (fields.length === 0) {
+      return { success: false, data: null, error: 'No valid fields to update' };
+    }
+
+    const values = Object.values(validUpdates);
+    const setClause = fields.map((field, i) => `${field} = ${i + 1}`).join(', ');
+    
+    const query = `
+      UPDATE alumni 
+      SET ${setClause}, updated_at = CURRENT_TIMESTAMP 
+      WHERE id = ${fields.length + 1} 
+      RETURNING *
+    `;
+
+    values.push(id);
+    const result = await pool.query(query, values);
+    
+    if (result.rows.length === 0) {
+      return { success: false, data: null, error: 'Alumni not found' };
+    }
+    
+    return { success: true, data: result.rows[0], error: null };
+  } catch (error) {
+    console.error('❌ Error in updateAlumni:', error.message);
+    return { success: false, data: null, error: error.message };
+  }
+}
+
+/**
+ * Delete an alumni record
+ */
+async function deleteAlumni(id) {
+  try {
+    const result = await pool.query('DELETE FROM alumni WHERE id = $1 RETURNING id', [id]);
+    
+    if (result.rows.length === 0) {
+      return { success: false, data: null, error: 'Alumni not found' };
+    }
+    
+    return { success: true, data: { id: result.rows[0].id }, error: null };
+  } catch (error) {
+    console.error('❌ Error in deleteAlumni:', error.message);
+    return { success: false, data: null, error: error.message };
+  }
+}
+
+/**
+ * Get featured alumni
+ */
+async function getFeaturedAlumni(limit = 6) {
+  try {
+    const query = `
+      SELECT * FROM alumni 
+      WHERE is_featured = true 
+      ORDER BY display_order ASC, name ASC 
+      LIMIT $1
+    `;
+    
+    const result = await pool.query(query, [limit]);
+    return { success: true, data: result.rows, error: null };
+  } catch (error) {
+    console.error('❌ Error in getFeaturedAlumni:', error.message);
+    return { success: false, data: null, error: error.message };
+  }
+}
+
+/**
+ * Get list of unique batch years
+ */
+async function getAlumniBatches() {
+  try {
+    const query = `
+      SELECT DISTINCT batch_year 
+      FROM alumni 
+      WHERE batch_year IS NOT NULL
+      ORDER BY batch_year DESC
+    `;
+    
+    const result = await pool.query(query);
+    return { success: true, data: result.rows.map(row => row.batch_year), error: null };
+  } catch (error) {
+    console.error('❌ Error in getAlumniBatches:', error.message);
+    return { success: false, data: null, error: error.message };
+  }
+}
+
+/**
+ * Get alumni statistics
+ */
+async function getAlumniStatistics() {
+  try {
+    const query = `
+      SELECT 
+        COUNT(*) as total,
+        COUNT(DISTINCT batch_year) as total_batches,
+        COUNT(*) FILTER (WHERE is_featured = true) as featured_count
+      FROM alumni
+    `;
+    
+    const result = await pool.query(query);
+    const stats = result.rows[0];
+    
+    return {
+      success: true,
+      data: {
+        total: parseInt(stats.total, 10),
+        total_batches: parseInt(stats.total_batches, 10),
+        featured_count: parseInt(stats.featured_count, 10)
+      },
+      error: null
+    };
+  } catch (error) {
+    console.error('❌ Error in getAlumniStatistics:', error.message);
+    return { success: false, data: null, error: error.message };
+  }
+}
+
+// ============================================
+// ADMIN FUNCTIONS
+// ============================================
+
 async function getAllAdmins() {
   try {
     const result = await pool.query('SELECT id, username, role, created_at, last_login FROM admins ORDER BY created_at DESC');
@@ -865,6 +1104,16 @@ module.exports = {
   createAnnouncement,
   updateAnnouncement,
   deleteAnnouncement,
+  // Alumni functions (ADDED - CRITICAL FIX!)
+  createAlumni,
+  getAllAlumni,
+  getAlumniById,
+  updateAlumni,
+  deleteAlumni,
+  getFeaturedAlumni,
+  getAlumniBatches,
+  getAlumniStatistics,
+  // Admin functions
   getAllAdmins,
   getAdminById,
   getAdminByUsername,
