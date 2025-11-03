@@ -1,8 +1,14 @@
+/**
+ * Alumni Application Routes
+ * =========================
+ * Handles alumni application submissions and management
+ */
+
 const express = require('express');
 const { body, validationResult } = require('express-validator');
 const router = express.Router();
 
-// Import models - ✅ FIXED: Correct path with "Model" suffix
+// ✅ FIXED: Correct import paths with "Model" suffix
 const alumniApplicationModel = require('../models/alumniApplicationModel');
 const alumniModel = require('../models/alumniModel');
 
@@ -29,7 +35,13 @@ const bangladeshPhoneRegex = /^(\+8801|01)[3-9]\d{8}$/;
 // Batch year validation regex (YYYY-YYYY format)
 const batchYearRegex = /^\d{4}-\d{4}$/;
 
-// 1. POST /api/alumni-application/apply (PUBLIC - No Auth Required)
+// ============ PUBLIC ROUTES ============
+
+/**
+ * @route   POST /api/alumni-application/apply
+ * @desc    Submit a new alumni application
+ * @access  Public
+ */
 router.post(
   '/apply',
   [
@@ -156,9 +168,6 @@ router.post(
       console.log('📝 Received alumni application');
       console.log('   Name:', req.body.full_name);
       console.log('   Email:', req.body.email);
-      console.log('   Phone:', req.body.phone);
-      console.log('   Batch Year:', req.body.batch_year);
-      console.log('   Department:', req.body.department);
 
       const applicationData = {
         full_name: req.body.full_name,
@@ -181,7 +190,6 @@ router.post(
 
       console.log('✅ Alumni application created successfully');
       console.log('   ID:', result.id);
-      console.log('   Status:', result.status);
 
       res.status(201).json({
         success: true,
@@ -204,7 +212,7 @@ router.post(
         return res.status(409).json({
           success: false,
           error: 'Duplicate email',
-          message: 'An alumni application with this email already exists. Please use a different email or contact us if you need help.'
+          message: 'An alumni application with this email already exists.'
         });
       }
 
@@ -218,7 +226,13 @@ router.post(
   }
 );
 
-// 2. GET /api/alumni-application/applications (ADMIN - Auth Required)
+// ============ ADMIN ROUTES ============
+
+/**
+ * @route   GET /api/alumni-application/applications
+ * @desc    Get all alumni applications (with optional status filter)
+ * @access  Admin only
+ */
 router.get('/applications', authenticateToken, isAdmin, async (req, res) => {
   try {
     const { status } = req.query;
@@ -233,7 +247,7 @@ router.get('/applications', authenticateToken, isAdmin, async (req, res) => {
 
     const applications = await alumniApplicationModel.getAllApplications(status);
 
-    console.log(`✅ Fetched ${applications.length} alumni applications (status: ${status || 'all'})`);
+    console.log(`✅ Fetched ${applications.length} alumni applications`);
 
     res.status(200).json({
       success: true,
@@ -245,13 +259,16 @@ router.get('/applications', authenticateToken, isAdmin, async (req, res) => {
     res.status(500).json({
       success: false,
       error: 'Failed to fetch alumni applications',
-      message: error.message,
-      details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+      message: error.message
     });
   }
 });
 
-// 3. GET /api/alumni-application/applications/:id (ADMIN - Auth Required)
+/**
+ * @route   GET /api/alumni-application/applications/:id
+ * @desc    Get a specific alumni application by ID
+ * @access  Admin only
+ */
 router.get('/applications/:id', authenticateToken, isAdmin, async (req, res) => {
   try {
     const { id } = req.params;
@@ -277,13 +294,16 @@ router.get('/applications/:id', authenticateToken, isAdmin, async (req, res) => 
     res.status(500).json({
       success: false,
       error: 'Failed to fetch alumni application',
-      message: error.message,
-      details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+      message: error.message
     });
   }
 });
 
-// 4. POST /api/alumni-application/applications/:id/approve (ADMIN - Auth Required)
+/**
+ * @route   POST /api/alumni-application/applications/:id/approve
+ * @desc    Approve an alumni application and create alumni record
+ * @access  Admin only
+ */
 router.post(
   '/applications/:id/approve',
   authenticateToken,
@@ -323,7 +343,7 @@ router.post(
         });
       }
 
-      // ✅ Prepare alumni data using alumniModel structure
+      // Prepare alumni data
       const alumniData = {
         name: application.full_name,
         email: application.email,
@@ -343,30 +363,23 @@ router.post(
         display_order: 0
       };
 
-      console.log('📝 Creating alumni record with data:', {
-        name: alumniData.name,
-        email: alumniData.email,
-        batch_year: alumniData.batch_year
-      });
+      console.log('📝 Creating alumni record');
 
-      // ✅ createAlumni returns alumni object DIRECTLY (not wrapped)
+      // Create alumni record
       let alumni;
       try {
         alumni = await alumniModel.createAlumni(alumniData);
         
-        // Verify we got valid data back
         if (!alumni || !alumni.id) {
           throw new Error('Invalid alumni data returned from database');
         }
         
         console.log('✅ Alumni created successfully');
         console.log('   Alumni ID:', alumni.id);
-        console.log('   Alumni Name:', alumni.name);
         
       } catch (alumniError) {
         console.error('❌ Failed to create alumni:', alumniError.message);
         
-        // Don't update application status since alumni creation failed
         return res.status(500).json({
           success: false,
           error: 'Failed to create alumni record',
@@ -374,7 +387,7 @@ router.post(
         });
       }
 
-      // ✅ Only update application status AFTER alumni is created successfully
+      // Update application status
       try {
         await alumniApplicationModel.updateApplicationStatus(
           id,
@@ -389,8 +402,6 @@ router.post(
         console.error('❌ Failed to update application status:', statusError.message);
         console.warn('⚠️ Alumni created but status update failed');
         
-        // Alumni is created, but we couldn't update the application status
-        // This is not ideal but not critical - respond with partial success
         return res.status(200).json({
           success: true,
           message: 'Alumni record created successfully, but application status update failed',
@@ -398,13 +409,12 @@ router.post(
             application_id: parseInt(id),
             alumni_id: alumni.id,
             alumni_name: alumni.name,
-            alumni_email: alumni.email,
             warning: 'Application status may not reflect approval'
           }
         });
       }
 
-      // ✅ Success - both alumni created and status updated
+      // Success
       res.status(200).json({
         success: true,
         message: 'Alumni application approved successfully and alumni record created',
@@ -418,18 +428,20 @@ router.post(
       
     } catch (error) {
       console.error('❌ Error approving alumni application:', error.message);
-      console.error('   Stack:', error.stack);
       res.status(500).json({
         success: false,
         error: 'Failed to approve alumni application',
-        message: error.message || 'An unexpected error occurred',
-        details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+        message: error.message || 'An unexpected error occurred'
       });
     }
   }
 );
 
-// 5. POST /api/alumni-application/applications/:id/reject (ADMIN - Auth Required)
+/**
+ * @route   POST /api/alumni-application/applications/:id/reject
+ * @desc    Reject an alumni application
+ * @access  Admin only
+ */
 router.post(
   '/applications/:id/reject',
   authenticateToken,
@@ -450,7 +462,6 @@ router.post(
 
       console.log(`📋 Rejecting alumni application ${id}`);
 
-      // Fetch application
       const application = await alumniApplicationModel.getApplicationById(id);
 
       if (!application) {
@@ -461,7 +472,6 @@ router.post(
         });
       }
 
-      // Check if already processed
       if (application.status !== 'pending') {
         return res.status(400).json({
           success: false,
@@ -470,7 +480,6 @@ router.post(
         });
       }
 
-      // Update application status
       const updatedApplication = await alumniApplicationModel.updateApplicationStatus(
         id,
         'rejected',
@@ -495,21 +504,23 @@ router.post(
       res.status(500).json({
         success: false,
         error: 'Failed to reject alumni application',
-        message: error.message,
-        details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+        message: error.message
       });
     }
   }
 );
 
-// 6. DELETE /api/alumni-application/applications/:id (ADMIN - Auth Required)
+/**
+ * @route   DELETE /api/alumni-application/applications/:id
+ * @desc    Delete an alumni application
+ * @access  Admin only
+ */
 router.delete('/applications/:id', authenticateToken, isAdmin, async (req, res) => {
   try {
     const { id } = req.params;
 
     console.log(`🗑️ Deleting alumni application ${id}`);
 
-    // Check if application exists
     const application = await alumniApplicationModel.getApplicationById(id);
 
     if (!application) {
@@ -520,7 +531,6 @@ router.delete('/applications/:id', authenticateToken, isAdmin, async (req, res) 
       });
     }
 
-    // Delete application
     await alumniApplicationModel.deleteApplication(id);
 
     console.log(`✅ Alumni application ${id} deleted`);
@@ -535,13 +545,16 @@ router.delete('/applications/:id', authenticateToken, isAdmin, async (req, res) 
     res.status(500).json({
       success: false,
       error: 'Failed to delete alumni application',
-      message: error.message,
-      details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+      message: error.message
     });
   }
 });
 
-// 7. GET /api/alumni-application/statistics (ADMIN - Auth Required)
+/**
+ * @route   GET /api/alumni-application/statistics
+ * @desc    Get alumni application statistics
+ * @access  Admin only
+ */
 router.get('/statistics', authenticateToken, isAdmin, async (req, res) => {
   try {
     const statistics = await alumniApplicationModel.getApplicationStatistics();
@@ -557,10 +570,20 @@ router.get('/statistics', authenticateToken, isAdmin, async (req, res) => {
     res.status(500).json({
       success: false,
       error: 'Failed to fetch alumni application statistics',
-      message: error.message,
-      details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+      message: error.message
     });
   }
+});
+
+/**
+ * Health check endpoint
+ */
+router.get('/health', (req, res) => {
+  res.json({
+    success: true,
+    message: 'Alumni application routes are operational',
+    timestamp: new Date().toISOString()
+  });
 });
 
 module.exports = router;
