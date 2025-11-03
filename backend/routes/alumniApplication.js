@@ -160,7 +160,6 @@ router.post(
     body('photo')
       .optional({ checkFalsy: true })
       .trim()
-      .withMessage('Photo must be text (base64 or URL)')
   ],
   validateRequest,
   async (req, res) => {

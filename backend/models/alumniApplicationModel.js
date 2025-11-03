@@ -76,7 +76,7 @@ router.post('/apply', async (req, res) => {
  * @access  Admin only
  * @query   status - Optional filter: 'pending', 'approved', 'rejected', or 'all'
  */
-router.get('/applications', authenticateToken, requireAdmin, async (req, res) => {
+router.get('/applications', authenticateToken, isAdmin, async (req, res) => {
   try {
     console.log('📋 Fetching alumni applications');
     
@@ -117,7 +117,7 @@ router.get('/applications', authenticateToken, requireAdmin, async (req, res) =>
  * @desc    Get a specific alumni application by ID
  * @access  Admin only
  */
-router.get('/applications/:id', authenticateToken, requireAdmin, async (req, res) => {
+router.get('/applications/:id', authenticateToken, isAdmin, async (req, res) => {
   try {
     const { id } = req.params;
     
@@ -161,7 +161,7 @@ router.get('/applications/:id', authenticateToken, requireAdmin, async (req, res
  * @desc    Approve an alumni application
  * @access  Admin only
  */
-router.post('/applications/:id/approve', authenticateToken, requireAdmin, async (req, res) => {
+router.post('/applications/:id/approve', authenticateToken, isAdmin, async (req, res) => {
   try {
     const { id } = req.params;
     const { admin_notes } = req.body;
@@ -215,7 +215,7 @@ router.post('/applications/:id/approve', authenticateToken, requireAdmin, async 
  * @desc    Reject an alumni application
  * @access  Admin only
  */
-router.post('/applications/:id/reject', authenticateToken, requireAdmin, async (req, res) => {
+router.post('/applications/:id/reject', authenticateToken, isAdmin, async (req, res) => {
   try {
     const { id } = req.params;
     const { admin_notes } = req.body;
@@ -269,7 +269,7 @@ router.post('/applications/:id/reject', authenticateToken, requireAdmin, async (
  * @desc    Delete an alumni application
  * @access  Admin only
  */
-router.delete('/applications/:id', authenticateToken, requireAdmin, async (req, res) => {
+router.delete('/applications/:id', authenticateToken, isAdmin, async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -315,7 +315,7 @@ router.delete('/applications/:id', authenticateToken, requireAdmin, async (req, 
  * @desc    Get alumni application statistics
  * @access  Admin only
  */
-router.get('/statistics', authenticateToken, requireAdmin, async (req, res) => {
+router.get('/statistics', authenticateToken, isAdmin, async (req, res) => {
   try {
     console.log('📊 Fetching alumni application statistics');
 
