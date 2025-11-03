@@ -1,351 +1,225 @@
 /**
- * Alumni Application Routes
- * =========================
- * Handles alumni application submissions and management
+ * Alumni Application Model
+ * ========================
+ * Database operations for alumni applications
  */
 
-const express = require('express');
-const router = express.Router();
-const alumniApplicationModel = require('../models/alumniApplicationModel');
-const { authenticateToken, isAdmin } = require('../middleware/auth');
+const pool = require('../db/pool');
 
 /**
- * @route   POST /api/alumni-application/apply
- * @desc    Submit a new alumni application
- * @access  Public
+ * Create a new alumni application
+ * @param {Object} applicationData - Application data
+ * @returns {Promise<Object>} Created application with id
  */
-router.post('/apply', async (req, res) => {
-  try {
-    console.log('📥 Received alumni application submission');
-    
-    const applicationData = req.body;
+const createApplication = async (applicationData) => {
+  const {
+    full_name,
+    email,
+    phone,
+    batch_year,
+    department,
+    role_in_club,
+    achievements,
+    current_position,
+    current_company,
+    bio,
+    linkedin,
+    github,
+    facebook,
+    photo
+  } = applicationData;
 
-    // Validate required fields
-    const requiredFields = ['full_name', 'email', 'phone', 'batch_year', 'department', 'bio'];
-    const missingFields = requiredFields.filter(field => !applicationData[field]);
-
-    if (missingFields.length > 0) {
-      return res.status(400).json({
-        success: false,
-        error: 'Missing required fields',
-        missingFields,
-        message: `Please provide: ${missingFields.join(', ')}`
-      });
-    }
-
-    // Create the application
-    const application = await alumniApplicationModel.createApplication(applicationData);
-
-    res.status(201).json({
-      success: true,
-      message: 'Alumni application submitted successfully',
-      data: application
-    });
-
-  } catch (error) {
-    console.error('❌ Error in POST /apply:', error);
-    
-    // Handle specific error messages
-    if (error.message && error.message.includes('Email already used')) {
-      return res.status(409).json({
-        success: false,
-        error: 'Duplicate application',
-        message: 'An application with this email already exists'
-      });
-    }
-
-    if (error.message && error.message.includes('Invalid batch_year format')) {
-      return res.status(400).json({
-        success: false,
-        error: 'Invalid format',
-        message: 'Batch year must be in YYYY-YYYY format (e.g., 2020-2021)'
-      });
-    }
-
-    res.status(500).json({
-      success: false,
-      error: 'Application submission failed',
-      message: error.message || 'An error occurred while submitting your application'
-    });
+  // Validate batch_year format (YYYY-YYYY)
+  const batchYearRegex = /^\d{4}-\d{4}$/;
+  if (!batchYearRegex.test(batch_year)) {
+    throw new Error('Invalid batch_year format. Expected format: YYYY-YYYY (e.g., 2020-2021)');
   }
-});
 
-/**
- * @route   GET /api/alumni-application/applications
- * @desc    Get all alumni applications (with optional status filter)
- * @access  Admin only
- * @query   status - Optional filter: 'pending', 'approved', 'rejected', or 'all'
- */
-router.get('/applications', authenticateToken, isAdmin, async (req, res) => {
+  const query = `
+    INSERT INTO alumni_applications (
+      full_name, email, phone, batch_year, department,
+      role_in_club, achievements, current_position, current_company,
+      bio, linkedin, github, facebook, photo, status, applied_date
+    )
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, 'pending', CURRENT_TIMESTAMP)
+    RETURNING 
+      id, full_name, email, phone, batch_year, department,
+      role_in_club, achievements, current_position, current_company,
+      bio, linkedin, github, facebook, photo, status, applied_date
+  `;
+
+  const values = [
+    full_name,
+    email,
+    phone,
+    batch_year,
+    department,
+    role_in_club || null,
+    achievements || null,
+    current_position || null,
+    current_company || null,
+    bio,
+    linkedin || null,
+    github || null,
+    facebook || null,
+    photo || null
+  ];
+
   try {
-    console.log('📋 Fetching alumni applications');
-    
-    const { status } = req.query;
-    
-    // Validate status parameter if provided
-    const validStatuses = ['pending', 'approved', 'rejected', 'all'];
-    if (status && !validStatuses.includes(status)) {
-      return res.status(400).json({
-        success: false,
-        error: 'Invalid status parameter',
-        message: `Status must be one of: ${validStatuses.join(', ')}`
-      });
-    }
-
-    const statusFilter = status === 'all' ? null : status;
-    const applications = await alumniApplicationModel.getAllApplications(statusFilter);
-
-    res.json({
-      success: true,
-      count: applications.length,
-      data: applications
-    });
-
+    const result = await pool.query(query, values);
+    return result.rows[0];
   } catch (error) {
-    console.error('❌ Error in GET /applications:', error);
-    
-    res.status(500).json({
-      success: false,
-      error: 'Failed to fetch applications',
-      message: error.message || 'An error occurred while fetching applications'
-    });
+    // Handle unique constraint violation (duplicate email)
+    if (error.code === '23505') {
+      throw new Error('Email already used in another application');
+    }
+    throw error;
   }
-});
+};
 
 /**
- * @route   GET /api/alumni-application/applications/:id
- * @desc    Get a specific alumni application by ID
- * @access  Admin only
+ * Get all alumni applications with optional status filter
+ * @param {string|null} status - Filter by status ('pending', 'approved', 'rejected') or null for all
+ * @returns {Promise<Array>} Array of applications
  */
-router.get('/applications/:id', authenticateToken, isAdmin, async (req, res) => {
-  try {
-    const { id } = req.params;
-    
-    // Validate ID
-    if (!id || isNaN(id)) {
-      return res.status(400).json({
-        success: false,
-        error: 'Invalid ID',
-        message: 'Application ID must be a valid number'
-      });
-    }
+const getAllApplications = async (status = null) => {
+  let query = `
+    SELECT 
+      aa.*,
+      a.username as reviewed_by_username
+    FROM alumni_applications aa
+    LEFT JOIN admins a ON aa.reviewed_by = a.id
+  `;
 
-    const application = await alumniApplicationModel.getApplicationById(parseInt(id));
+  const values = [];
 
-    if (!application) {
-      return res.status(404).json({
-        success: false,
-        error: 'Application not found',
-        message: `No application found with ID ${id}`
-      });
-    }
-
-    res.json({
-      success: true,
-      data: application
-    });
-
-  } catch (error) {
-    console.error('❌ Error in GET /applications/:id:', error);
-    
-    res.status(500).json({
-      success: false,
-      error: 'Failed to fetch application',
-      message: error.message || 'An error occurred while fetching the application'
-    });
+  if (status) {
+    query += ' WHERE aa.status = $1';
+    values.push(status);
   }
-});
+
+  query += ' ORDER BY aa.applied_date DESC';
+
+  const result = await pool.query(query, values);
+  return result.rows;
+};
 
 /**
- * @route   POST /api/alumni-application/applications/:id/approve
- * @desc    Approve an alumni application
- * @access  Admin only
+ * Get a single alumni application by ID
+ * @param {number} id - Application ID
+ * @returns {Promise<Object|null>} Application object or null
  */
-router.post('/applications/:id/approve', authenticateToken, isAdmin, async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { admin_notes } = req.body;
-    const adminId = req.user.id;
+const getApplicationById = async (id) => {
+  const query = `
+    SELECT 
+      aa.*,
+      a.username as reviewed_by_username
+    FROM alumni_applications aa
+    LEFT JOIN admins a ON aa.reviewed_by = a.id
+    WHERE aa.id = $1
+  `;
 
-    // Validate ID
-    if (!id || isNaN(id)) {
-      return res.status(400).json({
-        success: false,
-        error: 'Invalid ID',
-        message: 'Application ID must be a valid number'
-      });
-    }
-
-    console.log(`✅ Approving alumni application ${id} by admin ${adminId}`);
-
-    const updatedApplication = await alumniApplicationModel.updateApplicationStatus(
-      parseInt(id),
-      'approved',
-      adminId,
-      admin_notes || ''
-    );
-
-    res.json({
-      success: true,
-      message: 'Alumni application approved successfully',
-      data: updatedApplication
-    });
-
-  } catch (error) {
-    console.error('❌ Error in POST /applications/:id/approve:', error);
-    
-    if (error.message && error.message.includes('not found')) {
-      return res.status(404).json({
-        success: false,
-        error: 'Application not found',
-        message: error.message
-      });
-    }
-
-    res.status(500).json({
-      success: false,
-      error: 'Failed to approve application',
-      message: error.message || 'An error occurred while approving the application'
-    });
-  }
-});
+  const result = await pool.query(query, [id]);
+  return result.rows[0] || null;
+};
 
 /**
- * @route   POST /api/alumni-application/applications/:id/reject
- * @desc    Reject an alumni application
- * @access  Admin only
+ * Update application status (approve/reject)
+ * @param {number} id - Application ID
+ * @param {string} status - New status ('approved' or 'rejected')
+ * @param {number} reviewedBy - Admin user ID
+ * @param {string} adminNotes - Admin notes/comments
+ * @returns {Promise<Object>} Updated application
  */
-router.post('/applications/:id/reject', authenticateToken, isAdmin, async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { admin_notes } = req.body;
-    const adminId = req.user.id;
+const updateApplicationStatus = async (id, status, reviewedBy, adminNotes = '') => {
+  const query = `
+    UPDATE alumni_applications
+    SET 
+      status = $1,
+      reviewed_by = $2,
+      reviewed_date = CURRENT_TIMESTAMP,
+      admin_notes = $3
+    WHERE id = $4
+    RETURNING 
+      id, full_name, email, phone, batch_year, department,
+      role_in_club, achievements, current_position, current_company,
+      bio, linkedin, github, facebook, photo, status, 
+      applied_date, reviewed_date, reviewed_by, admin_notes
+  `;
 
-    // Validate ID
-    if (!id || isNaN(id)) {
-      return res.status(400).json({
-        success: false,
-        error: 'Invalid ID',
-        message: 'Application ID must be a valid number'
-      });
-    }
+  const values = [status, reviewedBy, adminNotes, id];
 
-    console.log(`❌ Rejecting alumni application ${id} by admin ${adminId}`);
+  const result = await pool.query(query, values);
 
-    const updatedApplication = await alumniApplicationModel.updateApplicationStatus(
-      parseInt(id),
-      'rejected',
-      adminId,
-      admin_notes || ''
-    );
-
-    res.json({
-      success: true,
-      message: 'Alumni application rejected',
-      data: updatedApplication
-    });
-
-  } catch (error) {
-    console.error('❌ Error in POST /applications/:id/reject:', error);
-    
-    if (error.message && error.message.includes('not found')) {
-      return res.status(404).json({
-        success: false,
-        error: 'Application not found',
-        message: error.message
-      });
-    }
-
-    res.status(500).json({
-      success: false,
-      error: 'Failed to reject application',
-      message: error.message || 'An error occurred while rejecting the application'
-    });
+  if (result.rows.length === 0) {
+    throw new Error(`Alumni application with ID ${id} not found`);
   }
-});
+
+  return result.rows[0];
+};
 
 /**
- * @route   DELETE /api/alumni-application/applications/:id
- * @desc    Delete an alumni application
- * @access  Admin only
+ * Delete an alumni application
+ * @param {number} id - Application ID
+ * @returns {Promise<Object>} Success response
  */
-router.delete('/applications/:id', authenticateToken, isAdmin, async (req, res) => {
-  try {
-    const { id } = req.params;
+const deleteApplication = async (id) => {
+  const query = 'DELETE FROM alumni_applications WHERE id = $1 RETURNING id';
+  const result = await pool.query(query, [id]);
 
-    // Validate ID
-    if (!id || isNaN(id)) {
-      return res.status(400).json({
-        success: false,
-        error: 'Invalid ID',
-        message: 'Application ID must be a valid number'
-      });
-    }
-
-    console.log(`🗑️ Deleting alumni application ${id}`);
-
-    await alumniApplicationModel.deleteApplication(parseInt(id));
-
-    res.json({
-      success: true,
-      message: 'Alumni application deleted successfully'
-    });
-
-  } catch (error) {
-    console.error('❌ Error in DELETE /applications/:id:', error);
-    
-    if (error.message && error.message.includes('not found')) {
-      return res.status(404).json({
-        success: false,
-        error: 'Application not found',
-        message: error.message
-      });
-    }
-
-    res.status(500).json({
-      success: false,
-      error: 'Failed to delete application',
-      message: error.message || 'An error occurred while deleting the application'
-    });
+  if (result.rows.length === 0) {
+    throw new Error(`Alumni application with ID ${id} not found`);
   }
-});
+
+  return { success: true, deleted: true, id: result.rows[0].id };
+};
 
 /**
- * @route   GET /api/alumni-application/statistics
- * @desc    Get alumni application statistics
- * @access  Admin only
+ * Get application statistics
+ * @returns {Promise<Object>} Statistics object
  */
-router.get('/statistics', authenticateToken, isAdmin, async (req, res) => {
-  try {
-    console.log('📊 Fetching alumni application statistics');
+const getApplicationStatistics = async () => {
+  const query = `
+    SELECT 
+      COUNT(*) as total_applications,
+      COUNT(*) FILTER (WHERE status = 'pending') as pending_count,
+      COUNT(*) FILTER (WHERE status = 'approved') as approved_count,
+      COUNT(*) FILTER (WHERE status = 'rejected') as rejected_count,
+      COUNT(DISTINCT batch_year) as unique_batches,
+      COUNT(DISTINCT department) as unique_departments
+    FROM alumni_applications
+  `;
 
-    const statistics = await alumniApplicationModel.getApplicationStatistics();
+  const result = await pool.query(query);
+  const stats = result.rows[0];
 
-    res.json({
-      success: true,
-      data: statistics
-    });
-
-  } catch (error) {
-    console.error('❌ Error in GET /statistics:', error);
-    
-    res.status(500).json({
-      success: false,
-      error: 'Failed to fetch statistics',
-      message: error.message || 'An error occurred while fetching statistics'
-    });
-  }
-});
+  return {
+    total: parseInt(stats.total_applications, 10),
+    pending: parseInt(stats.pending_count, 10),
+    approved: parseInt(stats.approved_count, 10),
+    rejected: parseInt(stats.rejected_count, 10),
+    unique_batches: parseInt(stats.unique_batches, 10),
+    unique_departments: parseInt(stats.unique_departments, 10)
+  };
+};
 
 /**
- * Health check for alumni application routes
+ * Check if email already exists in applications
+ * @param {string} email - Email to check
+ * @returns {Promise<boolean>} True if exists, false otherwise
  */
-router.get('/health', (req, res) => {
-  res.json({
-    success: true,
-    message: 'Alumni application routes are operational',
-    timestamp: new Date().toISOString()
-  });
-});
+const emailExists = async (email) => {
+  const query = 'SELECT id FROM alumni_applications WHERE email = $1';
+  const result = await pool.query(query, [email]);
+  return result.rows.length > 0;
+};
 
-module.exports = router;
+module.exports = {
+  createApplication,
+  getAllApplications,
+  getApplicationById,
+  updateApplicationStatus,
+  deleteApplication,
+  getApplicationStatistics,
+  emailExists
+};
