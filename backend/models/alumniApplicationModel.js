@@ -6,8 +6,8 @@
 
 const express = require('express');
 const router = express.Router();
-const alumniApplicationModel = require('../models/alumniApplication');
-const { authenticateToken, requireAdmin } = require('../middleware/auth');
+const alumniApplicationModel = require('../models/alumniApplicationModel');
+const { authenticateToken, isAdmin } = require('../middleware/auth');
 
 /**
  * @route   POST /api/alumni-application/apply

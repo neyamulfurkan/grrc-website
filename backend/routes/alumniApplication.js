@@ -9,7 +9,8 @@ const { body, validationResult } = require('express-validator');
 const router = express.Router();
 
 // ✅ FIXED: Correct import paths with "Model" suffix
-const alumniApplicationModel = require('../models/alumniApplicationModel');
+const AlumniApplication = require('../models/alumniApplicationModel');
+
 const alumniModel = require('../models/alumniModel');
 
 // Import middleware
