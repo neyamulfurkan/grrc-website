@@ -289,17 +289,51 @@
             await initializeAlumni();
             // STEP 3: Load alumni application statistics on init
             await loadAlumniApplicationStatistics();
+            // STEP 4: Load applications (default to pending)
+            await loadAlumniApplications('pending');
             // STEP 6: Initialize applications tab filters
             initializeAlumniApplicationFilters();
         });
 
         async function initializeAlumni() {
-            // Wait for API client
-            let retries = 0;
-            while ((!window.apiClient || !window.apiClient.isReady) && retries < 50) {
-                await new Promise(resolve => setTimeout(resolve, 100));
-                retries++;
+            console.log('🔄 Initializing alumni management iframe...');
+            
+            // ✅ CRITICAL FIX: Force use parent's API client and token
+            if (window.parent && window.parent.apiClient) {
+                window.apiClient = window.parent.apiClient;
+                console.log('✅ Using parent window API client');
+                
+                // Force re-authentication
+                const token = window.parent.apiClient.getAuthToken();
+                if (token) {
+                    window.apiClient.setAuthToken(token);
+                    console.log('✅ Token loaded from parent');
+                }
+            } else {
+                // Wait for own API client
+                let retries = 0;
+                while ((!window.apiClient || !window.apiClient.isReady) && retries < 30) {
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                    retries++;
+                }
             }
+            
+            if (!window.apiClient || !window.apiClient.isReady) {
+                console.error('❌ API client not available');
+                document.getElementById('alumniTableBody').innerHTML = 
+                    '<tr><td colspan="6" style="text-align: center; padding: var(--space-xl); color: var(--error-color);">Failed to initialize. Please refresh the page.</td></tr>';
+                return;
+            }
+            
+            const token = window.apiClient.getAuthToken();
+            if (!token) {
+                console.error('❌ No authentication token found');
+                document.getElementById('alumniTableBody').innerHTML = 
+                    '<tr><td colspan="6" style="text-align: center; padding: var(--space-xl); color: var(--error-color);">Not authenticated. Please log in again.</td></tr>';
+                return;
+            }
+            
+            console.log('✅ Authentication verified');
 
             setupAlumniForm();
             setupTabSwitching();

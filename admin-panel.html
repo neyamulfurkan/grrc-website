@@ -2829,9 +2829,25 @@ if (section === 'membership-applications') {
                     }, 1000);
                 }
             }
+            // ✅ CRITICAL FIX: Alumni section with token passing
             if (section === 'alumni') {
                 const iframe = document.getElementById('alumniIframe');
-                if (iframe) iframe.contentWindow.location.reload();
+                if (iframe && iframe.contentWindow) {
+                    try {
+                        const token = window.apiClient.getAuthToken();
+                        if (token) {
+                            // Wait for iframe to load
+                            setTimeout(() => {
+                                if (iframe.contentWindow.apiClient) {
+                                    iframe.contentWindow.apiClient.setAuthToken(token);
+                                }
+                                iframe.contentWindow.location.reload();
+                            }, 500);
+                        }
+                    } catch (e) {
+                        console.warn('Could not set alumni iframe token:', e);
+                    }
+                }
             }
         }
 
