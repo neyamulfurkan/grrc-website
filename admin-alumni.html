@@ -14,7 +14,7 @@
     <!-- This file is loaded as an iframe in admin-panel.html -->
     
     <div class="section-content active" id="alumniSection">
-        <!-- STEP 1: Modified tabs section with Applications tab -->
+        <!-- Tabs section with Applications tab -->
         <div class="tabs">
             <button class="tab-btn active" data-tab="all-alumni">All Alumni</button>
             <button class="tab-btn" data-tab="add-alumni">Add Alumni</button>
@@ -211,7 +211,7 @@
             </div>
         </div>
 
-        <!-- STEP 2: Applications Tab -->
+        <!-- Applications Tab -->
         <div class="tab-content" id="applicationsTab" style="display: none;">
             <!-- Statistics Cards -->
             <div class="stats-grid" style="margin-bottom: 2rem; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
@@ -284,33 +284,33 @@
     <script>
         // ========== ALUMNI MANAGEMENT ==========
         let currentEditAlumniId = null;
+        let currentAlumniApplicationStatusFilter = 'pending';
 
         document.addEventListener('DOMContentLoaded', async () => {
+            console.log('🚀 Alumni management page loaded');
+            
             await initializeAlumni();
-            // STEP 3: Load alumni application statistics on init
             await loadAlumniApplicationStatistics();
-            // STEP 4: Load applications (default to pending)
             await loadAlumniApplications('pending');
-            // STEP 6: Initialize applications tab filters
             initializeAlumniApplicationFilters();
+            
+            console.log('✅ All initializations complete');
         });
 
         async function initializeAlumni() {
             console.log('🔄 Initializing alumni management iframe...');
             
-            // ✅ CRITICAL FIX: Force use parent's API client and token
+            // Force use parent's API client and token
             if (window.parent && window.parent.apiClient) {
                 window.apiClient = window.parent.apiClient;
                 console.log('✅ Using parent window API client');
                 
-                // Force re-authentication
                 const token = window.parent.apiClient.getAuthToken();
                 if (token) {
                     window.apiClient.setAuthToken(token);
                     console.log('✅ Token loaded from parent');
                 }
             } else {
-                // Wait for own API client
                 let retries = 0;
                 while ((!window.apiClient || !window.apiClient.isReady) && retries < 30) {
                     await new Promise(resolve => setTimeout(resolve, 100));
@@ -347,7 +347,6 @@
                 await saveAlumni();
             });
             
-            // Search functionality
             const searchInput = document.getElementById('alumniSearch');
             if (searchInput) {
                 searchInput.addEventListener('input', (e) => {
@@ -355,35 +354,47 @@
                 });
             }
             
-            // Photo preview
             setupImagePreview('alumniPhoto', 'alumniPhotoUrl', 'alumniPhotoPreview');
         }
 
-        // STEP 5: Modified tab switching logic
         function setupTabSwitching() {
-            document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.addEventListener('click', async () => {
+            console.log('🔧 Setting up tab switching...');
+            
+            const tabs = document.querySelectorAll('.tab-btn');
+            console.log('📋 Found tabs:', tabs.length);
+            
+            tabs.forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    e.preventDefault();
+                    console.log('🖱️ Tab clicked:', btn.dataset.tab);
+                    
+                    // Remove active from all tabs
                     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
                     btn.classList.add('active');
                     
-                    document.querySelectorAll('.tab-content').forEach(content => {
-                        content.style.display = 'none';
-                    });
+                    // Hide all tab contents
+                    document.getElementById('allAlumniTab').style.display = 'none';
+                    document.getElementById('addAlumniTab').style.display = 'none';
+                    document.getElementById('applicationsTab').style.display = 'none';
                     
                     const tab = btn.dataset.tab;
                     
                     if (tab === 'all-alumni') {
+                        console.log('✅ Switching to All Alumni tab');
                         document.getElementById('allAlumniTab').style.display = 'block';
                         await loadAlumniList();
                     } else if (tab === 'add-alumni') {
+                        console.log('✅ Switching to Add Alumni tab');
                         document.getElementById('addAlumniTab').style.display = 'block';
                     } else if (tab === 'applications') {
+                        console.log('✅ Switching to Applications tab');
                         document.getElementById('applicationsTab').style.display = 'block';
                         await loadAlumniApplications(currentAlumniApplicationStatusFilter);
-                        initializeAlumniApplicationFilters();
                     }
                 });
             });
+            
+            console.log('✅ Tab switching initialized');
         }
 
         async function saveAlumni() {
@@ -448,7 +459,6 @@
                 resetAlumniForm();
                 await loadAlumniList();
                 
-                // Notify parent to refresh dashboard
                 if (window.parent && window.parent.loadDashboardStats) {
                     window.parent.loadDashboardStats();
                 }
@@ -471,7 +481,6 @@
                 
                 let alumni = result.data;
                 
-                // Apply search filter
                 if (searchTerm) {
                     alumni = alumni.filter(a =>
                         a.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -499,7 +508,6 @@
                     </tr>
                 `).join('');
                 
-                // Update parent dashboard stat
                 if (window.parent && window.parent.document.getElementById('statAlumni')) {
                     window.parent.document.getElementById('statAlumni').textContent = alumni.length;
                 }
@@ -540,11 +548,11 @@
                         document.getElementById('alumniPhotoPreview').style.display = 'block';
                     }
                     
-                    // Switch to add-alumni tab
                     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
                     document.querySelector('.tab-btn[data-tab="add-alumni"]').classList.add('active');
-                    document.querySelectorAll('.tab-content').forEach(content => content.style.display = 'none');
+                    document.getElementById('allAlumniTab').style.display = 'none';
                     document.getElementById('addAlumniTab').style.display = 'block';
+                    document.getElementById('applicationsTab').style.display = 'none';
                     
                     window.scrollTo({ top: 0, behavior: 'smooth' });
                     showToast('Editing alumni', 'info');
@@ -615,7 +623,6 @@
         }
 
         function showToast(message, type = 'success') {
-            // Try parent window toast first
             if (window.parent && window.parent.showToast) {
                 window.parent.showToast(message, type);
             } else {
@@ -638,9 +645,7 @@
             return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
         }
 
-        // STEP 4: ========== ALUMNI APPLICATIONS ==========
-
-        let currentAlumniApplicationStatusFilter = 'pending';
+        // ========== ALUMNI APPLICATIONS ==========
 
         async function loadAlumniApplicationStatistics() {
             try {
@@ -651,7 +656,6 @@
                     document.getElementById('approvedAlumniApplications').textContent = result.data.approved || 0;
                     document.getElementById('rejectedAlumniApplications').textContent = result.data.rejected || 0;
                     
-                    // Update badge
                     const badge = document.getElementById('pendingApplicationsBadge');
                     if (result.data.pending > 0) {
                         badge.textContent = result.data.pending;
@@ -737,7 +741,6 @@
                 });
             });
             
-            // Search functionality
             const searchInput = document.getElementById('alumniApplicationSearch');
             if (searchInput) {
                 let debounceTimer;
@@ -877,9 +880,8 @@
                     showToast('Application approved! Alumni added successfully.', 'success');
                     await loadAlumniApplications(currentAlumniApplicationStatusFilter);
                     await loadAlumniApplicationStatistics();
-                    await loadAlumniList(); // Refresh alumni list
+                    await loadAlumniList();
                     
-                    // Close modal if open
                     const modal = document.querySelector('div[style*="position: fixed"]');
                     if (modal) modal.remove();
                 } else {
@@ -907,7 +909,6 @@
                     await loadAlumniApplications(currentAlumniApplicationStatusFilter);
                     await loadAlumniApplicationStatistics();
                     
-                    // Close modal if open
                     const modal = document.querySelector('div[style*="position: fixed"]');
                     if (modal) modal.remove();
                 } else {
@@ -936,3 +937,6 @@
                 showToast('Error deleting application', 'error');
             }
         }
+    </script>
+</body>
+</html>
