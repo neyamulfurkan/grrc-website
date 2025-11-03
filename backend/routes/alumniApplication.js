@@ -284,6 +284,7 @@ router.get('/applications/:id', authenticateToken, isAdmin, async (req, res) => 
 });
 
 // 4. POST /api/alumni-application/applications/:id/approve (ADMIN - Auth Required)
+// ✅ THIS IS THE FIXED SECTION
 router.post(
   '/applications/:id/approve',
   authenticateToken,
@@ -323,15 +324,7 @@ router.post(
         });
       }
 
-      // Update application status to approved
-      await alumniApplicationModel.updateApplicationStatus(
-        id,
-        'approved',
-        req.user.id,
-        admin_notes || null
-      );
-
-      // ✅ CRITICAL: Create alumni record
+      // ✅ FIX: Prepare alumni data
       const alumniData = {
         name: application.full_name,
         email: application.email,
@@ -351,62 +344,68 @@ router.post(
         display_order: 0
       };
 
-      console.log('📝 Creating alumni record with data:', alumniData);
+      console.log('📝 Creating alumni record with data:', {
+        name: alumniData.name,
+        email: alumniData.email,
+        batch_year: alumniData.batch_year
+      });
 
-      // ✅ CRITICAL: contentModel.createAlumni returns {success, data, error}
-      const alumniResult = await contentModel.createAlumni(alumniData);
-
-      console.log('📦 createAlumni response:', alumniResult);
-
-      // ✅ CRITICAL: Check if alumni creation was successful
-      if (!alumniResult.success) {
-        console.error('❌ Failed to create alumni:', alumniResult.error);
+      // ✅ FIX: createAlumni returns alumni object DIRECTLY, not wrapped
+      let alumni;
+      try {
+        alumni = await contentModel.createAlumni(alumniData);
         
-        // Rollback application approval
-        try {
-          await alumniApplicationModel.updateApplicationStatus(
-            id,
-            'pending',
-            req.user.id,
-            'Auto-rollback: Alumni creation failed - ' + alumniResult.error
-          );
-          console.log('↩️  Application rolled back to pending');
-        } catch (rollbackError) {
-          console.error('❌ Rollback failed:', rollbackError.message);
+        // Verify we got valid data back
+        if (!alumni || !alumni.id) {
+          throw new Error('Invalid alumni data returned from database');
         }
         
+        console.log('✅ Alumni created successfully');
+        console.log('   Alumni ID:', alumni.id);
+        console.log('   Alumni Name:', alumni.name);
+        
+      } catch (alumniError) {
+        console.error('❌ Failed to create alumni:', alumniError.message);
+        
+        // Don't update application status since alumni creation failed
         return res.status(500).json({
           success: false,
           error: 'Failed to create alumni record',
-          message: alumniResult.error || 'Could not create alumni after approving application'
+          message: alumniError.message || 'Could not create alumni. Please try again.'
         });
       }
 
-      // ✅ Extract the actual alumni data from the wrapper
-      const alumni = alumniResult.data;
-
-      if (!alumni || !alumni.id) {
-        console.error('❌ Invalid alumni data returned');
-        
-        // Rollback
+      // ✅ Only update application status AFTER alumni is created successfully
+      try {
         await alumniApplicationModel.updateApplicationStatus(
           id,
-          'pending',
+          'approved',
           req.user.id,
-          'Auto-rollback: Invalid alumni data returned'
+          admin_notes || null
         );
         
-        return res.status(500).json({
-          success: false,
-          error: 'Failed to create alumni record',
-          message: 'Invalid alumni data returned from database'
+        console.log(`✅ Alumni application ${id} approved`);
+        
+      } catch (statusError) {
+        console.error('❌ Failed to update application status:', statusError.message);
+        console.warn('⚠️ Alumni created but status update failed');
+        
+        // Alumni is created, but we couldn't update the application status
+        // This is not ideal but not critical - respond with partial success
+        return res.status(200).json({
+          success: true,
+          message: 'Alumni record created successfully, but application status update failed',
+          data: { 
+            application_id: parseInt(id),
+            alumni_id: alumni.id,
+            alumni_name: alumni.name,
+            alumni_email: alumni.email,
+            warning: 'Application status may not reflect approval'
+          }
         });
       }
 
-      console.log(`✅ Alumni application ${id} approved and alumni created`);
-      console.log(`   Alumni ID: ${alumni.id}`);
-      console.log(`   Alumni Name: ${alumni.name}`);
-
+      // ✅ Success - both alumni created and status updated
       res.status(200).json({
         success: true,
         message: 'Alumni application approved successfully and alumni record created',
@@ -417,6 +416,7 @@ router.post(
           alumni_email: alumni.email
         }
       });
+      
     } catch (error) {
       console.error('❌ Error approving alumni application:', error.message);
       console.error('   Stack:', error.stack);
