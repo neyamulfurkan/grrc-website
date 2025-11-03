@@ -4,7 +4,7 @@
  * Production-ready backend API server for Render deployment
  * 
  * @author GSTU Robotics Club
- * @version 2.2.0 - Membership Routes Fixed
+ * @version 2.3.0 - Alumni Application Routes Added
  */
 
 // ============ DEPENDENCIES ============
@@ -114,7 +114,7 @@ app.get('/', (req, res) => {
     res.json({
         success: true,
         message: 'GSTU Robotics Club API Server',
-        version: '2.2.0',
+        version: '2.3.0',
         environment: NODE_ENV,
         timestamp: new Date().toISOString(),
         uptime: Math.floor(process.uptime()),
@@ -172,7 +172,8 @@ let routesLoaded = {
     auth: false,
     content: false,
     admin: false,
-    membership: false
+    membership: false,
+    alumniApplication: false
 };
 
 /**
@@ -231,11 +232,12 @@ function createPlaceholderRoute(mountPath, routeName) {
     console.log(`⚠️  Placeholder route created for ${mountPath}`);
 }
 
-// ✅ CRITICAL FIX: Load ALL routes using the dynamic loader
+// ✅ Load ALL routes using the dynamic loader
 loadRoute('auth', './routes/auth', '/api/auth');
 loadRoute('content', './routes/content', '/api/content');
 loadRoute('admin', './routes/admin', '/api/admin');
-loadRoute('membership', './routes/membership', '/api/membership');  // ✅ FIXED!
+loadRoute('membership', './routes/membership', '/api/membership');
+loadRoute('alumniApplication', './routes/alumniApplication', '/api/alumni-application');
 
 /**
  * API Documentation
@@ -244,7 +246,7 @@ app.get('/api', (req, res) => {
     res.json({
         success: true,
         message: 'GSTU Robotics Club API',
-        version: '2.2.0',
+        version: '2.3.0',
         documentation: 'https://github.com/gstu-robotics/grrc-website',
         routesLoaded: routesLoaded,
         endpoints: {
@@ -272,6 +274,15 @@ app.get('/api', (req, res) => {
                 'POST /api/membership/applications/:id/reject': 'Reject application',
                 'DELETE /api/membership/applications/:id': 'Delete application',
                 'GET /api/membership/statistics': 'Get application statistics'
+            } : 'Routes not loaded',
+            alumniApplication: routesLoaded.alumniApplication ? {
+                'POST /api/alumni-application/apply': 'Submit alumni application',
+                'GET /api/alumni-application/applications': 'Get all applications (admin)',
+                'GET /api/alumni-application/applications/:id': 'Get specific application',
+                'POST /api/alumni-application/applications/:id/approve': 'Approve application',
+                'POST /api/alumni-application/applications/:id/reject': 'Reject application',
+                'DELETE /api/alumni-application/applications/:id': 'Delete application',
+                'GET /api/alumni-application/statistics': 'Get application statistics'
             } : 'Routes not loaded'
         }
     });
@@ -369,10 +380,11 @@ async function startServer() {
             console.log(`📝 Environment: ${NODE_ENV}`);
             console.log(`🔒 CORS: ${NODE_ENV === 'development' ? 'Permissive (dev)' : 'Configured'}`);
             console.log(`\n📊 Routes Status:`);
-            console.log(`   Auth:       ${routesLoaded.auth ? '✅' : '❌'}`);
-            console.log(`   Content:    ${routesLoaded.content ? '✅' : '❌'}`);
-            console.log(`   Admin:      ${routesLoaded.admin ? '✅' : '❌'}`);
-            console.log(`   Membership: ${routesLoaded.membership ? '✅' : '❌'}`);
+            console.log(`   Auth:                ${routesLoaded.auth ? '✅' : '❌'}`);
+            console.log(`   Content:             ${routesLoaded.content ? '✅' : '❌'}`);
+            console.log(`   Admin:               ${routesLoaded.admin ? '✅' : '❌'}`);
+            console.log(`   Membership:          ${routesLoaded.membership ? '✅' : '❌'}`);
+            console.log(`   Alumni Application:  ${routesLoaded.alumniApplication ? '✅' : '❌'}`);
             console.log(`\n💡 Health Check: http://localhost:${PORT}/health`);
             console.log(`💡 API Docs: http://localhost:${PORT}/api`);
             console.log(`\n📖 Server ready!\n`);

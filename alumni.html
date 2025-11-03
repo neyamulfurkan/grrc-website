@@ -64,6 +64,26 @@
             animation: fadeInUp 0.6s ease 0.2s backwards;
         }
 
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: var(--radius-md);
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-primary {
+            background: white;
+            color: var(--primary-color);
+        }
+
+        .btn-primary:hover {
+            background: rgba(255, 255, 255, 0.9);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+        }
+
         @keyframes fadeInUp {
             from {
                 opacity: 0;
@@ -701,6 +721,12 @@
             <h1>Our Alumni</h1>
             <p>Honoring the Legacy of GSTU Robotics & Research Club</p>
             <p>Meet the brilliant minds who have contributed to our club's journey and are now making their mark in the world.</p>
+            <div style="margin-top: 2rem;">
+                <a href="alumni-application.html" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 1rem 2rem; font-size: 1.1rem; text-decoration: none;">
+                    <span>📝</span>
+                    <span>Apply as Alumni</span>
+                </a>
+            </div>
         </div>
     </section>
 

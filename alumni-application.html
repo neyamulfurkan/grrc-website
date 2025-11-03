@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Join the Alumni Network at GSTU Robotics & Research Club">
+    <title>Alumni Registration - GSTU Robotics & Research Club</title>
+    
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/common.css">
+    <link rel="stylesheet" href="css/components.css">
+    
+    <style>
+        .header {
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            backdrop-filter: blur(10px);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+        }
+
+        .hero {
+            min-height: 50vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            padding: 2rem;
+            margin-top: 70px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url("data:image/svg+xml,%3Csvg width='100' height='100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 0h100v100H0z' fill='none'/%3E%3Cpath d='M0 0L50 50L0 100M50 0L100 50L50 100M100 0v100' stroke='rgba(255,255,255,0.05)' stroke-width='1'/%3E%3C/svg%3E");
+            opacity: 0.3;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 1;
+            max-width: 700px;
+            color: white;
+        }
+
+        .hero h1 {
+            font-size: clamp(2rem, 5vw, 3rem);
+            font-weight: 700;
+            margin-bottom: 1rem;
+            text-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .hero p {
+            font-size: clamp(1rem, 2.5vw, 1.2rem);
+            margin-bottom: 1rem;
+            opacity: 0.95;
+            text-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .application-section {
+            padding: 4rem 0;
+            background: var(--background-color);
+        }
+
+        .form-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: var(--surface-color);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg);
+            padding: 3rem;
+        }
+
+        .form-header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+
+        .form-header h2 {
+            font-size: 2rem;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .form-header p {
+            color: var(--text-secondary);
+            font-size: 1rem;
+        }
+
+        .error-message {
+            display: none;
+            background: #fef2f2;
+            border: 2px solid #fecaca;
+            color: #dc2626;
+            padding: 1rem;
+            border-radius: var(--radius-md);
+            margin-bottom: 1.5rem;
+            animation: shake 0.3s ease;
+        }
+
+        [data-theme="dark"] .error-message {
+            background: rgba(220, 38, 38, 0.1);
+            border-color: rgba(220, 38, 38, 0.3);
+            color: #fca5a5;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        .form-section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 2px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--text-primary);
+            font-size: 0.95rem;
+        }
+
+        .form-label .required {
+            color: #dc2626;
+            margin-left: 0.25rem;
+        }
+
+        .form-input,
+        .form-select,
+        .form-textarea {
+            width: 100%;
+            padding: 0.875rem 1rem;
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius-md);
+            font-size: 1rem;
+            background: var(--background-color);
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        .form-input:focus,
+        .form-select:focus,
+        .form-textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.1);
+        }
+
+        .form-textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        .char-count {
+            text-align: right;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-top: 0.25rem;
+        }
+
+        .form-help {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-top: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .file-input-label {
+            display: inline-block;
+            padding: var(--space-sm) var(--space-md);
+            background: var(--primary-color);
+            color: white;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        .file-input-label:hover {
+            background: var(--primary-dark);
+        }
+
+        .file-input-wrapper input[type="file"] {
+            position: absolute;
+            left: -9999px;
+        }
+
+        .image-preview {
+            margin-top: var(--space-md);
+            max-width: 200px;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-color);
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 1rem;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: var(--radius-md);
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .submit-btn:hover:not(:disabled) {
+            background: var(--secondary-color);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .success-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+            z-index: 10000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .success-modal.active {
+            display: flex;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            background: var(--surface-color);
+            border-radius: var(--radius-lg);
+            padding: 3rem;
+            max-width: 500px;
+            text-align: center;
+            animation: slideUp 0.4s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .success-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 1.5rem;
+            background: #10b981;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            font-weight: bold;
+            animation: scaleIn 0.5s ease 0.2s backwards;
+        }
+
+        @keyframes scaleIn {
+            from {
+                transform: scale(0);
+            }
+            to {
+                transform: scale(1);
+            }
+        }
+
+        .modal-content h2 {
+            font-size: 1.8rem;
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+        }
+
+        .modal-content p {
+            color: var(--text-secondary);
+            margin-bottom: 0.75rem;
+            line-height: 1.6;
+        }
+
+        .footer {
+            background: var(--surface-color);
+            padding: 2rem 0;
+            margin-top: 4rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        @media (max-width: 768px) {
+            .form-container {
+                padding: 2rem 1.5rem;
+            }
+
+            .hero {
+                min-height: 40vh;
+            }
+
+            .form-header h2 {
+                font-size: 1.5rem;
+            }
+
+            .section-title {
+                font-size: 1.1rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .form-container {
+                padding: 1.5rem 1rem;
+            }
+
+            .modal-content {
+                padding: 2rem 1.5rem;
+            }
+
+            .success-icon {
+                width: 60px;
+                height: 60px;
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo-container">
+                    <img id="clubLogo" src="assets/default-logo.jpg" alt="Club Logo" class="logo">
+                    <span id="clubName" class="club-name">GSTU Robotics & Research Club</span>
+                </div>
+                
+                <nav class="nav-menu">
+                    <a href="index.html" class="nav-link">Home</a>
+                    <a href="members.html" class="nav-link">Members</a>
+                    <a href="events.html" class="nav-link">Events</a>
+                    <a href="projects.html" class="nav-link">Projects</a>
+                    <a href="gallery.html" class="nav-link">Gallery</a>
+                    <a href="membership.html" class="nav-link">Membership</a>
+                    <a href="alumni.html" class="nav-link active">Alumni</a>
+                    <a href="admin.html" class="nav-link">Admin</a>
+                </nav>
+                
+                <button id="themeToggle" class="theme-toggle" aria-label="Toggle theme">
+                    <span class="theme-icon">🌙</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <section class="hero">
+        <div class="hero-content">
+            <h1>Alumni Registration</h1>
+            <p>Join our Alumni Network</p>
+            <p>Share your journey and stay connected with GSTU Robotics & Research Club alumni community.</p>
+        </div>
+    </section>
+
+    <section class="application-section">
+        <div class="container">
+            <div class="form-container">
+                <div class="form-header">
+                    <h2>Alumni Application Form</h2>
+                    <p>Help us build a strong alumni network. Fields marked with <span style="color: #dc2626;">*</span> are required</p>
+                </div>
+
+                <div id="errorMessage" class="error-message"></div>
+
+                <form id="applicationForm">
+                    <!-- Section 1: Personal Information -->
+                    <div class="form-section">
+                        <h3 class="section-title">
+                            <span>👤</span>
+                            <span>Personal Information</span>
+                        </h3>
+
+                        <div class="form-group">
+                            <label class="form-label">
+                                Full Name<span class="required">*</span>
+                            </label>
+                            <input type="text" id="fullName" class="form-input" placeholder="Enter your full name" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">
+                                Email<span class="required">*</span>
+                            </label>
+                            <input type="email" id="email" class="form-input" placeholder="your.email@example.com" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">
+                                Phone Number<span class="required">*</span>
+                            </label>
+                            <input type="tel" id="phone" class="form-input" placeholder="+8801XXXXXXXXX or 01XXXXXXXXX" required>
+                            <div class="form-help">📱 Enter your active mobile number</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">
+                                Batch Year<span class="required">*</span>
+                            </label>
+                            <input type="text" id="batchYear" class="form-input" placeholder="2020-2021" pattern="\d{4}-\d{4}" required>
+                            <div class="form-help">📅 Enter in format: YYYY-YYYY (e.g., 2020-2021)</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">
+                                Department<span class="required">*</span>
+                            </label>
+                            <select id="department" class="form-select" required>
+                                <option value="">Select your department</option>
+                                <optgroup label="Faculty of Engineering">
+                                    <option value="Computer Science and Engineering (CSE)">Computer Science and Engineering (CSE)</option>
+                                    <option value="Electrical and Electronic Engineering (EEE)">Electrical and Electronic Engineering (EEE)</option>
+                                    <option value="Electronics and Telecommunication Engineering (ETE)">Electronics and Telecommunication Engineering (ETE)</option>
+                                    <option value="Applied Chemistry and Chemical Engineering (ACCE)">Applied Chemistry and Chemical Engineering (ACCE)</option>
+                                    <option value="Civil Engineering (CE)">Civil Engineering (CE)</option>
+                                    <option value="Food and Agroprocess Engineering (FAE)">Food and Agroprocess Engineering (FAE)</option>
+                                    <option value="Architecture (ARCH)">Architecture (ARCH)</option>
+                                </optgroup>
+                                <optgroup label="Faculty of Science">
+                                    <option value="Mathematics">Mathematics</option>
+                                    <option value="Statistics">Statistics</option>
+                                    <option value="Chemistry">Chemistry</option>
+                                    <option value="Physics">Physics</option>
+                                    <option value="Environmental Science & Disaster Management (ESDM)">Environmental Science & Disaster Management (ESDM)</option>
+                                </optgroup>
+                                <optgroup label="Faculty of Life Science">
+                                    <option value="Pharmacy">Pharmacy</option>
+                                    <option value="Biotechnology and Genetic Engineering (BGE)">Biotechnology and Genetic Engineering (BGE)</option>
+                                    <option value="Biochemistry and Molecular Biology (BMB)">Biochemistry and Molecular Biology (BMB)</option>
+                                    <option value="Psychology">Psychology</option>
+                                    <option value="Botany">Botany</option>
+                                </optgroup>
+                                <optgroup label="Faculty of Humanities (Arts)">
+                                    <option value="English">English</option>
+                                    <option value="Bangla">Bangla</option>
+                                    <option value="History">History</option>
+                                </optgroup>
+                                <optgroup label="Faculty of Social Science">
+                                    <option value="Sociology">Sociology</option>
+                                    <option value="Public Administration (PAD)">Public Administration (PAD)</option>
+                                    <option value="International Relations (IR)">International Relations (IR)</option>
+                                    <option value="Economics">Economics</option>
+                                    <option value="Political Science">Political Science</option>
+                                </optgroup>
+                                <optgroup label="Faculty of Business Studies">
+                                    <option value="Management Studies">Management Studies</option>
+                                    <option value="Accounting and Information Systems (AIS)">Accounting and Information Systems (AIS)</option>
+                                    <option value="Marketing">Marketing</option>
+                                    <option value="Finance and Banking">Finance and Banking</option>
+                                    <option value="Tourism and Hospitality Management (THM)">Tourism and Hospitality Management (THM)</option>
+                                </optgroup>
+                                <optgroup label="Faculty of Law">
+                                    <option value="Law">Law</option>
+                                </optgroup>
+                                <optgroup label="Sheikh Hasina Agriculture Institute">
+                                    <option value="Agriculture">Agriculture</option>
+                                    <option value="Fisheries and Marine Bioscience (FMB)">Fisheries and Marine Bioscience (FMB)</option>
+                                    <option value="Livestock Science and Veterinary Medicine (LSVM)">Livestock Science and Veterinary Medicine (LSVM)</option>
+                                </optgroup>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Section 2: Club Experience -->
+                    <div class="form-section">
+                        <h3 class="section-title">
+                            <span>🎓</span>
+                            <span>Club Experience</span>
+                        </h3>
+
+                        <div class="form-group">
+                            <label class="form-label">Your Role in Club</label>
+                            <input type="text" id="roleInClub" class="form-input" placeholder="e.g., President, Vice President, Project Lead">
+                            <div class="form-help">💡 What was your primary role in the club?</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Achievements</label>
+                            <textarea id="achievements" class="form-textarea" placeholder="What did you accomplish during your time in the club? (Optional)"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Section 3: Current Status -->
+                    <div class="form-section">
+                        <h3 class="section-title">
+                            <span>💼</span>
+                            <span>Current Status</span>
+                        </h3>
+
+                        <div class="form-group">
+                            <label class="form-label">Current Position</label>
+                            <input type="text" id="currentPosition" class="form-input" placeholder="e.g., Software Engineer, Research Assistant">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Current Company/Organization</label>
+                            <input type="text" id="currentCompany" class="form-input" placeholder="e.g., Google, Microsoft, University Name">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">
+                                About Your Journey<span class="required">*</span>
+                            </label>
+                            <textarea id="bio" class="form-textarea" placeholder="Tell us about your journey after graduation and why you want to join the alumni network..." required></textarea>
+                            <div class="char-count">
+                                <span id="bioCount">0</span> / 50 characters minimum
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 4: Optional Information -->
+                    <div class="form-section">
+                        <h3 class="section-title">
+                            <span>🔗</span>
+                            <span>Optional Information</span>
+                        </h3>
+
+                        <div class="form-group">
+                            <label class="form-label">Photo</label>
+                            <div class="file-input-wrapper">
+                                <label for="photo" class="file-input-label">📷 Choose Photo</label>
+                                <input type="file" id="photo" accept="image/*">
+                            </div>
+                            <input type="url" class="form-input" id="photoUrl" placeholder="Or enter image URL" style="margin-top: var(--space-sm);">
+                            <img id="photoPreview" class="image-preview" style="display: none;">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">LinkedIn Profile</label>
+                            <input type="url" id="linkedin" class="form-input" placeholder="https://linkedin.com/in/yourusername">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">GitHub Profile</label>
+                            <input type="url" id="github" class="form-input" placeholder="https://github.com/yourusername">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Facebook Profile</label>
+                            <input type="url" id="facebook" class="form-input" placeholder="https://facebook.com/yourusername">
+                        </div>
+                    </div>
+
+                    <button type="submit" id="submitBtn" class="submit-btn">
+                        Submit Application
+                    </button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="container">
+            <p style="text-align: center; color: var(--text-secondary);">
+                &copy; <span id="currentYear"></span> GSTU Robotics & Research Club. All rights reserved.
+            </p>
+        </div>
+    </footer>
+
+    <script src="js/api-client.js"></script>
+    <script src="js/config.js"></script>
+    <script src="js/storage.js"></script>
+    <script src="js/theme.js"></script>
+    <script src="js/navigation.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/load-config.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async function() {
+            document.getElementById('currentYear').textContent = new Date().getFullYear();
+            
+            // Wait for API client
+            let retries = 0;
+            while ((!window.apiClient || !window.apiClient.isReady) && retries < 50) {
+                await new Promise(resolve => setTimeout(resolve, 100));
+                retries++;
+            }
+
+            await loadClubConfig();
+            initializeForm();
+            initializeBioCounter();
+            initializePhotoPreview();
+
+            if (typeof initTheme === 'function') {
+                initTheme();
+            }
+
+            if (typeof initNavigation === 'function') {
+                initNavigation();
+            }
+        });
+
+        async function loadClubConfig() {
+            try {
+                if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady) {
+                    const result = await window.apiClient.getConfig();
+                    if (result.success && result.data) {
+                        const config = result.data;
+                        if (config.name) {
+                            document.getElementById('clubName').textContent = config.name;
+                        }
+                        if (config.logo || config.logo_url) {
+                            const logoUrl = config.logo || config.logo_url;
+                            document.getElementById('clubLogo').src = logoUrl + '?t=' + Date.now();
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading club config:', error);
+            }
+        }
+
+        function initializeBioCounter() {
+            const bioTextarea = document.getElementById('bio');
+            const bioCount = document.getElementById('bioCount');
+
+            bioTextarea.addEventListener('input', () => {
+                const length = bioTextarea.value.length;
+                bioCount.textContent = length;
+                
+                if (length >= 50) {
+                    bioCount.style.color = 'var(--primary-color)';
+                } else {
+                    bioCount.style.color = 'var(--text-secondary)';
+                }
+            });
+        }
+
+        function initializePhotoPreview() {
+            const photoFile = document.getElementById('photo');
+            const photoUrl = document.getElementById('photoUrl');
+            const preview = document.getElementById('photoPreview');
+
+            photoFile.addEventListener('change', async (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const base64 = await imageToBase64(file);
+                    preview.src = base64;
+                    preview.style.display = 'block';
+                }
+            });
+
+            photoUrl.addEventListener('input', (e) => {
+                if (e.target.value) {
+                    preview.src = e.target.value;
+                    preview.style.display = 'block';
+                } else {
+                    preview.style.display = 'none';
+                }
+            });
+        }
+
+        async function imageToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function initializeForm() {
+            const form = document.getElementById('applicationForm');
+            
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                // Gather form data
+                const fullName = document.getElementById('fullName').value.trim();
+                const email = document.getElementById('email').value.trim();
+                const phone = document.getElementById('phone').value.trim();
+                const batchYear = document.getElementById('batchYear').value;
+                const department = document.getElementById('department').value;
+                const roleInClub = document.getElementById('roleInClub').value.trim();
+                const achievements = document.getElementById('achievements').value.trim();
+                const currentPosition = document.getElementById('currentPosition').value.trim();
+                const currentCompany = document.getElementById('currentCompany').value.trim();
+                const bio = document.getElementById('bio').value.trim();
+                const linkedin = document.getElementById('linkedin').value.trim();
+                const github = document.getElementById('github').value.trim();
+                const facebook = document.getElementById('facebook').value.trim();
+                
+                // Validation
+                if (!fullName || !email || !phone || !batchYear || !department || !bio) {
+                    showError('Please fill all required fields');
+                    return;
+                }
+                
+                if (fullName.length < 2) {
+                    showError('Full name must be at least 2 characters');
+                    return;
+                }
+                
+                if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                    showError('Invalid email format');
+                    return;
+                }
+                
+                if (!/^(\+8801|01)[3-9]\d{8}$/.test(phone)) {
+                    showError('Invalid phone format. Use +8801XXXXXXXXX or 01XXXXXXXXX');
+                    return;
+                }
+                
+                // Validate batch year format (YYYY-YYYY)
+                if (!/^\d{4}-\d{4}$/.test(batchYear)) {
+                    showError('Invalid batch year format. Use YYYY-YYYY (e.g., 2020-2021)');
+                    return;
+                }
+                
+                if (bio.length < 50) {
+                    showError('Please write at least 50 characters about your journey');
+                    return;
+                }
+                
+                if (bio.length > 2000) {
+                    showError('Bio must not exceed 2000 characters');
+                    return;
+                }
+                
+                // Validate URLs if provided
+                if (linkedin && !isValidUrl(linkedin)) {
+                    showError('Invalid LinkedIn URL');
+                    return;
+                }
+                
+                if (github && !isValidUrl(github)) {
+                    showError('Invalid GitHub URL');
+                    return;
+                }
+                
+                if (facebook && !isValidUrl(facebook)) {
+                    showError('Invalid Facebook URL');
+                    return;
+                }
+                
+                // Get photo
+                const photoFile = document.getElementById('photo').files[0];
+                const photoUrl = document.getElementById('photoUrl').value.trim();
+                let photo = photoUrl;
+                
+                if (photoFile) {
+                    photo = await imageToBase64(photoFile);
+                }
+                
+                // Prepare data
+                const applicationData = {
+                    full_name: fullName,
+                    email: email,
+                    phone: phone,
+                    batch_year: batchYear,
+                    department: department,
+                    role_in_club: roleInClub || null,
+                    achievements: achievements || null,
+                    current_position: currentPosition || null,
+                    current_company: currentCompany || null,
+                    bio: bio,
+                    linkedin: linkedin || null,
+                    github: github || null,
+                    facebook: facebook || null,
+                    photo: photo || null
+                };
+                
+                // Show loading
+                setLoadingState(true);
+                hideError();
+                
+                try {
+                    const result = await window.apiClient.submitAlumniApplication(applicationData);
+                    
+                    if (result.success) {
+                        showSuccessModal();
+                        form.reset();
+                        document.getElementById('bioCount').textContent = '0';
+                        document.getElementById('photoPreview').style.display = 'none';
+                    } else {
+                        showError(result.error || 'Failed to submit application');
+                    }
+                } catch (error) {
+                    console.error('Submission error:', error);
+                    showError('Network error. Please try again.');
+                } finally {
+                    setLoadingState(false);
+                }
+            });
+        }
+
+        function isValidUrl(string) {
+            try {
+                new URL(string);
+                return true;
+            } catch (_) {
+                return false;
+            }
+        }
+
+        function setLoadingState(loading) {
+            const submitBtn = document.getElementById('submitBtn');
+            const inputs = document.querySelectorAll('.form-input, .form-select, .form-textarea');
+            
+            submitBtn.disabled = loading;
+            inputs.forEach(input => input.disabled = loading);
+            
+            if (loading) {
+                submitBtn.innerHTML = '<div class="spinner"></div> Submitting...';
+            } else {
+                submitBtn.innerHTML = 'Submit Application';
+            }
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+            errorDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        function hideError() {
+            document.getElementById('errorMessage').style.display = 'none';
+        }
+
+        function showSuccessModal() {
+            const modal = document.createElement('div');
+            modal.className = 'success-modal active';
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <div class="success-icon">✓</div>
+                    <h2>Application Submitted Successfully!</h2>
+                    <p>Thank you for joining our alumni network!</p>
+                    <p>We'll review your application and add you to our alumni directory soon.</p>
+                    <button class="btn btn-primary" onclick="this.closest('.success-modal').remove()">Close</button>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+    </script>
+</body>
+</html>

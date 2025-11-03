@@ -489,6 +489,48 @@ async function getAlumniStatistics() {
     return request('/api/admin/alumni/statistics');
 }
 
+// ============ ALUMNI APPLICATION API METHODS ============
+
+async function submitAlumniApplication(data) {
+    return request('/api/alumni-application/apply', {
+        method: 'POST',
+        body: JSON.stringify(data)
+    });
+}
+
+async function getAlumniApplications(status = null) {
+    const endpoint = `/api/alumni-application/applications${status ? '?status=' + status : ''}`;
+    return request(endpoint);
+}
+
+async function getAlumniApplicationById(id) {
+    return request(`/api/alumni-application/applications/${id}`);
+}
+
+async function approveAlumniApplication(id, adminNotes = '') {
+    return request(`/api/alumni-application/applications/${id}/approve`, {
+        method: 'POST',
+        body: JSON.stringify({ admin_notes: adminNotes })
+    });
+}
+
+async function rejectAlumniApplication(id, adminNotes) {
+    return request(`/api/alumni-application/applications/${id}/reject`, {
+        method: 'POST',
+        body: JSON.stringify({ admin_notes: adminNotes })
+    });
+}
+
+async function deleteAlumniApplication(id) {
+    return request(`/api/alumni-application/applications/${id}`, {
+        method: 'DELETE'
+    });
+}
+
+async function getAlumniApplicationStatistics() {
+    return request('/api/alumni-application/statistics');
+}
+
 async function checkAPIHealth() {
     try {
         const response = await fetch(`${API_BASE_URL}/health`, {
@@ -579,12 +621,19 @@ window.apiClient = {
     updateAlumni,
     deleteAlumni,
     getAlumniStatistics,
+    submitAlumniApplication,
+    getAlumniApplications,
+    getAlumniApplicationById,
+    approveAlumniApplication,
+    rejectAlumniApplication,
+    deleteAlumniApplication,
+    getAlumniApplicationStatistics,
     checkAPIHealth,
     formatErrorMessage,
     request
 };
 
-console.log('✅ API Client v1.4.0 - Added Membership & Alumni APIs');
+console.log('✅ API Client v1.5.0 - Added Alumni Application APIs');
 console.log('📡 API Base URL:', API_BASE_URL);
 console.log('🔐 Authentication:', isAuthenticated() ? 'Active (token loaded)' : 'Not authenticated');
 

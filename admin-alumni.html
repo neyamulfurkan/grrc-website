@@ -14,187 +14,262 @@
     <!-- This file is loaded as an iframe in admin-panel.html -->
     
     <div class="section-content active" id="alumniSection">
-        <div class="admin-form">
-            <h2 style="margin-bottom: var(--space-lg);">Add/Edit Alumni</h2>
-            <form id="alumniForm">
-                <input type="hidden" id="alumniId">
-                
-                <div class="form-group">
-                    <label class="form-label">Photo</label>
-                    <div class="file-input-wrapper">
-                        <label for="alumniPhoto" class="file-input-label">📷 Choose Photo</label>
-                        <input type="file" id="alumniPhoto" accept="image/*">
-                    </div>
-                    <input type="url" class="form-input" id="alumniPhotoUrl" placeholder="Or enter image URL" style="margin-top: var(--space-sm);">
-                    <img id="alumniPhotoPreview" class="image-preview" style="display: none;">
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label">Full Name *</label>
-                        <input type="text" class="form-input" id="alumniName" required>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Batch Year *</label>
-                        <input type="text" class="form-input" id="alumniBatchYear" placeholder="2020-2021" required>
-                    </div>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label">Department *</label>
-                        <select class="form-select" id="alumniDepartment" required>
-                            <option value="">Select Department</option>
-                            <optgroup label="Faculty of Engineering">
-                                <option value="Computer Science and Engineering (CSE)">Computer Science and Engineering (CSE)</option>
-                                <option value="Electrical and Electronic Engineering (EEE)">Electrical and Electronic Engineering (EEE)</option>
-                                <option value="Electronics and Telecommunication Engineering (ETE)">Electronics and Telecommunication Engineering (ETE)</option>
-                                <option value="Applied Chemistry and Chemical Engineering (ACCE)">Applied Chemistry and Chemical Engineering (ACCE)</option>
-                                <option value="Civil Engineering (CE)">Civil Engineering (CE)</option>
-                                <option value="Food and Agroprocess Engineering (FAE)">Food and Agroprocess Engineering (FAE)</option>
-                                <option value="Architecture (ARCH)">Architecture (ARCH)</option>
-                            </optgroup>
-                            <optgroup label="Faculty of Science">
-                                <option value="Mathematics">Mathematics</option>
-                                <option value="Statistics">Statistics</option>
-                                <option value="Chemistry">Chemistry</option>
-                                <option value="Physics">Physics</option>
-                                <option value="Environmental Science & Disaster Management (ESDM)">Environmental Science & Disaster Management (ESDM)</option>
-                            </optgroup>
-                            <optgroup label="Faculty of Life Science">
-                                <option value="Pharmacy">Pharmacy</option>
-                                <option value="Biotechnology and Genetic Engineering (BGE)">Biotechnology and Genetic Engineering (BGE)</option>
-                                <option value="Biochemistry and Molecular Biology (BMB)">Biochemistry and Molecular Biology (BMB)</option>
-                                <option value="Psychology">Psychology</option>
-                                <option value="Botany">Botany</option>
-                            </optgroup>
-                            <optgroup label="Faculty of Humanities (Arts)">
-                                <option value="English">English</option>
-                                <option value="Bangla">Bangla</option>
-                                <option value="History">History</option>
-                            </optgroup>
-                            <optgroup label="Faculty of Social Science">
-                                <option value="Sociology">Sociology</option>
-                                <option value="Public Administration (PAD)">Public Administration (PAD)</option>
-                                <option value="International Relations (IR)">International Relations (IR)</option>
-                                <option value="Economics">Economics</option>
-                                <option value="Political Science">Political Science</option>
-                            </optgroup>
-                            <optgroup label="Faculty of Business Studies">
-                                <option value="Management Studies">Management Studies</option>
-                                <option value="Accounting and Information Systems (AIS)">Accounting and Information Systems (AIS)</option>
-                                <option value="Marketing">Marketing</option>
-                                <option value="Finance and Banking">Finance and Banking</option>
-                                <option value="Tourism and Hospitality Management (THM)">Tourism and Hospitality Management (THM)</option>
-                            </optgroup>
-                            <optgroup label="Faculty of Law">
-                                <option value="Law">Law</option>
-                            </optgroup>
-                            <optgroup label="Sheikh Hasina Agriculture Institute">
-                                <option value="Agriculture">Agriculture</option>
-                                <option value="Fisheries and Marine Bioscience (FMB)">Fisheries and Marine Bioscience (FMB)</option>
-                                <option value="Livestock Science and Veterinary Medicine (LSVM)">Livestock Science and Veterinary Medicine (LSVM)</option>
-                            </optgroup>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Role in Club</label>
-                        <input type="text" class="form-input" id="alumniRoleInClub" placeholder="e.g., President, Vice President">
-                    </div>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label">Current Position</label>
-                        <input type="text" class="form-input" id="alumniCurrentPosition" placeholder="e.g., Software Engineer">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Current Company</label>
-                        <input type="text" class="form-input" id="alumniCurrentCompany" placeholder="e.g., Google, Microsoft">
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Bio</label>
-                    <textarea class="form-textarea" id="alumniBio" placeholder="Brief bio..."></textarea>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Achievements</label>
-                    <textarea class="form-textarea" id="alumniAchievements" placeholder="Notable achievements during club tenure..."></textarea>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label">Email</label>
-                        <input type="email" class="form-input" id="alumniEmail">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Phone</label>
-                        <input type="tel" class="form-input" id="alumniPhone" placeholder="+8801234567890">
-                    </div>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label">LinkedIn</label>
-                        <input type="url" class="form-input" id="alumniLinkedin" placeholder="https://linkedin.com/in/...">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">GitHub</label>
-                        <input type="url" class="form-input" id="alumniGithub" placeholder="https://github.com/...">
-                    </div>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label">Facebook</label>
-                        <input type="url" class="form-input" id="alumniFacebook" placeholder="https://facebook.com/...">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Display Order</label>
-                        <input type="number" class="form-input" id="alumniDisplayOrder" value="0" min="0">
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-                        <input type="checkbox" id="alumniIsFeatured" style="width: 20px; height: 20px;">
-                        <span class="form-label" style="margin: 0;">Featured Alumni (Show on homepage)</span>
-                    </label>
-                </div>
-
-                <div style="display: flex; gap: var(--space-md);">
-                    <button type="submit" class="btn btn-primary">💾 Save Alumni</button>
-                    <button type="button" class="btn btn-secondary" onclick="resetAlumniForm()">🔄 Reset Form</button>
-                </div>
-            </form>
+        <!-- STEP 1: Modified tabs section with Applications tab -->
+        <div class="tabs">
+            <button class="tab-btn active" data-tab="all-alumni">All Alumni</button>
+            <button class="tab-btn" data-tab="add-alumni">Add Alumni</button>
+            <button class="tab-btn" data-tab="applications">Applications <span id="pendingApplicationsBadge" class="badge badge-warning" style="display: none; margin-left: 0.5rem;">0</span></button>
         </div>
 
-        <!-- Alumni Table -->
-        <div class="data-table-wrapper">
-            <div class="table-header">
-                <h3>All Alumni</h3>
-                <input type="text" class="form-input" id="alumniSearch" placeholder="🔍 Search alumni..." style="max-width: 300px;">
+        <!-- All Alumni Tab -->
+        <div class="tab-content" id="allAlumniTab" style="display: block;">
+            <!-- Alumni Table -->
+            <div class="data-table-wrapper">
+                <div class="table-header">
+                    <h3>All Alumni</h3>
+                    <input type="text" class="form-input" id="alumniSearch" placeholder="🔍 Search alumni..." style="max-width: 300px;">
+                </div>
+                <div style="overflow-x: auto;">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Batch</th>
+                                <th>Department</th>
+                                <th>Current Position</th>
+                                <th>Featured</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="alumniTableBody">
+                            <tr>
+                                <td colspan="6" style="text-align: center; padding: var(--space-xl);">No alumni added yet</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
-            <div style="overflow-x: auto;">
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>Name</th>
-                            <th>Batch</th>
-                            <th>Department</th>
-                            <th>Current Position</th>
-                            <th>Featured</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="alumniTableBody">
-                        <tr>
-                            <td colspan="6" style="text-align: center; padding: var(--space-xl);">No alumni added yet</td>
-                        </tr>
-                    </tbody>
-                </table>
+        </div>
+
+        <!-- Add Alumni Tab -->
+        <div class="tab-content" id="addAlumniTab" style="display: none;">
+            <div class="admin-form">
+                <h2 style="margin-bottom: var(--space-lg);">Add/Edit Alumni</h2>
+                <form id="alumniForm">
+                    <input type="hidden" id="alumniId">
+                    
+                    <div class="form-group">
+                        <label class="form-label">Photo</label>
+                        <div class="file-input-wrapper">
+                            <label for="alumniPhoto" class="file-input-label">📷 Choose Photo</label>
+                            <input type="file" id="alumniPhoto" accept="image/*">
+                        </div>
+                        <input type="url" class="form-input" id="alumniPhotoUrl" placeholder="Or enter image URL" style="margin-top: var(--space-sm);">
+                        <img id="alumniPhotoPreview" class="image-preview" style="display: none;">
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Full Name *</label>
+                            <input type="text" class="form-input" id="alumniName" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Batch Year *</label>
+                            <input type="text" class="form-input" id="alumniBatchYear" placeholder="2020-2021" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Department *</label>
+                            <select class="form-select" id="alumniDepartment" required>
+                                <option value="">Select Department</option>
+                                <optgroup label="Faculty of Engineering">
+                                    <option value="Computer Science and Engineering (CSE)">Computer Science and Engineering (CSE)</option>
+                                    <option value="Electrical and Electronic Engineering (EEE)">Electrical and Electronic Engineering (EEE)</option>
+                                    <option value="Electronics and Telecommunication Engineering (ETE)">Electronics and Telecommunication Engineering (ETE)</option>
+                                    <option value="Applied Chemistry and Chemical Engineering (ACCE)">Applied Chemistry and Chemical Engineering (ACCE)</option>
+                                    <option value="Civil Engineering (CE)">Civil Engineering (CE)</option>
+                                    <option value="Food and Agroprocess Engineering (FAE)">Food and Agroprocess Engineering (FAE)</option>
+                                    <option value="Architecture (ARCH)">Architecture (ARCH)</option>
+                                </optgroup>
+                                <optgroup label="Faculty of Science">
+                                    <option value="Mathematics">Mathematics</option>
+                                    <option value="Statistics">Statistics</option>
+                                    <option value="Chemistry">Chemistry</option>
+                                    <option value="Physics">Physics</option>
+                                    <option value="Environmental Science & Disaster Management (ESDM)">Environmental Science & Disaster Management (ESDM)</option>
+                                </optgroup>
+                                <optgroup label="Faculty of Life Science">
+                                    <option value="Pharmacy">Pharmacy</option>
+                                    <option value="Biotechnology and Genetic Engineering (BGE)">Biotechnology and Genetic Engineering (BGE)</option>
+                                    <option value="Biochemistry and Molecular Biology (BMB)">Biochemistry and Molecular Biology (BMB)</option>
+                                    <option value="Psychology">Psychology</option>
+                                    <option value="Botany">Botany</option>
+                                </optgroup>
+                                <optgroup label="Faculty of Humanities (Arts)">
+                                    <option value="English">English</option>
+                                    <option value="Bangla">Bangla</option>
+                                    <option value="History">History</option>
+                                </optgroup>
+                                <optgroup label="Faculty of Social Science">
+                                    <option value="Sociology">Sociology</option>
+                                    <option value="Public Administration (PAD)">Public Administration (PAD)</option>
+                                    <option value="International Relations (IR)">International Relations (IR)</option>
+                                    <option value="Economics">Economics</option>
+                                    <option value="Political Science">Political Science</option>
+                                </optgroup>
+                                <optgroup label="Faculty of Business Studies">
+                                    <option value="Management Studies">Management Studies</option>
+                                    <option value="Accounting and Information Systems (AIS)">Accounting and Information Systems (AIS)</option>
+                                    <option value="Marketing">Marketing</option>
+                                    <option value="Finance and Banking">Finance and Banking</option>
+                                    <option value="Tourism and Hospitality Management (THM)">Tourism and Hospitality Management (THM)</option>
+                                </optgroup>
+                                <optgroup label="Faculty of Law">
+                                    <option value="Law">Law</option>
+                                </optgroup>
+                                <optgroup label="Sheikh Hasina Agriculture Institute">
+                                    <option value="Agriculture">Agriculture</option>
+                                    <option value="Fisheries and Marine Bioscience (FMB)">Fisheries and Marine Bioscience (FMB)</option>
+                                    <option value="Livestock Science and Veterinary Medicine (LSVM)">Livestock Science and Veterinary Medicine (LSVM)</option>
+                                </optgroup>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Role in Club</label>
+                            <input type="text" class="form-input" id="alumniRoleInClub" placeholder="e.g., President, Vice President">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Current Position</label>
+                            <input type="text" class="form-input" id="alumniCurrentPosition" placeholder="e.g., Software Engineer">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Current Company</label>
+                            <input type="text" class="form-input" id="alumniCurrentCompany" placeholder="e.g., Google, Microsoft">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Bio</label>
+                        <textarea class="form-textarea" id="alumniBio" placeholder="Brief bio..."></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Achievements</label>
+                        <textarea class="form-textarea" id="alumniAchievements" placeholder="Notable achievements during club tenure..."></textarea>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Email</label>
+                            <input type="email" class="form-input" id="alumniEmail">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Phone</label>
+                            <input type="tel" class="form-input" id="alumniPhone" placeholder="+8801234567890">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">LinkedIn</label>
+                            <input type="url" class="form-input" id="alumniLinkedin" placeholder="https://linkedin.com/in/...">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">GitHub</label>
+                            <input type="url" class="form-input" id="alumniGithub" placeholder="https://github.com/...">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Facebook</label>
+                            <input type="url" class="form-input" id="alumniFacebook" placeholder="https://facebook.com/...">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Display Order</label>
+                            <input type="number" class="form-input" id="alumniDisplayOrder" value="0" min="0">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                            <input type="checkbox" id="alumniIsFeatured" style="width: 20px; height: 20px;">
+                            <span class="form-label" style="margin: 0;">Featured Alumni (Show on homepage)</span>
+                        </label>
+                    </div>
+
+                    <div style="display: flex; gap: var(--space-md);">
+                        <button type="submit" class="btn btn-primary">💾 Save Alumni</button>
+                        <button type="button" class="btn btn-secondary" onclick="resetAlumniForm()">🔄 Reset Form</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- STEP 2: Applications Tab -->
+        <div class="tab-content" id="applicationsTab" style="display: none;">
+            <!-- Statistics Cards -->
+            <div class="stats-grid" style="margin-bottom: 2rem; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
+                <div class="stat-card">
+                    <div class="stat-number" id="totalAlumniApplications">0</div>
+                    <div class="stat-label">Total Applications</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="pendingAlumniApplications">0</div>
+                    <div class="stat-label">Pending</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="approvedAlumniApplications">0</div>
+                    <div class="stat-label">Approved</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="rejectedAlumniApplications">0</div>
+                    <div class="stat-label">Rejected</div>
+                </div>
+            </div>
+            
+            <!-- Filter Buttons -->
+            <div class="admin-form" style="padding: 1.5rem; margin-bottom: 2rem;">
+                <div class="filter-buttons" id="alumniApplicationStatusFilters">
+                    <button class="filter-btn active" data-status="pending">Pending</button>
+                    <button class="filter-btn" data-status="all">All</button>
+                    <button class="filter-btn" data-status="approved">Approved</button>
+                    <button class="filter-btn" data-status="rejected">Rejected</button>
+                </div>
+            </div>
+            
+            <!-- Applications Table -->
+            <div class="data-table-wrapper">
+                <div class="table-header">
+                    <h3>Alumni Applications</h3>
+                    <input type="text" class="form-input" id="alumniApplicationSearch" placeholder="🔍 Search applications..." style="max-width: 300px;">
+                </div>
+                <div style="overflow-x: auto;">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Batch Year</th>
+                                <th>Department</th>
+                                <th>Role in Club</th>
+                                <th>Applied Date</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="alumniApplicationsTableBody">
+                            <tr>
+                                <td colspan="8" style="text-align: center; padding: var(--space-xl);">Loading...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
@@ -210,8 +285,12 @@
         // ========== ALUMNI MANAGEMENT ==========
         let currentEditAlumniId = null;
 
-        document.addEventListener('DOMContentLoaded', () => {
-            initializeAlumni();
+        document.addEventListener('DOMContentLoaded', async () => {
+            await initializeAlumni();
+            // STEP 3: Load alumni application statistics on init
+            await loadAlumniApplicationStatistics();
+            // STEP 6: Initialize applications tab filters
+            initializeAlumniApplicationFilters();
         });
 
         async function initializeAlumni() {
@@ -223,6 +302,7 @@
             }
 
             setupAlumniForm();
+            setupTabSwitching();
             await loadAlumniList();
         }
 
@@ -243,6 +323,33 @@
             
             // Photo preview
             setupImagePreview('alumniPhoto', 'alumniPhotoUrl', 'alumniPhotoPreview');
+        }
+
+        // STEP 5: Modified tab switching logic
+        function setupTabSwitching() {
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    
+                    document.querySelectorAll('.tab-content').forEach(content => {
+                        content.style.display = 'none';
+                    });
+                    
+                    const tab = btn.dataset.tab;
+                    
+                    if (tab === 'all-alumni') {
+                        document.getElementById('allAlumniTab').style.display = 'block';
+                        await loadAlumniList();
+                    } else if (tab === 'add-alumni') {
+                        document.getElementById('addAlumniTab').style.display = 'block';
+                    } else if (tab === 'applications') {
+                        document.getElementById('applicationsTab').style.display = 'block';
+                        await loadAlumniApplications(currentAlumniApplicationStatusFilter);
+                        initializeAlumniApplicationFilters();
+                    }
+                });
+            });
         }
 
         async function saveAlumni() {
@@ -399,6 +506,12 @@
                         document.getElementById('alumniPhotoPreview').style.display = 'block';
                     }
                     
+                    // Switch to add-alumni tab
+                    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                    document.querySelector('.tab-btn[data-tab="add-alumni"]').classList.add('active');
+                    document.querySelectorAll('.tab-content').forEach(content => content.style.display = 'none');
+                    document.getElementById('addAlumniTab').style.display = 'block';
+                    
                     window.scrollTo({ top: 0, behavior: 'smooth' });
                     showToast('Editing alumni', 'info');
                 }
@@ -484,6 +597,308 @@
                 reader.readAsDataURL(file);
             });
         }
-    </script>
-</body>
-</html>
+
+        function formatDate(dateString) {
+            if (!dateString) return 'N/A';
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+        }
+
+        // STEP 4: ========== ALUMNI APPLICATIONS ==========
+
+        let currentAlumniApplicationStatusFilter = 'pending';
+
+        async function loadAlumniApplicationStatistics() {
+            try {
+                const result = await window.apiClient.getAlumniApplicationStatistics();
+                if (result.success && result.data) {
+                    document.getElementById('totalAlumniApplications').textContent = result.data.total || 0;
+                    document.getElementById('pendingAlumniApplications').textContent = result.data.pending || 0;
+                    document.getElementById('approvedAlumniApplications').textContent = result.data.approved || 0;
+                    document.getElementById('rejectedAlumniApplications').textContent = result.data.rejected || 0;
+                    
+                    // Update badge
+                    const badge = document.getElementById('pendingApplicationsBadge');
+                    if (result.data.pending > 0) {
+                        badge.textContent = result.data.pending;
+                        badge.style.display = 'inline';
+                    } else {
+                        badge.style.display = 'none';
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading alumni application statistics:', error);
+            }
+        }
+
+        async function loadAlumniApplications(status = 'pending') {
+            try {
+                console.log('📋 Loading alumni applications with status:', status);
+                
+                const result = await window.apiClient.getAlumniApplications(status);
+                console.log('📦 API response:', result);
+                
+                const tbody = document.getElementById('alumniApplicationsTableBody');
+                
+                if (!result.success) {
+                    console.error('❌ API call failed:', result.error);
+                    tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; padding: var(--space-xl); color: var(--error-color);">Error: ${result.error || 'Failed to load applications'}</td></tr>`;
+                    return;
+                }
+                
+                if (!result.data || result.data.length === 0) {
+                    console.log('ℹ️ No applications found');
+                    tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: var(--space-xl);">No applications found</td></tr>';
+                    return;
+                }
+                
+                console.log(`✅ Loaded ${result.data.length} applications`);
+                
+                tbody.innerHTML = result.data.map(app => `
+                    <tr>
+                        <td style="font-weight: 600;">${app.full_name}</td>
+                        <td>${app.email}</td>
+                        <td>${app.batch_year}</td>
+                        <td>${app.department}</td>
+                        <td>${app.role_in_club || 'N/A'}</td>
+                        <td>${formatDate(app.applied_date)}</td>
+                        <td><span class="badge ${getApplicationStatusBadge(app.status)}">${app.status.toUpperCase()}</span></td>
+                        <td class="action-buttons">
+                            <button class="btn btn-icon" style="background: #3b82f6; color: white;" onclick="viewAlumniApplication('${app.id}')" title="View Details">👁️</button>
+                            ${app.status === 'pending' ? `
+                                <button class="btn btn-icon" style="background: #10b981; color: white;" onclick="approveAlumniApplication('${app.id}')" title="Approve">✓</button>
+                                <button class="btn btn-icon" style="background: #ef4444; color: white;" onclick="rejectAlumniApplication('${app.id}')" title="Reject">✕</button>
+                            ` : ''}
+                            <button class="btn btn-icon btn-delete" onclick="deleteAlumniApplication('${app.id}')" title="Delete">🗑️</button>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading alumni applications:', error);
+                document.getElementById('alumniApplicationsTableBody').innerHTML = 
+                    '<tr><td colspan="8" style="text-align: center; padding: var(--space-xl); color: var(--error-color);">Error loading applications</td></tr>';
+            }
+        }
+
+        function getApplicationStatusBadge(status) {
+            const badges = {
+                'pending': 'badge-warning',
+                'approved': 'badge-success',
+                'rejected': 'badge-error'
+            };
+            return badges[status] || 'badge-info';
+        }
+
+        function initializeAlumniApplicationFilters() {
+            const filterButtons = document.querySelectorAll('#alumniApplicationStatusFilters .filter-btn');
+            
+            filterButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    filterButtons.forEach(btn => btn.classList.remove('active'));
+                    button.classList.add('active');
+                    
+                    const status = button.dataset.status;
+                    currentAlumniApplicationStatusFilter = status === 'all' ? null : status;
+                    loadAlumniApplications(currentAlumniApplicationStatusFilter);
+                });
+            });
+            
+            // Search functionality
+            const searchInput = document.getElementById('alumniApplicationSearch');
+            if (searchInput) {
+                let debounceTimer;
+                searchInput.addEventListener('input', (e) => {
+                    clearTimeout(debounceTimer);
+                    debounceTimer = setTimeout(() => {
+                        const searchTerm = e.target.value.toLowerCase();
+                        const rows = document.querySelectorAll('#alumniApplicationsTableBody tr');
+                        rows.forEach(row => {
+                            const text = row.textContent.toLowerCase();
+                            row.style.display = text.includes(searchTerm) ? '' : 'none';
+                        });
+                    }, 300);
+                });
+            }
+        }
+
+        async function viewAlumniApplication(id) {
+            try {
+                const result = await window.apiClient.getAlumniApplicationById(id);
+                if (result.success && result.data) {
+                    const app = result.data;
+                    
+                    const modalHTML = `
+                        <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 10000; display: flex; align-items: center; justify-content: center; padding: 2rem;" onclick="this.remove()">
+                            <div style="background: var(--surface-color); border-radius: var(--radius-lg); max-width: 800px; width: 100%; max-height: 90vh; overflow-y: auto; padding: 2rem;" onclick="event.stopPropagation()">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                                    <h2 style="margin: 0; color: var(--text-primary);">Alumni Application</h2>
+                                    <button onclick="this.closest('div').parentElement.remove()" style="background: var(--error-color); color: white; border: none; padding: 0.5rem 1rem; border-radius: var(--radius-md); cursor: pointer;">Close</button>
+                                </div>
+                                
+                                ${app.photo ? `
+                                <div style="text-align: center; margin-bottom: 1.5rem;">
+                                    <img src="${app.photo}" alt="${app.full_name}" style="width: 150px; height: 150px; border-radius: 50%; object-fit: cover; border: 3px solid var(--primary-color);">
+                                </div>
+                                ` : ''}
+                                
+                                <div style="background: var(--background-color); padding: 1.5rem; border-radius: var(--radius-md); margin-bottom: 1.5rem;">
+                                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                                        <div>
+                                            <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.25rem;">Full Name</div>
+                                            <div style="font-weight: 600; color: var(--text-primary);">${app.full_name}</div>
+                                        </div>
+                                        <div>
+                                            <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.25rem;">Email</div>
+                                            <div style="font-weight: 600; color: var(--text-primary);">${app.email}</div>
+                                        </div>
+                                        <div>
+                                            <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.25rem;">Phone</div>
+                                            <div style="font-weight: 600; color: var(--text-primary);">${app.phone}</div>
+                                        </div>
+                                        <div>
+                                            <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.25rem;">Batch Year</div>
+                                            <div style="font-weight: 600; color: var(--text-primary);">${app.batch_year}</div>
+                                        </div>
+                                        <div>
+                                            <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.25rem;">Department</div>
+                                            <div style="font-weight: 600; color: var(--text-primary);">${app.department}</div>
+                                        </div>
+                                        <div>
+                                            <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.25rem;">Role in Club</div>
+                                            <div style="font-weight: 600; color: var(--text-primary);">${app.role_in_club || 'N/A'}</div>
+                                        </div>
+                                        <div>
+                                            <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.25rem;">Applied Date</div>
+                                            <div style="font-weight: 600; color: var(--text-primary);">${formatDate(app.applied_date)}</div>
+                                        </div>
+                                        <div>
+                                            <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.25rem;">Status</div>
+                                            <span class="badge ${getApplicationStatusBadge(app.status)}">${app.status.toUpperCase()}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                ${app.current_position || app.current_company ? `
+                                <div style="margin-bottom: 1.5rem;">
+                                    <h3 style="color: var(--text-primary); margin-bottom: 0.5rem;">Current Status:</h3>
+                                    <div style="background: var(--background-color); padding: 1rem; border-radius: var(--radius-md);">
+                                        ${app.current_position ? `<div style="margin-bottom: 0.5rem;"><strong>Position:</strong> ${app.current_position}</div>` : ''}
+                                        ${app.current_company ? `<div><strong>Company:</strong> ${app.current_company}</div>` : ''}
+                                    </div>
+                                </div>` : ''}
+                                
+                                ${app.bio ? `
+                                <div style="margin-bottom: 1.5rem;">
+                                    <h3 style="color: var(--text-primary); margin-bottom: 0.5rem;">About Their Journey:</h3>
+                                    <p style="color: var(--text-secondary); line-height: 1.6;">${app.bio}</p>
+                                </div>` : ''}
+                                
+                                ${app.achievements ? `
+                                <div style="margin-bottom: 1.5rem;">
+                                    <h3 style="color: var(--text-primary); margin-bottom: 0.5rem;">Achievements:</h3>
+                                    <p style="color: var(--text-secondary); line-height: 1.6;">${app.achievements}</p>
+                                </div>` : ''}
+                                
+                                ${app.linkedin || app.github || app.facebook ? `
+                                <div style="margin-bottom: 1.5rem;">
+                                    <h3 style="color: var(--text-primary); margin-bottom: 0.5rem;">Social Profiles:</h3>
+                                    <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                                        ${app.linkedin ? `<a href="${app.linkedin}" target="_blank" style="color: var(--primary-color); text-decoration: none;">💼 LinkedIn</a>` : ''}
+                                        ${app.github ? `<a href="${app.github}" target="_blank" style="color: var(--primary-color); text-decoration: none;">💻 GitHub</a>` : ''}
+                                        ${app.facebook ? `<a href="${app.facebook}" target="_blank" style="color: var(--primary-color); text-decoration: none;">📘 Facebook</a>` : ''}
+                                    </div>
+                                </div>` : ''}
+                                
+                                ${app.admin_notes ? `
+                                <div style="background: #fef2f2; border: 2px solid #fecaca; padding: 1rem; border-radius: var(--radius-md); margin-bottom: 1.5rem;">
+                                    <h3 style="color: #dc2626; margin-bottom: 0.5rem;">Admin Notes:</h3>
+                                    <p style="color: #dc2626; margin: 0;">${app.admin_notes}</p>
+                                    ${app.reviewer_username ? `<p style="color: #dc2626; font-size: 0.875rem; margin-top: 0.5rem;">Reviewed by: ${app.reviewer_username}</p>` : ''}
+                                </div>` : ''}
+                                
+                                ${app.status === 'pending' ? `
+                                <div style="display: flex; gap: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                                    <button onclick="approveAlumniApplication('${app.id}')" class="btn btn-primary" style="flex: 1;">✓ Approve Application</button>
+                                    <button onclick="rejectAlumniApplication('${app.id}')" class="btn" style="flex: 1; background: var(--error-color); color: white;">✕ Reject Application</button>
+                                </div>` : ''}
+                            </div>
+                        </div>
+                    `;
+                    
+                    document.body.insertAdjacentHTML('beforeend', modalHTML);
+                }
+            } catch (error) {
+                console.error('Error viewing alumni application:', error);
+                showToast('Error loading application details', 'error');
+            }
+        }
+
+        async function approveAlumniApplication(id) {
+            const notes = prompt('Add optional notes (press OK to approve):');
+            if (notes === null) return;
+            
+            try {
+                const result = await window.apiClient.approveAlumniApplication(id, notes);
+                if (result.success) {
+                    showToast('Application approved! Alumni added successfully.', 'success');
+                    await loadAlumniApplications(currentAlumniApplicationStatusFilter);
+                    await loadAlumniApplicationStatistics();
+                    await loadAlumniList(); // Refresh alumni list
+                    
+                    // Close modal if open
+                    const modal = document.querySelector('div[style*="position: fixed"]');
+                    if (modal) modal.remove();
+                } else {
+                    showToast(result.error || 'Failed to approve application', 'error');
+                }
+            } catch (error) {
+                console.error('Error approving alumni application:', error);
+                showToast('Error approving application', 'error');
+            }
+        }
+
+        async function rejectAlumniApplication(id) {
+            const reason = prompt('Enter rejection reason (required):');
+            if (!reason || reason.trim() === '') {
+                showToast('Rejection reason is required', 'error');
+                return;
+            }
+            
+            if (!confirm('Are you sure you want to reject this application?')) return;
+            
+            try {
+                const result = await window.apiClient.rejectAlumniApplication(id, reason);
+                if (result.success) {
+                    showToast('Application rejected', 'success');
+                    await loadAlumniApplications(currentAlumniApplicationStatusFilter);
+                    await loadAlumniApplicationStatistics();
+                    
+                    // Close modal if open
+                    const modal = document.querySelector('div[style*="position: fixed"]');
+                    if (modal) modal.remove();
+                } else {
+                    showToast(result.error || 'Failed to reject application', 'error');
+                }
+            } catch (error) {
+                console.error('Error rejecting alumni application:', error);
+                showToast('Error rejecting application', 'error');
+            }
+        }
+
+        async function deleteAlumniApplication(id) {
+            if (!confirm('Are you sure you want to delete this application? This cannot be undone.')) return;
+            
+            try {
+                const result = await window.apiClient.deleteAlumniApplication(id);
+                if (result.success) {
+                    showToast('Application deleted', 'success');
+                    await loadAlumniApplications(currentAlumniApplicationStatusFilter);
+                    await loadAlumniApplicationStatistics();
+                } else {
+                    showToast(result.error || 'Failed to delete application', 'error');
+                }
+            } catch (error) {
+                console.error('Error deleting alumni application:', error);
+                showToast('Error deleting application', 'error');
+            }
+        }
