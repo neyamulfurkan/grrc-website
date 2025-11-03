@@ -2,9 +2,9 @@ const express = require('express');
 const { body, validationResult } = require('express-validator');
 const router = express.Router();
 
-// Import models
+// Import models - ✅ FIXED: Correct path with "Model" suffix
 const alumniApplicationModel = require('../models/alumniApplicationModel');
-const contentModel = require('../models/contentModel');
+const alumniModel = require('../models/alumniModel');
 
 // Import middleware
 const { authenticateToken, isAdmin } = require('../middleware/auth');
@@ -284,7 +284,6 @@ router.get('/applications/:id', authenticateToken, isAdmin, async (req, res) => 
 });
 
 // 4. POST /api/alumni-application/applications/:id/approve (ADMIN - Auth Required)
-// ✅ THIS IS THE FIXED SECTION
 router.post(
   '/applications/:id/approve',
   authenticateToken,
@@ -324,7 +323,7 @@ router.post(
         });
       }
 
-      // ✅ FIX: Prepare alumni data
+      // ✅ Prepare alumni data using alumniModel structure
       const alumniData = {
         name: application.full_name,
         email: application.email,
@@ -350,10 +349,10 @@ router.post(
         batch_year: alumniData.batch_year
       });
 
-      // ✅ FIX: createAlumni returns alumni object DIRECTLY, not wrapped
+      // ✅ createAlumni returns alumni object DIRECTLY (not wrapped)
       let alumni;
       try {
-        alumni = await contentModel.createAlumni(alumniData);
+        alumni = await alumniModel.createAlumni(alumniData);
         
         // Verify we got valid data back
         if (!alumni || !alumni.id) {
