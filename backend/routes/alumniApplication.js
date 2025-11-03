@@ -8,9 +8,8 @@ const express = require('express');
 const { body, validationResult } = require('express-validator');
 const router = express.Router();
 
-// ✅ FIXED: Correct import paths with "Model" suffix
-const AlumniApplication = require('../models/alumniApplicationModel');
-
+// ✅ FIXED: Correct import with proper variable names
+const alumniApplicationModel = require('../models/alumniApplicationModel');
 const alumniModel = require('../models/alumniModel');
 
 // Import middleware
