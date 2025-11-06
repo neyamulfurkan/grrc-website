@@ -835,8 +835,8 @@
 
         // Initialize page
         document.addEventListener('DOMContentLoaded', async () => {
-    // ✅ CRITICAL: Clear cache to force fresh API fetch
-    localStorage.removeItem('cache_clubConfig');
+    // Use cache for faster loading
+    // localStorage.removeItem('cache_clubConfig'); // REMOVED - causing slow loads
     
     // Wait for API client
     let retries = 0;
@@ -844,9 +844,12 @@
         await new Promise(resolve => setTimeout(resolve, 100));
         retries++;
     }
-    await loadClubConfig();
-            await loadEvents();
-            initializeFilters();
+    // ✅ PARALLEL LOADING
+    await Promise.all([
+        loadClubConfig(),
+        loadEvents()
+    ]);
+    initializeFilters();
             initializeSearch();
             initializeModal();
             

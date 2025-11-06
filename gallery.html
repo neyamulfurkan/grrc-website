@@ -901,18 +901,18 @@
 
         /* MODIFIED - Added API integration with localStorage fallback */
         async function loadGallery() {
-    console.log('🔄 loadGallery() called');
+    console.log('📄 loadGallery() called');
     
     try {
-        // ✅ CRITICAL FIX: Clear cache first
-        localStorage.removeItem('cache_gallery');
+        // Use cache for faster loading
+        // localStorage.removeItem('cache_gallery'); // REMOVED
         
         // Try API first with timeout
-        const result = await Promise.race([
-            getGallery(),
-            new Promise((_, reject) => 
-                setTimeout(() => reject(new Error('Timeout')), 10000)
-            )
+       const result = await Promise.race([
+          window.apiClient.getConfig(),
+          new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('API timeout')), 2000)
+          )
         ]);
         
         console.log('📊 API result:', result);
@@ -1222,32 +1222,25 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('loadingState').style.display = 'block';
     document.getElementById('galleryGrid').style.display = 'none';
     
-    // Wait for API client
+    // Wait for API client (faster timeout)
     let retries = 0;
-    while ((!window.apiClient || !window.apiClient.isReady) && retries < 50) {
-        await new Promise(resolve => setTimeout(resolve, 100));
+    while ((!window.apiClient || !window.apiClient.isReady) && retries < 20) {
+        await new Promise(resolve => setTimeout(resolve, 50));
         retries++;
     }
     
-    console.log('🔄 Gallery page initializing...');
+    console.log('📄 Gallery page initializing...');
 
-    // Initialize theme
-    if (typeof initTheme === 'function') {
-        initTheme();
-    }
+    // Initialize theme & navigation (non-blocking)
+    if (typeof initTheme === 'function') initTheme();
+    if (typeof initNavigation === 'function') initNavigation();
 
-    // Initialize navigation
-    if (typeof initNavigation === 'function') {
-        initNavigation();
-    }
-
-    // NEW - Use await for async functions
-    await loadClubConfig();
+    // ✅ PARALLEL LOADING - Load everything at once
+    await Promise.all([
+        loadClubConfig(),
+        loadGallery()
+    ]);
     
-    // ✅ CRITICAL FIX: Add delay to ensure API is ready
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    await loadGallery();
     initializeFilters();
     initializeSearch();
     

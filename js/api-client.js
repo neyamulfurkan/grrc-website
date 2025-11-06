@@ -1,6 +1,6 @@
 const API_BASE_URL = 'https://grrc-website-10.onrender.com';
 const AUTH_TOKEN_KEY = 'grrc_auth_token';
-const REQUEST_TIMEOUT = 5000;
+const REQUEST_TIMEOUT = 3000;
 
 const activeRequests = new Map();
 
