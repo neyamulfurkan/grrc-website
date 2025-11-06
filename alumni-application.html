@@ -11,14 +11,26 @@
     <link rel="stylesheet" href="css/components.css">
     
     <style>
-        .header {
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            backdrop-filter: blur(10px);
+       .header {
             position: fixed;
             top: 0;
             left: 0;
             right: 0;
             z-index: 1000;
+            background: var(--surface-color);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        [data-theme="dark"] .header {
+            background: rgba(26, 31, 58, 0.95);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        [data-theme="light"] .header {
+            background: rgba(255, 255, 255, 0.95);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         }
 
         .hero {
@@ -30,7 +42,8 @@
             position: relative;
             overflow: hidden;
             padding: 2rem;
-            margin-top: 70px;
+            padding-top: 140px;
+            margin-top: 0;
             background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
         }
 
@@ -373,6 +386,97 @@
             }
         }
 
+        .mobile-menu-toggle {
+            display: none;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            padding: 0.5rem;
+            z-index: 1001;
+        }
+        
+        .mobile-menu-toggle span {
+            display: block;
+            width: 25px;
+            height: 3px;
+            background: var(--text-primary);
+            margin: 5px 0;
+            transition: all 0.3s ease;
+        }
+        
+        .mobile-menu-toggle.active span:nth-child(1) {
+            transform: rotate(45deg) translate(8px, 8px);
+        }
+        
+        .mobile-menu-toggle.active span:nth-child(2) {
+            opacity: 0;
+        }
+        
+        .mobile-menu-toggle.active span:nth-child(3) {
+            transform: rotate(-45deg) translate(7px, -7px);
+        }
+        
+        .mobile-nav-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 999;
+            display: none;
+            backdrop-filter: blur(5px);
+        }
+        
+        .mobile-nav-overlay.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .mobile-nav {
+            background: var(--surface-color);
+            border-radius: var(--radius-lg);
+            padding: 2rem;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: var(--shadow-xl);
+        }
+        
+        .mobile-nav-link {
+            display: block;
+            padding: 1rem;
+            color: var(--text-primary);
+            text-decoration: none;
+            border-radius: var(--radius-md);
+            margin-bottom: 0.5rem;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            text-align: center;
+        }
+        
+        .mobile-nav-link:hover,
+        .mobile-nav-link.active {
+            background: var(--primary-color);
+            color: white;
+        }
+        
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        @media (max-width: 768px) {
+            .nav-menu {
+                display: none;
+            }
+            
+            .mobile-menu-toggle {
+                display: block;
+            }
+        }
+
         @media (max-width: 480px) {
             .form-container {
                 padding: 1.5rem 1rem;
@@ -410,12 +514,33 @@
                     <a href="admin.html" class="nav-link">Admin</a>
                 </nav>
                 
-                <button id="themeToggle" class="theme-toggle" aria-label="Toggle theme">
-                    <span class="theme-icon">🌙</span>
-                </button>
+                <div class="header-actions">
+                    <button id="themeToggle" class="theme-toggle" aria-label="Toggle theme">
+                        <span class="theme-icon">🌙</span>
+                    </button>
+                    <button class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Toggle menu">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </button>
+                </div>
             </div>
         </div>
     </header>
+
+    <!-- Mobile Navigation Overlay -->
+    <div class="mobile-nav-overlay" id="mobileNavOverlay">
+        <nav class="mobile-nav">
+            <a href="index.html" class="mobile-nav-link">Home</a>
+            <a href="members.html" class="mobile-nav-link">Members</a>
+            <a href="events.html" class="mobile-nav-link">Events</a>
+            <a href="projects.html" class="mobile-nav-link">Projects</a>
+            <a href="gallery.html" class="mobile-nav-link">Gallery</a>
+            <a href="membership.html" class="mobile-nav-link">Membership</a>
+            <a href="alumni.html" class="mobile-nav-link active">Alumni</a>
+            <a href="admin.html" class="mobile-nav-link">Admin</a>
+        </nav>
+    </div>
 
     <section class="hero">
         <div class="hero-content">
