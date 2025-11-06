@@ -1157,79 +1157,70 @@
     try {
         console.log('🎬 Starting slideshow load...');
         
-        // ✅ Try cache FIRST for instant display
-        const cached = localStorage.getItem('gallery');
-        if (cached) {
-            const galleryItems = JSON.parse(cached);
-            if (galleryItems.length > 0) {
-                console.log('⚡ Using cached gallery for instant slideshow');
-                processSlideshow(galleryItems);
-            }
-        }
-        
-        // Then update from API in background
         let galleryItems = [];
         
+        // Try API first
         if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady) {
             try {
-                console.log('📡 Updating gallery from API...');
+                console.log('📡 Calling API for gallery...');
                 const response = await window.apiClient.getGallery();
-                        console.log('📊 API response:', response);
-                        
-                        if (response.success && Array.isArray(response.data) && response.data.length > 0) {
-                            galleryItems = response.data;
-                            console.log('✅ Slideshow loaded', galleryItems.length, 'images from API');
-                            try {
-                                localStorage.setItem('gallery', JSON.stringify(galleryItems));
-                            } catch (e) {
-                                console.warn('⚠️ Could not save to cache (quota exceeded):', e.message);
-                            }
-                        }
-                    } catch (apiError) {
-                        console.error('❌ API call failed:', apiError);
+                console.log('📊 API response:', response);
+                
+                if (response.success && Array.isArray(response.data) && response.data.length > 0) {
+                    galleryItems = response.data;
+                    console.log('✅ Slideshow loaded', galleryItems.length, 'images from API');
+                    try {
+                        localStorage.setItem('gallery', JSON.stringify(galleryItems));
+                    } catch (e) {
+                        console.warn('⚠️ Could not save to cache (quota exceeded):', e.message);
                     }
                 }
-                
-                if (galleryItems.length === 0) {
-                    console.log('📦 Trying cache...');
-                    const cached = localStorage.getItem('gallery');
-                    if (cached) {
-                        galleryItems = JSON.parse(cached);
-                        console.log('✅ Slideshow loaded', galleryItems.length, 'images from cache');
-                    }
-                }
-                
-                console.log('🔍 Total gallery items:', galleryItems.length);
-                
-                if (galleryItems.length > 0) {
-                    slideshowImages = galleryItems
-                        .filter(item => {
-                            const imageUrl = item.image || item.image_url;
-                            return imageUrl && imageUrl.trim() !== '';
-                        })
-                        .map(item => ({
-                            url: item.image || item.image_url,
-                            title: item.title || 'Untitled',
-                            description: item.description || item.category || ''
-                        }))
-                        .slice(0, 10);
-                    
-                    console.log('✅ Valid slideshow images:', slideshowImages.length);
-                    console.log('🖼️ Image data:', slideshowImages);
-                    
-                    if (slideshowImages.length > 0) {
-                        console.log('🎬 Initializing slideshow with', slideshowImages.length, 'images');
-                        initializeSlideshow();
-                    } else {
-                        console.warn('⚠️ No valid images found in gallery');
-                    }
-                } else {
-                    console.warn('⚠️ No gallery items found');
-                }
-            } catch (error) {
-                console.error('❌ Error loading gallery for slideshow:', error);
+            } catch (apiError) {
+                console.error('❌ API call failed:', apiError);
             }
         }
+        
+        // Fallback to cache if API failed
+        if (galleryItems.length === 0) {
+            console.log('📦 Trying cache...');
+            const cached = localStorage.getItem('gallery');
+            if (cached) {
+                galleryItems = JSON.parse(cached);
+                console.log('✅ Slideshow loaded', galleryItems.length, 'images from cache');
+            }
+        }
+        
+        console.log('🔍 Total gallery items:', galleryItems.length);
+        
+        if (galleryItems.length > 0) {
+            slideshowImages = galleryItems
+                .filter(item => {
+                    const imageUrl = item.image || item.image_url;
+                    return imageUrl && imageUrl.trim() !== '';
+                })
+                .map(item => ({
+                    url: item.image || item.image_url,
+                    title: item.title || 'Untitled',
+                    description: item.description || item.category || ''
+                }))
+                .slice(0, 10);
+            
+            console.log('✅ Valid slideshow images:', slideshowImages.length);
+            console.log('🖼️ Image data:', slideshowImages);
+            
+            if (slideshowImages.length > 0) {
+                console.log('🎬 Initializing slideshow with', slideshowImages.length, 'images');
+                initializeSlideshow();
+            } else {
+                console.warn('⚠️ No valid images found in gallery');
+            }
+        } else {
+            console.warn('⚠️ No gallery items found');
+        }
+    } catch (error) {
+        console.error('❌ Error loading gallery for slideshow:', error);
+    }
+}
         
         function initializeSlideshow() {
             const slideshowContainer = document.getElementById('heroSlideshow');
