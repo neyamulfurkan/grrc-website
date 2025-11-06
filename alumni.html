@@ -17,11 +17,13 @@
             top: 0;
             left: 0;
             right: 0;
+            width: 100%;
             z-index: 1000;
             background: var(--surface-color);
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
             transition: all 0.3s ease;
             backdrop-filter: blur(10px);
+            height: 70px;
         }
 
         [data-theme="dark"] .header {
@@ -33,9 +35,22 @@
             background: rgba(255, 255, 255, 0.95);
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         }
-        .page-header {
+
+        .header .container {
+            height: 100%;
+        }
+
+        .header-content {
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 1rem;
+        }
+       .page-header {
             background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-            padding: 160px 0 60px;
+            padding: 140px 0 60px;
+            margin-top: 70px; 60px;
             text-align: center;
             color: white;
             position: relative;
