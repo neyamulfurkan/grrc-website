@@ -159,29 +159,27 @@ em {
 }
 
 .logo-container {
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
-  cursor: pointer;
-  transition: transform var(--transition-fast);
-}
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex-shrink: 0;
+        }
 
-.logo-container:hover {
-  transform: scale(1.02);
-}
+        .logo {
+            height: 45px;
+            width: 45px;
+            object-fit: contain;
+            flex-shrink: 0;
+        }
 
-.logo {
-  height: 45px;
-  width: auto;
-  transition: transform var(--transition-base);
-}
-
-.club-name {
-  font-size: var(--font-lg);
-  font-weight: var(--font-weight-bold);
-  color: var(--header-text);
-  white-space: nowrap;
-}
+        .club-name {
+            font-size: 1.1rem;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 200px;
+        }
 
 .nav-menu {
   display: flex;

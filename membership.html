@@ -23,6 +23,7 @@
             transition: all 0.3s ease;
             backdrop-filter: blur(10px);
             height: 70px;
+            display: block !important;
         }
 
         [data-theme="dark"] .header {
@@ -39,12 +40,15 @@
             height: 100%;
         }
 
-        .header-content {
+       .header-content {
             height: 100%;
             display: flex;
             align-items: center;
             justify-content: space-between;
             padding: 0 1rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
         }
         .hero {
             min-height: 50vh;
@@ -436,7 +440,7 @@
             }
         }
 
-        .mobile-menu-toggle {
+       .mobile-menu-toggle {
             display: none;
             background: transparent;
             border: none;
@@ -446,8 +450,10 @@
             position: relative;
             width: 40px;
             height: 40px;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
+            flex-shrink: 0;
         }
         
         .mobile-menu-toggle span {
@@ -528,24 +534,60 @@
             color: white;
         }
         
-        .header-actions {
+       .header-actions {
             display: flex;
             align-items: center;
-            gap: 1rem;
+            gap: 0.5rem;
             height: 100%;
+            flex-shrink: 0;
         }
 
-        @media (max-width: 768px) {
+        .theme-toggle {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: var(--background-color);
+            border: 2px solid var(--border-color);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            flex-shrink: 0;
+        }
+
+        .theme-toggle:hover {
+            background: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        .theme-icon {
+            font-size: 1.2rem;
+        }
+
+       @media (max-width: 768px) {
             .nav-menu {
                 display: none !important;
             }
             
             .mobile-menu-toggle {
                 display: flex !important;
+                visibility: visible !important;
+                opacity: 1 !important;
             }
 
             .header {
                 height: 60px;
+            }
+
+            .club-name {
+                max-width: 150px;
+                font-size: 0.9rem;
+            }
+
+            .logo {
+                height: 40px;
+                width: 40px;
             }
         }
         @media (max-width: 480px) {

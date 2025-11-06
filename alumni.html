@@ -12,7 +12,7 @@
     <link rel="stylesheet" href="css/components.css">
     
     <style>
-        .header {
+       .header {
             position: fixed;
             top: 0;
             left: 0;
@@ -24,6 +24,7 @@
             transition: all 0.3s ease;
             backdrop-filter: blur(10px);
             height: 70px;
+            display: block !important;
         }
 
         [data-theme="dark"] .header {
@@ -46,11 +47,14 @@
             align-items: center;
             justify-content: space-between;
             padding: 0 1rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
         }
        .page-header {
             background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-            padding: 140px 0 60px;
-            margin-top: 70px; 60px;
+            padding: 100px 0 60px;
+            margin-top: 60px;
             text-align: center;
             color: white;
             position: relative;
