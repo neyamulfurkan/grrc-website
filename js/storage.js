@@ -933,8 +933,8 @@ async function addProject(projectData) {
         };
         
         console.log('🔄 Sending to backend:', backendProject);
-        console.log('🔍 Backend technologies (stringified):', backendProject.technologies);
-        console.log('🔍 Backend team_members (stringified):', backendProject.team_members);
+        console.log('&#128269; Backend technologies (stringified):', backendProject.technologies);
+        console.log('&#128269; Backend team_members (stringified):', backendProject.team_members);
         
         const apiResult = await window.apiClient.createProject(backendProject);
         

@@ -644,7 +644,7 @@
                         const storedToken = localStorage.getItem('grrc_auth_token');
                         const storedSession = sessionStorage.getItem('adminSession');
                         
-                        console.log(`🔍 Verification attempt ${attempts}/${maxAttempts}:`);
+                        console.log(`&#128269; Verification attempt ${attempts}/${maxAttempts}:`);
                         console.log('   Token in localStorage:', storedToken ? 'YES' : 'NO');
                         console.log('   Session in sessionStorage:', storedSession ? 'YES' : 'NO');
                         
@@ -730,7 +730,7 @@
                         }
 
                         // Step 6: CRITICAL - Verify storage writes completed
-                        console.log('🔍 Step 5: Verifying storage writes...');
+                        console.log('&#128269; Step 5: Verifying storage writes...');
                         const verified = await verifyStorageWrites(result.data.token, sessionData);
                         
                         if (!verified) {
@@ -742,7 +742,7 @@
                         const finalSession = sessionStorage.getItem('adminSession');
                         const apiClientToken = window.apiClient.getAuthToken();
 
-                        console.log('🔍 Final verification:');
+                        console.log('&#128269; Final verification:');
                         console.log('   Token in localStorage:', finalToken ? 'YES' : 'NO');
                         console.log('   Session in sessionStorage:', finalSession ? 'YES' : 'NO');
                         console.log('   Token in apiClient:', apiClientToken ? 'YES' : 'NO');

@@ -335,7 +335,7 @@ app.use((err, req, res, next) => {
 
 async function startServer() {
     try {
-        console.log('\n🔍 Validating environment configuration...');
+        console.log('\n&#128269; Validating environment configuration...');
         
         // Check for DATABASE_URL first (Render/Neon uses this)
         if (process.env.DATABASE_URL) {
@@ -353,7 +353,7 @@ async function startServer() {
         }
 
         // Test database connection
-        console.log('🔍 Testing database connection...');
+        console.log('&#128269; Testing database connection...');
         try {
             const pool = require('./db/pool');
             const result = await Promise.race([
@@ -385,8 +385,8 @@ async function startServer() {
             console.log(`   Admin:               ${routesLoaded.admin ? '✅' : '❌'}`);
             console.log(`   Membership:          ${routesLoaded.membership ? '✅' : '❌'}`);
             console.log(`   Alumni Application:  ${routesLoaded.alumniApplication ? '✅' : '❌'}`);
-            console.log(`\n💡 Health Check: http://localhost:${PORT}/health`);
-            console.log(`💡 API Docs: http://localhost:${PORT}/api`);
+            console.log(`\n&#128161; Health Check: http://localhost:${PORT}/health`);
+            console.log(`&#128161; API Docs: http://localhost:${PORT}/api`);
             console.log(`\n📖 Server ready!\n`);
         });
 
@@ -450,7 +450,7 @@ async function startServer() {
             console.error('Stack:', error.stack);
         }
         
-        console.error('\n🔍 Troubleshooting:');
+        console.error('\n&#128269; Troubleshooting:');
         console.error('   1. Check environment variables in Render dashboard');
         console.error('   2. Verify database is created and accessible');
         console.error('   3. Check that route files exist');

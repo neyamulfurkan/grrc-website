@@ -12,7 +12,7 @@ async function getClubConfig() {
 
 async function updateClubConfig(data) {
   try {
-    console.log('🔍 updateClubConfig received data:', JSON.stringify(data, null, 2));
+    console.log('&#128269; updateClubConfig received data:', JSON.stringify(data, null, 2));
     
     const { logo, club_name, club_motto, club_description, social_links, logo_url } = data;
     
@@ -718,7 +718,7 @@ async function deleteAnnouncement(id) {
  */
 async function createAlumni(alumniData) {
   try {
-    console.log('🔍 createAlumni called with data:', alumniData);
+    console.log('&#128269; createAlumni called with data:', alumniData);
     
     const {
       name,

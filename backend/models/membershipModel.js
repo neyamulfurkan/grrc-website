@@ -21,7 +21,7 @@ const createApplication = async (applicationData) => {
   } = applicationData;
 
   try {
-    console.log('🔍 Creating application for:', email);
+    console.log('&#128269; Creating application for:', email);
     console.log('📝 Application data:', {
       full_name,
       email,
@@ -121,7 +121,7 @@ const createApplication = async (applicationData) => {
  */
 const getAllApplications = async (status = null) => {
   try {
-    console.log('🔍 Fetching applications with status:', status || 'all');
+    console.log('&#128269; Fetching applications with status:', status || 'all');
 
     // ✅ CRITICAL FIX: Different query based on whether status is provided
     let query, values;
@@ -173,7 +173,7 @@ const getAllApplications = async (status = null) => {
  */
 const getApplicationById = async (id) => {
   try {
-    console.log('🔍 Fetching application by ID:', id);
+    console.log('&#128269; Fetching application by ID:', id);
 
     const query = `
       SELECT 
