@@ -742,7 +742,7 @@
             </nav>
 
             <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
-                <span class="theme-icon">🌙</span>
+                <span class="theme-icon">ðŸŒ™</span>
             </button>
 
             <button class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Toggle menu">
@@ -773,7 +773,7 @@
             <p>Meet the brilliant minds who have contributed to our club's journey and are now making their mark in the world.</p>
             <div style="margin-top: 2rem;">
                 <a href="alumni-application.html" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 1rem 2rem; font-size: 1.1rem; text-decoration: none;">
-                    <span>📝</span>
+                    <span>ðŸ“</span>
                     <span>Apply as Alumni</span>
                 </a>
             </div>
@@ -807,7 +807,7 @@
         <div class="filter-section">
             <div class="filter-header">
                 <div class="search-box">
-                    <input type="text" id="searchInput" placeholder="🔍 Search alumni by name or company...">
+                    <input type="text" id="searchInput" placeholder="ðŸ” Search alumni by name or company...">
                 </div>
                 <select id="sortSelect" class="sort-select">
                     <option value="newest">Newest First</option>
@@ -833,14 +833,14 @@
         <div class="alumni-grid" id="alumniGrid" style="display: none;"></div>
         
         <div class="empty-state" id="emptyState" style="display: none;">
-            <div class="empty-icon">🎓</div>
+            <div class="empty-icon">ðŸŽ“</div>
             <h2 class="empty-title">No Alumni Added Yet</h2>
             <p class="empty-description">Alumni profiles will appear here once added.</p>
             <a href="admin.html" class="btn btn-primary">Go to Admin Panel</a>
         </div>
         
         <div class="empty-state" id="noResultsState" style="display: none;">
-            <div class="empty-icon">🔍</div>
+            <div class="empty-icon">ðŸ”</div>
             <h2 class="empty-title">No Alumni Found</h2>
             <p class="empty-description">Try adjusting your search or filters.</p>
         </div>
@@ -970,15 +970,15 @@
 
         function getSocialIcon(platform) {
             const icons = {
-                facebook: '📘',
-                twitter: '🐦',
-                instagram: '📷',
-                linkedin: '💼',
-                youtube: '📺',
-                github: '💻',
-                email: '📧'
+                facebook: 'ðŸ“˜',
+                twitter: 'ðŸ¦',
+                instagram: 'ðŸ“·',
+                linkedin: 'ðŸ’¼',
+                youtube: 'ðŸ“º',
+                github: 'ðŸ’»',
+                email: 'ðŸ“§'
             };
-            return icons[platform.toLowerCase()] || '🔗';
+            return icons[platform.toLowerCase()] || 'ðŸ”—';
         }
 
         async function loadStatistics() {
@@ -1141,7 +1141,7 @@
         function createAlumniCard(alumni) {
             const defaultPhoto = createDefaultAvatar(alumni.name || 'Alumni');
             const photoSrc = alumni.photo || defaultPhoto;
-            const featuredBadge = alumni.is_featured ? '<div class="featured-badge">⭐ Featured</div>' : '';
+            const featuredBadge = alumni.is_featured ? '<div class="featured-badge">â­ Featured</div>' : '';
             
             return `
                 <div class="alumni-card" onclick="showAlumniModal('${alumni.id}')">
@@ -1171,16 +1171,16 @@
             const photoSrc = alumni.photo || defaultPhoto;
             
             const modalHTML = `
-                <button class="modal-close" onclick="closeAlumniModal()">×</button>
+                <button class="modal-close" onclick="closeAlumniModal()">Ã—</button>
                 <div class="modal-header">
                     <img src="${photoSrc}" alt="${alumni.name || 'Alumni'}" class="modal-photo" onerror="this.src='${defaultPhoto}'">
                     <div class="modal-name">${alumni.name || 'Unknown'}</div>
                     <div class="modal-batch">Batch: ${alumni.batch_year || 'N/A'}</div>
-                    ${alumni.is_featured ? '<div class="featured-label">⭐ Featured Alumni</div>' : ''}
+                    ${alumni.is_featured ? '<div class="featured-label">â­ Featured Alumni</div>' : ''}
                 </div>
                 <div class="modal-body">
                     <div class="modal-section">
-                        <div class="modal-section-title">🎓 Academic Background</div>
+                        <div class="modal-section-title">ðŸŽ“ Academic Background</div>
                         <div class="modal-info-grid">
                             <div class="modal-info-item">
                                 <div class="modal-info-label">Department</div>
@@ -1200,7 +1200,7 @@
                     
                     ${alumni.current_position || alumni.current_company ? `
                     <div class="modal-section">
-                        <div class="modal-section-title">💼 Current Position</div>
+                        <div class="modal-section-title">ðŸ’¼ Current Position</div>
                         <div class="modal-info-grid">
                             ${alumni.current_position ? `
                             <div class="modal-info-item">
@@ -1217,25 +1217,25 @@
                     
                     ${alumni.bio ? `
                     <div class="modal-section">
-                        <div class="modal-section-title">📝 About</div>
+                        <div class="modal-section-title">ðŸ“ About</div>
                         <p class="modal-bio">${alumni.bio}</p>
                     </div>` : ''}
                     
                     ${alumni.achievements ? `
                     <div class="modal-section">
-                        <div class="modal-section-title">🏆 Achievements</div>
+                        <div class="modal-section-title">ðŸ† Achievements</div>
                         <p class="modal-bio">${alumni.achievements}</p>
                     </div>` : ''}
                     
                     ${alumni.email || alumni.phone || alumni.linkedin || alumni.github || alumni.facebook ? `
                     <div class="modal-section">
-                        <div class="modal-section-title">📞 Connect</div>
+                        <div class="modal-section-title">ðŸ“ž Connect</div>
                         <div class="contact-links">
-                            ${alumni.email ? `<a href="mailto:${alumni.email}" class="contact-link">📧 ${alumni.email}</a>` : ''}
-                            ${alumni.phone ? `<a href="tel:${alumni.phone}" class="contact-link">📱 ${alumni.phone}</a>` : ''}
-                            ${alumni.linkedin ? `<a href="${alumni.linkedin}" target="_blank" rel="noopener noreferrer" class="contact-link">💼 LinkedIn</a>` : ''}
-                            ${alumni.github ? `<a href="${alumni.github}" target="_blank" rel="noopener noreferrer" class="contact-link">💻 GitHub</a>` : ''}
-                            ${alumni.facebook ? `<a href="${alumni.facebook}" target="_blank" rel="noopener noreferrer" class="contact-link">📘 Facebook</a>` : ''}
+                            ${alumni.email ? `<a href="mailto:${alumni.email}" class="contact-link">ðŸ“§ ${alumni.email}</a>` : ''}
+                            ${alumni.phone ? `<a href="tel:${alumni.phone}" class="contact-link">ðŸ“± ${alumni.phone}</a>` : ''}
+                            ${alumni.linkedin ? `<a href="${alumni.linkedin}" target="_blank" rel="noopener noreferrer" class="contact-link">ðŸ’¼ LinkedIn</a>` : ''}
+                            ${alumni.github ? `<a href="${alumni.github}" target="_blank" rel="noopener noreferrer" class="contact-link">ðŸ’» GitHub</a>` : ''}
+                            ${alumni.facebook ? `<a href="${alumni.facebook}" target="_blank" rel="noopener noreferrer" class="contact-link">ðŸ“˜ Facebook</a>` : ''}
                         </div>
                     </div>` : ''}
                 </div>

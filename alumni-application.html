@@ -23,7 +23,8 @@
             transition: all 0.3s ease;
             backdrop-filter: blur(10px);
             height: 70px;
-            display: block !important;
+            display: flex !important;
+            align-items: center;
         }
 
         [data-theme="dark"] .header {
@@ -613,7 +614,7 @@
                 
                 <div class="header-actions">
                     <button id="themeToggle" class="theme-toggle" aria-label="Toggle theme">
-                        <span class="theme-icon">🌙</span>
+                        <span class="theme-icon">ðŸŒ™</span>
                     </button>
                     <button class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Toggle menu">
                         <span></span>
@@ -661,7 +662,7 @@
                     <!-- Section 1: Personal Information -->
                     <div class="form-section">
                         <h3 class="section-title">
-                            <span>👤</span>
+                            <span>ðŸ‘¤</span>
                             <span>Personal Information</span>
                         </h3>
 
@@ -684,7 +685,7 @@
                                 Phone Number<span class="required">*</span>
                             </label>
                             <input type="tel" id="phone" class="form-input" placeholder="+8801XXXXXXXXX or 01XXXXXXXXX" required>
-                            <div class="form-help">📱 Enter your active mobile number</div>
+                            <div class="form-help">ðŸ“± Enter your active mobile number</div>
                         </div>
 
                         <div class="form-group">
@@ -692,7 +693,7 @@
                                 Batch Year<span class="required">*</span>
                             </label>
                             <input type="text" id="batchYear" class="form-input" placeholder="2020-2021" pattern="\d{4}-\d{4}" required>
-                            <div class="form-help">📅 Enter in format: YYYY-YYYY (e.g., 2020-2021)</div>
+                            <div class="form-help">ðŸ“… Enter in format: YYYY-YYYY (e.g., 2020-2021)</div>
                         </div>
 
                         <div class="form-group">
@@ -758,14 +759,14 @@
                     <!-- Section 2: Club Experience -->
                     <div class="form-section">
                         <h3 class="section-title">
-                            <span>🎓</span>
+                            <span>ðŸŽ“</span>
                             <span>Club Experience</span>
                         </h3>
 
                         <div class="form-group">
                             <label class="form-label">Your Role in Club</label>
                             <input type="text" id="roleInClub" class="form-input" placeholder="e.g., President, Vice President, Project Lead">
-                            <div class="form-help">💡 What was your primary role in the club?</div>
+                            <div class="form-help">ðŸ’¡ What was your primary role in the club?</div>
                         </div>
 
                         <div class="form-group">
@@ -777,7 +778,7 @@
                     <!-- Section 3: Current Status -->
                     <div class="form-section">
                         <h3 class="section-title">
-                            <span>💼</span>
+                            <span>ðŸ’¼</span>
                             <span>Current Status</span>
                         </h3>
 
@@ -805,14 +806,14 @@
                     <!-- Section 4: Optional Information -->
                     <div class="form-section">
                         <h3 class="section-title">
-                            <span>🔗</span>
+                            <span>ðŸ”—</span>
                             <span>Optional Information</span>
                         </h3>
 
                         <div class="form-group">
                             <label class="form-label">Photo</label>
                             <div class="file-input-wrapper">
-                                <label for="photo" class="file-input-label">📷 Choose Photo</label>
+                                <label for="photo" class="file-input-label">ðŸ“· Choose Photo</label>
                                 <input type="file" id="photo" accept="image/*">
                             </div>
                             <input type="url" class="form-input" id="photoUrl" placeholder="Or enter image URL" style="margin-top: var(--space-sm);">
@@ -1117,7 +1118,7 @@
             modal.className = 'success-modal active';
             modal.innerHTML = `
                 <div class="modal-content">
-                    <div class="success-icon">✓</div>
+                    <div class="success-icon">âœ“</div>
                     <h2>Application Submitted Successfully!</h2>
                     <p>Thank you for joining our alumni network!</p>
                     <p>We'll review your application and add you to our alumni directory soon.</p>

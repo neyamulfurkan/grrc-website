@@ -624,7 +624,7 @@
             </nav>
             <div class="header-actions">
                 <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
-                    <span class="theme-icon">Ã°Å¸Å’â„¢</span>
+                    <span class="theme-icon">ðŸŒ™</span>
                 </button>
                 <button class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Toggle menu">
                     <span></span>
@@ -689,7 +689,7 @@
                     <input 
                         type="text" 
                         id="searchInput" 
-                        placeholder="Ã°Å¸â€Â Search photos by title or description..."
+                        placeholder="ðŸ” Search photos by title or description..."
                         autocomplete="off"
                     >
                 </div>
@@ -717,8 +717,8 @@
                 <div class="filter-section">
                     <label class="filter-label">View:</label>
                     <div class="view-toggle">
-                        <button class="view-btn active" data-view="grid">Ã°Å¸â€œÂ± Grid View</button>
-                        <button class="view-btn" data-view="masonry">Ã°Å¸Å½Â¨ Masonry View</button>
+                        <button class="view-btn active" data-view="grid">ðŸ“± Grid View</button>
+                        <button class="view-btn" data-view="masonry">ðŸŽ¨ Masonry View</button>
                     </div>
                 </div>
             </div>
@@ -734,7 +734,7 @@
 
             <!-- Empty State -->
             <div class="empty-state" id="emptyState" style="display: none;">
-                <div class="empty-icon">Ã°Å¸â€œÂ¸</div>
+                <div class="empty-icon">ðŸ“¸</div>
                 <h2 class="empty-title">No Photos in Gallery</h2>
                 <p class="empty-description">Photos will appear here once they are added</p>
                 <a href="admin-panel.html" class="btn btn-primary">Go to Admin Panel</a>
@@ -742,7 +742,7 @@
 
             <!-- No Results State -->
             <div class="empty-state" id="noResultsState" style="display: none;">
-                <div class="empty-icon">Ã°Å¸â€Â</div>
+                <div class="empty-icon">ðŸ”</div>
                 <h2 class="empty-title">No Photos Found</h2>
                 <p class="empty-description">Try adjusting your search or filter criteria</p>
             </div>
@@ -804,7 +804,7 @@
         /* FIXED - Complete config loading */
         async function loadClubConfig() {
     try {
-        console.log('Ã°Å¸â€œâ€ž Loading club config for gallery page...');
+        console.log('ðŸ“„ Loading club config for gallery page...');
         
         // Try API first
         let config = null;
@@ -812,7 +812,7 @@
             const result = await window.apiClient.getConfig();
             if (result.success && result.data) {
                 config = result.data;
-                console.log('Ã¢Å“â€¦ Config from API:', config);
+                console.log('âœ… Config from API:', config);
             }
         }
         
@@ -820,7 +820,7 @@
         if (!config) {
             const cachedConfig = localStorage.getItem('clubConfig');
             config = cachedConfig ? JSON.parse(cachedConfig) : {};
-            console.log('Ã¢Å¡ Ã¯Â¸Â Using fallback cache:', config);
+            console.log('âš ï¸ Using fallback cache:', config);
         }
         
         // Update header LOGO with cache busting
@@ -835,7 +835,7 @@
                 headerLogo.onerror = function() {
                     this.src = 'assets/default-logo.jpg';
                 };
-                console.log('Ã¢Å“â€¦ Header logo updated');
+                console.log('âœ… Header logo updated');
             }
         }
         
@@ -845,7 +845,7 @@
             const headerName = document.getElementById('headerClubName');
             if (headerName) {
                 headerName.textContent = name;
-                console.log('Ã¢Å“â€¦ Header name updated to:', name);
+                console.log('âœ… Header name updated to:', name);
             }
         }
         
@@ -885,27 +885,27 @@
         // Get social media icon
         function getSocialIcon(platform) {
             const icons = {
-                facebook: 'Ã°Å¸â€œËœ',
-                twitter: 'Ã°Å¸ÂÂ¦',
-                instagram: 'Ã°Å¸â€œÂ·',
-                linkedin: 'Ã°Å¸â€™Â¼',
-                youtube: 'Ã°Å¸â€œÂº',
-                github: 'Ã°Å¸â€™Â»',
-                email: 'Ã¢Å“â€°Ã¯Â¸Â'
+                facebook: 'ðŸ“˜',
+                twitter: 'ðŸ¦',
+                instagram: 'ðŸ“·',
+                linkedin: 'ðŸ’¼',
+                youtube: 'ðŸ“º',
+                github: 'ðŸ’»',
+                email: 'âœ‰ï¸'
             };
-            return icons[platform.toLowerCase()] || 'Ã°Å¸â€â€”';
+            return icons[platform.toLowerCase()] || 'ðŸ”—';
         }
 
         /* MODIFIED - Added API integration with localStorage fallback */
         async function loadGallery() {
-    console.log('Ã°Å¸â€œâ€ž loadGallery() called');
+    console.log('ðŸ“„ loadGallery() called');
     
     try {
-        // Ã¢Å“â€¦ SPEED FIX: Try cache FIRST for instant loading
+        // âœ… SPEED FIX: Try cache FIRST for instant loading
         const cached = localStorage.getItem('gallery');
         if (cached) {
             allPhotos = JSON.parse(cached);
-            console.log('Ã¢Å“â€¦ Loaded', allPhotos.length, 'photos from cache (instant)');
+            console.log('âœ… Loaded', allPhotos.length, 'photos from cache (instant)');
             allPhotos.sort((a, b) => new Date(b.date) - new Date(a.date));
             updateStatistics();
             applyFilters();
@@ -920,11 +920,11 @@
           )
         ]);
         
-        console.log('Ã°Å¸â€œÅ  API result:', result);
+        console.log('ðŸ“Š API result:', result);
         
         if (result.success && result.data && Array.isArray(result.data)) {
             allPhotos = result.data;
-            console.log('Ã¢Å“â€¦ Loaded', allPhotos.length, 'photos from API');
+            console.log('âœ… Loaded', allPhotos.length, 'photos from API');
             
             // Save to cache
             localStorage.setItem('gallery', JSON.stringify(allPhotos));
@@ -937,13 +937,13 @@
             return;
         }
         
-        console.warn('Ã¢Å¡ Ã¯Â¸Â API returned no data, trying cache...');
+        console.warn('âš ï¸ API returned no data, trying cache...');
         
         // Fallback to localStorage
         const cached = localStorage.getItem('gallery');
         if (cached) {
             allPhotos = JSON.parse(cached);
-            console.log('Ã¢Å“â€¦ Loaded', allPhotos.length, 'photos from cache');
+            console.log('âœ… Loaded', allPhotos.length, 'photos from cache');
             
             // Sort photos by date (newest first by default)
             allPhotos.sort((a, b) => new Date(b.date) - new Date(a.date));
@@ -953,17 +953,17 @@
             return;
         }
         
-        console.warn('Ã¢Å¡ Ã¯Â¸Â No photos in cache either');
+        console.warn('âš ï¸ No photos in cache either');
         showEmptyState();
         
     } catch (error) {
-        console.error('Ã¢ÂÅ’ Error loading gallery:', error);
+        console.error('âŒ Error loading gallery:', error);
         
         // Try cache as last resort
         const cached = localStorage.getItem('gallery');
         if (cached) {
             allPhotos = JSON.parse(cached);
-            console.log('Ã¢Å“â€¦ Loaded', allPhotos.length, 'photos from cache (after error)');
+            console.log('âœ… Loaded', allPhotos.length, 'photos from cache (after error)');
             allPhotos.sort((a, b) => new Date(b.date) - new Date(a.date));
             updateStatistics();
             applyFilters();
@@ -1103,7 +1103,7 @@
             galleryGrid.innerHTML = filteredPhotos.map((photo, index) => `
                 <div class="gallery-item" data-index="${index}" onclick="openLightbox(${index})">
                     <img 
-                        src="${photo.image || 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300"><rect fill="%23f0f0f0" width="400" height="300"/><text x="50%" y="50%" text-anchor="middle" fill="%23999" font-size="24">Ã°Å¸â€œÂ· No Image</text></svg>'}" 
+                        src="${photo.image || 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300"><rect fill="%23f0f0f0" width="400" height="300"/><text x="50%" y="50%" text-anchor="middle" fill="%23999" font-size="24">ðŸ“· No Image</text></svg>'}" 
                         alt="${photo.title || 'Gallery image'}"
                         class="gallery-item-image"
                         loading="lazy"
@@ -1112,7 +1112,7 @@
                     <div class="gallery-item-overlay">
                         <div class="gallery-item-title">${photo.title || 'Untitled'}</div>
                         <div class="gallery-item-meta">
-                            <span>Ã°Å¸â€œâ€¦ ${formatDate(photo.date)}</span>
+                            <span>ðŸ“… ${formatDate(photo.date)}</span>
                         </div>
                     </div>
                 </div>
@@ -1126,11 +1126,11 @@
 
             const lightboxHTML = `
                 <div class="lightbox" id="lightbox" onclick="closeLightboxOnBackdrop(event)">
-                    <button class="lightbox-close" onclick="closeLightbox()" aria-label="Close lightbox">Ã¢Å“â€¢</button>
+                    <button class="lightbox-close" onclick="closeLightbox()" aria-label="Close lightbox">âœ•</button>
                     <div class="lightbox-counter">${index + 1} / ${filteredPhotos.length}</div>
                     ${filteredPhotos.length > 1 ? `
-                        <button class="lightbox-nav prev" onclick="navigateLightbox(-1)" aria-label="Previous photo">Ã¢â‚¬Â¹</button>
-                        <button class="lightbox-nav next" onclick="navigateLightbox(1)" aria-label="Next photo">Ã¢â‚¬Âº</button>
+                        <button class="lightbox-nav prev" onclick="navigateLightbox(-1)" aria-label="Previous photo">â€¹</button>
+                        <button class="lightbox-nav next" onclick="navigateLightbox(1)" aria-label="Next photo">â€º</button>
                     ` : ''}
                     <div class="lightbox-content">
                         <img 
@@ -1142,9 +1142,9 @@
                             <div class="lightbox-title">${photo.title || 'Untitled'}</div>
                             ${photo.description ? `<div class="lightbox-description">${photo.description}</div>` : ''}
                             <div class="lightbox-meta">
-                                <span>Ã°Å¸â€œÂ Category: ${photo.category || 'General'}</span>
-                                <span>Ã°Å¸â€œâ€¦ Date: ${formatDate(photo.date)}</span>
-                                ${photo.photographer ? `<span>Ã°Å¸â€œÂ· By: ${photo.photographer}</span>` : ''}
+                                <span>ðŸ“ Category: ${photo.category || 'General'}</span>
+                                <span>ðŸ“… Date: ${formatDate(photo.date)}</span>
+                                ${photo.photographer ? `<span>ðŸ“· By: ${photo.photographer}</span>` : ''}
                             </div>
                         </div>
                     </div>
@@ -1222,58 +1222,8 @@
 
         /* MODIFIED - Updated to use async/await for API calls */
         /* MODIFIED - Updated to use async/await for API calls */
-function handleScroll() {
-            const header = document.getElementById('mainHeader');
-            if (!header) return;
-            
-            const scrollPosition = window.scrollY;
-            
-            if (scrollPosition > 100) {
-                header.classList.remove('transparent');
-            }
-        }
-
-        function initializeMobileMenu() {
-            const mobileMenuToggle = document.getElementById('mobileMenuToggle');
-            const mobileNavOverlay = document.getElementById('mobileNavOverlay');
-            const mobileNavLinks = document.querySelectorAll('.mobile-nav-link');
-            
-            if (mobileMenuToggle && mobileNavOverlay) {
-                mobileMenuToggle.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    mobileNavOverlay.classList.toggle('active');
-                    mobileMenuToggle.classList.toggle('active');
-                    document.body.style.overflow = mobileNavOverlay.classList.contains('active') ? 'hidden' : '';
-                });
-                
-                mobileNavLinks.forEach(link => {
-                    link.addEventListener('click', function() {
-                        mobileNavOverlay.classList.remove('active');
-                        mobileMenuToggle.classList.remove('active');
-                        document.body.style.overflow = '';
-                    });
-                });
-                
-                mobileNavOverlay.addEventListener('click', function(e) {
-                    if (e.target === mobileNavOverlay) {
-                        mobileNavOverlay.classList.remove('active');
-                        mobileMenuToggle.classList.remove('active');
-                        document.body.style.overflow = '';
-                    }
-                });
-            }
-        }
-
-        document.addEventListener('DOMContentLoaded', async () => {
-            // âœ… Apply theme IMMEDIATELY
-            const savedTheme = localStorage.getItem('theme') || 'dark';
-            document.documentElement.setAttribute('data-theme', savedTheme);
-            
-            window.addEventListener('scroll', handleScroll);
-            handleScroll();
-            initializeMobileMenu();
-    // Ã¢Å“â€¦ Apply theme IMMEDIATELY
+document.addEventListener('DOMContentLoaded', async () => {
+    // âœ… Apply theme IMMEDIATELY
     const savedTheme = localStorage.getItem('theme') || 'dark';
     document.documentElement.setAttribute('data-theme', savedTheme);
     
@@ -1281,22 +1231,22 @@ function handleScroll() {
     document.getElementById('loadingState').style.display = 'block';
     document.getElementById('galleryGrid').style.display = 'none';
     
-    console.log('Ã°Å¸â€œâ€ž Gallery page initializing...');
+    console.log('ðŸ“„ Gallery page initializing...');
 
     // Initialize theme & navigation
     if (typeof initTheme === 'function') initTheme();
     if (typeof initNavigation === 'function') initNavigation();
 
-    // Ã¢Å“â€¦ Load gallery immediately from cache
+    // âœ… Load gallery immediately from cache
     await loadGallery();
     
-    // Ã¢Å“â€¦ Load config in parallel
+    // âœ… Load config in parallel
     loadClubConfig();
     
     initializeFilters();
     initializeSearch();
     
-    console.log('Ã¢Å“â€¦ Gallery page initialization complete');
+    console.log('âœ… Gallery page initialization complete');
 });
     </script>
 </body>
