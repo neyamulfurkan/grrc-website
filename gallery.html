@@ -806,10 +806,6 @@
     try {
         console.log('📄 Loading club config for gallery page...');
         
-        // ✅ CRITICAL: Clear cache FIRST to force fresh API fetch
-        localStorage.removeItem('cache_clubConfig');
-        localStorage.removeItem('clubConfig');
-        
         // Try API first
         let config = null;
         if (typeof window.apiClient !== 'undefined' && window.apiClient.getConfig) {
@@ -905,11 +901,19 @@
     console.log('📄 loadGallery() called');
     
     try {
-        // Use cache for faster loading
-        // localStorage.removeItem('cache_gallery'); // REMOVED
+        // ✅ SPEED FIX: Try cache FIRST for instant loading
+        const cached = localStorage.getItem('gallery');
+        if (cached) {
+            allPhotos = JSON.parse(cached);
+            console.log('✅ Loaded', allPhotos.length, 'photos from cache (instant)');
+            allPhotos.sort((a, b) => new Date(b.date) - new Date(a.date));
+            updateStatistics();
+            applyFilters();
+        }
         
-        // Try API first with timeout
-       const result = await Promise.race([
+        // Then try API for fresh data in background
+        try {
+            const result = await Promise.race([
           window.apiClient.getConfig(),
           new Promise((_, reject) => 
             setTimeout(() => reject(new Error('API timeout')), 2000)
@@ -1219,28 +1223,25 @@
         /* MODIFIED - Updated to use async/await for API calls */
         /* MODIFIED - Updated to use async/await for API calls */
 document.addEventListener('DOMContentLoaded', async () => {
-    // Show loading state FIRST
+    // ✅ Apply theme IMMEDIATELY
+    const savedTheme = localStorage.getItem('theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    
+    // Show loading state
     document.getElementById('loadingState').style.display = 'block';
     document.getElementById('galleryGrid').style.display = 'none';
     
-    // Wait for API client (faster timeout)
-    let retries = 0;
-    while ((!window.apiClient || !window.apiClient.isReady) && retries < 20) {
-        await new Promise(resolve => setTimeout(resolve, 50));
-        retries++;
-    }
-    
     console.log('📄 Gallery page initializing...');
 
-    // Initialize theme & navigation (non-blocking)
+    // Initialize theme & navigation
     if (typeof initTheme === 'function') initTheme();
     if (typeof initNavigation === 'function') initNavigation();
 
-    // ✅ PARALLEL LOADING - Load everything at once
-    await Promise.all([
-        loadClubConfig(),
-        loadGallery()
-    ]);
+    // ✅ Load gallery immediately from cache
+    await loadGallery();
+    
+    // ✅ Load config in parallel
+    loadClubConfig();
     
     initializeFilters();
     initializeSearch();

@@ -814,10 +814,6 @@
     try {
         console.log('📄 Loading club config for members page...');
         
-        // ✅ CRITICAL: Clear cache FIRST to force fresh API fetch
-        localStorage.removeItem('cache_clubConfig');
-        localStorage.removeItem('clubConfig');
-        
         // Try API first
         let config = null;
         if (typeof window.apiClient !== 'undefined' && window.apiClient.getConfig) {

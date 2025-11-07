@@ -24,7 +24,8 @@
             transition: all 0.3s ease;
             backdrop-filter: blur(10px);
             height: 70px;
-            display: block !important;
+            display: flex !important;
+            align-items: center;
         }
 
         [data-theme="dark"] .header {
@@ -949,6 +950,7 @@
                 </div>
                 
                 <nav class="nav-menu" id="navMenu">
+                    <a href="index.html" class="nav-link active">Home</a>
                     <a href="members.html" class="nav-link">Members</a>
                     <a href="events.html" class="nav-link">Events</a>
                     <a href="projects.html" class="nav-link">Projects</a>
@@ -974,7 +976,7 @@
 
     <div class="mobile-nav-overlay" id="mobileNavOverlay">
         <nav class="mobile-nav">
-            <a href="index.html" class="mobile-nav-link">Home</a>
+            <a href="index.html" class="mobile-nav-link active">Home</a>
             <a href="members.html" class="mobile-nav-link">Members</a>
             <a href="events.html" class="mobile-nav-link">Events</a>
             <a href="projects.html" class="mobile-nav-link">Projects</a>
@@ -1142,36 +1144,32 @@
         }
 
         document.addEventListener('DOMContentLoaded', async function() {
+            // ✅ Apply theme IMMEDIATELY before any rendering
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            
             document.getElementById('currentYear').textContent = new Date().getFullYear();
-            
-            const htmlElement = document.documentElement;
-            const savedTheme = localStorage.getItem('theme');
-            
-            if (!savedTheme) {
-                htmlElement.setAttribute('data-theme', 'dark');
-                localStorage.setItem('theme', 'dark');
-            } else {
-                htmlElement.setAttribute('data-theme', savedTheme);
-            }
-            
             window.addEventListener('scroll', handleScroll);
             handleScroll();
-            
             initializeMobileMenu();
             
+            // ✅ SPEED FIX: Start loading immediately, don't wait for API client
+            const loadingPromises = [
+                loadClubConfig(),
+                loadGalleryForSlideshow(),
+                loadUpcomingEvents(),
+                loadExecutiveMembers()
+            ];
+            
+            // Wait for API client with shorter timeout
             let retries = 0;
-            while ((!window.apiClient || !window.apiClient.isReady) && retries < 50) {
-                await new Promise(resolve => setTimeout(resolve, 100));
+            while ((!window.apiClient || !window.apiClient.isReady) && retries < 20) {
+                await new Promise(resolve => setTimeout(resolve, 50));
                 retries++;
             }
             
-            // ✅ PARALLEL LOADING - 3x faster
-    await Promise.all([
-        loadClubConfig(),
-        loadGalleryForSlideshow(),
-        loadUpcomingEvents(),
-        loadExecutiveMembers()
-    ]);
+            // ✅ PARALLEL LOADING - All at once
+            await Promise.all(loadingPromises);
             
             if (typeof initTheme === 'function') {
                 initTheme();
@@ -1220,7 +1218,32 @@
         
         let galleryItems = [];
         
-        // Try API first
+        // Try cache first for faster loading
+        const cached = localStorage.getItem('gallery');
+        if (cached) {
+            galleryItems = JSON.parse(cached);
+            console.log('✅ Loaded', galleryItems.length, 'images from cache (fast path)');
+            
+            if (galleryItems.length > 0) {
+                slideshowImages = galleryItems
+                    .filter(item => {
+                        const imageUrl = item.image || item.image_url;
+                        return imageUrl && imageUrl.trim() !== '';
+                    })
+                    .map(item => ({
+                        url: item.image || item.image_url,
+                        title: item.title || 'Untitled',
+                        description: item.description || item.category || ''
+                    }))
+                    .slice(0, 10);
+                
+                if (slideshowImages.length > 0) {
+                    initializeSlideshow();
+                }
+            }
+        }
+        
+        // Then try API for fresh data in background
         if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady) {
             try {
                 console.log('📡 Calling API for gallery...');

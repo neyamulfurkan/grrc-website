@@ -15,8 +15,7 @@
         /* Events Page Specific Styles */
         .page-header {
             background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-            padding: 140px 0 60px;
-            margin-top: 70px;80px;
+            padding: 160px 0 80px;
             text-align: center;
             position: relative;
             overflow: hidden;
@@ -863,10 +862,6 @@
         async function loadClubConfig() {
             try {
                 console.log('📄 Loading club config for events page...');
-                
-                // ✅ CRITICAL: Clear cache FIRST to force fresh API fetch
-                localStorage.removeItem('cache_clubConfig');
-                localStorage.removeItem('clubConfig');
                 
                 // Try to get fresh config from API
                 let config = null;
