@@ -616,7 +616,7 @@
             </nav>
             <div class="header-actions">
                 <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
-                    <span class="theme-icon">ðŸŒ™</span>
+                    <span class="theme-icon">🌙</span>
                 </button>
                 <button class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Toggle menu">
                     <span></span>
@@ -713,14 +713,14 @@
 
         <!-- Empty State -->
         <div class="empty-state" id="emptyState" style="display: none;">
-            <div class="empty-icon">ðŸ“…</div>
+            <div class="empty-icon">📅</div>
             <h2 class="empty-title">No Events Found</h2>
             <p class="empty-description">There are no events matching your filters. Try adjusting your search criteria.</p>
         </div>
 
         <!-- No Events State -->
         <div class="empty-state" id="noEventsState" style="display: none;">
-            <div class="empty-icon">ðŸ“…</div>
+            <div class="empty-icon">📅</div>
             <h2 class="empty-title">No Events Added Yet</h2>
             <p class="empty-description">Events will appear here once they are added by the admin.</p>
             <a href="admin-panel.html" class="btn btn-primary">Go to Admin Panel</a>
@@ -732,7 +732,7 @@
         <div class="event-modal-content">
             <div class="event-modal-header">
                 <img src="" alt="Event" class="event-modal-image" id="modalEventImage">
-                <button class="event-modal-close" id="modalCloseBtn">Ã—</button>
+                <button class="event-modal-close" id="modalCloseBtn">×</button>
             </div>
             <div class="event-modal-body">
                 <div class="event-category" id="modalEventCategory"></div>
@@ -845,7 +845,7 @@
         await new Promise(resolve => setTimeout(resolve, 100));
         retries++;
     }
-    // âœ… PARALLEL LOADING
+    // ✅ PARALLEL LOADING
     await Promise.all([
         loadClubConfig(),
         loadEvents()
@@ -861,7 +861,7 @@
         /* FIXED - Complete config loading with header updates */
         async function loadClubConfig() {
             try {
-                console.log('ðŸ“„ Loading club config for events page...');
+                console.log('📄 Loading club config for events page...');
                 
                 // Try to get fresh config from API
                 let config = null;
@@ -870,7 +870,7 @@
                     const result = await window.apiClient.getConfig();
                     if (result.success && result.data) {
                         config = result.data;
-                        console.log('âœ… Config loaded from API:', config);
+                        console.log('✅ Config loaded from API:', config);
                     }
                 }
                 
@@ -878,7 +878,7 @@
                 if (!config) {
                     const cachedConfig = localStorage.getItem('clubConfig');
                     config = cachedConfig ? JSON.parse(cachedConfig) : {};
-                    console.log('âš ï¸ Using fallback cache:', config);
+                    console.log('⚠️ Using fallback cache:', config);
                 }
                 
                 /// Update header LOGO
@@ -895,18 +895,18 @@ if (headerLogo && (config.logo || config.logo_url)) {
     headerLogo.onerror = function() {
         this.src = 'assets/default-logo.jpg';
     };
-    console.log('âœ… Header logo updated');
+    console.log('✅ Header logo updated');
 }
 
 if (headerClubName && (config.name || config.club_name)) {
     headerClubName.textContent = config.name || config.club_name;
-    console.log('âœ… Header name updated');
+    console.log('✅ Header name updated');
 }
                 
                 if (headerClubName && (config.name || config.club_name)) {
                     headerClubName.textContent = config.name || config.club_name;
                     headerClubName.style.display = 'inline-block';
-                    console.log('âœ… Header club name updated to:', config.name || config.club_name);
+                    console.log('✅ Header club name updated to:', config.name || config.club_name);
                 }
                 
                 // Update footer
@@ -938,7 +938,7 @@ if (headerClubName && (config.name || config.club_name)) {
                     }
                 }
                 
-                console.log('âœ… Club config loaded successfully');
+                console.log('✅ Club config loaded successfully');
                 return;
                 
                 // Update footer
@@ -966,15 +966,15 @@ if (headerClubName && (config.name || config.club_name)) {
         // Get social media icon
         function getSocialIcon(platform) {
             const icons = {
-                facebook: 'ðŸ“˜',
-                twitter: 'ðŸ¦',
-                instagram: 'ðŸ“·',
-                linkedin: 'ðŸ’¼',
-                youtube: 'ðŸ“º',
-                github: 'ðŸ’»',
-                email: 'âœ‰ï¸'
+                facebook: '📘',
+                twitter: '🐦',
+                instagram: '📷',
+                linkedin: '💼',
+                youtube: '📺',
+                github: '💻',
+                email: '✉️'
             };
-            return icons[platform.toLowerCase()] || 'ðŸ”—';
+            return icons[platform.toLowerCase()] || '🔗';
         }
 
         /* MODIFIED - Added API integration */
@@ -1208,15 +1208,15 @@ if (headerClubName && (config.name || config.club_name)) {
                         <p class="event-description">${description}</p>
                         <div class="event-meta">
                             <div class="event-meta-item">
-                                <span class="event-meta-icon">ðŸ“…</span>
+                                <span class="event-meta-icon">📅</span>
                                 <span>${formatDate(event.date)}</span>
                             </div>
                             <div class="event-meta-item">
-                                <span class="event-meta-icon">ðŸ•</span>
+                                <span class="event-meta-icon">🕐</span>
                                 <span>${event.time || 'TBA'}</span>
                             </div>
                             <div class="event-meta-item">
-                                <span class="event-meta-icon">ðŸ“</span>
+                                <span class="event-meta-icon">📍</span>
                                 <span>${event.venue || 'TBA'}</span>
                             </div>
                         </div>
