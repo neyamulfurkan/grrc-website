@@ -588,7 +588,28 @@ if (document.readyState === 'loading') {
 } else {
   initNavigation();
 }
+// Ensure page is immediately interactive
+document.addEventListener('DOMContentLoaded', function() {
+  // Remove loading class from body
+  document.body.classList.remove('loading');
+  document.body.classList.add('loaded');
+  
+  // Force enable pointer events
+  document.body.style.pointerEvents = 'auto';
+  
+  // Ensure all interactive elements are enabled
+  const interactiveElements = document.querySelectorAll('button, a, input, select, textarea, .btn, .mobile-menu-toggle, .theme-toggle');
+  interactiveElements.forEach(el => {
+    el.style.pointerEvents = 'auto';
+  });
+});
 
+// Backup: Enable after a short delay if DOMContentLoaded didn't fire
+setTimeout(() => {
+  document.body.classList.remove('loading');
+  document.body.classList.add('loaded');
+  document.body.style.pointerEvents = 'auto';
+}, 100);
 // ============================================================================
 // EXPORTS (for use in other modules)
 // ============================================================================
