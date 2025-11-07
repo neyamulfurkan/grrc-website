@@ -118,18 +118,10 @@
             background: rgba(255, 255, 255, 0.35);
         }
         
-        @media (max-width: 767px) {
-    .header.transparent .mobile-menu-toggle {
-        background: rgba(255, 255, 255, 0.15);
-        border-radius: 8px;
-        padding: 8px;
-    }
-    
-    .header.transparent .mobile-menu-toggle span {
-        background: white;
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.8);
-    }
-}
+        .header.transparent .mobile-menu-toggle span {
+            background: white;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+        }
         
         .mobile-menu-toggle {
             background: transparent;
@@ -1239,7 +1231,7 @@
                 
                 <div class="header-actions">
                     <button id="themeToggle" class="theme-toggle" aria-label="Toggle theme">
-                        <span class="theme-icon">🌙</span>
+                        <span class="theme-icon">ðŸŒ™</span>
                     </button>
                     <button class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Toggle menu">
                         <span></span>
@@ -1311,7 +1303,7 @@
         <div class="container">
             <div class="filter-controls">
                 <div class="search-box">
-                    <input type="text" id="searchInput" placeholder="🔍 Search projects by title, description, or technology...">
+                    <input type="text" id="searchInput" placeholder="ðŸ” Search projects by title, description, or technology...">
                 </div>
                 
                 <div>
@@ -1342,14 +1334,14 @@
             </div>
 
             <div class="empty-state" id="emptyState" style="display: none;">
-                <div class="empty-state-icon">🤖</div>
+                <div class="empty-state-icon">ðŸ¤–</div>
                 <h3>No Projects Added Yet</h3>
                 <p>Start building amazing robotics projects and showcase them here!</p>
                 <a href="admin-panel.html" class="btn btn-primary">Go to Admin Panel</a>
             </div>
 
             <div class="empty-state" id="noResultsState" style="display: none;">
-                <div class="empty-state-icon">🔍</div>
+                <div class="empty-state-icon">ðŸ”</div>
                 <h3>No Projects Found</h3>
                 <p>Try adjusting your search criteria or filters</p>
             </div>
@@ -1359,7 +1351,7 @@
     <div class="project-modal" id="projectModal">
         <div class="modal-content">
             <div class="modal-header" id="modalHeader">
-                <button class="modal-close" id="modalClose">×</button>
+                <button class="modal-close" id="modalClose">Ã—</button>
             </div>
             <div class="modal-body" id="modalBody">
             </div>
@@ -1476,27 +1468,18 @@
         });
         
         function initializeMobileMenu() {
-    const mobileMenuToggle = document.getElementById('mobileMenuToggle');
-    const mobileNavOverlay = document.getElementById('mobileNavOverlay');
-    const mobileNavLinks = document.querySelectorAll('.mobile-nav-link');
-    
-    if (!mobileMenuToggle || !mobileNavOverlay) {
-        console.error('Mobile menu elements not found');
-        return;
-    }
-
-    // Remove any existing listeners
-    const newToggle = mobileMenuToggle.cloneNode(true);
-    mobileMenuToggle.parentNode.replaceChild(newToggle, mobileMenuToggle);
-    
-    newToggle.addEventListener('click', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        console.log('Mobile menu clicked');
-        mobileNavOverlay.classList.toggle('active');
-        newToggle.classList.toggle('active');
-        document.body.style.overflow = mobileNavOverlay.classList.contains('active') ? 'hidden' : '';
-    });
+            const mobileMenuToggle = document.getElementById('mobileMenuToggle');
+            const mobileNavOverlay = document.getElementById('mobileNavOverlay');
+            const mobileNavLinks = document.querySelectorAll('.mobile-nav-link');
+            
+            if (mobileMenuToggle && mobileNavOverlay) {
+                mobileMenuToggle.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    mobileNavOverlay.classList.toggle('active');
+                    mobileMenuToggle.classList.toggle('active');
+                    document.body.style.overflow = mobileNavOverlay.classList.contains('active') ? 'hidden' : '';
+                });
                 
                 mobileNavLinks.forEach(link => {
                     link.addEventListener('click', function() {
@@ -1514,39 +1497,39 @@
                     }
                 });
             }
-        
+        }
         
         async function loadProjectsForSlideshow() {
             try {
-                console.log('🎬 Starting slideshow load...');
+                console.log('ðŸŽ¬ Starting slideshow load...');
                 
                 let projectItems = [];
                 
                 if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady) {
                     try {
-                        console.log('📡 Calling API for projects...');
+                        console.log('ðŸ“¡ Calling API for projects...');
                         const response = await window.apiClient.getProjects();
-                        console.log('📊 API response:', response);
+                        console.log('ðŸ“Š API response:', response);
                         
                         if (response.success && Array.isArray(response.data) && response.data.length > 0) {
                             projectItems = response.data;
-                            console.log('✅ Slideshow loaded', projectItems.length, 'projects from API');
+                            console.log('âœ… Slideshow loaded', projectItems.length, 'projects from API');
                         }
                     } catch (apiError) {
-                        console.error('❌ API call failed:', apiError);
+                        console.error('âŒ API call failed:', apiError);
                     }
                 }
                 
                 if (projectItems.length === 0) {
-                    console.log('📦 Trying cache...');
+                    console.log('ðŸ“¦ Trying cache...');
                     const cached = localStorage.getItem('projects');
                     if (cached) {
                         projectItems = JSON.parse(cached);
-                        console.log('✅ Slideshow loaded', projectItems.length, 'projects from cache');
+                        console.log('âœ… Slideshow loaded', projectItems.length, 'projects from cache');
                     }
                 }
                 
-                console.log('🔍 Total project items:', projectItems.length);
+                console.log('ðŸ” Total project items:', projectItems.length);
                 
                 if (projectItems.length > 0) {
                     slideshowImages = projectItems
@@ -1563,22 +1546,22 @@
                         }))
                         .slice(0, 10);
                     
-                    console.log('✅ Valid slideshow images:', slideshowImages.length);
+                    console.log('âœ… Valid slideshow images:', slideshowImages.length);
                     
                     if (slideshowImages.length > 0) {
-                        console.log('🎬 Initializing slideshow with', slideshowImages.length, 'images');
+                        console.log('ðŸŽ¬ Initializing slideshow with', slideshowImages.length, 'images');
                         console.log('First image URL:', slideshowImages[0].url);
                         initializeSlideshow();
                     } else {
-                        console.warn('⚠️ No valid images found in projects');
+                        console.warn('âš ï¸ No valid images found in projects');
                         showFallbackHero();
                     }
                 } else {
-                    console.warn('⚠️ No project items found');
+                    console.warn('âš ï¸ No project items found');
                     showFallbackHero();
                 }
             } catch (error) {
-                console.error('❌ Error loading projects for slideshow:', error);
+                console.error('âŒ Error loading projects for slideshow:', error);
                 showFallbackHero();
             }
         }
@@ -1604,12 +1587,12 @@
                 img.loading = index === 0 ? 'eager' : 'lazy';
                 
                 img.onerror = function() {
-                    console.error('❌ Failed to load image:', imageData.url);
+                    console.error('âŒ Failed to load image:', imageData.url);
                     this.style.display = 'none';
                 };
                 
                 img.onload = function() {
-                    console.log('✅ Image loaded successfully:', imageData.url.substring(0, 50) + '...');
+                    console.log('âœ… Image loaded successfully:', imageData.url.substring(0, 50) + '...');
                 };
                 
                 slide.appendChild(img);
@@ -1795,15 +1778,15 @@
 
         function getSocialIcon(platform) {
             const icons = {
-                facebook: '📘',
-                twitter: '🐦',
-                instagram: '📷',
-                linkedin: '💼',
-                youtube: '📺',
-                github: '🔗',
-                email: '📧'
+                facebook: 'ðŸ“˜',
+                twitter: 'ðŸ¦',
+                instagram: 'ðŸ“·',
+                linkedin: 'ðŸ’¼',
+                youtube: 'ðŸ“º',
+                github: 'ðŸ”—',
+                email: 'ðŸ“§'
             };
-            return icons[platform.toLowerCase()] || '🔗';
+            return icons[platform.toLowerCase()] || 'ðŸ”—';
         }
 
         async function loadProjects() {
@@ -1976,16 +1959,16 @@
 
             const imageHTML = project.image 
                 ? `<img src="${project.image}" alt="${project.title}">`
-                : `<span style="font-size: 4rem;">🤖</span>`;
+                : `<span style="font-size: 4rem;">ðŸ¤–</span>`;
 
             const teamCount = project.team_members ? project.team_members.length : (project.teamMembers ? project.teamMembers.length : 0);
 
             const githubLink = (project.github_link || project.githubLink)
-                ? `<a href="${project.github_link || project.githubLink}" class="project-link" onclick="event.stopPropagation()" target="_blank" rel="noopener noreferrer" title="View on GitHub">🔗</a>` 
+                ? `<a href="${project.github_link || project.githubLink}" class="project-link" onclick="event.stopPropagation()" target="_blank" rel="noopener noreferrer" title="View on GitHub">ðŸ”—</a>` 
                 : '';
             
             const liveLink = (project.live_link || project.liveLink)
-                ? `<a href="${project.live_link || project.liveLink}" class="project-link" onclick="event.stopPropagation()" target="_blank" rel="noopener noreferrer" title="View Live Demo">🚀</a>` 
+                ? `<a href="${project.live_link || project.liveLink}" class="project-link" onclick="event.stopPropagation()" target="_blank" rel="noopener noreferrer" title="View Live Demo">ðŸš€</a>` 
                 : '';
 
             return `
@@ -2004,7 +1987,7 @@
                         </div>
                         <div class="project-footer">
                             <div class="project-team">
-                                <span>👥</span>
+                                <span>ðŸ‘¥</span>
                                 <span>${teamCount} member${teamCount !== 1 ? 's' : ''}</span>
                             </div>
                             <div class="project-links">
@@ -2027,11 +2010,11 @@
 
             const headerImageHTML = project.image 
                 ? `<img src="${project.image}" alt="${project.title}">` 
-                : `<span style="color: white; font-size: 5rem;">🤖</span>`;
+                : `<span style="color: white; font-size: 5rem;">ðŸ¤–</span>`;
             
             modalHeader.innerHTML = `
                 ${headerImageHTML}
-                <button class="modal-close" id="modalClose">×</button>
+                <button class="modal-close" id="modalClose">Ã—</button>
             `;
 
             const teamMembers = project.team_members || project.teamMembers || [];
@@ -2053,13 +2036,13 @@
 
             const githubBtn = githubLink
                 ? `<button class="modal-btn modal-btn-secondary" onclick="window.open('${githubLink}', '_blank')">
-                    <span>🔗</span> View on GitHub
+                    <span>ðŸ”—</span> View on GitHub
                    </button>` 
                 : '';
 
             const liveBtn = liveLink
                 ? `<button class="modal-btn modal-btn-primary" onclick="window.open('${liveLink}', '_blank')">
-                    <span>🚀</span> View Live Demo
+                    <span>ðŸš€</span> View Live Demo
                    </button>` 
                 : '';
 
@@ -2088,19 +2071,19 @@
                 </div>
 
                 <div class="modal-section">
-                    <h3 class="modal-section-title">📝 About This Project</h3>
+                    <h3 class="modal-section-title">ðŸ“ About This Project</h3>
                     <p class="modal-description">${project.description}</p>
                 </div>
 
                 ${project.features ? `
                 <div class="modal-section">
-                    <h3 class="modal-section-title">✨ Key Features</h3>
+                    <h3 class="modal-section-title">âœ¨ Key Features</h3>
                     <p class="modal-description">${project.features}</p>
                 </div>` : ''}
 
                 ${technologies.length > 0 ? `
                 <div class="modal-section">
-                    <h3 class="modal-section-title">🛠️ Technologies Used</h3>
+                    <h3 class="modal-section-title">ðŸ› ï¸ Technologies Used</h3>
                     <div class="technologies-list">
                         ${technologiesHTML}
                     </div>
@@ -2108,7 +2091,7 @@
 
                 ${teamMembers.length > 0 ? `
                 <div class="modal-section">
-                    <h3 class="modal-section-title">👥 Team Members</h3>
+                    <h3 class="modal-section-title">ðŸ‘¥ Team Members</h3>
                     <div class="team-members-list">
                         ${teamMembersHTML}
                     </div>
@@ -2116,7 +2099,7 @@
 
                 ${project.achievements ? `
                 <div class="modal-section">
-                    <h3 class="modal-section-title">🏆 Achievements</h3>
+                    <h3 class="modal-section-title">ðŸ† Achievements</h3>
                     <p class="modal-description">${project.achievements}</p>
                 </div>` : ''}
 

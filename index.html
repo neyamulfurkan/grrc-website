@@ -120,18 +120,10 @@
             background: rgba(255, 255, 255, 0.35);
         }
         
-        @media (max-width: 767px) {
-    .header.transparent .mobile-menu-toggle {
-        background: rgba(255, 255, 255, 0.15);
-        border-radius: 8px;
-        padding: 8px;
-    }
-    
-    .header.transparent .mobile-menu-toggle span {
-        background: white;
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.8);
-    }
-}
+        .header.transparent .mobile-menu-toggle span {
+            background: white;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+        }
         
         .mobile-menu-toggle {
             background: transparent;
@@ -970,7 +962,7 @@
                 
                 <div class="header-actions">
                     <button id="themeToggle" class="theme-toggle" aria-label="Toggle theme">
-                        <span class="theme-icon">🌙</span>
+                        <span class="theme-icon">ðŸŒ™</span>
                     </button>
                     <button class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Toggle menu">
                         <span></span>
@@ -1040,7 +1032,7 @@
             
             <div class="features-grid">
                 <div class="feature-card">
-                    <div class="feature-icon">💡</div>
+                    <div class="feature-icon">ðŸ’¡</div>
                     <h3 class="feature-title">Innovation</h3>
                     <p class="feature-description">
                         Work on cutting-edge robotics projects and bring your innovative ideas to life with like-minded peers.
@@ -1048,7 +1040,7 @@
                 </div>
                 
                 <div class="feature-card">
-                    <div class="feature-icon">🎓</div>
+                    <div class="feature-icon">ðŸŽ“</div>
                     <h3 class="feature-title">Workshops</h3>
                     <p class="feature-description">
                         Attend regular workshops and training sessions on robotics, AI, IoT, and emerging technologies.
@@ -1056,7 +1048,7 @@
                 </div>
                 
                 <div class="feature-card">
-                    <div class="feature-icon">🤖</div>
+                    <div class="feature-icon">ðŸ¤–</div>
                     <h3 class="feature-title">Projects</h3>
                     <p class="feature-description">
                         Collaborate on real-world projects, participate in competitions, and build your technical portfolio.
@@ -1064,7 +1056,7 @@
                 </div>
                 
                 <div class="feature-card">
-                    <div class="feature-icon">🤝</div>
+                    <div class="feature-icon">ðŸ¤</div>
                     <h3 class="feature-title">Community</h3>
                     <p class="feature-description">
                         Join a vibrant community of robotics enthusiasts, share knowledge, and grow together.
@@ -1152,7 +1144,7 @@
         }
 
         document.addEventListener('DOMContentLoaded', async function() {
-            // ✅ Apply theme IMMEDIATELY before any rendering
+            // âœ… Apply theme IMMEDIATELY before any rendering
             const savedTheme = localStorage.getItem('theme') || 'dark';
             document.documentElement.setAttribute('data-theme', savedTheme);
             
@@ -1161,7 +1153,7 @@
             handleScroll();
             initializeMobileMenu();
             
-            // ✅ SPEED FIX: Start loading immediately, don't wait for API client
+            // âœ… SPEED FIX: Start loading immediately, don't wait for API client
             const loadingPromises = [
                 loadClubConfig(),
                 loadGalleryForSlideshow(),
@@ -1176,7 +1168,7 @@
                 retries++;
             }
             
-            // ✅ PARALLEL LOADING - All at once
+            // âœ… PARALLEL LOADING - All at once
             await Promise.all(loadingPromises);
             
             if (typeof initTheme === 'function') {
@@ -1189,27 +1181,18 @@
         });
         
         function initializeMobileMenu() {
-    const mobileMenuToggle = document.getElementById('mobileMenuToggle');
-    const mobileNavOverlay = document.getElementById('mobileNavOverlay');
-    const mobileNavLinks = document.querySelectorAll('.mobile-nav-link');
-    
-    if (!mobileMenuToggle || !mobileNavOverlay) {
-        console.error('Mobile menu elements not found');
-        return;
-    }
-
-    // Remove any existing listeners
-    const newToggle = mobileMenuToggle.cloneNode(true);
-    mobileMenuToggle.parentNode.replaceChild(newToggle, mobileMenuToggle);
-    
-    newToggle.addEventListener('click', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        console.log('Mobile menu clicked');
-        mobileNavOverlay.classList.toggle('active');
-        newToggle.classList.toggle('active');
-        document.body.style.overflow = mobileNavOverlay.classList.contains('active') ? 'hidden' : '';
-    });
+            const mobileMenuToggle = document.getElementById('mobileMenuToggle');
+            const mobileNavOverlay = document.getElementById('mobileNavOverlay');
+            const mobileNavLinks = document.querySelectorAll('.mobile-nav-link');
+            
+            if (mobileMenuToggle && mobileNavOverlay) {
+                mobileMenuToggle.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    mobileNavOverlay.classList.toggle('active');
+                    mobileMenuToggle.classList.toggle('active');
+                    document.body.style.overflow = mobileNavOverlay.classList.contains('active') ? 'hidden' : '';
+                });
                 
                 mobileNavLinks.forEach(link => {
                     link.addEventListener('click', function() {
@@ -1227,11 +1210,11 @@
                     }
                 });
             }
-        
+        }
         
         async function loadGalleryForSlideshow() {
     try {
-        console.log('🎬 Starting slideshow load...');
+        console.log('ðŸŽ¬ Starting slideshow load...');
         
         let galleryItems = [];
         
@@ -1239,7 +1222,7 @@
         const cached = localStorage.getItem('gallery');
         if (cached) {
             galleryItems = JSON.parse(cached);
-            console.log('✅ Loaded', galleryItems.length, 'images from cache (fast path)');
+            console.log('âœ… Loaded', galleryItems.length, 'images from cache (fast path)');
             
             if (galleryItems.length > 0) {
                 slideshowImages = galleryItems
@@ -1263,35 +1246,35 @@
         // Then try API for fresh data in background
         if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady) {
             try {
-                console.log('📡 Calling API for gallery...');
+                console.log('ðŸ“¡ Calling API for gallery...');
                 const response = await window.apiClient.getGallery();
-                console.log('📊 API response:', response);
+                console.log('ðŸ“Š API response:', response);
                 
                 if (response.success && Array.isArray(response.data) && response.data.length > 0) {
                     galleryItems = response.data;
-                    console.log('✅ Slideshow loaded', galleryItems.length, 'images from API');
+                    console.log('âœ… Slideshow loaded', galleryItems.length, 'images from API');
                     try {
                         localStorage.setItem('gallery', JSON.stringify(galleryItems));
                     } catch (e) {
-                        console.warn('⚠️ Could not save to cache (quota exceeded):', e.message);
+                        console.warn('âš ï¸ Could not save to cache (quota exceeded):', e.message);
                     }
                 }
             } catch (apiError) {
-                console.error('❌ API call failed:', apiError);
+                console.error('âŒ API call failed:', apiError);
             }
         }
         
         // Fallback to cache if API failed
         if (galleryItems.length === 0) {
-            console.log('📦 Trying cache...');
+            console.log('ðŸ“¦ Trying cache...');
             const cached = localStorage.getItem('gallery');
             if (cached) {
                 galleryItems = JSON.parse(cached);
-                console.log('✅ Slideshow loaded', galleryItems.length, 'images from cache');
+                console.log('âœ… Slideshow loaded', galleryItems.length, 'images from cache');
             }
         }
         
-        console.log('🔍 Total gallery items:', galleryItems.length);
+        console.log('ðŸ” Total gallery items:', galleryItems.length);
         
         if (galleryItems.length > 0) {
             slideshowImages = galleryItems
@@ -1306,20 +1289,20 @@
                 }))
                 .slice(0, 10);
             
-            console.log('✅ Valid slideshow images:', slideshowImages.length);
-            console.log('🖼️ Image data:', slideshowImages);
+            console.log('âœ… Valid slideshow images:', slideshowImages.length);
+            console.log('ðŸ–¼ï¸ Image data:', slideshowImages);
             
             if (slideshowImages.length > 0) {
-                console.log('🎬 Initializing slideshow with', slideshowImages.length, 'images');
+                console.log('ðŸŽ¬ Initializing slideshow with', slideshowImages.length, 'images');
                 initializeSlideshow();
             } else {
-                console.warn('⚠️ No valid images found in gallery');
+                console.warn('âš ï¸ No valid images found in gallery');
             }
         } else {
-            console.warn('⚠️ No gallery items found');
+            console.warn('âš ï¸ No gallery items found');
         }
     } catch (error) {
-        console.error('❌ Error loading gallery for slideshow:', error);
+        console.error('âŒ Error loading gallery for slideshow:', error);
     }
 }
         
@@ -1338,12 +1321,12 @@
                 img.loading = index === 0 ? 'eager' : 'lazy';
                 
                 img.onerror = function() {
-                    console.error('❌ Failed to load image:', imageData.url);
+                    console.error('âŒ Failed to load image:', imageData.url);
                     this.style.display = 'none';
                 };
                 
                 img.onload = function() {
-                    console.log('✅ Image loaded successfully:', imageData.url.substring(0, 50) + '...');
+                    console.log('âœ… Image loaded successfully:', imageData.url.substring(0, 50) + '...');
                 };
                 
                 slide.appendChild(img);
@@ -1577,7 +1560,7 @@
                         if (upcomingEvents.length === 0) {
                             container.innerHTML = `
                                 <div class="empty-state">
-                                    <div class="empty-state-icon">📅</div>
+                                    <div class="empty-state-icon">ðŸ“…</div>
                                     <h3>No Upcoming Events</h3>
                                     <p>Check back soon for exciting workshops and competitions!</p>
                                 </div>
@@ -1594,9 +1577,9 @@
                                 <div class="event-content">
                                     <h3 class="event-title">${event.title}</h3>
                                     <div class="event-meta">
-                                        <span>📅 ${formatDate(event.date)}</span>
-                                        <span>⏰ ${event.time || 'TBA'}</span>
-                                        <span>📍 ${event.venue || 'TBA'}</span>
+                                        <span>ðŸ“… ${formatDate(event.date)}</span>
+                                        <span>â° ${event.time || 'TBA'}</span>
+                                        <span>ðŸ“ ${event.venue || 'TBA'}</span>
                                     </div>
                                     <p class="event-description">${truncateText(event.description, 120)}</p>
                                     ${event.registrationLink ? 
@@ -1622,7 +1605,7 @@
                 if (upcomingEvents.length === 0) {
                     container.innerHTML = `
                         <div class="empty-state">
-                            <div class="empty-state-icon">📅</div>
+                            <div class="empty-state-icon">ðŸ“…</div>
                             <h3>No Upcoming Events</h3>
                             <p>Check back soon for exciting workshops and competitions!</p>
                         </div>
@@ -1639,9 +1622,9 @@
                         <div class="event-content">
                             <h3 class="event-title">${event.title}</h3>
                             <div class="event-meta">
-                                <span>📅 ${formatDate(event.date)}</span>
-                                <span>⏰ ${event.time || 'TBA'}</span>
-                                <span>📍 ${event.venue || 'TBA'}</span>
+                                <span>ðŸ“… ${formatDate(event.date)}</span>
+                                <span>â° ${event.time || 'TBA'}</span>
+                                <span>ðŸ“ ${event.venue || 'TBA'}</span>
                             </div>
                             <p class="event-description">${truncateText(event.description, 120)}</p>
                             ${event.registrationLink ? 
@@ -1674,7 +1657,7 @@
                         if (executives.length === 0) {
                             container.innerHTML = `
                                 <div class="empty-state">
-                                    <div class="empty-state-icon">👥</div>
+                                    <div class="empty-state-icon">ðŸ‘¥</div>
                                     <h3>No Executive Members Yet</h3>
                                     <p>Our leadership team will be announced soon!</p>
                                 </div>
@@ -1709,7 +1692,7 @@
                 if (executives.length === 0) {
                     container.innerHTML = `
                         <div class="empty-state">
-                            <div class="empty-state-icon">👥</div>
+                            <div class="empty-state-icon">ðŸ‘¥</div>
                             <h3>No Executive Members Yet</h3>
                             <p>Our leadership team will be announced soon!</p>
                         </div>
