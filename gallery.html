@@ -1234,19 +1234,27 @@ function handleScroll() {
         }
 
         function initializeMobileMenu() {
-            const mobileMenuToggle = document.getElementById('mobileMenuToggle');
-            const mobileNavOverlay = document.getElementById('mobileNavOverlay');
-            const mobileNavLinks = document.querySelectorAll('.mobile-nav-link');
-            
-            if (mobileMenuToggle && mobileNavOverlay) {
-                mobileMenuToggle.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    mobileNavOverlay.classList.toggle('active');
-                    mobileMenuToggle.classList.toggle('active');
-                    document.body.style.overflow = mobileNavOverlay.classList.contains('active') ? 'hidden' : '';
-                });
-                
+    const mobileMenuToggle = document.getElementById('mobileMenuToggle');
+    const mobileNavOverlay = document.getElementById('mobileNavOverlay');
+    const mobileNavLinks = document.querySelectorAll('.mobile-nav-link');
+    
+    if (!mobileMenuToggle || !mobileNavOverlay) {
+        console.error('Mobile menu elements not found');
+        return;
+    }
+
+    // Remove any existing listeners
+    const newToggle = mobileMenuToggle.cloneNode(true);
+    mobileMenuToggle.parentNode.replaceChild(newToggle, mobileMenuToggle);
+    
+    newToggle.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('Mobile menu clicked');
+        mobileNavOverlay.classList.toggle('active');
+        newToggle.classList.toggle('active');
+        document.body.style.overflow = mobileNavOverlay.classList.contains('active') ? 'hidden' : '';
+    });
                 mobileNavLinks.forEach(link => {
                     link.addEventListener('click', function() {
                         mobileNavOverlay.classList.remove('active');
