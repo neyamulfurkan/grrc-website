@@ -628,7 +628,7 @@
 
             <div class="header-actions">
                 <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
-                    <span class="theme-icon">🌙</span>
+                    <span class="theme-icon">ðŸŒ™</span>
                 </button>
                 <button class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Toggle menu">
                     <span></span>
@@ -687,7 +687,7 @@
         <div class="filter-section">
             <div class="filter-header">
                 <div class="search-box">
-                    <span class="search-icon">🔍</span>
+                    <span class="search-icon">ðŸ”</span>
                     <input 
                         type="text" 
                         id="searchInput" 
@@ -786,7 +786,57 @@
         }
 
         // Initialize page
+        function handleScroll() {
+            const header = document.getElementById('mainHeader');
+            if (!header) return;
+            
+            const scrollPosition = window.scrollY;
+            
+            if (scrollPosition > 100) {
+                header.classList.remove('transparent');
+            }
+        }
+
+        function initializeMobileMenu() {
+            const mobileMenuToggle = document.getElementById('mobileMenuToggle');
+            const mobileNavOverlay = document.getElementById('mobileNavOverlay');
+            const mobileNavLinks = document.querySelectorAll('.mobile-nav-link');
+            
+            if (mobileMenuToggle && mobileNavOverlay) {
+                mobileMenuToggle.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    mobileNavOverlay.classList.toggle('active');
+                    mobileMenuToggle.classList.toggle('active');
+                    document.body.style.overflow = mobileNavOverlay.classList.contains('active') ? 'hidden' : '';
+                });
+                
+                mobileNavLinks.forEach(link => {
+                    link.addEventListener('click', function() {
+                        mobileNavOverlay.classList.remove('active');
+                        mobileMenuToggle.classList.remove('active');
+                        document.body.style.overflow = '';
+                    });
+                });
+                
+                mobileNavOverlay.addEventListener('click', function(e) {
+                    if (e.target === mobileNavOverlay) {
+                        mobileNavOverlay.classList.remove('active');
+                        mobileMenuToggle.classList.remove('active');
+                        document.body.style.overflow = '';
+                    }
+                });
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', async () => {
+            // ✅ Apply theme IMMEDIATELY
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            
+            window.addEventListener('scroll', handleScroll);
+            handleScroll();
+            initializeMobileMenu();
     // Use cache for faster loading
     // localStorage.removeItem('cache_clubConfig'); // REMOVED
     
@@ -796,7 +846,7 @@
         await new Promise(resolve => setTimeout(resolve, 100));
         retries++;
     }
-    // ✅ PARALLEL LOADING
+    // âœ… PARALLEL LOADING
     await Promise.all([
         loadClubConfig(),
         loadMembers()
@@ -812,7 +862,7 @@
         // Load club configuration
         async function loadClubConfig() {
     try {
-        console.log('📄 Loading club config for members page...');
+        console.log('ðŸ“„ Loading club config for members page...');
         
         // Try API first
         let config = null;
@@ -820,7 +870,7 @@
             const result = await window.apiClient.getConfig();
             if (result.success && result.data) {
                 config = result.data;
-                console.log('✅ Config from API:', config);
+                console.log('âœ… Config from API:', config);
             }
         }
         
@@ -828,7 +878,7 @@
         if (!config) {
             const cachedConfig = localStorage.getItem('clubConfig');
             config = cachedConfig ? JSON.parse(cachedConfig) : {};
-            console.log('⚠️ Using fallback cache:', config);
+            console.log('âš ï¸ Using fallback cache:', config);
         }
         
         applyClubConfig(config);
@@ -852,7 +902,7 @@
             headerLogo.onerror = function() {
                 this.src = 'assets/default-logo.jpg';
             };
-            console.log('✅ Header logo updated to:', cacheBustedUrl);
+            console.log('âœ… Header logo updated to:', cacheBustedUrl);
         }
     }
     
@@ -863,7 +913,7 @@
         const footerName = document.getElementById('footerClubName');
         if (headerName) {
             headerName.textContent = name;
-            console.log('✅ Header name updated to:', name);
+            console.log('âœ… Header name updated to:', name);
         }
         if (footerName) {
             footerName.textContent = name;
@@ -893,15 +943,15 @@
         // Get social media icon
         function getSocialIcon(platform) {
             const icons = {
-                facebook: '📘',
-                twitter: '🐦',
-                instagram: '📷',
-                linkedin: '💼',
-                youtube: '📺',
-                github: '💻',
-                email: '📧'
+                facebook: 'ðŸ“˜',
+                twitter: 'ðŸ¦',
+                instagram: 'ðŸ“·',
+                linkedin: 'ðŸ’¼',
+                youtube: 'ðŸ“º',
+                github: 'ðŸ’»',
+                email: 'ðŸ“§'
             };
-            return icons[platform.toLowerCase()] || '🔗';
+            return icons[platform.toLowerCase()] || 'ðŸ”—';
         }
 
         // Load members
@@ -1009,11 +1059,11 @@
                 <div class="member-role" style="background: var(--primary-color); color: white; padding: 0.375rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; display: inline-block; margin-bottom: 0.5rem;">${member.role || 'Member'}</div>
                 <div class="member-details">
                     <div class="member-detail-item" style="display: flex; align-items: center; gap: 0.5rem; color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 0.25rem;">
-                        <span class="detail-icon">🎓</span>
+                        <span class="detail-icon">ðŸŽ“</span>
                         <span>${member.department || 'N/A'}</span>
                     </div>
                     <div class="member-detail-item" style="display: flex; align-items: center; gap: 0.5rem; color: var(--text-secondary); font-size: 0.9rem;">
-                        <span class="detail-icon">📅</span>
+                        <span class="detail-icon">ðŸ“…</span>
                         <span>${member.year ? member.year + ' Year' : 'N/A'}</span>
                     </div>
                 </div>
@@ -1027,7 +1077,7 @@
             const container = document.getElementById('membersContainer');
             container.innerHTML = `
                 <div class="empty-state">
-                    <div class="empty-icon">👥</div>
+                    <div class="empty-icon">ðŸ‘¥</div>
                     <div class="empty-title">No Members Found</div>
                     <div class="empty-message">${message}</div>
                     ${allMembers.length === 0 ? '<a href="admin.html" class="btn btn-primary">Add Members from Admin Panel</a>' : ''}
@@ -1059,7 +1109,7 @@
                     <!-- Basic Information -->
                     <div class="modal-section">
                         <div class="modal-section-title">
-                            <span>📋</span>
+                            <span>ðŸ“‹</span>
                             <span>Basic Information</span>
                         </div>
                         <div class="modal-info-grid">
@@ -1085,7 +1135,7 @@
                     ${member.bio ? `
                     <div class="modal-section">
                         <div class="modal-section-title">
-                            <span>📝</span>
+                            <span>ðŸ“</span>
                             <span>About</span>
                         </div>
                         <div class="modal-bio">${member.bio}</div>
@@ -1095,7 +1145,7 @@
                     ${member.skills && member.skills.length > 0 ? `
                     <div class="modal-section">
                         <div class="modal-section-title">
-                            <span>⚡</span>
+                            <span>âš¡</span>
                             <span>Skills & Expertise</span>
                         </div>
                         <div class="skills-list">
@@ -1107,12 +1157,12 @@
                     ${member.email || member.phone ? `
                     <div class="modal-section">
                         <div class="modal-section-title">
-                            <span>📞</span>
+                            <span>ðŸ“ž</span>
                             <span>Contact Information</span>
                         </div>
                         <div class="contact-links">
-                            ${member.email ? `<a href="mailto:${member.email}" class="contact-link">📧 ${member.email}</a>` : ''}
-                            ${member.phone ? `<a href="tel:${member.phone}" class="contact-link">📱 ${member.phone}</a>` : ''}
+                            ${member.email ? `<a href="mailto:${member.email}" class="contact-link">ðŸ“§ ${member.email}</a>` : ''}
+                            ${member.phone ? `<a href="tel:${member.phone}" class="contact-link">ðŸ“± ${member.phone}</a>` : ''}
                         </div>
                     </div>
                     ` : ''}

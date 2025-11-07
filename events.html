@@ -598,12 +598,13 @@
 </head>
 <body>
     <!-- Header -->
-    <header class="header">
-        <div class="header-content container">
-            <div class="logo-container">
-               <img src="assets/default-logo.jpg" alt="Club Logo" class="logo" id="headerLogo">
-               <span class="club-name" id="headerClubName">GSTU Robotics & Research Club</span>
-            </div>
+    <header class="header" id="mainHeader">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo-container">
+                    <img id="clubLogo" src="assets/default-logo.jpg" alt="Club Logo" class="logo">
+                    <span id="clubName" class="club-name">GSTU Robotics & Research Club</span>
+                </div>
             <nav class="nav-menu" id="navMenu">
                 <a href="index.html" class="nav-link">Home</a>
                 <a href="members.html" class="nav-link">Members</a>
@@ -616,7 +617,7 @@
             </nav>
             <div class="header-actions">
                 <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
-                    <span class="theme-icon">🌙</span>
+                    <span class="theme-icon">ðŸŒ™</span>
                 </button>
                 <button class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Toggle menu">
                     <span></span>
@@ -713,14 +714,14 @@
 
         <!-- Empty State -->
         <div class="empty-state" id="emptyState" style="display: none;">
-            <div class="empty-icon">📅</div>
+            <div class="empty-icon">ðŸ“…</div>
             <h2 class="empty-title">No Events Found</h2>
             <p class="empty-description">There are no events matching your filters. Try adjusting your search criteria.</p>
         </div>
 
         <!-- No Events State -->
         <div class="empty-state" id="noEventsState" style="display: none;">
-            <div class="empty-icon">📅</div>
+            <div class="empty-icon">ðŸ“…</div>
             <h2 class="empty-title">No Events Added Yet</h2>
             <p class="empty-description">Events will appear here once they are added by the admin.</p>
             <a href="admin-panel.html" class="btn btn-primary">Go to Admin Panel</a>
@@ -732,7 +733,7 @@
         <div class="event-modal-content">
             <div class="event-modal-header">
                 <img src="" alt="Event" class="event-modal-image" id="modalEventImage">
-                <button class="event-modal-close" id="modalCloseBtn">×</button>
+                <button class="event-modal-close" id="modalCloseBtn">Ã—</button>
             </div>
             <div class="event-modal-body">
                 <div class="event-category" id="modalEventCategory"></div>
@@ -835,7 +836,57 @@
         };
 
         // Initialize page
+        function handleScroll() {
+            const header = document.getElementById('mainHeader');
+            if (!header) return;
+            
+            const scrollPosition = window.scrollY;
+            
+            if (scrollPosition > 100) {
+                header.classList.remove('transparent');
+            }
+        }
+
+        function initializeMobileMenu() {
+            const mobileMenuToggle = document.getElementById('mobileMenuToggle');
+            const mobileNavOverlay = document.getElementById('mobileNavOverlay');
+            const mobileNavLinks = document.querySelectorAll('.mobile-nav-link');
+            
+            if (mobileMenuToggle && mobileNavOverlay) {
+                mobileMenuToggle.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    mobileNavOverlay.classList.toggle('active');
+                    mobileMenuToggle.classList.toggle('active');
+                    document.body.style.overflow = mobileNavOverlay.classList.contains('active') ? 'hidden' : '';
+                });
+                
+                mobileNavLinks.forEach(link => {
+                    link.addEventListener('click', function() {
+                        mobileNavOverlay.classList.remove('active');
+                        mobileMenuToggle.classList.remove('active');
+                        document.body.style.overflow = '';
+                    });
+                });
+                
+                mobileNavOverlay.addEventListener('click', function(e) {
+                    if (e.target === mobileNavOverlay) {
+                        mobileNavOverlay.classList.remove('active');
+                        mobileMenuToggle.classList.remove('active');
+                        document.body.style.overflow = '';
+                    }
+                });
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', async () => {
+            // ✅ Apply theme IMMEDIATELY
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            
+            window.addEventListener('scroll', handleScroll);
+            handleScroll();
+            initializeMobileMenu();
     // Use cache for faster loading
     // localStorage.removeItem('cache_clubConfig'); // REMOVED - causing slow loads
     
@@ -845,7 +896,7 @@
         await new Promise(resolve => setTimeout(resolve, 100));
         retries++;
     }
-    // ✅ PARALLEL LOADING
+    // âœ… PARALLEL LOADING
     await Promise.all([
         loadClubConfig(),
         loadEvents()
@@ -861,7 +912,7 @@
         /* FIXED - Complete config loading with header updates */
         async function loadClubConfig() {
             try {
-                console.log('📄 Loading club config for events page...');
+                console.log('ðŸ“„ Loading club config for events page...');
                 
                 // Try to get fresh config from API
                 let config = null;
@@ -870,7 +921,7 @@
                     const result = await window.apiClient.getConfig();
                     if (result.success && result.data) {
                         config = result.data;
-                        console.log('✅ Config loaded from API:', config);
+                        console.log('âœ… Config loaded from API:', config);
                     }
                 }
                 
@@ -878,7 +929,7 @@
                 if (!config) {
                     const cachedConfig = localStorage.getItem('clubConfig');
                     config = cachedConfig ? JSON.parse(cachedConfig) : {};
-                    console.log('⚠️ Using fallback cache:', config);
+                    console.log('âš ï¸ Using fallback cache:', config);
                 }
                 
                 /// Update header LOGO
@@ -895,18 +946,18 @@ if (headerLogo && (config.logo || config.logo_url)) {
     headerLogo.onerror = function() {
         this.src = 'assets/default-logo.jpg';
     };
-    console.log('✅ Header logo updated');
+    console.log('âœ… Header logo updated');
 }
 
 if (headerClubName && (config.name || config.club_name)) {
     headerClubName.textContent = config.name || config.club_name;
-    console.log('✅ Header name updated');
+    console.log('âœ… Header name updated');
 }
                 
                 if (headerClubName && (config.name || config.club_name)) {
                     headerClubName.textContent = config.name || config.club_name;
                     headerClubName.style.display = 'inline-block';
-                    console.log('✅ Header club name updated to:', config.name || config.club_name);
+                    console.log('âœ… Header club name updated to:', config.name || config.club_name);
                 }
                 
                 // Update footer
@@ -938,7 +989,7 @@ if (headerClubName && (config.name || config.club_name)) {
                     }
                 }
                 
-                console.log('✅ Club config loaded successfully');
+                console.log('âœ… Club config loaded successfully');
                 return;
                 
                 // Update footer
@@ -966,15 +1017,15 @@ if (headerClubName && (config.name || config.club_name)) {
         // Get social media icon
         function getSocialIcon(platform) {
             const icons = {
-                facebook: '📘',
-                twitter: '🐦',
-                instagram: '📷',
-                linkedin: '💼',
-                youtube: '📺',
-                github: '💻',
-                email: '✉️'
+                facebook: 'ðŸ“˜',
+                twitter: 'ðŸ¦',
+                instagram: 'ðŸ“·',
+                linkedin: 'ðŸ’¼',
+                youtube: 'ðŸ“º',
+                github: 'ðŸ’»',
+                email: 'âœ‰ï¸'
             };
-            return icons[platform.toLowerCase()] || '🔗';
+            return icons[platform.toLowerCase()] || 'ðŸ”—';
         }
 
         /* MODIFIED - Added API integration */
@@ -1208,15 +1259,15 @@ if (headerClubName && (config.name || config.club_name)) {
                         <p class="event-description">${description}</p>
                         <div class="event-meta">
                             <div class="event-meta-item">
-                                <span class="event-meta-icon">📅</span>
+                                <span class="event-meta-icon">ðŸ“…</span>
                                 <span>${formatDate(event.date)}</span>
                             </div>
                             <div class="event-meta-item">
-                                <span class="event-meta-icon">🕐</span>
+                                <span class="event-meta-icon">ðŸ•</span>
                                 <span>${event.time || 'TBA'}</span>
                             </div>
                             <div class="event-meta-item">
-                                <span class="event-meta-icon">📍</span>
+                                <span class="event-meta-icon">ðŸ“</span>
                                 <span>${event.venue || 'TBA'}</span>
                             </div>
                         </div>

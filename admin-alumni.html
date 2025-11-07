@@ -286,7 +286,107 @@
         let currentEditAlumniId = null;
         let currentAlumniApplicationStatusFilter = 'pending';
 
+        function handleScroll() {
+            const header = document.getElementById('mainHeader');
+            if (!header) return;
+            
+            const scrollPosition = window.scrollY;
+            
+            if (scrollPosition > 100) {
+                header.classList.remove('transparent');
+            }
+        }
+
+        function initializeMobileMenu() {
+            const mobileMenuToggle = document.getElementById('mobileMenuToggle');
+            const mobileNavOverlay = document.getElementById('mobileNavOverlay');
+            const mobileNavLinks = document.querySelectorAll('.mobile-nav-link');
+            
+            if (mobileMenuToggle && mobileNavOverlay) {
+                mobileMenuToggle.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    mobileNavOverlay.classList.toggle('active');
+                    mobileMenuToggle.classList.toggle('active');
+                    document.body.style.overflow = mobileNavOverlay.classList.contains('active') ? 'hidden' : '';
+                });
+                
+                mobileNavLinks.forEach(link => {
+                    link.addEventListener('click', function() {
+                        mobileNavOverlay.classList.remove('active');
+                        mobileMenuToggle.classList.remove('active');
+                        document.body.style.overflow = '';
+                    });
+                });
+                
+                mobileNavOverlay.addEventListener('click', function(e) {
+                    if (e.target === mobileNavOverlay) {
+                        mobileNavOverlay.classList.remove('active');
+                        mobileMenuToggle.classList.remove('active');
+                        document.body.style.overflow = '';
+                    }
+                });
+            }
+        }
+
+        function handleScroll() {
+            const header = document.getElementById('mainHeader');
+            if (!header) return;
+            
+            const scrollPosition = window.scrollY;
+            
+            if (scrollPosition > 100) {
+                header.classList.remove('transparent');
+            }
+        }
+
+        function initializeMobileMenu() {
+            const mobileMenuToggle = document.getElementById('mobileMenuToggle');
+            const mobileNavOverlay = document.getElementById('mobileNavOverlay');
+            const mobileNavLinks = document.querySelectorAll('.mobile-nav-link');
+            
+            if (mobileMenuToggle && mobileNavOverlay) {
+                mobileMenuToggle.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    mobileNavOverlay.classList.toggle('active');
+                    mobileMenuToggle.classList.toggle('active');
+                    document.body.style.overflow = mobileNavOverlay.classList.contains('active') ? 'hidden' : '';
+                });
+                
+                mobileNavLinks.forEach(link => {
+                    link.addEventListener('click', function() {
+                        mobileNavOverlay.classList.remove('active');
+                        mobileMenuToggle.classList.remove('active');
+                        document.body.style.overflow = '';
+                    });
+                });
+                
+                mobileNavOverlay.addEventListener('click', function(e) {
+                    if (e.target === mobileNavOverlay) {
+                        mobileNavOverlay.classList.remove('active');
+                        mobileMenuToggle.classList.remove('active');
+                        document.body.style.overflow = '';
+                    }
+                });
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', async () => {
+            // ✅ Apply theme IMMEDIATELY
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            
+            window.addEventListener('scroll', handleScroll);
+            handleScroll();
+            initializeMobileMenu();
+            // ✅ Apply theme IMMEDIATELY
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            
+            window.addEventListener('scroll', handleScroll);
+            handleScroll();
+            initializeMobileMenu();
             console.log('🚀 Alumni management page loaded');
             
             await initializeAlumni();
