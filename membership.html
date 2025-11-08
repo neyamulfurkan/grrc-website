@@ -1096,11 +1096,17 @@
                     const result = await window.apiClient.submitMembershipApplication(applicationData);
                     
                     if (result.success) {
+                        console.log('✅ Membership application submitted successfully');
                         showSuccessModal();
                         form.reset();
                         skills = [];
                         renderSkills();
                         document.getElementById('bioCount').textContent = '0';
+                        
+                        // Notify parent window to refresh member count
+                        if (window.opener && !window.opener.closed) {
+                            window.opener.postMessage({ type: 'MEMBER_ADDED' }, '*');
+                        }
                     } else {
                         showError(result.error || 'Failed to submit application');
                     }

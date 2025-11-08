@@ -124,13 +124,52 @@
             background: white;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
         }
+
+        /* Force hamburger visibility on mobile */
+        @media (max-width: 768px) {
+            .mobile-menu-toggle {
+                display: flex !important;
+                background: rgba(255, 255, 255, 0.2) !important;
+                border-radius: 8px !important;
+                padding: 8px !important;
+                backdrop-filter: blur(10px) !important;
+            }
+
+            .mobile-menu-toggle span {
+                background: white !important;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5) !important;
+            }
+
+            .header.transparent .mobile-menu-toggle {
+                background: rgba(255, 255, 255, 0.25) !important;
+            }
+
+            .header:not(.transparent) .mobile-menu-toggle {
+                background: var(--background-color) !important;
+            }
+
+            .header:not(.transparent) .mobile-menu-toggle span {
+                background: var(--text-primary) !important;
+                box-shadow: none !important;
+            }
+        }
         
         .mobile-menu-toggle {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
             background: transparent;
             border: none;
             cursor: pointer;
             padding: 0.5rem;
             z-index: 1001;
+            visibility: visible;
+            opacity: 1;
+        }
+
+        .header.transparent .mobile-menu-toggle {
+            display: flex !important;
         }
         
         .mobile-menu-toggle span {
@@ -914,6 +953,30 @@
         }
         
         @media (max-width: 768px) {
+            .nav-menu {
+                display: none !important;
+            }
+            
+            .mobile-menu-toggle {
+                display: flex !important;
+                visibility: visible !important;
+                opacity: 1 !important;
+            }
+
+            .header {
+                height: 60px;
+            }
+
+            .club-name {
+                max-width: 150px;
+                font-size: 0.9rem;
+            }
+
+            .logo {
+                height: 40px;
+                width: 40px;
+            }
+
             .hero {
                 min-height: 100vh;
                 padding: 1rem;
@@ -938,16 +1001,27 @@
                 bottom: 1rem;
             }
         }
+        /* Force hamburger menu to show on mobile */
+        @media (max-width: 767px) {
+            .mobile-menu-toggle {
+                display: flex !important;
+                visibility: visible !important;
+                opacity: 1 !important;
+            }
+            
+            .nav-menu {
+                display: none !important;
+            }
+        }
     </style>
 </head>
 <body>
-    <header class="header transparent" id="mainHeader">
-        <div class="container">
-            <div class="header-content">
-                <div class="logo-container">
-                    <img id="clubLogo" src="assets/default-logo.jpg" alt="Club Logo" class="logo">
-                    <span id="clubName" class="club-name">GSTU Robotics & Research Club</span>
-                </div>
+   <header class="header" id="mainHeader">
+        <div class="header-content container">
+            <div class="logo-container">
+                <img id="clubLogo" src="assets/default-logo.jpg" alt="Club Logo" class="logo">
+                <span id="clubName" class="club-name">GSTU Robotics & Research Club</span>
+            </div>
                 
                 <nav class="nav-menu" id="navMenu">
                     <a href="index.html" class="nav-link active">Home</a>

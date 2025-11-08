@@ -941,13 +941,14 @@
 
             filteredMembers = [...allMembers];
             
+            console.log('📊 Processing members data:', allMembers.length, 'members');
             updateStatistics();
             displayMembers();
             populateDepartmentFilters();
         }
 
         // Update statistics
-        function updateStatistics() {
+       function updateStatistics() {
             const totalMembers = allMembers.length;
             const executiveCount = allMembers.filter(m => 
                 (m.role || '').toLowerCase().includes('executive')
@@ -959,6 +960,8 @@
             document.getElementById('executiveCount').textContent = executiveCount;
             document.getElementById('generalCount').textContent = generalCount;
             document.getElementById('departmentCount').textContent = departments.size;
+            
+            console.log('✅ Member stats updated:', { totalMembers, executiveCount, generalCount, departments: departments.size });
         }
 
         // Display members grid

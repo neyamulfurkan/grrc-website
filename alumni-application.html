@@ -1063,10 +1063,16 @@
                     const result = await window.apiClient.submitAlumniApplication(applicationData);
                     
                     if (result.success) {
+                        console.log('✅ Alumni application submitted successfully');
                         showSuccessModal();
                         form.reset();
                         document.getElementById('bioCount').textContent = '0';
                         document.getElementById('photoPreview').style.display = 'none';
+                        
+                        // Notify parent window to refresh alumni count
+                        if (window.opener && !window.opener.closed) {
+                            window.opener.postMessage({ type: 'ALUMNI_ADDED' }, '*');
+                        }
                     } else {
                         showError(result.error || 'Failed to submit application');
                     }
