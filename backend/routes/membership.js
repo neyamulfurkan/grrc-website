@@ -157,7 +157,7 @@ router.post(
       console.log('   ID:', result.id);
       console.log('   Status:', result.status);
 
-      // ✅ FIXED: Send confirmation email to applicant (fire-and-forget)
+      // Send confirmation email to applicant (fire-and-forget)
       emailService.sendMembershipApplicationEmail(
         result.email,
         result.full_name,
@@ -166,7 +166,7 @@ router.post(
         console.error('⚠️ Failed to send confirmation email:', err.message);
       });
 
-      // ✅ FIXED: Send notification email to admin (fire-and-forget)
+      // Send notification email to admin (fire-and-forget)
       emailService.sendAdminMembershipNotification(
         process.env.ADMIN_EMAIL || 'grrcgstu@gmail.com',
         {
@@ -227,15 +227,23 @@ router.post(
 // 2. GET /api/membership/applications (ADMIN - Auth Required)
 router.get('/applications', authenticateToken, isAdmin, async (req, res) => {
   try {
-    const { status } = req.query;
+    let { status } = req.query;
 
-    if (status && !['pending', 'approved', 'rejected'].includes(status)) {
+    // ✅ CRITICAL FIX: Handle 'all' status or missing status
+    if (status === 'all' || status === '' || status === undefined) {
+      status = null; // null means fetch all applications
+    }
+
+    // ✅ Validate status if it's not null
+    if (status !== null && !['pending', 'approved', 'rejected'].includes(status)) {
       return res.status(400).json({
         success: false,
         error: 'Invalid status parameter',
-        message: 'Status must be one of: pending, approved, rejected'
+        message: 'Status must be one of: pending, approved, rejected, all, or omitted'
       });
     }
+
+    console.log(`📋 Fetching applications with status: ${status || 'all'}`);
 
     const applications = await membershipModel.getAllApplications(status);
 
@@ -337,7 +345,7 @@ router.post(
         admin_notes || null
       );
 
-      // ✅ Create member account
+      // Create member account
       const memberData = {
         name: application.full_name,
         email: application.email,
