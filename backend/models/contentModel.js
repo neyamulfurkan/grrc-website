@@ -12,7 +12,7 @@ async function getClubConfig() {
 
 async function updateClubConfig(data) {
   try {
-    console.log('&#128269; updateClubConfig received data:', JSON.stringify(data, null, 2));
+    console.log('🔍 updateClubConfig received data:', JSON.stringify(data, null, 2));
     
     const { logo, club_name, club_motto, club_description, social_links, logo_url } = data;
     
@@ -718,7 +718,7 @@ async function deleteAnnouncement(id) {
  */
 async function createAlumni(alumniData) {
   try {
-    console.log('&#128269; createAlumni called with data:', alumniData);
+    console.log('🔍 createAlumni called with data:', alumniData);
     
     const {
       name,
@@ -1073,6 +1073,33 @@ async function getStatistics() {
   }
 }
 
+/**
+ * Get all active member email addresses
+ * @returns {Promise<Array<string>>} Array of email addresses
+ */
+async function getAllMemberEmails() {
+  try {
+    const query = `
+      SELECT email 
+      FROM members 
+      WHERE email IS NOT NULL AND email != ''
+      ORDER BY email ASC
+    `;
+    
+    const result = await pool.query(query);
+    
+    // Extract just the email strings from result rows
+    const emails = result.rows.map(row => row.email);
+    
+    console.log(`✅ Fetched ${emails.length} member emails`);
+    
+    return emails;
+  } catch (error) {
+    console.error('❌ Error in getAllMemberEmails:', error.message);
+    throw new Error(`Failed to fetch member emails: ${error.message}`);
+  }
+}
+
 module.exports = {
   getClubConfig,
   updateClubConfig,
@@ -1122,4 +1149,6 @@ module.exports = {
   deleteAdmin,
   updateLastLogin,
   getStatistics,
+  // Member email function (NEW!)
+  getAllMemberEmails,
 };

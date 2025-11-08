@@ -12,6 +12,9 @@ const router = express.Router();
 const alumniApplicationModel = require('../models/alumniApplicationModel');
 const alumniModel = require('../models/alumniModel');
 
+// Import services
+const emailService = require('../services/emailService');
+
 // Import middleware
 const { authenticateToken, isAdmin } = require('../middleware/auth');
 
@@ -189,6 +192,40 @@ router.post(
 
       console.log('✅ Alumni application created successfully');
       console.log('   ID:', result.id);
+
+      // Send confirmation email to applicant (fire-and-forget)
+      emailService.sendAlumniApplicationEmail(
+        result.email,
+        result.full_name,
+        result.id
+      ).catch(err => {
+        console.error('⚠️ Failed to send application confirmation email:', err.message);
+      });
+
+      // Send notification to admin (fire-and-forget)
+      emailService.sendAdminAlumniNotification(process.env.ADMIN_EMAIL, {
+        full_name: result.full_name,
+        email: result.email,
+        phone: applicationData.phone,
+        batch_year: applicationData.batch_year,
+        department: applicationData.department,
+        role_in_club: applicationData.role_in_club || 'N/A',
+        achievements: applicationData.achievements || 'N/A',
+        current_position: applicationData.current_position || 'N/A',
+        current_company: applicationData.current_company || 'N/A',
+        bio: applicationData.bio,
+        linkedin: applicationData.linkedin || 'N/A',
+        github: applicationData.github || 'N/A',
+        facebook: applicationData.facebook || 'N/A',
+        applicationId: result.id,
+        applied_date: new Date(result.applied_date).toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        })
+      }).catch(err => {
+        console.error('⚠️ Failed to send admin notification:', err.message);
+      });
 
       res.status(201).json({
         success: true,
@@ -413,6 +450,14 @@ router.post(
         });
       }
 
+      // Send approval email to applicant (fire-and-forget)
+      emailService.sendAlumniApprovalEmail(
+        application.email,
+        application.full_name
+      ).catch(err => {
+        console.error('⚠️ Failed to send approval email:', err.message);
+      });
+
       // Success
       res.status(200).json({
         success: true,
@@ -487,6 +532,15 @@ router.post(
       );
 
       console.log(`✅ Alumni application ${id} rejected`);
+
+      // Send rejection email to applicant (fire-and-forget)
+      emailService.sendAlumniRejectionEmail(
+        application.email,
+        application.full_name,
+        admin_notes || 'Thank you for your interest. Please feel free to stay connected with our community.'
+      ).catch(err => {
+        console.error('⚠️ Failed to send rejection email:', err.message);
+      });
 
       res.status(200).json({
         success: true,

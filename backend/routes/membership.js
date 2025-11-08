@@ -6,6 +6,9 @@ const router = express.Router();
 const membershipModel = require('../models/membershipModel');
 const contentModel = require('../models/contentModel');
 
+// Import services
+const emailService = require('../services/emailService');
+
 // Import middleware
 const { authenticateToken, isAdmin } = require('../middleware/auth');
 
@@ -153,6 +156,34 @@ router.post(
       console.log('✅ Application created successfully');
       console.log('   ID:', result.id);
       console.log('   Status:', result.status);
+
+      // Send confirmation email to applicant (fire-and-forget)
+      emailService.sendMembershipApplicationReceived(
+        result.email,
+        result.full_name,
+        result.id
+      ).catch(err => {
+        console.error('⚠️ Failed to send confirmation email:', err.message);
+      });
+
+      // Send notification email to admin (fire-and-forget)
+      emailService.sendAdminMembershipNotification({
+        full_name: result.full_name,
+        email: result.email,
+        phone: result.phone,
+        student_id: result.student_id || 'N/A',
+        department: result.department,
+        year: result.year,
+        bio: result.bio,
+        skills: Array.isArray(result.skills) ? result.skills : [],
+        previous_experience: result.previous_experience || 'None provided',
+        github_profile: result.github_profile || 'Not provided',
+        linkedin_profile: result.linkedin_profile || 'Not provided',
+        applicationId: result.id,
+        applied_date: result.applied_date
+      }).catch(err => {
+        console.error('⚠️ Failed to send admin notification email:', err.message);
+      });
 
       res.status(201).json({
         success: true,
@@ -372,6 +403,34 @@ router.post(
       console.log(`   Member ID: ${member.id}`);
       console.log(`   Member Name: ${member.name}`);
 
+      // Send approval email to applicant (fire-and-forget)
+      emailService.sendMembershipApprovalEmail(
+        application.email,
+        application.full_name
+      ).catch(err => {
+        console.error('⚠️ Failed to send approval email:', err.message);
+      });
+
+      // Send new member announcement to all members (fire-and-forget)
+      try {
+        const memberEmails = await contentModel.getAllMemberEmails();
+        if (memberEmails.length > 0) {
+          emailService.sendNewMemberAnnouncement(memberEmails, {
+            name: member.name,
+            department: member.department,
+            year: member.year,
+            role: member.role,
+            bio: member.bio,
+            skills: Array.isArray(member.skills) ? member.skills.join(', ') : '',
+            email: member.email
+          }).catch(err => {
+            console.error('⚠️ Failed to send member announcement:', err.message);
+          });
+        }
+      } catch (emailError) {
+        console.error('⚠️ Failed to fetch member emails:', emailError.message);
+      }
+
       res.status(200).json({
         success: true,
         message: 'Application approved successfully and member account created',
@@ -445,6 +504,15 @@ router.post(
       );
 
       console.log(`✅ Application ${id} rejected`);
+
+      // Send rejection email to applicant (fire-and-forget)
+      emailService.sendMembershipRejectionEmail(
+        application.email,
+        application.full_name,
+        admin_notes || 'Please consider reapplying after improving your skills and experience.'
+      ).catch(err => {
+        console.error('⚠️ Failed to send rejection email:', err.message);
+      });
 
       res.status(200).json({
         success: true,

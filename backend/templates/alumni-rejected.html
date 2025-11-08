@@ -1,0 +1,92 @@
+<!-- FILE 3: backend/templates/alumni-rejected.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Alumni Application Status Update</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: Arial, Helvetica, sans-serif; background-color: #f3f4f6;">
+  <table role="presentation" style="width: 100%; border-collapse: collapse; background-color: #f3f4f6;">
+    <tr>
+      <td style="padding: 40px 20px;">
+        <table role="presentation" style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+          
+          <tr>
+            <td style="background: linear-gradient(135deg, #2563eb 0%, #06b6d4 100%); padding: 40px 20px; text-align: center; border-radius: 8px 8px 0 0;">
+              <h1 style="margin: 0; font-size: 32px; font-weight: bold; color: #ffffff;">GSTU Robotics Club</h1>
+              <p style="margin: 10px 0 0 0; font-size: 16px; color: #e0f2fe;">Innovate. Create. Inspire.</p>
+            </td>
+          </tr>
+
+          <tr>
+            <td style="padding: 40px 30px;">
+              <h2 style="margin: 0 0 20px 0; font-size: 24px; font-weight: bold; color: #1f2937;">Thank you for your interest, {{name}}</h2>
+              
+              <p style="margin: 0 0 16px 0; font-size: 16px; line-height: 1.6; color: #4b5563;">
+                Thank you for taking the time to apply for alumni status with the GSTU Robotics Club. We sincerely appreciate your interest in joining our alumni network.
+              </p>
+              
+              <p style="margin: 0 0 24px 0; font-size: 16px; line-height: 1.6; color: #4b5563;">
+                After careful review of your application, we regret to inform you that we are unable to approve your alumni status at this time. This decision was made after thorough consideration of all applications received.
+              </p>
+
+              <div style="background-color: #f9fafb; border-left: 4px solid #6b7280; padding: 20px; margin: 0 0 24px 0; border-radius: 4px;">
+                <h3 style="margin: 0 0 12px 0; font-size: 18px; font-weight: bold; color: #1f2937;">Feedback:</h3>
+                <p style="margin: 0; font-size: 15px; line-height: 1.6; color: #4b5563; font-style: italic;">{{reason}}</p>
+              </div>
+
+              <div style="background-color: #eff6ff; border-left: 4px solid #2563eb; padding: 20px; margin: 0 0 24px 0; border-radius: 4px;">
+                <h3 style="margin: 0 0 12px 0; font-size: 18px; font-weight: bold; color: #1f2937;">We Encourage You To:</h3>
+                <ul style="margin: 0; padding-left: 20px; font-size: 16px; line-height: 1.8; color: #4b5563;">
+                  <li>Stay connected with current members through our public events</li>
+                  <li>Continue supporting the club's mission and activities</li>
+                  <li>Follow us on social media for updates and opportunities</li>
+                  <li>Consider reapplying after 3 months with updated information</li>
+                </ul>
+              </div>
+
+              <p style="margin: 0 0 24px 0; font-size: 16px; line-height: 1.6; color: #4b5563;">
+                We value your past contributions to the club and hope you'll continue to stay engaged with our community through other channels. Thank you for your understanding!
+              </p>
+
+              <div style="text-align: center; margin: 32px 0;">
+                <a href="#" style="display: inline-block; background-color: #2563eb; color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 6px; font-size: 16px; font-weight: bold;">Stay Connected</a>
+              </div>
+
+              <p style="margin: 0; font-size: 16px; line-height: 1.6; color: #4b5563; text-align: center;">
+                Thank you for your interest and support!
+              </p>
+            </td>
+          </tr>
+
+          <tr>
+            <td style="background-color: #f9fafb; padding: 30px; text-align: center; border-radius: 0 0 8px 8px; border-top: 1px solid #e5e7eb;">
+              <p style="margin: 0 0 12px 0; font-size: 14px; color: #6b7280;">
+                <strong>Questions?</strong> Email us at <a href="mailto:grrcgstu@gmail.com" style="color: #2563eb; text-decoration: none;">grrcgstu@gmail.com</a>
+              </p>
+              
+              <div style="margin: 20px 0;">
+                <a href="#" style="display: inline-block; margin: 0 8px; color: #2563eb; text-decoration: none; font-size: 14px;">Facebook</a>
+                <span style="color: #d1d5db;">|</span>
+                <a href="#" style="display: inline-block; margin: 0 8px; color: #2563eb; text-decoration: none; font-size: 14px;">LinkedIn</a>
+                <span style="color: #d1d5db;">|</span>
+                <a href="#" style="display: inline-block; margin: 0 8px; color: #2563eb; text-decoration: none; font-size: 14px;">Instagram</a>
+              </div>
+
+              <p style="margin: 12px 0 0 0; font-size: 12px; color: #9ca3af;">
+                © {{year}} GSTU Robotics Club. All rights reserved.
+              </p>
+              
+              <p style="margin: 8px 0 0 0; font-size: 11px; color: #9ca3af;">
+                This is an automated notification. Please do not reply to this email.
+              </p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

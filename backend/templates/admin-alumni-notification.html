@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>New Alumni Application</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: Arial, Helvetica, sans-serif; background-color: #f3f4f6;">
+  <table role="presentation" style="width: 100%; border-collapse: collapse; background-color: #f3f4f6;">
+    <tr>
+      <td style="padding: 40px 20px;">
+        <table role="presentation" style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+          
+          <tr>
+            <td style="background: linear-gradient(135deg, #2563eb 0%, #06b6d4 100%); padding: 40px 20px; text-align: center; border-radius: 8px 8px 0 0;">
+              <h1 style="margin: 0; font-size: 28px; font-weight: bold; color: #ffffff;">New Alumni Application</h1>
+              <p style="margin: 10px 0 0 0; font-size: 16px; color: #e0f2fe;">Action Required: Review & Approve</p>
+            </td>
+          </tr>
+
+          <tr>
+            <td style="padding: 40px 30px;">
+              
+              <div style="background-color: #eff6ff; padding: 24px; margin: 0 0 24px 0; border-radius: 8px; border: 2px solid #2563eb;">
+                <h2 style="margin: 0 0 8px 0; font-size: 24px; font-weight: bold; color: #1f2937;">{{full_name}}</h2>
+                <p style="margin: 0 0 4px 0; font-size: 15px; color: #4b5563;">
+                  📧 <a href="mailto:{{email}}" style="color: #2563eb; text-decoration: none;">{{email}}</a>
+                </p>
+                <p style="margin: 0 0 4px 0; font-size: 15px; color: #4b5563;">
+                  📱 {{phone}}
+                </p>
+                <p style="margin: 0 0 12px 0; font-size: 15px; color: #4b5563;">
+                  🎓 {{department}} - Batch {{batch_year}}
+                </p>
+                <p style="margin: 0; font-size: 13px; color: #6b7280;">
+                  Application ID: <strong>#{{applicationId}}</strong> | Submitted: {{applied_date}}
+                </p>
+              </div>
+
+              <h3 style="margin: 0 0 12px 0; font-size: 18px; font-weight: bold; color: #1f2937; border-bottom: 2px solid #e5e7eb; padding-bottom: 8px;">Personal Information</h3>
+              <table style="width: 100%; margin: 0 0 24px 0; font-size: 15px; color: #4b5563;">
+                <tr>
+                  <td style="padding: 8px 0; font-weight: bold; width: 40%;">Full Name:</td>
+                  <td style="padding: 8px 0;">{{full_name}}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px 0; font-weight: bold;">Email:</td>
+                  <td style="padding: 8px 0;">{{email}}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px 0; font-weight: bold;">Phone:</td>
+                  <td style="padding: 8px 0;">{{phone}}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px 0; font-weight: bold;">Department:</td>
+                  <td style="padding: 8px 0;">{{department}}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px 0; font-weight: bold;">Batch Year:</td>
+                  <td style="padding: 8px 0;">{{batch_year}}</td>
+                </tr>
+              </table>
+
+              <h3 style="margin: 0 0 12px 0; font-size: 18px; font-weight: bold; color: #1f2937; border-bottom: 2px solid #e5e7eb; padding-bottom: 8px;">Club History</h3>
+              <table style="width: 100%; margin: 0 0 24px 0; font-size: 15px; color: #4b5563;">
+                <tr>
+                  <td style="padding: 8px 0; font-weight: bold; width: 40%;">Role in Club:</td>
+                  <td style="padding: 8px 0;">{{role_in_club}}</td>
+                </tr>
+              </table>
+
+              <h3 style="margin: 0 0 12px 0; font-size: 18px; font-weight: bold; color: #1f2937; border-bottom: 2px solid #e5e7eb; padding-bottom: 8px;">Current Status</h3>
+              <table style="width: 100%; margin: 0 0 24px 0; font-size: 15px; color: #4b5563;">
+                <tr>
+                  <td style="padding: 8px 0; font-weight: bold; width: 40%;">Current Position:</td>
+                  <td style="padding: 8px 0;">{{current_position}}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px 0; font-weight: bold;">Current Company:</td>
+                  <td style="padding: 8px 0;">{{current_company}}</td>
+                </tr>
+              </table>
+
+              <h3 style="margin: 0 0 12px 0; font-size: 18px; font-weight: bold; color: #1f2937; border-bottom: 2px solid #e5e7eb; padding-bottom: 8px;">Personal Bio</h3>
+              <div style="background-color: #f9fafb; padding: 16px; margin: 0 0 24px 0; border-radius: 6px;">
+                <p style="margin: 0; font-size: 15px; line-height: 1.6; color: #4b5563;">{{bio}}</p>
+              </div>
+
+              <h3 style="margin: 0 0 12px 0; font-size: 18px; font-weight: bold; color: #1f2937; border-bottom: 2px solid #e5e7eb; padding-bottom: 8px;">Achievements</h3>
+              <div style="background-color: #f9fafb; padding: 16px; margin: 0 0 24px 0; border-radius: 6px;">
+                <p style="margin: 0; font-size: 15px; line-height: 1.6; color: #4b5563;">{{achievements}}</p>
+              </div>
+
+              <h3 style="margin: 0 0 12px 0; font-size: 18px; font-weight: bold; color: #1f2937; border-bottom: 2px solid #e5e7eb; padding-bottom: 8px;">Social Profiles</h3>
+              <div style="margin: 0 0 32px 0;">
+                <p style="margin: 0 0 8px 0; font-size: 15px; color: #4b5563;">
+                  <strong>LinkedIn:</strong> 
+                  <a href="{{linkedin}}" style="color: #2563eb; text-decoration: none;">{{linkedin}}</a>
+                </p>
+                <p style="margin: 0 0 8px 0; font-size: 15px; color: #4b5563;">
+                  <strong>GitHub:</strong> 
+                  <a href="{{github}}" style="color: #2563eb; text-decoration: none;">{{github}}</a>
+                </p>
+                <p style="margin: 0; font-size: 15px; color: #4b5563;">
+                  <strong>Facebook:</strong> 
+                  <a href="{{facebook}}" style="color: #2563eb; text-decoration: none;">{{facebook}}</a>
+                </p>
+              </div>
+
+              <div style="text-align: center; margin: 32px 0; padding: 24px; background-color: #fef3c7; border-radius: 8px;">
+                <p style="margin: 0 0 16px 0; font-size: 14px; color: #92400e; font-weight: bold;">⚠️ Action Required</p>
+                <a href="#" style="display: inline-block; background-color: #10b981; color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 6px; font-size: 16px; font-weight: bold; margin: 0 8px 8px 8px;">Review in Admin Panel</a>
+                <p style="margin: 16px 0 0 0; font-size: 13px; color: #6b7280;">Login to the admin panel to approve or reject this application</p>
+              </div>
+
+            </td>
+          </tr>
+
+          <tr>
+            <td style="background-color: #f9fafb; padding: 30px; text-align: center; border-radius: 0 0 8px 8px; border-top: 1px solid #e5e7eb;">
+              <p style="margin: 0 0 12px 0; font-size: 14px; color: #6b7280;">
+                <strong>Questions?</strong> Email us at <a href="mailto:grrcgstu@gmail.com" style="color: #2563eb; text-decoration: none;">grrcgstu@gmail.com</a>
+              </p>
+              
+              <p style="margin: 12px 0 0 0; font-size: 12px; color: #9ca3af;">
+                © {{year}} GSTU Robotics Club. All rights reserved.
+              </p>
+              
+              <p style="margin: 8px 0 0 0; font-size: 11px; color: #9ca3af;">
+                This is an automated admin notification. Please do not reply to this email.
+              </p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
