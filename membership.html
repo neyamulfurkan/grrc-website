@@ -23,7 +23,8 @@
             transition: all 0.3s ease;
             backdrop-filter: blur(10px);
             height: 70px;
-            display: block !important;
+            display: flex !important;
+            align-items: center;
         }
 
         [data-theme="dark"] .header {
@@ -40,7 +41,33 @@
             height: 100%;
         }
 
-       .header-actions {
+        .header-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 70px;
+            width: 100%;
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+        }
+
+        .logo {
+            height: 45px;
+            width: auto;
+            display: block;
+        }
+
+        .club-name {
+            font-size: var(--font-lg);
+            font-weight: var(--font-weight-bold);
+            color: var(--header-text);
+        }
+
+        .header-actions {
             display: flex;
             align-items: center;
             gap: 0.5rem;
@@ -606,9 +633,23 @@
             }
 
             .logo {
+            height: 45px;
+            width: auto;
+            transition: transform var(--transition-base);
+        }
+
+        @media (max-width: 768px) {
+            .logo {
                 height: 40px;
                 width: 40px;
             }
+
+            .logo-container {
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+            }
+        }
         }
         @media (max-width: 480px) {
             .form-container {
