@@ -157,8 +157,8 @@ router.post(
       console.log('   ID:', result.id);
       console.log('   Status:', result.status);
 
-      // Send confirmation email to applicant (fire-and-forget)
-      emailService.sendMembershipApplicationReceived(
+      // ✅ FIXED: Send confirmation email to applicant (fire-and-forget)
+      emailService.sendMembershipApplicationEmail(
         result.email,
         result.full_name,
         result.id
@@ -166,22 +166,25 @@ router.post(
         console.error('⚠️ Failed to send confirmation email:', err.message);
       });
 
-      // Send notification email to admin (fire-and-forget)
-      emailService.sendAdminMembershipNotification({
-        full_name: result.full_name,
-        email: result.email,
-        phone: result.phone,
-        student_id: result.student_id || 'N/A',
-        department: result.department,
-        year: result.year,
-        bio: result.bio,
-        skills: Array.isArray(result.skills) ? result.skills : [],
-        previous_experience: result.previous_experience || 'None provided',
-        github_profile: result.github_profile || 'Not provided',
-        linkedin_profile: result.linkedin_profile || 'Not provided',
-        applicationId: result.id,
-        applied_date: result.applied_date
-      }).catch(err => {
+      // ✅ FIXED: Send notification email to admin (fire-and-forget)
+      emailService.sendAdminMembershipNotification(
+        process.env.ADMIN_EMAIL || 'grrcgstu@gmail.com',
+        {
+          full_name: result.full_name,
+          email: result.email,
+          phone: result.phone,
+          student_id: result.student_id || 'N/A',
+          department: result.department,
+          year: result.year,
+          bio: result.bio,
+          skills: Array.isArray(result.skills) ? result.skills.join(', ') : JSON.stringify(result.skills),
+          previous_experience: result.previous_experience || 'None provided',
+          github_profile: result.github_profile || 'Not provided',
+          linkedin_profile: result.linkedin_profile || 'Not provided',
+          applicationId: result.id,
+          applied_date: result.applied_date
+        }
+      ).catch(err => {
         console.error('⚠️ Failed to send admin notification email:', err.message);
       });
 
@@ -198,6 +201,7 @@ router.post(
       });
     } catch (error) {
       console.error('❌ Error submitting application:', error.message);
+      console.error('   Stack:', error.stack);
 
       // Handle duplicate email error
       if (error.code === '23505' || 
@@ -333,7 +337,7 @@ router.post(
         admin_notes || null
       );
 
-      // ✅ CRITICAL FIX: Create member account
+      // ✅ Create member account
       const memberData = {
         name: application.full_name,
         email: application.email,
@@ -349,12 +353,10 @@ router.post(
 
       console.log('📝 Creating member with data:', memberData);
 
-      // ✅ CRITICAL: contentModel.createMember returns {success, data, error}
       const memberResult = await contentModel.createMember(memberData);
 
       console.log('📦 createMember response:', memberResult);
 
-      // ✅ CRITICAL: Check if member creation was successful
       if (!memberResult.success) {
         console.error('❌ Failed to create member:', memberResult.error);
         
@@ -378,13 +380,11 @@ router.post(
         });
       }
 
-      // ✅ Extract the actual member data from the wrapper
       const member = memberResult.data;
 
       if (!member || !member.id) {
         console.error('❌ Invalid member data returned');
         
-        // Rollback
         await membershipModel.updateApplicationStatus(
           id,
           'pending',
@@ -414,7 +414,7 @@ router.post(
       // Send new member announcement to all members (fire-and-forget)
       try {
         const memberEmails = await contentModel.getAllMemberEmails();
-        if (memberEmails.length > 0) {
+        if (memberEmails && memberEmails.length > 0) {
           emailService.sendNewMemberAnnouncement(memberEmails, {
             name: member.name,
             department: member.department,
