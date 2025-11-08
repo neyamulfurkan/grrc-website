@@ -10,7 +10,9 @@ const fs = require('fs').promises;
 const path = require('path');
 const emailConfig = require('../config/email');
 
-let transporter;
+// Create reusable transporter
+let transporter = null;
+
 try {
   transporter = nodemailer.createTransport(emailConfig.smtp);
   console.log('✅ Email transporter created successfully');
@@ -24,22 +26,23 @@ try {
  * @param {Object} data - Key-value pairs to replace in template
  * @returns {Promise<string>} Populated HTML content
  */
-async function loadTemplate(templateName, data) {
+const loadTemplate = async (templateName, data) => {
   try {
     const templatePath = path.join(__dirname, '../templates', `${templateName}.html`);
     let html = await fs.readFile(templatePath, 'utf-8');
-    
-    html = html.replace(/\{\{(\w+)\}\}/g, (match, key) => {
-      return data[key] !== undefined ? data[key] : match;
+
+    // Replace all {{key}} placeholders with data values
+    Object.keys(data).forEach(key => {
+      const regex = new RegExp(`\\{\\{${key}\\}\\}`, 'g');
+      html = html.replace(regex, data[key] || '');
     });
-    
-    console.log(`✅ Template loaded: ${templateName}`);
+
     return html;
   } catch (error) {
-    console.error(`❌ Template loading failed: ${templateName}`, error.message);
-    throw new Error(`Template not found: ${templateName}`);
+    console.error(`❌ Failed to load template "${templateName}":`, error.message);
+    throw new Error(`Template "${templateName}" not found or invalid`);
   }
-}
+};
 
 /**
  * Send email with automatic retry on failure
@@ -47,21 +50,23 @@ async function loadTemplate(templateName, data) {
  * @param {number} retries - Number of retry attempts remaining
  * @returns {Promise<Object>} Email send result
  */
-async function sendEmailWithRetry(mailOptions, retries = emailConfig.options.maxRetries) {
+const sendEmailWithRetry = async (mailOptions, retries = emailConfig.options.maxRetries) => {
   try {
     const result = await transporter.sendMail(mailOptions);
-    console.log(`📧 Email sent successfully: ${result.messageId}`);
+    console.log('✅ Email sent successfully:', result.messageId);
     return result;
   } catch (error) {
+    console.error(`❌ Email send failed (${emailConfig.options.maxRetries - retries + 1}/${emailConfig.options.maxRetries}):`, error.message);
+
     if (retries > 0) {
-      console.log(`🔄 Retrying email send... (${retries} attempts remaining)`);
+      console.log(`🔄 Retrying in ${emailConfig.options.retryDelay}ms...`);
       await new Promise(resolve => setTimeout(resolve, emailConfig.options.retryDelay));
       return sendEmailWithRetry(mailOptions, retries - 1);
+    } else {
+      throw error;
     }
-    console.error('❌ Email send failed after all retries:', error.message);
-    throw error;
   }
-}
+};
 
 /**
  * Send an email (main public API)
@@ -74,14 +79,21 @@ async function sendEmailWithRetry(mailOptions, retries = emailConfig.options.max
  * @param {string} [options.bcc] - BCC recipients
  * @returns {Promise<Object>} { success: boolean, messageId?: string, error?: string }
  */
-async function sendEmail(options) {
+const sendEmail = async (options) => {
   try {
+    // Validate required fields
     if (!options.to || !options.subject || !options.template) {
       throw new Error('Missing required fields: to, subject, or template');
     }
 
+    if (!transporter) {
+      throw new Error('Email transporter not configured');
+    }
+
+    // Load and populate template
     const html = await loadTemplate(options.template, options.data);
-    
+
+    // Construct mail options
     const mailOptions = {
       from: `${emailConfig.from.name} <${emailConfig.from.address}>`,
       to: Array.isArray(options.to) ? options.to.join(', ') : options.to,
@@ -91,15 +103,33 @@ async function sendEmail(options) {
       bcc: options.bcc
     };
 
-    const result = await sendEmailWithRetry(mailOptions);
-    return { success: true, messageId: result.messageId };
-  } catch (error) {
-    console.error('❌ Send email error:', error.message);
-    return { success: false, error: error.message };
-  }
-}
+    console.log(`📧 Sending email to: ${mailOptions.to}`);
+    console.log(`   Subject: ${options.subject}`);
 
-async function sendMembershipApplicationEmail(applicantEmail, applicantName, applicationId) {
+    // Send email with retry logic
+    const result = await sendEmailWithRetry(mailOptions);
+
+    return {
+      success: true,
+      messageId: result.messageId
+    };
+  } catch (error) {
+    console.error('❌ Email service error:', error.message);
+    return {
+      success: false,
+      error: error.message
+    };
+  }
+};
+
+/**
+ * Send membership application confirmation email
+ * @param {string} applicantEmail - Applicant's email
+ * @param {string} applicantName - Applicant's name
+ * @param {number} applicationId - Application ID
+ * @returns {Promise<Object>} Send result
+ */
+const sendMembershipApplicationEmail = async (applicantEmail, applicantName, applicationId) => {
   return sendEmail({
     to: applicantEmail,
     subject: 'Thank You for Your Membership Application',
@@ -110,9 +140,15 @@ async function sendMembershipApplicationEmail(applicantEmail, applicantName, app
       year: new Date().getFullYear()
     }
   });
-}
+};
 
-async function sendAdminMembershipNotification(adminEmail, applicationData) {
+/**
+ * Send admin notification for new membership application
+ * @param {string} adminEmail - Admin email address
+ * @param {Object} applicationData - Application details
+ * @returns {Promise<Object>} Send result
+ */
+const sendAdminMembershipNotification = async (adminEmail, applicationData) => {
   return sendEmail({
     to: adminEmail || emailConfig.adminEmail,
     subject: 'New Membership Application Received',
@@ -122,9 +158,15 @@ async function sendAdminMembershipNotification(adminEmail, applicationData) {
       year: new Date().getFullYear()
     }
   });
-}
+};
 
-async function sendMembershipApprovalEmail(applicantEmail, applicantName) {
+/**
+ * Send membership approval email
+ * @param {string} applicantEmail - Applicant's email
+ * @param {string} applicantName - Applicant's name
+ * @returns {Promise<Object>} Send result
+ */
+const sendMembershipApprovalEmail = async (applicantEmail, applicantName) => {
   return sendEmail({
     to: applicantEmail,
     subject: 'Your Membership Application has been Approved! 🎉',
@@ -134,9 +176,16 @@ async function sendMembershipApprovalEmail(applicantEmail, applicantName) {
       year: new Date().getFullYear()
     }
   });
-}
+};
 
-async function sendMembershipRejectionEmail(applicantEmail, applicantName, reason) {
+/**
+ * Send membership rejection email
+ * @param {string} applicantEmail - Applicant's email
+ * @param {string} applicantName - Applicant's name
+ * @param {string} reason - Rejection reason
+ * @returns {Promise<Object>} Send result
+ */
+const sendMembershipRejectionEmail = async (applicantEmail, applicantName, reason) => {
   return sendEmail({
     to: applicantEmail,
     subject: 'Membership Application Status Update',
@@ -147,9 +196,16 @@ async function sendMembershipRejectionEmail(applicantEmail, applicantName, reaso
       year: new Date().getFullYear()
     }
   });
-}
+};
 
-async function sendAlumniApplicationEmail(applicantEmail, applicantName, applicationId) {
+/**
+ * Send alumni application confirmation email
+ * @param {string} applicantEmail - Applicant's email
+ * @param {string} applicantName - Applicant's name
+ * @param {number} applicationId - Application ID
+ * @returns {Promise<Object>} Send result
+ */
+const sendAlumniApplicationEmail = async (applicantEmail, applicantName, applicationId) => {
   return sendEmail({
     to: applicantEmail,
     subject: 'Thank You for Your Alumni Application',
@@ -160,9 +216,15 @@ async function sendAlumniApplicationEmail(applicantEmail, applicantName, applica
       year: new Date().getFullYear()
     }
   });
-}
+};
 
-async function sendAdminAlumniNotification(adminEmail, applicationData) {
+/**
+ * Send admin notification for new alumni application
+ * @param {string} adminEmail - Admin email address
+ * @param {Object} applicationData - Application details
+ * @returns {Promise<Object>} Send result
+ */
+const sendAdminAlumniNotification = async (adminEmail, applicationData) => {
   return sendEmail({
     to: adminEmail || emailConfig.adminEmail,
     subject: 'New Alumni Application Received',
@@ -172,9 +234,15 @@ async function sendAdminAlumniNotification(adminEmail, applicationData) {
       year: new Date().getFullYear()
     }
   });
-}
+};
 
-async function sendAlumniApprovalEmail(applicantEmail, applicantName) {
+/**
+ * Send alumni approval email
+ * @param {string} applicantEmail - Applicant's email
+ * @param {string} applicantName - Applicant's name
+ * @returns {Promise<Object>} Send result
+ */
+const sendAlumniApprovalEmail = async (applicantEmail, applicantName) => {
   return sendEmail({
     to: applicantEmail,
     subject: 'Your Alumni Application has been Approved! 🎉',
@@ -184,9 +252,16 @@ async function sendAlumniApprovalEmail(applicantEmail, applicantName) {
       year: new Date().getFullYear()
     }
   });
-}
+};
 
-async function sendAlumniRejectionEmail(applicantEmail, applicantName, reason) {
+/**
+ * Send alumni rejection email
+ * @param {string} applicantEmail - Applicant's email
+ * @param {string} applicantName - Applicant's name
+ * @param {string} reason - Rejection reason
+ * @returns {Promise<Object>} Send result
+ */
+const sendAlumniRejectionEmail = async (applicantEmail, applicantName, reason) => {
   return sendEmail({
     to: applicantEmail,
     subject: 'Alumni Application Status Update',
@@ -197,12 +272,18 @@ async function sendAlumniRejectionEmail(applicantEmail, applicantName, reason) {
       year: new Date().getFullYear()
     }
   });
-}
+};
 
-async function sendNewMemberAnnouncement(memberEmails, newMemberData) {
+/**
+ * Send new member announcement to all existing members
+ * @param {string[]} memberEmails - Array of member email addresses
+ * @param {Object} newMemberData - New member information
+ * @returns {Promise<Object>} Send result
+ */
+const sendNewMemberAnnouncement = async (memberEmails, newMemberData) => {
   return sendEmail({
-    to: emailConfig.adminEmail,
-    bcc: Array.isArray(memberEmails) ? memberEmails.join(', ') : memberEmails,
+    to: emailConfig.adminEmail, // Primary recipient (to satisfy email requirements)
+    bcc: memberEmails.join(', '), // BCC all members for privacy
     subject: 'Welcome Our Newest Member! 🎉',
     template: 'new-member-announcement',
     data: {
@@ -210,7 +291,7 @@ async function sendNewMemberAnnouncement(memberEmails, newMemberData) {
       year: new Date().getFullYear()
     }
   });
-}
+};
 
 module.exports = {
   sendEmail,
