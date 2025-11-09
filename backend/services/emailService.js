@@ -27,8 +27,13 @@ const emailConfig = {
 if (!process.env.RESEND_API_KEY) {
   console.error('❌ RESEND_API_KEY is not configured in environment variables');
   console.error('   Please add RESEND_API_KEY to your Render environment settings');
+} else if (!process.env.RESEND_API_KEY.startsWith('re_')) {
+  console.error('⚠️ WARNING: RESEND_API_KEY format looks incorrect');
+  console.error('   API key should start with "re_"');
+  console.error('   Current key starts with:', process.env.RESEND_API_KEY.substring(0, 5));
 } else {
   console.log('✅ Resend email service initialized successfully');
+  console.log(`   API Key: ${process.env.RESEND_API_KEY.substring(0, 10)}...`);
   console.log(`   From: ${emailConfig.fromName} <${emailConfig.fromAddress}>`);
   console.log(`   Admin: ${emailConfig.adminEmail}`);
 }
@@ -58,16 +63,30 @@ async function sendEmailWithRetry(to, subject, html, maxRetries = 3) {
         html: html
       });
       
+      // Resend returns { data: { id: '...' }, error: null } or just { id: '...' }
+      const messageId = result?.data?.id || result?.id || 'unknown';
+      
       console.log('✅ Email sent successfully via Resend');
-      console.log(`   Message ID: ${result.data?.id || result.id}`);
+      console.log(`   Message ID: ${messageId}`);
+      console.log(`   Recipients: ${recipients.join(', ')}`);
       
       return {
         success: true,
-        messageId: result.data?.id || result.id
+        messageId: messageId
       };
       
     } catch (error) {
       console.error(`❌ Email send failed (${attempt}/${maxRetries}):`, error.message);
+      console.error('   Error details:', JSON.stringify(error, null, 2));
+      console.error('   Error stack:', error.stack);
+      
+      // Check for specific Resend errors
+      if (error.message?.includes('API key')) {
+        console.error('🔑 API KEY ERROR: Check that RESEND_API_KEY is correct');
+      }
+      if (error.message?.includes('domain')) {
+        console.error('🌐 DOMAIN ERROR: Sender email domain may not be verified');
+      }
       
       if (attempt < maxRetries) {
         const delayMs = attempt * 2000; // Exponential backoff: 2s, 4s, 6s
@@ -75,7 +94,9 @@ async function sendEmailWithRetry(to, subject, html, maxRetries = 3) {
         await new Promise(resolve => setTimeout(resolve, delayMs));
       } else {
         console.error('❌ All email send attempts failed');
-        console.error('   Full error:', error);
+        console.error('   Final error:', error);
+        console.error('   Error type:', typeof error);
+        console.error('   Error name:', error.name);
         return {
           success: false,
           error: error.message || 'Failed to send email after multiple attempts'
