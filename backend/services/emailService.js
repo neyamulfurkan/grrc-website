@@ -52,17 +52,20 @@ const loadTemplate = async (templateName, data) => {
  */
 const sendEmailWithRetry = async (mailOptions, retries = emailConfig.options.maxRetries) => {
   try {
+    console.log('⏳ Attempting to send email...');
     const result = await transporter.sendMail(mailOptions);
     console.log('✅ Email sent successfully:', result.messageId);
     return result;
   } catch (error) {
     console.error(`❌ Email send failed (${emailConfig.options.maxRetries - retries + 1}/${emailConfig.options.maxRetries}):`, error.message);
+    console.error('   Full error:', error);
 
     if (retries > 0) {
       console.log(`🔄 Retrying in ${emailConfig.options.retryDelay}ms...`);
       await new Promise(resolve => setTimeout(resolve, emailConfig.options.retryDelay));
       return sendEmailWithRetry(mailOptions, retries - 1);
     } else {
+      console.error('❌ All retry attempts failed');
       throw error;
     }
   }
