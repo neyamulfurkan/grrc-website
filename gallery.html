@@ -898,7 +898,66 @@
 
         /* MODIFIED - Added API integration with localStorage fallback */
         async function loadGallery() {
-    console.log('📄 loadGallery() called');
+            console.log('📄 loadGallery() called');
+            
+            try {
+                // ✅ SPEED FIX: Try cache FIRST for instant loading
+                const cached = localStorage.getItem('gallery');
+                if (cached) {
+                    allPhotos = JSON.parse(cached);
+                    console.log('✅ Loaded', allPhotos.length, 'photos from cache (instant)');
+                    allPhotos.sort((a, b) => new Date(b.date) - new Date(a.date));
+                    updateStatistics();
+                    applyFilters();
+                }
+                
+                // Then try API for fresh data in background
+                try {
+                    const result = await Promise.race([
+                        window.apiClient.getGallery(),
+                        new Promise((_, reject) => 
+                            setTimeout(() => reject(new Error('API timeout')), 2000)
+                        )
+                    ]);
+                    
+                    console.log('📊 API result:', result);
+                    
+                    if (result.success && result.data && Array.isArray(result.data)) {
+                        allPhotos = result.data;
+                        console.log('✅ Loaded', allPhotos.length, 'photos from API');
+                        
+                        // Save to cache
+                        localStorage.setItem('gallery', JSON.stringify(allPhotos));
+                        
+                        // Sort photos by date (newest first by default)
+                        allPhotos.sort((a, b) => new Date(b.date) - new Date(a.date));
+                        
+                        updateStatistics();
+                        applyFilters();
+                        return;
+                    }
+                    
+                    console.warn('⚠️ API returned no data');
+                    
+                } catch (apiError) {
+                    console.warn('⚠️ API failed:', apiError);
+                }
+                
+                // If API failed but we have cache, we're already showing it
+                if (allPhotos.length > 0) {
+                    console.log('✅ Using cached data after API failure');
+                    return;
+                }
+                
+                // No cache and no API - show empty state
+                console.warn('⚠️ No photos available');
+                showEmptyState();
+                
+            } catch (error) {
+                console.error('❌ Error loading gallery:', error);
+                showEmptyState();
+            }
+        }
     
     try {
         // ✅ SPEED FIX: Try cache FIRST for instant loading
@@ -914,20 +973,20 @@
         // Then try API for fresh data in background
         try {
             const result = await Promise.race([
-          window.apiClient.getConfig(),
-          new Promise((_, reject) => 
-            setTimeout(() => reject(new Error('API timeout')), 2000)
-          )
-        ]);
+                window.apiClient.getGallery(),
+                new Promise((_, reject) => 
+                    setTimeout(() => reject(new Error('API timeout')), 2000)
+                )
+            ]);
         
-        console.log('📊 API result:', result);
+            console.log('📊 API result:', result);
         
-        if (result.success && result.data && Array.isArray(result.data)) {
-            allPhotos = result.data;
-            console.log('✅ Loaded', allPhotos.length, 'photos from API');
+            if (result.success && result.data && Array.isArray(result.data)) {
+                allPhotos = result.data;
+                console.log('✅ Loaded', allPhotos.length, 'photos from API');
             
-            // Save to cache
-            localStorage.setItem('gallery', JSON.stringify(allPhotos));
+                // Save to cache
+                localStorage.setItem('gallery', JSON.stringify(allPhotos));
             
             // Sort photos by date (newest first by default)
             allPhotos.sort((a, b) => new Date(b.date) - new Date(a.date));
@@ -949,12 +1008,15 @@
             allPhotos.sort((a, b) => new Date(b.date) - new Date(a.date));
             
             updateStatistics();
-            applyFilters();
-            return;
-        }
+                applyFilters();
+                return;
+            }
         
-        console.warn('⚠️ No photos in cache either');
-        showEmptyState();
+            console.warn('⚠️ No photos in cache either');
+            showEmptyState();
+        } catch (apiError) {
+            console.warn('⚠️ API failed:', apiError);
+        }
         
     } catch (error) {
         console.error('❌ Error loading gallery:', error);
@@ -971,7 +1033,7 @@
             showEmptyState();
         }
     }
-}
+
 
         // Update statistics
         function updateStatistics() {
