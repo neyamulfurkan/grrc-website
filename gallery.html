@@ -1284,7 +1284,7 @@
 
         /* MODIFIED - Updated to use async/await for API calls */
         /* MODIFIED - Updated to use async/await for API calls */
-document.addEventListener('DOMContentLoaded', async () => {
+document.addEventListener('DOMContentLoaded', function() {
     // ✅ Apply theme IMMEDIATELY
     const savedTheme = localStorage.getItem('theme') || 'dark';
     document.documentElement.setAttribute('data-theme', savedTheme);
@@ -1299,8 +1299,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (typeof initTheme === 'function') initTheme();
     if (typeof initNavigation === 'function') initNavigation();
 
-    // ✅ Load gallery immediately from cache
-    await loadGallery();
+    // ✅ Load gallery (no await needed, it's async internally)
+    loadGallery();
     
     // ✅ Load config in parallel
     loadClubConfig();

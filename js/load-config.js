@@ -120,14 +120,13 @@ function updateClubConfigDOM(config) {
   console.log('🎨 Updating DOM with config:', config);
   
   // ✅ CRITICAL FIX: Update ALL possible logo selectors INCLUDING admin-logo
-  const logoElements = document.querySelectorAll('.club-logo, .admin-logo, #sidebarLogo, #headerLogo, #clubLogo, #footerLogo, .logo');
-  function updateClubConfigDOM(config) {
+function updateClubConfigDOM(config) {
   if (!config) return;
   
   console.log('🎨 Updating DOM with config:', config);
   
-  // Update ALL logo elements INCLUDING membership form logo
-  const logoElements = document.querySelectorAll('.club-logo, .admin-logo, #sidebarLogo, #headerLogo, #clubLogo, #footerLogo, #membershipLogo, #applicationLogo, .logo, img.logo');
+  // Update ALL logo elements
+  const logoElements = document.querySelectorAll('.club-logo, .admin-logo, #sidebarLogo, #headerLogo, #clubLogo, #footerLogo, .logo, img.logo');
   logoElements.forEach(el => {
     const logoValue = config.logo || config.logo_url;
     if (logoValue) {
@@ -145,7 +144,7 @@ function updateClubConfigDOM(config) {
     }
   });
   
- // Update ALL club name elements
+  // Update ALL club name elements
   const clubNameElements = document.querySelectorAll('.club-name, .admin-subtitle, #sidebarSubtitle, #headerClubName, #clubName, #heroClubName, #footerClubName');
   clubNameElements.forEach(el => {
     const nameValue = config.name || config.club_name;
@@ -1191,5 +1190,5 @@ waitForDependencies().then(() => {
   console.log('✅ Dependencies ready, initializing page');
   initializePage();
 });
-
+}
 console.log('✅ load-config.js v3.0.0 loaded successfully');
