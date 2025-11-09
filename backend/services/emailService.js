@@ -13,8 +13,19 @@
 
 const { Resend } = require('resend');
 
-// Initialize Resend
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Initialize Resend with API key
+const resendApiKey = process.env.RESEND_API_KEY;
+let resend = null;
+
+try {
+  if (!resendApiKey) {
+    throw new Error('RESEND_API_KEY not found in environment variables');
+  }
+  resend = new Resend(resendApiKey);
+  console.log('✅ Resend client initialized');
+} catch (error) {
+  console.error('❌ Failed to initialize Resend:', error.message);
+}
 
 // Email configuration from environment variables
 const emailConfig = {
@@ -24,16 +35,16 @@ const emailConfig = {
 };
 
 // Verify configuration on startup
-if (!process.env.RESEND_API_KEY) {
+if (!resendApiKey) {
   console.error('❌ RESEND_API_KEY is not configured in environment variables');
   console.error('   Please add RESEND_API_KEY to your Render environment settings');
-} else if (!process.env.RESEND_API_KEY.startsWith('re_')) {
+} else if (!resendApiKey.startsWith('re_')) {
   console.error('⚠️ WARNING: RESEND_API_KEY format looks incorrect');
   console.error('   API key should start with "re_"');
-  console.error('   Current key starts with:', process.env.RESEND_API_KEY.substring(0, 5));
+  console.error('   Current key starts with:', resendApiKey.substring(0, 5));
 } else {
   console.log('✅ Resend email service initialized successfully');
-  console.log(`   API Key: ${process.env.RESEND_API_KEY.substring(0, 10)}...`);
+  console.log(`   API Key: ${resendApiKey.substring(0, 10)}...`);
   console.log(`   From: ${emailConfig.fromName} <${emailConfig.fromAddress}>`);
   console.log(`   Admin: ${emailConfig.adminEmail}`);
 }
@@ -47,28 +58,48 @@ if (!process.env.RESEND_API_KEY) {
  * @returns {Promise<Object>} { success: boolean, messageId?: string, error?: string }
  */
 async function sendEmailWithRetry(to, subject, html, maxRetries = 3) {
+  if (!resend) {
+    console.error('❌ Resend client not initialized');
+    return {
+      success: false,
+      error: 'Email service not configured'
+    };
+  }
+
   const recipients = Array.isArray(to) ? to : [to];
   
   console.log(`📧 Sending email to: ${recipients.join(', ')}`);
   console.log(`   Subject: ${subject}`);
+  console.log(`   From: ${emailConfig.fromName} <${emailConfig.fromAddress}>`);
   
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
       console.log(`⏳ Attempting to send email (${attempt}/${maxRetries})...`);
+      console.log(`   Using Resend API...`);
       
-      const result = await resend.emails.send({
+      // Call Resend API
+      const { data, error } = await resend.emails.send({
         from: `${emailConfig.fromName} <${emailConfig.fromAddress}>`,
         to: recipients,
         subject: subject,
         html: html
       });
       
-      // Resend returns { data: { id: '...' }, error: null } or just { id: '...' }
-      const messageId = result?.data?.id || result?.id || 'unknown';
+      // Check for errors in response
+      if (error) {
+        console.error('❌ Resend API returned error:', error);
+        throw new Error(JSON.stringify(error));
+      }
+      
+      // Log full response to debug
+      console.log('📦 Resend response data:', JSON.stringify(data, null, 2));
+      
+      const messageId = data?.id || 'no-id-returned';
       
       console.log('✅ Email sent successfully via Resend');
       console.log(`   Message ID: ${messageId}`);
       console.log(`   Recipients: ${recipients.join(', ')}`);
+      console.log(`   Check Resend dashboard: https://resend.com/emails`);
       
       return {
         success: true,
