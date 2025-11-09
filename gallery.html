@@ -1145,7 +1145,48 @@
             document.getElementById('loadingState').style.display = 'none';
         }
 
-        /* MODIFIED - Updated to use async/await for API calls */
+        // ✅ CRITICAL: Define loadGallery BEFORE DOMContentLoaded
+        async function loadGallery() {
+            console.log('📄 loadGallery() called');
+            
+            try {
+                const cached = localStorage.getItem('gallery');
+                if (cached) {
+                    allPhotos = JSON.parse(cached);
+                    console.log('✅ Loaded', allPhotos.length, 'photos from cache');
+                    allPhotos.sort((a, b) => new Date(b.date) - new Date(a.date));
+                    updateStatistics();
+                    applyFilters();
+                }
+                
+                try {
+                    const result = await window.apiClient.getGallery();
+                    
+                    if (result.success && result.data && Array.isArray(result.data)) {
+                        allPhotos = result.data;
+                        console.log('✅ Loaded', allPhotos.length, 'photos from API');
+                        localStorage.setItem('gallery', JSON.stringify(allPhotos));
+                        allPhotos.sort((a, b) => new Date(b.date) - new Date(a.date));
+                        updateStatistics();
+                        applyFilters();
+                        return;
+                    }
+                } catch (apiError) {
+                    console.warn('⚠️ API failed:', apiError);
+                }
+                
+                if (allPhotos.length > 0) {
+                    return;
+                }
+                
+                showEmptyState();
+                
+            } catch (error) {
+                console.error('❌ Error loading gallery:', error);
+                showEmptyState();
+            }
+        }
+
         /* MODIFIED - Updated to use async/await for API calls */
 document.addEventListener('DOMContentLoaded', function() {
     // ✅ Apply theme IMMEDIATELY
