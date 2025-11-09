@@ -1,5 +1,5 @@
 -- ====================================
--- GSTU Robotics Club Database Schema
+-- GSTU Robotics & Research Club Database Schema
 -- ====================================
 -- This file creates all necessary tables for the club management system
 -- Run this file with: psql -U postgres -d grrc_db -f backend/db/schema.sql

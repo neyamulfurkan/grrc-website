@@ -1,9 +1,9 @@
 /**
- * GSTU Robotics Club - Express.js Server
+ * GSTU Robotics & Research Club - Express.js Server
  * ======================================
  * Production-ready backend API server for Render deployment
  * 
- * @author GSTU Robotics Club
+ * @author GSTU Robotics & Research Club
  * @version 2.3.0 - Alumni Application Routes Added
  */
 
@@ -113,7 +113,7 @@ app.use((req, res, next) => {
 app.get('/', (req, res) => {
     res.json({
         success: true,
-        message: 'GSTU Robotics Club API Server',
+        message: 'GSTU Robotics & Research Club API Server',
         version: '2.3.0',
         environment: NODE_ENV,
         timestamp: new Date().toISOString(),
@@ -245,7 +245,7 @@ loadRoute('alumniApplication', './routes/alumniApplication', '/api/alumni-applic
 app.get('/api', (req, res) => {
     res.json({
         success: true,
-        message: 'GSTU Robotics Club API',
+        message: 'GSTU Robotics & Research Club API Server',
         version: '2.3.0',
         documentation: 'https://github.com/gstu-robotics/grrc-website',
         routesLoaded: routesLoaded,
@@ -374,7 +374,7 @@ async function startServer() {
         // Start HTTP server
         const server = app.listen(PORT, '0.0.0.0', () => {
             console.log('\n╔════════════════════════════════════════════════════════╗');
-            console.log('║     GSTU Robotics Club API Server - STARTED          ║');
+            console.log('║     GSTU Robotics & Research Club & Research Club API Server - STARTED          ║');
             console.log('╚════════════════════════════════════════════════════════╝\n');
             console.log(`🚀 Server running on port ${PORT}`);
             console.log(`📝 Environment: ${NODE_ENV}`);

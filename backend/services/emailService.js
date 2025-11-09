@@ -1,7 +1,7 @@
 /**
  * Email Service
  * =============
- * Handles all email operations for the GSTU Robotics Club
+ * Handles all email operations for the GSTU Robotics & Research Club
  * Features: HTML templates, retry logic, error handling, logging
  */
 

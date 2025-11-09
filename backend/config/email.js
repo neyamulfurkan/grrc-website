@@ -36,7 +36,7 @@ const emailConfig = {
 
   // Email Sender Information
   from: {
-    name: process.env.EMAIL_FROM_NAME || 'GSTU Robotics Club',
+    name: process.env.EMAIL_FROM_NAME || 'GSTU Robotics Club & Research Club',
     address: process.env.EMAIL_FROM_ADDRESS || process.env.EMAIL_USER
   },
 

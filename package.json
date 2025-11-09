@@ -1,7 +1,7 @@
 {
   "name": "gstu-robotics-club-backend",
   "version": "1.0.0",
-  "description": "Backend API for GSTU Robotics Club Management System",
+  "description": "Backend API for GSTU Robotics & Research Club Management System",
   "main": "backend/server.js",
   "scripts": {
     "start": "node backend/server.js",

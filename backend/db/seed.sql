@@ -1,5 +1,5 @@
 -- ====================================
--- GSTU Robotics Club Database Seed File
+-- GSTU Robotics & Research Club Database Seed File
 -- ====================================
 -- This file populates the database with ONLY essential initial data
 -- Run this file AFTER schema.sql with: psql -U your_user -d your_database -f backend/db/seed.sql
@@ -76,7 +76,7 @@ ON CONFLICT (username) DO UPDATE SET
 -- ====================================
 INSERT INTO announcements (title, content, priority, date, created_at)
 VALUES (
-    '🎉 Welcome to GSTU Robotics Club!',
+    '🎉 Welcome to GSTU Robotics & Research Club!',
     'Welcome to the official website of GSTU Robotics & Research Club. We are excited to have you here. Stay tuned for upcoming events, projects, and workshops!',
     'high',
     CURRENT_TIMESTAMP,
