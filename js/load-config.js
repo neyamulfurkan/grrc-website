@@ -119,12 +119,6 @@ function updateClubConfigDOM(config) {
   
   console.log('🎨 Updating DOM with config:', config);
   
-  // ✅ CRITICAL FIX: Update ALL possible logo selectors INCLUDING admin-logo
-function updateClubConfigDOM(config) {
-  if (!config) return;
-  
-  console.log('🎨 Updating DOM with config:', config);
-  
   // Update ALL logo elements
   const logoElements = document.querySelectorAll('.club-logo, .admin-logo, #sidebarLogo, #headerLogo, #clubLogo, #footerLogo, .logo, img.logo');
   logoElements.forEach(el => {
@@ -1185,10 +1179,9 @@ function waitForDependencies() {
   });
 }
 
-// Initialize when ready
 waitForDependencies().then(() => {
   console.log('✅ Dependencies ready, initializing page');
   initializePage();
 });
-}
+
 console.log('✅ load-config.js v3.0.0 loaded successfully');
