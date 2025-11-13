@@ -872,9 +872,11 @@
             }
 
             await loadClubConfig();
+            await loadBkashNumber();
             initializeForm();
             initializeBioCounter();
-            initializePhotoPreview();
+            initializeSkillsInput();
+            initializePaymentPreview();
 
             if (typeof initTheme === 'function') {
                 initTheme();
@@ -884,6 +886,33 @@
                 initNavigation();
             }
         });
+
+        async function loadBkashNumber() {
+            try {
+                // For now, use a default number. Later you can fetch from API
+                const bkashNumber = '01712345678'; // Admin can configure this
+                document.getElementById('bkashNumber').textContent = bkashNumber;
+            } catch (error) {
+                console.error('Error loading bKash number:', error);
+            }
+        }
+
+        function initializePaymentPreview() {
+            const paymentInput = document.getElementById('paymentScreenshot');
+            const preview = document.getElementById('paymentPreview');
+
+            paymentInput.addEventListener('change', async (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        preview.src = e.target.result;
+                        preview.style.display = 'block';
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+        }
 
         async function loadClubConfig() {
             try {
@@ -1028,13 +1057,20 @@
                     return;
                 }
                 
-                // Get photo
+               // Get photo with proper error handling
                 const photoFile = document.getElementById('photo').files[0];
                 const photoUrl = document.getElementById('photoUrl').value.trim();
                 let photo = photoUrl;
                 
                 if (photoFile) {
-                    photo = await imageToBase64(photoFile);
+                    try {
+                        photo = await imageToBase64(photoFile);
+                        console.log('✅ Photo converted to base64');
+                    } catch (error) {
+                        console.error('Error converting photo:', error);
+                        showError('Failed to process photo. Please try a smaller image.');
+                        return;
+                    }
                 }
                 
                 // Prepare data

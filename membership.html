@@ -778,6 +778,12 @@
                         </div>
 
                         <div class="form-group">
+                            <label class="form-label">Your Photo (Optional)</label>
+                            <input type="file" id="photoFile" class="form-input" accept="image/*">
+                            <div class="form-help">📷 Upload a recent photo (optional)</div>
+                        </div>
+
+                        <div class="form-group">
                             <label class="form-label">
                                 Department<span class="required">*</span>
                             </label>
@@ -858,23 +864,25 @@
                         </h3>
 
                         <div class="form-group">
-                            <label class="form-label">
-                                Why do you want to join?<span class="required">*</span>
-                            </label>
-                            <textarea id="bio" class="form-textarea" placeholder="Tell us about your interest in robotics and technology..." required></textarea>
-                            <div class="char-count">
-                                <span id="bioCount">0</span> / 100 characters minimum
-                            </div>
+                        <label class="form-label">
+                            Why do you want to join?<span class="required">*</span>
+                        </label>
+                        <textarea id="bio" class="form-textarea" placeholder="Tell us about your interest in robotics and technology..." required></textarea>
+                        <div class="char-count">
+                            <span id="bioCount">0</span> characters
                         </div>
+                    </div>
 
-                        <div class="form-group">
+                       <div class="form-group">
                             <label class="form-label">
                                 Skills<span class="required">*</span>
                             </label>
-                            <div class="skills-container" id="skillsContainer">
-                                <input type="text" id="skillsInput" class="skills-input" placeholder="Type a skill and press Enter">
+                            <div style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem;">
+                                <input type="text" id="skillsInput" class="form-input" placeholder="Type a skill" style="flex: 1;">
+                                <button type="button" class="btn btn-primary" onclick="addSkillFromButton()" style="white-space: nowrap;">+ Add</button>
                             </div>
-                            <div class="form-help">&#128161; Add at least 2 skills (e.g., Python, Arduino, CAD Design)</div>
+                            <div class="skills-container" id="skillsContainer" style="min-height: 60px; padding: 0.5rem; border: 2px solid var(--border-color); border-radius: var(--radius-md); background: var(--background-color); display: flex; flex-wrap: wrap; gap: 0.5rem;"></div>
+                            <div class="form-help">💡 Add at least 2 skills (e.g., Python, Arduino, CAD Design)</div>
                         </div>
 
                         <div class="form-group">
@@ -898,6 +906,36 @@
                         <div class="form-group">
                             <label class="form-label">LinkedIn Profile</label>
                             <input type="url" id="linkedin" class="form-input" placeholder="https://linkedin.com/in/yourusername">
+                        </div>
+                    </div>
+
+                    <!-- Section 4: Payment Information -->
+                    <div class="form-section">
+                        <h3 class="section-title">
+                            <span>💳</span>
+                            <span>Payment Information</span>
+                        </h3>
+
+                        <div style="background: var(--background-color); padding: 1.5rem; border-radius: var(--radius-md); border: 2px solid var(--primary-color); margin-bottom: 1.5rem;">
+                            <h4 style="color: var(--primary-color); margin-bottom: 1rem;">📱 bKash Payment Required</h4>
+                            <p style="color: var(--text-primary); margin-bottom: 0.5rem;"><strong>bKash Number:</strong> <span id="bkashNumber" style="font-size: 1.2rem; color: var(--primary-color);">01XXXXXXXXX</span></p>
+                            <p style="color: var(--text-secondary); font-size: 0.9rem;">Please send the membership fee to the above bKash number and upload the payment screenshot below.</p>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">
+                                Payment Screenshot<span class="required">*</span>
+                            </label>
+                            <input type="file" id="paymentScreenshot" class="form-input" accept="image/*" required>
+                            <img id="paymentPreview" style="display: none; max-width: 300px; margin-top: 1rem; border-radius: var(--radius-md); border: 2px solid var(--border-color);">
+                            <div class="form-help">📸 Upload a screenshot of your bKash payment confirmation</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">
+                                Transaction ID (Optional)
+                            </label>
+                            <input type="text" id="transactionId" class="form-input" placeholder="Enter bKash transaction ID if available">
                         </div>
                     </div>
 
@@ -976,36 +1014,51 @@
             const skillsInput = document.getElementById('skillsInput');
             const skillsContainer = document.getElementById('skillsContainer');
 
+            // Support both Enter key and button click
             skillsInput.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter') {
+                if (e.key === 'Enter' || e.keyCode === 13) {
                     e.preventDefault();
-                    const value = skillsInput.value.trim();
-                    if (value && !skills.includes(value)) {
-                        skills.push(value);
-                        renderSkills();
-                        skillsInput.value = '';
-                    }
+                    addSkillFromButton();
                 }
             });
 
-            skillsContainer.addEventListener('click', () => {
-                skillsInput.focus();
+            // Also support input event for mobile (when they finish typing)
+            skillsInput.addEventListener('blur', () => {
+                if (skillsInput.value.trim()) {
+                    addSkillFromButton();
+                }
             });
+        }
+
+        // New function for button click (works on mobile)
+        function addSkillFromButton() {
+            const skillsInput = document.getElementById('skillsInput');
+            const value = skillsInput.value.trim();
+            if (value && !skills.includes(value)) {
+                skills.push(value);
+                renderSkills();
+                skillsInput.value = '';
+                skillsInput.focus();
+            }
         }
 
         function renderSkills() {
             const skillsContainer = document.getElementById('skillsContainer');
-            const skillsInput = document.getElementById('skillsInput');
-            
-            const existingTags = skillsContainer.querySelectorAll('.skill-tag');
-            existingTags.forEach(tag => tag.remove());
+            skillsContainer.innerHTML = '';
             
             skills.forEach((skill, index) => {
                 const tag = document.createElement('div');
                 tag.className = 'skill-tag';
-                tag.innerHTML = `${skill} <span class="tag-remove" data-index="${index}">×</span>`;
-                skillsContainer.insertBefore(tag, skillsInput);
+                tag.style.cssText = 'display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 0.75rem; background: var(--primary-color); color: white; border-radius: var(--radius-sm); font-size: 0.875rem;';
+                tag.innerHTML = `${skill} <span class="tag-remove" onclick="removeSkill(${index})" style="cursor: pointer; font-weight: bold; font-size: 1.2rem;">×</span>`;
+                skillsContainer.appendChild(tag);
             });
+        }
+
+        function removeSkill(index) {
+            skills.splice(index, 1);
+            renderSkills();
+        }
 
             // Add click handlers to remove buttons
             document.querySelectorAll('.tag-remove').forEach(btn => {
@@ -1014,7 +1067,7 @@
                     removeSkill(index);
                 });
             });
-        }
+        
 
         function removeSkill(index) {
             skills.splice(index, 1);
@@ -1028,12 +1081,7 @@
             bioTextarea.addEventListener('input', () => {
                 const length = bioTextarea.value.length;
                 bioCount.textContent = length;
-                
-                if (length >= 100) {
-                    bioCount.style.color = 'var(--primary-color)';
-                } else {
-                    bioCount.style.color = 'var(--text-secondary)';
-                }
+                bioCount.style.color = 'var(--text-secondary)';
             });
         }
 
@@ -1071,8 +1119,8 @@
                     return;
                 }
                 
-                if (bio.length < 100) {
-                    showError('Please write at least 100 characters about why you want to join');
+               if (!bio || bio.length < 20) {
+                    showError('Please write at least 20 characters about why you want to join');
                     return;
                 }
                 
@@ -1080,20 +1128,52 @@
                     showError('Please add at least 2 skills');
                     return;
                 }
+
+                // Validate payment screenshot
+                const paymentScreenshot = document.getElementById('paymentScreenshot').files[0];
+                if (!paymentScreenshot) {
+                    showError('Please upload payment screenshot');
+                    return;
+                }
                 
-                // Prepare data
+                // Helper function for image conversion
+                const imageToBase64 = (file) => {
+                    return new Promise((resolve, reject) => {
+                        const reader = new FileReader();
+                        reader.onload = () => resolve(reader.result);
+                        reader.onerror = reject;
+                        reader.readAsDataURL(file);
+                    });
+                };
+                
+                // Get photo
+                const photoFile = document.getElementById('photoFile').files[0];
+                let photoBase64 = null;
+                if (photoFile) {
+                    photoBase64 = await imageToBase64(photoFile);
+                }
+
+                // Get payment screenshot
+                const paymentFile = document.getElementById('paymentScreenshot').files[0];
+                const paymentBase64 = await imageToBase64(paymentFile);
+                const transactionId = document.getElementById('transactionId').value.trim();
+
+                // Prepare data with correct variable names
                 const applicationData = {
                     full_name: fullName,
                     email: email,
                     phone: phone,
-                    student_id: studentId,
+                    student_id: studentId || null,
                     department: department,
                     year: year,
                     bio: bio,
                     skills: skills,
-                    previous_experience: previousExperience,
-                    github_profile: github,
-                    linkedin_profile: linkedin
+                    previous_experience: previousExperience || null,
+                    github_profile: github || null,
+                    linkedin_profile: linkedin || null,
+                    photo: photoBase64,
+                    payment_screenshot: paymentBase64,
+                    transaction_id: transactionId || null
                 };
                 
                 // Show loading
