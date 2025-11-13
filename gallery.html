@@ -498,6 +498,31 @@
 
         /* Responsive Design */
        @media (max-width: 768px) {
+    .header {
+        height: 60px;
+    }
+
+    .header-content {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        height: 100%;
+    }
+
+    .logo-container {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        flex-shrink: 0;
+    }
+
+    .header-actions {
+        display: flex !important;
+        align-items: center;
+        gap: 0.5rem;
+        flex-shrink: 0;
+    }
+    
     .nav-menu {
         display: none !important;
     }
@@ -507,11 +532,44 @@
         visibility: visible !important;
         opacity: 1 !important;
         pointer-events: auto !important;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        padding: 0.5rem;
+        z-index: 1001;
+        width: 40px;
+        height: 40px;
     }
     
     .mobile-menu-toggle span {
         display: block !important;
+        width: 25px !important;
+        height: 3px !important;
         background: var(--text-primary) !important;
+        margin: 3px 0 !important;
+        transition: all 0.3s ease;
+        border-radius: 2px;
+    }
+
+    .mobile-menu-toggle.active span:nth-child(1) {
+        transform: rotate(45deg) translate(8px, 8px);
+    }
+
+    .mobile-menu-toggle.active span:nth-child(2) {
+        opacity: 0;
+    }
+
+    .mobile-menu-toggle.active span:nth-child(3) {
+        transform: rotate(-45deg) translate(7px, -7px);
+    }
+
+    .theme-toggle {
+        width: 36px;
+        height: 36px;
+        flex-shrink: 0;
     }
 
     .header {
@@ -1219,6 +1277,39 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('galleryGrid').style.display = 'none';
     
     console.log('🔄 Gallery page initializing...');
+
+    // ✅ Initialize mobile menu
+    const mobileMenuToggle = document.getElementById('mobileMenuToggle');
+    const mobileNavOverlay = document.getElementById('mobileNavOverlay');
+    const mobileNavLinks = document.querySelectorAll('.mobile-nav-link');
+    
+    if (mobileMenuToggle && mobileNavOverlay) {
+        mobileMenuToggle.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            mobileNavOverlay.classList.toggle('active');
+            mobileMenuToggle.classList.toggle('active');
+            document.body.style.overflow = mobileNavOverlay.classList.contains('active') ? 'hidden' : '';
+        });
+        
+        // Close menu when clicking on links
+        mobileNavLinks.forEach(link => {
+            link.addEventListener('click', function() {
+                mobileNavOverlay.classList.remove('active');
+                mobileMenuToggle.classList.remove('active');
+                document.body.style.overflow = '';
+            });
+        });
+        
+        // Close menu when clicking on overlay background
+        mobileNavOverlay.addEventListener('click', function(e) {
+            if (e.target === mobileNavOverlay) {
+                mobileNavOverlay.classList.remove('active');
+                mobileMenuToggle.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        });
+    }
 
     // Initialize theme & navigation
     if (typeof initTheme === 'function') initTheme();
