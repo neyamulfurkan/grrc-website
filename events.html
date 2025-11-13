@@ -530,60 +530,90 @@
 
         /* Responsive Design */
         @media (max-width: 768px) {
-            .page-header {
-                padding: 100px 0 60px;
-            }
+    .nav-menu {
+        display: none !important;
+    }
+    
+    .mobile-menu-toggle {
+        display: flex !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        pointer-events: auto !important;
+    }
+    
+    .mobile-menu-toggle span {
+        display: block !important;
+        background: var(--text-primary) !important;
+    }
 
-            .page-header h1 {
-                font-size: 2rem;
-            }
+    .header {
+        height: 60px;
+    }
 
-            .page-header p {
-                font-size: 1rem;
-            }
+    .club-name {
+        max-width: 150px;
+        font-size: 0.9rem;
+    }
 
-            .events-grid {
-                grid-template-columns: 1fr;
-                gap: 1.5rem;
-            }
+    .logo {
+        height: 40px;
+        width: 40px;
+    }
 
-            .event-stats {
-                grid-template-columns: repeat(2, 1fr);
-            }
+    .page-header {
+        padding: 100px 0 60px;
+    }
 
-            .filter-buttons {
-                gap: 0.5rem;
-            }
+    .page-header h1 {
+        font-size: 2rem;
+    }
 
-            .filter-btn {
-                font-size: 0.85rem;
-                padding: 0.4rem 1rem;
-            }
+    .page-header p {
+        font-size: 1rem;
+    }
 
-            .event-modal.active {
-                padding: 1rem;
-            }
+    .events-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
 
-            .event-modal-header {
-                height: 200px;
-            }
+    .event-stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
 
-            .event-modal-body {
-                padding: 1.5rem;
-            }
+    .filter-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
 
-            .event-modal-title {
-                font-size: 1.5rem;
-            }
+    .search-box {
+        min-width: 100%;
+    }
 
-            .event-modal-actions {
-                flex-direction: column;
-            }
+    .event-modal.active {
+        padding: 1rem;
+    }
 
-            .event-btn {
-                width: 100%;
-            }
-        }
+    .event-modal-header {
+        height: 200px;
+    }
+
+    .event-modal-body {
+        padding: 1.5rem;
+    }
+
+    .event-modal-title {
+        font-size: 1.5rem;
+    }
+
+    .event-modal-actions {
+        flex-direction: column;
+    }
+
+    .event-btn {
+        width: 100%;
+    }
+}
 
         @media (max-width: 480px) {
             .event-stats {

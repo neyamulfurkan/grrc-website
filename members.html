@@ -524,76 +524,106 @@
 
         /* Responsive Design */
         @media (max-width: 768px) {
-            .page-header h1 {
-                font-size: 2rem;
-            }
+    .nav-menu {
+        display: none !important;
+    }
+    
+    .mobile-menu-toggle {
+        display: flex !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        pointer-events: auto !important;
+    }
+    
+    .mobile-menu-toggle span {
+        display: block !important;
+        background: var(--text-primary) !important;
+    }
 
-            .page-header p {
-                font-size: 1rem;
-            }
+    .header {
+        height: 60px;
+    }
 
-            .members-stats {
-                grid-template-columns: repeat(2, 1fr);
-                gap: 1rem;
-                padding: 2rem 0;
-            }
+    .club-name {
+        max-width: 150px;
+        font-size: 0.9rem;
+    }
 
-            .stat-card {
-                padding: 1.5rem;
-            }
+    .logo {
+        height: 40px;
+        width: 40px;
+    }
 
-            .stat-number {
-                font-size: 2rem;
-            }
+    .page-header h1 {
+        font-size: 2rem;
+    }
 
-            .filter-header {
-                flex-direction: column;
-                align-items: stretch;
-            }
+    .page-header p {
+        font-size: 1rem;
+    }
 
-            .search-box {
-                min-width: 100%;
-            }
+    .members-stats {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+        padding: 2rem 0;
+    }
 
-            .filter-buttons {
-                width: 100%;
-            }
+    .stat-card {
+        padding: 1.5rem;
+    }
 
-            .filter-btn {
-                flex: 1;
-                min-width: calc(50% - 0.5rem);
-            }
+    .stat-number {
+        font-size: 2rem;
+    }
 
-            .members-grid {
-                grid-template-columns: 1fr;
-                gap: 1.5rem;
-            }
+    .filter-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
 
-            .modal-content {
-                margin: 1rem;
-            }
+    .search-box {
+        min-width: 100%;
+    }
 
-            .modal-header {
-                padding: 2rem;
-            }
+    .filter-buttons {
+        width: 100%;
+    }
 
-            .modal-photo {
-                width: 120px;
-                height: 120px;
-            }
+    .filter-btn {
+        flex: 1;
+        min-width: calc(50% - 0.5rem);
+    }
 
-            .modal-name {
-                font-size: 1.5rem;
-            }
+    .members-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
 
-            .modal-body {
-                padding: 1.5rem;
-            }
+    .modal-content {
+        margin: 1rem;
+    }
 
-            .modal-info-grid {
-                grid-template-columns: 1fr;
-            }
-        }
+    .modal-header {
+        padding: 2rem;
+    }
+
+    .modal-photo {
+        width: 120px;
+        height: 120px;
+    }
+
+    .modal-name {
+        font-size: 1.5rem;
+    }
+
+    .modal-body {
+        padding: 1.5rem;
+    }
+
+    .modal-info-grid {
+        grid-template-columns: 1fr;
+    }
+}
 
         @media (max-width: 480px) {
             .members-stats {

@@ -181,14 +181,25 @@ em {
   font-weight: var(--font-weight-bold);
   color: var(--header-text);
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 @media (max-width: 767px) {
   .club-name {
-    font-size: 0.8rem;
-    max-width: calc(100vw - 180px);
-    white-space: normal;
-    line-height: 1.2;
+    font-size: 0.75rem;
+    max-width: calc(100vw - 200px);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.3;
+  }
+}
+
+@media (max-width: 480px) {
+  .club-name {
+    font-size: 0.7rem;
+    max-width: calc(100vw - 160px);
   }
 }
 
@@ -263,8 +274,6 @@ em {
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  width: 40px;
-  height: 40px;
   background: transparent;
   border: none;
   cursor: pointer;
@@ -273,6 +282,18 @@ em {
   pointer-events: auto;
   position: relative;
   flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+}
+
+.mobile-menu-toggle span {
+  display: block;
+  width: 25px;
+  height: 3px;
+  background: var(--text-primary);
+  margin: 3px 0;
+  transition: all 0.3s ease;
+  border-radius: 2px;
 }
 
 .mobile-menu-toggle span {
@@ -302,14 +323,23 @@ em {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.8);
+  background: rgba(0, 0, 0, 0.85);
   z-index: 999;
-  display: none;
+  display: none !important;
   visibility: hidden;
   pointer-events: none;
-  backdrop-filter: blur(5px);
+  backdrop-filter: blur(8px);
   opacity: 0;
   transition: opacity 0.3s ease;
+}
+
+.mobile-nav-overlay.active {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
 }
 
 .mobile-nav-overlay.active {
@@ -1356,6 +1386,7 @@ em {
 }
 
 /* Mobile (< 768px) */
+
 @media (max-width: 767px) {
   html {
     font-size: 14px;
@@ -1374,16 +1405,16 @@ em {
   }
 
   .club-name {
-    font-size: 0.85rem;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: calc(100vw - 180px);
+    font-size: 0.75rem !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    max-width: calc(100vw - 200px) !important;
   }
 
   .logo {
-    height: 40px;
-    width: 40px;
+    height: 35px;
+    width: 35px;
   }
 
   /* Force mobile menu overlay to be hidden by default */
@@ -1423,6 +1454,11 @@ em {
     display: flex !important;
     visibility: visible !important;
     opacity: 1 !important;
+    pointer-events: auto !important;
+  }
+  
+  .mobile-menu-toggle span {
+    display: block !important;
   }
 
   .mobile-nav-overlay {

@@ -103,9 +103,20 @@
             width: 25px;
             height: 3px;
             background: var(--text-primary);
-            margin: 5px 0;
+            margin: 3px 0;
             transition: all 0.3s ease;
             position: relative;
+            border-radius: 2px;
+        }
+        
+        @media (max-width: 768px) {
+            .mobile-menu-toggle {
+                display: flex !important;
+            }
+            
+            .mobile-menu-toggle span {
+                display: block !important;
+            }
         }
 
         .mobile-menu-toggle.active span:nth-child(1) {

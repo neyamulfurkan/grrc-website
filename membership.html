@@ -11,21 +11,21 @@
     <link rel="stylesheet" href="css/components.css">
     
     <style>
-        .header {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            width: 100%;
-            z-index: 1000;
-            background: var(--surface-color);
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            transition: all 0.3s ease;
-            backdrop-filter: blur(10px);
-            height: 70px;
-            display: flex !important;
-            align-items: center;
-        }
+       .header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    z-index: 1000;
+    background: var(--surface-color);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+    height: 70px;
+    display: flex !important;
+    align-items: center;
+}
 
         [data-theme="dark"] .header {
             background: rgba(26, 31, 58, 0.95);
@@ -628,8 +628,11 @@
             }
 
             .club-name {
-                max-width: 150px;
-                font-size: 0.9rem;
+                max-width: calc(100vw - 200px);
+                font-size: 0.75rem;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
             }
 
             .logo {
@@ -640,8 +643,13 @@
 
         @media (max-width: 768px) {
             .logo {
-                height: 40px;
-                width: 40px;
+                height: 35px;
+                width: 35px;
+            }
+            
+            .club-name {
+                font-size: 0.7rem;
+                max-width: calc(100vw - 180px);
             }
 
             .logo-container {
