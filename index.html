@@ -124,7 +124,7 @@
             background: white;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
         }
-
+        
         /* Force hamburger visibility on mobile */
         @media (max-width: 768px) {
             .header {
@@ -207,49 +207,11 @@
                 box-shadow: none !important;
             }
 
-            .theme-toggle {
+           .theme-toggle {
                 width: 36px;
                 height: 36px;
                 flex-shrink: 0;
             }
-        
-        .mobile-menu-toggle {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            background: transparent;
-            border: none;
-            cursor: pointer;
-            padding: 0.5rem;
-            z-index: 1001;
-            visibility: visible;
-            opacity: 1;
-        }
-
-        .header.transparent .mobile-menu-toggle {
-            display: flex !important;
-        }
-        
-        .mobile-menu-toggle span {
-            display: block;
-            width: 25px;
-            height: 3px;
-            background: var(--text-primary);
-            margin: 5px 0;
-            transition: all 0.3s ease;
-        }
-        
-        .mobile-menu-toggle.active span:nth-child(1) {
-            transform: rotate(45deg) translate(8px, 8px);
-        }
-        
-        .mobile-menu-toggle.active span:nth-child(2) {
-            opacity: 0;
-        }
-        
-        .mobile-menu-toggle.active span:nth-child(3) {
-            transform: rotate(-45deg) translate(7px, -7px);
         }
         
         .mobile-nav-overlay {
@@ -1350,33 +1312,9 @@
         console.log('🎬 Starting slideshow load...');
         
         let galleryItems = [];
+        let usedCache = false;
         
-        // Try cache first for faster loading
-        const cached = localStorage.getItem('gallery');
-        if (cached) {
-            galleryItems = JSON.parse(cached);
-            console.log('✅ Loaded', galleryItems.length, 'images from cache (fast path)');
-            
-            if (galleryItems.length > 0) {
-                slideshowImages = galleryItems
-                    .filter(item => {
-                        const imageUrl = item.image || item.image_url;
-                        return imageUrl && imageUrl.trim() !== '';
-                    })
-                    .map(item => ({
-                        url: item.image || item.image_url,
-                        title: item.title || 'Untitled',
-                        description: item.description || item.category || ''
-                    }))
-                    .slice(0, 10);
-                
-                if (slideshowImages.length > 0) {
-                    initializeSlideshow();
-                }
-            }
-        }
-        
-        // Then try API for fresh data in background
+        // Try API first
         if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady) {
             try {
                 console.log('📡 Calling API for gallery...');
@@ -1389,7 +1327,7 @@
                     try {
                         localStorage.setItem('gallery', JSON.stringify(galleryItems));
                     } catch (e) {
-                        console.warn('⚠️ Could not save to cache (quota exceeded):', e.message);
+                        console.warn('⚠️ Could not save to cache:', e.message);
                     }
                 }
             } catch (apiError) {
@@ -1397,15 +1335,17 @@
             }
         }
         
-        // Fallback to cache if API failed
+        // Fallback to cache if API didn't work
         if (galleryItems.length === 0) {
-            console.log('📦 Trying cache...');
             const cached = localStorage.getItem('gallery');
             if (cached) {
                 galleryItems = JSON.parse(cached);
-                console.log('✅ Slideshow loaded', galleryItems.length, 'images from cache');
+                usedCache = true;
+                console.log('✅ Loaded', galleryItems.length, 'images from cache');
             }
         }
+        
+        // Process images
         
         console.log('🔍 Total gallery items:', galleryItems.length);
         
