@@ -270,6 +270,7 @@ em {
   cursor: pointer;
   padding: 0.5rem;
   z-index: 1001;
+  pointer-events: auto;
   position: relative;
   flex-shrink: 0;
 }
@@ -304,14 +305,20 @@ em {
   background: rgba(0, 0, 0, 0.8);
   z-index: 999;
   display: none;
+  visibility: hidden;
+  pointer-events: none;
   backdrop-filter: blur(5px);
   opacity: 0;
   transition: opacity 0.3s ease;
 }
 
 .mobile-nav-overlay.active {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   opacity: 1;
   visibility: visible;
+  pointer-events: auto;
 }
 
 .mobile-nav-overlay .nav-menu {
@@ -1377,6 +1384,19 @@ em {
   .logo {
     height: 40px;
     width: 40px;
+  }
+
+  /* Force mobile menu overlay to be hidden by default */
+  .mobile-nav-overlay {
+    display: none !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+  }
+
+  .mobile-nav-overlay.active {
+    display: flex !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
   }
 
   .section {
