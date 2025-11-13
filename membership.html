@@ -917,10 +917,12 @@
                         </h3>
 
                         <div style="background: var(--background-color); padding: 1.5rem; border-radius: var(--radius-md); border: 2px solid var(--primary-color); margin-bottom: 1.5rem;">
-                            <h4 style="color: var(--primary-color); margin-bottom: 1rem;">📱 bKash Payment Required</h4>
-                            <p style="color: var(--text-primary); margin-bottom: 0.5rem;"><strong>bKash Number:</strong> <span id="bkashNumber" style="font-size: 1.2rem; color: var(--primary-color);">01XXXXXXXXX</span></p>
-                            <p style="color: var(--text-secondary); font-size: 0.9rem;">Please send the membership fee to the above bKash number and upload the payment screenshot below.</p>
-                        </div>
+    <h4 style="color: var(--primary-color); margin-bottom: 1rem;">📱 bKash Payment Required</h4>
+    <p style="color: var(--text-primary); margin-bottom: 0.5rem;"><strong>Membership Fee:</strong> <span style="font-size: 1.2rem; color: var(--primary-color); font-weight: bold;">৳500</span></p>
+    <p style="color: var(--text-primary); margin-bottom: 0.5rem;"><strong>bKash Number:</strong> <span id="bkashNumber" style="font-size: 1.2rem; color: var(--primary-color); font-weight: bold;">01712345678</span></p>
+    <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 0.5rem;">⚠️ Please send the membership fee to the above bKash number using "Send Money"</p>
+    <p style="color: var(--text-secondary); font-size: 0.9rem;">📸 After payment, upload the payment screenshot below</p>
+</div>
 
                         <div class="form-group">
                             <label class="form-label">
@@ -990,25 +992,29 @@
             }
         });
 
-        async function loadClubConfig() {
-            try {
-                if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady) {
-                    const result = await window.apiClient.getConfig();
-                    if (result.success && result.data) {
-                        const config = result.data;
-                        if (config.name) {
-                            document.getElementById('clubName').textContent = config.name;
-                        }
-                        if (config.logo || config.logo_url) {
-                            const logoUrl = config.logo || config.logo_url;
-                            document.getElementById('clubLogo').src = logoUrl + '?t=' + Date.now();
-                        }
-                    }
+       async function loadClubConfig() {
+    try {
+        if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady) {
+            const result = await window.apiClient.getConfig();
+            if (result.success && result.data) {
+                const config = result.data;
+                if (config.name) {
+                    document.getElementById('clubName').textContent = config.name;
                 }
-            } catch (error) {
-                console.error('Error loading club config:', error);
+                if (config.logo || config.logo_url) {
+                    const logoUrl = config.logo || config.logo_url;
+                    document.getElementById('clubLogo').src = logoUrl + '?t=' + Date.now();
+                }
+                // Load bKash number from config if available
+                if (config.bkash_number) {
+                    document.getElementById('bkashNumber').textContent = config.bkash_number;
+                }
             }
         }
+    } catch (error) {
+        console.error('Error loading club config:', error);
+    }
+}
 
         function initializeSkillsInput() {
             const skillsInput = document.getElementById('skillsInput');
@@ -1129,12 +1135,7 @@
                     return;
                 }
 
-                // Validate payment screenshot
                 const paymentScreenshot = document.getElementById('paymentScreenshot').files[0];
-                if (!paymentScreenshot) {
-                    showError('Please upload payment screenshot');
-                    return;
-                }
                 
                 // Helper function for image conversion
                 const imageToBase64 = (file) => {
@@ -1181,29 +1182,31 @@
                 hideError();
                 
                 try {
-                    const result = await window.apiClient.submitMembershipApplication(applicationData);
-                    
-                    if (result.success) {
-                        console.log('✅ Membership application submitted successfully');
-                        showSuccessModal();
-                        form.reset();
-                        skills = [];
-                        renderSkills();
-                        document.getElementById('bioCount').textContent = '0';
-                        
-                        // Notify parent window to refresh member count
-                        if (window.opener && !window.opener.closed) {
-                            window.opener.postMessage({ type: 'MEMBER_ADDED' }, '*');
-                        }
-                    } else {
-                        showError(result.error || 'Failed to submit application');
-                    }
-                } catch (error) {
-                    console.error('Submission error:', error);
-                    showError('Network error. Please try again.');
-                } finally {
-                    setLoadingState(false);
-                }
+    const result = await window.apiClient.submitMembershipApplication(applicationData);
+    
+    if (result.success) {
+        console.log('✅ Membership application submitted successfully');
+        showSuccessModal();
+        form.reset();
+        skills = [];
+        renderSkills();
+        document.getElementById('bioCount').textContent = '0';
+        document.getElementById('paymentPreview').style.display = 'none';
+        
+        // Notify parent window to refresh member count
+        if (window.opener && !window.opener.closed) {
+            window.opener.postMessage({ type: 'MEMBER_ADDED' }, '*');
+        }
+    } else {
+        console.error('❌ Application submission failed:', result.error);
+        showError(result.error || 'Failed to submit application. Please check all required fields.');
+    }
+} catch (error) {
+    console.error('❌ Submission error:', error);
+    showError('Network error. Please check your connection and try again.');
+} finally {
+    setLoadingState(false);
+}
             });
         }
 
