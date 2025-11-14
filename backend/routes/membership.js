@@ -389,7 +389,7 @@ router.post(
         bio: application.bio,
         skills: application.skills,
         role: 'General Member',
-        photo: '',
+        photo: application.photo || '',
         joined_date: new Date().toISOString().split('T')[0]
       };
 

@@ -275,6 +275,11 @@
                                     <button onclick="this.closest('div').parentElement.remove()" style="background: var(--error-color); color: white; border: none; padding: 0.5rem 1rem; border-radius: var(--radius-md); cursor: pointer;">Close</button>
                                 </div>
                                 
+                                ${app.photo ? `
+                                <div style="text-align: center; margin-bottom: 1.5rem;">
+                                    <img src="${app.photo}" alt="${app.full_name}" style="width: 150px; height: 150px; border-radius: 50%; object-fit: cover; border: 3px solid var(--primary-color); box-shadow: var(--shadow-md);">
+                                </div>` : ''}
+                                
                                 <div style="background: var(--background-color); padding: 1.5rem; border-radius: var(--radius-md); margin-bottom: 1.5rem;">
                                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
                                         <div>
@@ -340,6 +345,13 @@
                                         ${app.github_profile ? `<a href="${app.github_profile}" target="_blank" style="color: var(--primary-color);">GitHub</a>` : ''}
                                         ${app.linkedin_profile ? `<a href="${app.linkedin_profile}" target="_blank" style="color: var(--primary-color);">LinkedIn</a>` : ''}
                                     </div>
+                                </div>` : ''}
+                                
+                                ${app.payment_screenshot ? `
+                                <div style="margin-bottom: 1.5rem;">
+                                    <h3 style="color: var(--text-primary); margin-bottom: 0.5rem;">Payment Verification:</h3>
+                                    <img src="${app.payment_screenshot}" alt="Payment Screenshot" style="max-width: 100%; border-radius: var(--radius-md); border: 2px solid var(--border-color); cursor: pointer;" onclick="window.open('${app.payment_screenshot}', '_blank')">
+                                    ${app.transaction_id ? `<p style="color: var(--text-secondary); margin-top: 0.5rem;">Transaction ID: <strong>${app.transaction_id}</strong></p>` : ''}
                                 </div>` : ''}
                                 
                                 ${app.status === 'pending' ? `

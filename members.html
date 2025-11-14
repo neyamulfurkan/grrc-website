@@ -1081,7 +1081,15 @@
         // Create member card HTML
         function createMemberCard(member) {
     const defaultPhoto = createDefaultAvatar(member.name);
-    const photoSrc = member.photo || defaultPhoto;
+    // Ensure photo URL is valid - handle both base64 and regular URLs
+    let photoSrc = defaultPhoto;
+    if (member.photo) {
+        if (member.photo.startsWith('data:image/') || member.photo.startsWith('http')) {
+            photoSrc = member.photo;
+        } else {
+            console.warn('Invalid photo format for member:', member.name);
+        }
+    }
     
     return `
         <div class="member-card" data-member-id="${member.id}">
