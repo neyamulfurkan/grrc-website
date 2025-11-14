@@ -717,6 +717,21 @@
                         <input type="email" class="form-input" id="socialEmail" placeholder="contact@grrc.edu.bd">
                     </div>
 
+                    <h3 style="margin: var(--space-xl) 0 var(--space-md);">Membership Settings</h3>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">bKash Number</label>
+                            <input type="text" class="form-input" id="bkashNumber" placeholder="01712345678" pattern="^(\+8801|01)[3-9]\d{8}$" required>
+                            <div class="form-help" style="font-size: 0.875rem; color: var(--text-secondary); margin-top: 0.5rem;">📱 Enter bKash number for membership payments</div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Membership Fee (৳)</label>
+                            <input type="number" class="form-input" id="membershipFee" placeholder="500" min="0" required>
+                            <div class="form-help" style="font-size: 0.875rem; color: var(--text-secondary); margin-top: 0.5rem;">💰 Set membership fee amount</div>
+                        </div>
+                    </div>
+
                     <button type="submit" class="btn btn-primary">💾 Save Configuration</button>
                 </form>
             </div>
@@ -2996,11 +3011,29 @@ if (section === 'membership-applications') {
                 logo = await imageToBase64(logoFile);
             }
 
+            const bkashNumber = document.getElementById('bkashNumber').value.trim();
+            const membershipFee = parseInt(document.getElementById('membershipFee').value.trim());
+
+            // Validate bKash number
+            const bkashPattern = /^(\+8801|01)[3-9]\d{8}$/;
+            if (!bkashPattern.test(bkashNumber)) {
+                showToast('Invalid bKash number format. Use +8801XXXXXXXXX or 01XXXXXXXXX', 'error');
+                return;
+            }
+
+            // Validate membership fee
+            if (isNaN(membershipFee) || membershipFee < 0) {
+                showToast('Invalid membership fee. Must be a positive number', 'error');
+                return;
+            }
+
              const config = {
                 logo: logo,
                 name: document.getElementById('clubName').value.trim(),
                 motto: document.getElementById('clubMotto').value.trim(),
                 description: document.getElementById('clubDescription').value.trim(),
+                bkash_number: bkashNumber,
+                membership_fee: membershipFee,
                 socialLinks: []
             };
 
@@ -3112,6 +3145,10 @@ if (section === 'membership-applications') {
                     document.getElementById('clubName').value = config.name || config.club_name || 'GSTU Robotics & Research Club';
                     document.getElementById('clubMotto').value = config.motto || '';
                     document.getElementById('clubDescription').value = config.description || '';
+                    
+                    // Load membership settings
+                    document.getElementById('bkashNumber').value = config.bkash_number || '01712345678';
+                    document.getElementById('membershipFee').value = config.membership_fee || 500;
 
                     if (config.socialLinks || config.social_links) {
                         const links = config.socialLinks || config.social_links;

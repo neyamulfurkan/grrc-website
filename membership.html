@@ -919,7 +919,7 @@
 
                         <div style="background: var(--background-color); padding: 1.5rem; border-radius: var(--radius-md); border: 2px solid var(--primary-color); margin-bottom: 1.5rem;">
     <h4 style="color: var(--primary-color); margin-bottom: 1rem;">📱 bKash Payment Required</h4>
-    <p style="color: var(--text-primary); margin-bottom: 0.5rem;"><strong>Membership Fee:</strong> <span style="font-size: 1.2rem; color: var(--primary-color); font-weight: bold;">৳500</span></p>
+    <p style="color: var(--text-primary); margin-bottom: 0.5rem;"><strong>Membership Fee:</strong> <span id="membershipFeeDisplay" style="font-size: 1.2rem; color: var(--primary-color); font-weight: bold;">৳500</span></p>
     <p style="color: var(--text-primary); margin-bottom: 0.5rem;"><strong>bKash Number:</strong> <span id="bkashNumber" style="font-size: 1.2rem; color: var(--primary-color); font-weight: bold;">01712345678</span></p>
     <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 0.5rem;">⚠️ Please send the membership fee to the above bKash number using "Send Money"</p>
     <p style="color: var(--text-secondary); font-size: 0.9rem;">📸 After payment, upload the payment screenshot below</p>
@@ -1009,6 +1009,10 @@
                 // Load bKash number from config if available
                 if (config.bkash_number) {
                     document.getElementById('bkashNumber').textContent = config.bkash_number;
+                }
+                // Load membership fee from config if available
+                if (config.membership_fee) {
+                    document.getElementById('membershipFeeDisplay').textContent = '৳' + config.membership_fee;
                 }
             }
         }
