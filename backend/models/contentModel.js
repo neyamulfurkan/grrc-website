@@ -14,13 +14,27 @@ async function updateClubConfig(data) {
   try {
     console.log('🔍 updateClubConfig received data:', JSON.stringify(data, null, 2));
     
-    const { logo, club_name, club_motto, club_description, social_links, logo_url } = data;
+    const { 
+      logo, logo_url, 
+      club_name, name,
+      club_motto, motto,
+      club_description, description,
+      social_links, socialLinks,
+      bkash_number,
+      membership_fee
+    } = data;
     
+    // Handle field name variations
     const finalLogo = logo_url || logo;
+    const finalName = club_name || name || 'GSTU Robotics & Research Club';
+    const finalMotto = club_motto || motto || '';
+    const finalDescription = club_description || description || '';
+    const finalBkash = bkash_number || '01712345678';
+    const finalFee = membership_fee || 500;
     
-    let finalSocialLinks = social_links;
-    if (social_links && typeof social_links === 'object') {
-      finalSocialLinks = JSON.stringify(social_links);
+    let finalSocialLinks = social_links || socialLinks;
+    if (finalSocialLinks && typeof finalSocialLinks === 'object') {
+      finalSocialLinks = JSON.stringify(finalSocialLinks);
       console.log('🔄 Converted social_links to JSON string:', finalSocialLinks);
     }
     
@@ -29,25 +43,27 @@ async function updateClubConfig(data) {
     if (checkResult.rows.length === 0) {
       console.log('➕ No config found, inserting new row...');
       const insertQuery = `
-        INSERT INTO club_config (logo, club_name, club_motto, club_description, social_links)
-        VALUES ($1, $2, $3, $4, $5::jsonb)
+        INSERT INTO club_config (logo, club_name, club_motto, club_description, social_links, bkash_number, membership_fee)
+        VALUES ($1, $2, $3, $4, $5::jsonb, $6, $7)
         RETURNING *
       `;
       const insertValues = [
         finalLogo || 'assets/default-logo.jpg',
-        club_name || 'GSTU Robotics Club',
-        club_motto || '',
-        club_description || '',
-        finalSocialLinks || '[]'
+        finalName,
+        finalMotto,
+        finalDescription,
+        finalSocialLinks || '[]',
+        finalBkash,
+        finalFee
       ];
       
-      console.log('📤 Insert values:', insertValues);
+      console.log('📤 Insert values (with payment):', insertValues);
       const result = await pool.query(insertQuery, insertValues);
-      console.log('✅ Club config inserted:', result.rows[0]);
+      console.log('✅ Club config inserted with payment settings:', result.rows[0]);
       return { success: true, data: result.rows[0], error: null };
     }
     
-    console.log('✏️ Updating existing config...');
+    console.log('✏️ Updating existing config with payment settings...');
     const updateQuery = `
       UPDATE club_config 
       SET logo = COALESCE($1, logo),
@@ -55,6 +71,8 @@ async function updateClubConfig(data) {
           club_motto = COALESCE($3, club_motto),
           club_description = COALESCE($4, club_description),
           social_links = COALESCE($5::jsonb, social_links),
+          bkash_number = COALESCE($6, bkash_number),
+          membership_fee = COALESCE($7, membership_fee),
           updated_at = CURRENT_TIMESTAMP
       WHERE id = (SELECT id FROM club_config LIMIT 1)
       RETURNING *
@@ -62,16 +80,21 @@ async function updateClubConfig(data) {
     
     const values = [
       finalLogo, 
-      club_name, 
-      club_motto, 
-      club_description, 
-      finalSocialLinks
+      finalName, 
+      finalMotto, 
+      finalDescription, 
+      finalSocialLinks,
+      finalBkash,
+      finalFee
     ];
     
-    console.log('📤 Update values:', values);
+    console.log('📤 Update values (with payment):', values);
     const result = await pool.query(updateQuery, values);
     
-    console.log('✅ Club config updated successfully:', result.rows[0]);
+    console.log('✅ Club config updated successfully with payment settings:', {
+      bkash: result.rows[0].bkash_number,
+      fee: result.rows[0].membership_fee
+    });
     return { success: true, data: result.rows[0], error: null };
   } catch (error) {
     console.error('❌ Error in updateClubConfig:', error.message);
