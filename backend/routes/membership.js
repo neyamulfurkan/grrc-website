@@ -79,8 +79,8 @@ router.post(
       .trim()
       .notEmpty()
       .withMessage('Bio is required')
-      .isLength({ min: 100, max: 1000 })
-      .withMessage('Bio must be between 100 and 1000 characters'),
+      .isLength({ min: 20, max: 1000 })
+      .withMessage('Bio must be between 20 and 1000 characters'),
     
     body('skills')
       .isArray({ min: 2 })

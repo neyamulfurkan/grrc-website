@@ -867,7 +867,7 @@
                         <label class="form-label">
                             Why do you want to join?<span class="required">*</span>
                         </label>
-                        <textarea id="bio" class="form-textarea" placeholder="Tell us about your interest in robotics and technology..." required></textarea>
+                        <textarea id="bio" class="form-textarea" placeholder="Tell us about your interest in robotics and technology... (minimum 100 characters)" required minlength="100" maxlength="1000"></textarea>
                         <div class="char-count">
                             <span id="bioCount">0</span> characters
                         </div>
@@ -1125,8 +1125,8 @@
                     return;
                 }
                 
-               if (!bio || bio.length < 20) {
-                    showError('Please write at least 20 characters about why you want to join');
+               if (!bio || bio.length < 100) {
+                    showError('Please write at least 100 characters about why you want to join');
                     return;
                 }
                 
@@ -1140,8 +1140,44 @@
                 // Helper function for image conversion
                 const imageToBase64 = (file) => {
                     return new Promise((resolve, reject) => {
+                        // Check file size (max 5MB)
+                        if (file.size > 5 * 1024 * 1024) {
+                            reject(new Error('Image too large. Maximum size is 5MB'));
+                            return;
+                        }
+                        
                         const reader = new FileReader();
-                        reader.onload = () => resolve(reader.result);
+                        reader.onload = () => {
+                            // Optional: Compress image if too large
+                            const img = new Image();
+                            img.onload = () => {
+                                const canvas = document.createElement('canvas');
+                                let width = img.width;
+                                let height = img.height;
+                                
+                                // Resize if larger than 1920px
+                                const maxSize = 1920;
+                                if (width > maxSize || height > maxSize) {
+                                    if (width > height) {
+                                        height = (height / width) * maxSize;
+                                        width = maxSize;
+                                    } else {
+                                        width = (width / height) * maxSize;
+                                        height = maxSize;
+                                    }
+                                }
+                                
+                                canvas.width = width;
+                                canvas.height = height;
+                                const ctx = canvas.getContext('2d');
+                                ctx.drawImage(img, 0, 0, width, height);
+                                
+                                // Convert to base64 with 80% quality
+                                resolve(canvas.toDataURL('image/jpeg', 0.8));
+                            };
+                            img.onerror = reject;
+                            img.src = reader.result;
+                        };
                         reader.onerror = reject;
                         reader.readAsDataURL(file);
                     });
