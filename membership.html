@@ -995,9 +995,13 @@
 
        async function loadClubConfig() {
     try {
-        // Clear cache to force fresh fetch
+        // ✅ CRITICAL: Clear ALL caches to force fresh fetch
         localStorage.removeItem('cache_clubConfig');
         localStorage.removeItem('clubConfig');
+        localStorage.removeItem(STORAGE_KEYS.CLUB_CONFIG);
+        if (typeof STORAGE_KEYS !== 'undefined') {
+            localStorage.removeItem(STORAGE_KEYS.CLUB_CONFIG);
+        }
         
         if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady) {
             const result = await window.apiClient.getConfig();

@@ -3138,9 +3138,10 @@ if (section === 'membership-applications') {
 
         async function loadClubConfig() {
             try {
-                // Clear cache first to force fresh load
+                // ✅ CRITICAL: Clear cache FIRST to force fresh API fetch
                 localStorage.removeItem('cache_clubConfig');
                 localStorage.removeItem('clubConfig');
+                localStorage.removeItem(STORAGE_KEYS.CLUB_CONFIG);
                 
                 const result = await getClubConfig();
                 if (result.success && result.data) {
