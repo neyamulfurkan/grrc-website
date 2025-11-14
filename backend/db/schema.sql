@@ -27,6 +27,8 @@ CREATE TABLE club_config (
     club_motto VARCHAR(500),
     club_description TEXT,
     social_links JSONB DEFAULT '[]'::jsonb,
+    bkash_number VARCHAR(20) DEFAULT '01712345678',
+    membership_fee INTEGER DEFAULT 500,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 

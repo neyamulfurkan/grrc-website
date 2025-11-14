@@ -3034,19 +3034,19 @@ if (section === 'membership-applications') {
 
              const config = {
                 logo: logo,
-                name: document.getElementById('clubName').value.trim(),
-                motto: document.getElementById('clubMotto').value.trim(),
-                description: document.getElementById('clubDescription').value.trim(),
+                club_name: document.getElementById('clubName').value.trim(),
+                club_motto: document.getElementById('clubMotto').value.trim(),
+                club_description: document.getElementById('clubDescription').value.trim(),
                 bkash_number: bkashNumber,
                 membership_fee: membershipFee,
-                socialLinks: []
+                social_links: []
             };
 
             const socials = ['facebook', 'twitter', 'instagram', 'linkedin', 'youtube', 'github', 'email'];
             socials.forEach(platform => {
                 const value = document.getElementById(`social${platform.charAt(0).toUpperCase() + platform.slice(1)}`).value.trim();
                 if (value) {
-                    config.socialLinks.push({ platform, url: value });
+                    config.social_links.push({ platform, url: value });
                 }
             });
 
