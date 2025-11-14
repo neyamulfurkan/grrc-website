@@ -32,11 +32,9 @@ router.use(isAdmin);
 
 router.put('/config', async (req, res) => {
   try {
-    console.log('📥 Received config update:', {
-      bkash: req.body.bkash_number,
-      fee: req.body.membership_fee,
-      user: req.user.username
-    });
+    console.log('📥 RAW REQUEST BODY:', JSON.stringify(req.body, null, 2));
+    console.log('📥 bkash_number received:', req.body.bkash_number);
+    console.log('📥 membership_fee received:', req.body.membership_fee);
     
     const result = await updateClubConfig(req.body);
     
