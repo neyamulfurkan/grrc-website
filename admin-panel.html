@@ -3064,6 +3064,7 @@ if (section === 'membership-applications') {
             // Save to backend with error handling
             let saveResult;
             try {
+                console.log('📤 Sending config to API:', JSON.stringify(config, null, 2));
                 saveResult = await setClubConfig(config);
                 
                 if (!saveResult || !saveResult.success) {
