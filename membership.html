@@ -995,10 +995,19 @@
 
        async function loadClubConfig() {
     try {
+        // Clear cache to force fresh fetch
+        localStorage.removeItem('cache_clubConfig');
+        localStorage.removeItem('clubConfig');
+        
         if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady) {
             const result = await window.apiClient.getConfig();
             if (result.success && result.data) {
                 const config = result.data;
+                console.log('📋 Loaded membership config:', {
+                    bkash: config.bkash_number,
+                    fee: config.membership_fee
+                });
+                
                 if (config.name) {
                     document.getElementById('clubName').textContent = config.name;
                 }
@@ -1006,18 +1015,22 @@
                     const logoUrl = config.logo || config.logo_url;
                     document.getElementById('clubLogo').src = logoUrl + '?t=' + Date.now();
                 }
-                // Load bKash number from config if available
-                if (config.bkash_number) {
-                    document.getElementById('bkashNumber').textContent = config.bkash_number;
-                }
-                // Load membership fee from config if available
-                if (config.membership_fee) {
-                    document.getElementById('membershipFeeDisplay').textContent = '৳' + config.membership_fee;
-                }
+                // Load bKash number with fallback
+                const bkashNumber = config.bkash_number || '01712345678';
+                document.getElementById('bkashNumber').textContent = bkashNumber;
+                console.log('✅ bKash number set to:', bkashNumber);
+                
+                // Load membership fee with fallback
+                const membershipFee = config.membership_fee || 500;
+                document.getElementById('membershipFeeDisplay').textContent = '৳' + membershipFee;
+                console.log('✅ Membership fee set to:', membershipFee);
             }
         }
     } catch (error) {
         console.error('Error loading club config:', error);
+        // Set defaults on error
+        document.getElementById('bkashNumber').textContent = '01712345678';
+        document.getElementById('membershipFeeDisplay').textContent = '৳500';
     }
 }
 

@@ -32,13 +32,23 @@ router.use(isAdmin);
 
 router.put('/config', async (req, res) => {
   try {
+    console.log('📥 Received config update:', {
+      bkash: req.body.bkash_number,
+      fee: req.body.membership_fee,
+      user: req.user.username
+    });
+    
     const result = await updateClubConfig(req.body);
     
     if (!result.success) {
+      console.error('❌ Config update failed:', result.error);
       return res.status(400).json(result);
     }
     
-    console.log(`✏️ Club config updated by ${req.user.username}`);
+    console.log(`✏️ Club config updated by ${req.user.username}:`, {
+      bkash: result.data?.bkash_number,
+      fee: result.data?.membership_fee
+    });
     res.json(result);
   } catch (error) {
     console.error('❌ Error in PUT /config:', {
