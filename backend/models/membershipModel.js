@@ -17,7 +17,10 @@ const createApplication = async (applicationData) => {
     skills,
     previous_experience,
     github_profile,
-    linkedin_profile
+    linkedin_profile,
+    photo,
+    payment_screenshot,
+    transaction_id
   } = applicationData;
 
   try {
@@ -59,9 +62,10 @@ const createApplication = async (applicationData) => {
     const query = `
       INSERT INTO membership_applications (
         full_name, email, phone, student_id, department, year, 
-        bio, skills, previous_experience, github_profile, linkedin_profile
+        bio, skills, previous_experience, github_profile, linkedin_profile,
+        photo, payment_screenshot, transaction_id
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8::jsonb, $9, $10, $11)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8::jsonb, $9, $10, $11, $12, $13, $14)
       RETURNING id, full_name, email, status, applied_date
     `;
 
@@ -73,10 +77,13 @@ const createApplication = async (applicationData) => {
       department,
       year,
       bio,
-      skillsJson,  // ✅ Now properly stringified
+      skillsJson,
       previous_experience || null,
       github_profile || null,
-      linkedin_profile || null
+      linkedin_profile || null,
+      photo || null,
+      payment_screenshot,
+      transaction_id || null
     ];
 
     console.log('📤 Executing query with values:', values);

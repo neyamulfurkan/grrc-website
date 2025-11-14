@@ -56,7 +56,7 @@ router.post(
       .withMessage('Invalid Bangladesh phone number format (use +8801XXXXXXXXX or 01XXXXXXXXX)'),
     
     body('student_id')
-      .optional({ checkFalsy: true })
+      .optional({ nullable: true, checkFalsy: true })
       .trim()
       .isLength({ max: 50 })
       .withMessage('Student ID must not exceed 50 characters'),
@@ -92,40 +92,71 @@ router.post(
       .withMessage('Each skill must be a non-empty string'),
     
     body('previous_experience')
-      .optional({ checkFalsy: true })
+      .optional({ nullable: true, checkFalsy: true })
       .trim()
       .isLength({ max: 2000 })
       .withMessage('Previous experience must not exceed 2000 characters'),
     
     body('github_profile')
-      .optional({ checkFalsy: true })
+      .optional({ nullable: true, checkFalsy: true })
       .trim()
       .custom((value) => {
-        if (value && value.length > 0) {
-          try {
-            new URL(value);
-            return true;
-          } catch (e) {
-            throw new Error('GitHub profile must be a valid URL');
-          }
+        if (!value || value === '' || value === null) return true;
+        try {
+          new URL(value);
+          return true;
+        } catch (e) {
+          throw new Error('GitHub profile must be a valid URL');
         }
-        return true;
       }),
     
     body('linkedin_profile')
-      .optional({ checkFalsy: true })
+      .optional({ nullable: true, checkFalsy: true })
       .trim()
       .custom((value) => {
-        if (value && value.length > 0) {
-          try {
-            new URL(value);
-            return true;
-          } catch (e) {
-            throw new Error('LinkedIn profile must be a valid URL');
-          }
+        if (!value || value === '' || value === null) return true;
+        try {
+          new URL(value);
+          return true;
+        } catch (e) {
+          throw new Error('LinkedIn profile must be a valid URL');
         }
-        return true;
-      })
+      }),
+    
+    body('photo')
+      .optional({ nullable: true, checkFalsy: true })
+      .custom((value) => {
+        if (!value) return true;
+        // Allow data URLs (base64) or regular URLs
+        if (value.startsWith('data:image/')) return true;
+        try {
+          new URL(value);
+          return true;
+        } catch (e) {
+          throw new Error('Photo must be a valid URL or base64 image');
+        }
+      }),
+    
+    body('payment_screenshot')
+      .custom((value) => {
+        if (!value || value === '') {
+          throw new Error('Payment screenshot is required');
+        }
+        // Allow data URLs (base64) or regular URLs
+        if (value.startsWith('data:image/')) return true;
+        try {
+          new URL(value);
+          return true;
+        } catch (e) {
+          throw new Error('Payment screenshot must be a valid URL or base64 image');
+        }
+      }),
+    
+    body('transaction_id')
+      .optional({ nullable: true, checkFalsy: true })
+      .trim()
+      .isLength({ max: 100 })
+      .withMessage('Transaction ID must not exceed 100 characters')
   ],
   validateRequest,
   async (req, res) => {
@@ -148,7 +179,10 @@ router.post(
         skills: req.body.skills,
         previous_experience: req.body.previous_experience || null,
         github_profile: req.body.github_profile || null,
-        linkedin_profile: req.body.linkedin_profile || null
+        linkedin_profile: req.body.linkedin_profile || null,
+        photo: req.body.photo || null,
+        payment_screenshot: req.body.payment_screenshot,
+        transaction_id: req.body.transaction_id || null
       };
 
       const result = await membershipModel.createApplication(applicationData);
