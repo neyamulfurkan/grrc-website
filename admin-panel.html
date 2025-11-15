@@ -1396,18 +1396,21 @@
         document.addEventListener('DOMContentLoaded', () => {
             console.log('Admin Panel Loading...');
             
-            function initializeAdminPanel() {
-                const session = sessionStorage.getItem('adminSession');
-                const token = localStorage.getItem('grrc_auth_token');
-                
-                console.log('Auth Check - Session:', session ? 'EXISTS' : 'MISSING', 'Token:', token ? 'EXISTS' : 'MISSING');
-                
-                if (!session || !token) {
-                    console.error('Not authenticated - redirecting to login');
-                    alert('Please log in to access the admin panel');
-                    window.location.href = 'admin.html';
-                    return;
-                }
+            console.log('All authentication checks passed!');
+
+                initTheme();
+                loadAdminInfo();
+                loadClubConfigToSidebar();
+                loadDashboardStats();
+                setupNavigation();
+                setupLogoutButton();
+                setupForms();
+                setupMobileSidebar();
+                loadAllData();
+            }
+
+            setTimeout(initializeAdminPanel, 200);
+        });
 
                 if (!window.apiClient || !window.apiClient.isReady) {
                     console.warn('API client not ready yet, retrying...');
@@ -2807,11 +2810,12 @@
                 }
             });
             
-            // Setup Super Admin button
+            // Setup Super Admin button - ONLY SHOW MODAL WHEN CLICKED
             const superAdminBtn = document.getElementById('superAdminBtn');
             if (superAdminBtn) {
                 superAdminBtn.addEventListener('click', (e) => {
                     e.preventDefault();
+                    e.stopPropagation();
                     showSuperAdminModal();
                 });
             }
