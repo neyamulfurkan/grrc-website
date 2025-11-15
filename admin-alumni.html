@@ -339,6 +339,20 @@
             initializeMobileMenu();
             console.log('🚀 Alumni management page loaded');
             
+            // Wait for API client to be ready
+            let retries = 0;
+            while ((!window.apiClient || !window.apiClient.isReady) && retries < 50) {
+                await new Promise(resolve => setTimeout(resolve, 100));
+                retries++;
+            }
+            
+            if (!window.apiClient || !window.apiClient.isReady) {
+                console.error('❌ API client failed to initialize');
+                document.getElementById('alumniTableBody').innerHTML = 
+                    '<tr><td colspan="6" style="text-align: center; padding: var(--space-xl); color: var(--error-color);">Failed to initialize. Please refresh the page.</td></tr>';
+                return;
+            }
+            
             await initializeAlumni();
             await loadAlumniApplicationStatistics();
             await loadAlumniApplications('pending');
@@ -773,14 +787,21 @@
             try {
                 console.log('📋 Loading alumni applications with status:', status);
                 
+                if (!window.apiClient || !window.apiClient.isReady) {
+                    console.error('❌ API client not ready');
+                    document.getElementById('alumniApplicationsTableBody').innerHTML = 
+                        '<tr><td colspan="8" style="text-align: center; padding: var(--space-xl); color: var(--error-color);">API client not ready</td></tr>';
+                    return;
+                }
+                
                 const result = await window.apiClient.getAlumniApplications(status);
                 console.log('📦 API response:', result);
                 
                 const tbody = document.getElementById('alumniApplicationsTableBody');
                 
-                if (!result.success) {
-                    console.error('❌ API call failed:', result.error);
-                    tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; padding: var(--space-xl); color: var(--error-color);">Error: ${result.error || 'Failed to load applications'}</td></tr>`;
+                if (!result || !result.success) {
+                    console.error('❌ API call failed:', result ? result.error : 'No response');
+                    tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; padding: var(--space-xl); color: var(--error-color);">Error: ${result && result.error ? result.error : 'Failed to load applications'}</td></tr>`;
                     return;
                 }
                 

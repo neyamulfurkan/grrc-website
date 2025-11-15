@@ -7,9 +7,13 @@ async function loadClubConfiguration() {
     console.log('Loading club configuration...');
     
     // Check if API client exists
-    if (!window.apiClient) {
-      console.warn('API client not available, using cached data');
-      return loadFromCache('clubConfig');
+    if (!window.apiClient || !window.apiClient.isReady) {
+      console.warn('API client not ready, using cached data');
+      const cached = await loadFromCache('clubConfig');
+      if (cached) {
+        updateClubConfigDOM(cached);
+      }
+      return cached !== null;
     }
     
     // Try to get from cache first
