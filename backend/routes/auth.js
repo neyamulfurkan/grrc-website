@@ -51,9 +51,12 @@ router.post('/login', async (req, res) => {
     const admin = result.data;
 
     // Compare password with hashed password
+    console.log('🔍 Comparing password for admin:', username);
     const isPasswordValid = await bcrypt.compare(password, admin.password_hash);
+    console.log('🔐 Password valid:', isPasswordValid);
     
     if (!isPasswordValid) {
+      console.log('❌ Password mismatch for admin:', username);
       return res.status(401).json({
         success: false,
         error: 'Invalid username or password',

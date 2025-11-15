@@ -295,8 +295,11 @@ async function logout() {
     return { success: true, data: null, error: null };
 }
 
-async function verifyToken() {
-    return request('/api/auth/verify');
+async function verifySuperAdmin(password) {
+    return request('/api/auth/verify-superadmin', {
+        method: 'POST',
+        body: JSON.stringify({ password })
+    });
 }
 
 async function updateConfig(data) {
@@ -590,6 +593,7 @@ window.apiClient = {
     getAuthToken,
     clearAuthToken,
     isAuthenticated,
+    verifySuperAdmin,
     getConfig,
     getMembers,
     getMemberById,

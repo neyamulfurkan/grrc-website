@@ -51,9 +51,13 @@ FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TABLE admins (
     id SERIAL PRIMARY KEY,
     username VARCHAR(100) UNIQUE NOT NULL,
-    password_hash VARCHAR(255) NOT NULL, -- Bcrypt hashed password
+    password_hash VARCHAR(255) NOT NULL,
     role VARCHAR(50) DEFAULT 'Admin' CHECK (role IN ('Super Admin', 'Admin', 'Moderator')),
+    is_super_admin BOOLEAN DEFAULT false,
+    permissions JSONB DEFAULT '{}'::jsonb,
+    is_active BOOLEAN DEFAULT true,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     last_login TIMESTAMP
 );
 

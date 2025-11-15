@@ -57,18 +57,20 @@ ON CONFLICT (id) DO UPDATE SET
 -- 🔒 SECURITY WARNING: Change this password IMMEDIATELY after first login!
 -- 
 -- Password hash generated with bcrypt (salt rounds: 10)
--- Hash for "admin123": $2b$10$XO4qZ9X.3.YqJ0LmYbVz5.GKzKqZxJX3kZXqZXqZXqZXqZXqZXqO
-INSERT INTO admins (username, password_hash, role, created_at, last_login)
+-- Hash for "admin123": $2b$10$K7L/MoRZUuyCfsmUs0.mPu.9B8Af4qdBncjU4K6RpW3u4G3rBVMG2
+INSERT INTO admins (username, password_hash, role, is_super_admin, created_at, last_login)
 VALUES (
     'admin',
-    '$2b$10$XO4qZ9X.3.YqJ0LmYbVz5.GKzKqZxJX3kZXqZXqZXqZXqZXqZXqO',
+    '$2b$10$K7L/MoRZUuyCfsmUs0.mPu.9B8Af4qdBncjU4K6RpW3u4G3rBVMG2',
     'Super Admin',
+    true,
     CURRENT_TIMESTAMP,
     NULL
 )
 ON CONFLICT (username) DO UPDATE SET
-    password_hash = EXCLUDED.password_hash,
-    role = EXCLUDED.role,
+    password_hash = '$2b$10$K7L/MoRZUuyCfsmUs0.mPu.9B8Af4qdBncjU4K6RpW3u4G3rBVMG2',
+    role = 'Super Admin',
+    is_super_admin = true,
     updated_at = CURRENT_TIMESTAMP;
 
 -- ====================================

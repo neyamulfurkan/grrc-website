@@ -1338,8 +1338,9 @@
         <button class="mobile-sidebar-toggle" id="mobileSidebarToggle">☰</button>
     </div>
 
-    <!-- This login page does NOT have super admin modal - it's only in admin-panel.html -->
-        <div class="modal-content" style="background: var(--surface-color); border-radius: var(--radius-lg); padding: 2rem; max-width: 500px; width: 90%; box-shadow: var(--shadow-xl);">
+    <!-- Super Admin Verification Modal -->
+    <div id="superAdminModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 10000;">
+        <div class="modal-content" style="background: var(--surface-color); border-radius: var(--radius-lg); padding: 2rem; max-width: 500px; width: 90%; max-height: 90vh; overflow-y: auto; box-shadow: var(--shadow-xl); position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
                 <h2 style="margin: 0; color: var(--text-primary);">👑 Super Admin Verification</h2>
                 <button onclick="closeSuperAdminModal()" style="background: transparent; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-secondary);">&times;</button>
@@ -3262,7 +3263,8 @@ if (section === 'membership-applications') {
         // ========== SUPER ADMIN ACCESS FUNCTIONS ==========
         
         function showSuperAdminModal() {
-            document.getElementById('superAdminModal').style.display = 'flex';
+            const modal = document.getElementById('superAdminModal');
+            modal.style.display = 'block';
             document.getElementById('superAdminPassword').value = '';
             document.getElementById('superAdminPassword').focus();
             const errorDiv = document.getElementById('superAdminError');
@@ -3299,14 +3301,13 @@ if (section === 'membership-applications') {
             try {
                 console.log('🔐 Verifying super admin password...');
                 
-                const admin = getCurrentAdmin();
-                if (!admin || !admin.username) {
-                    throw new Error('No admin session found');
-                }
+                // Use dedicated verify-superadmin endpoint
+                const result = await window.apiClient.request('/api/auth/verify-superadmin', {
+                    method: 'POST',
+                    body: JSON.stringify({ password: password })
+                });
                 
-                const result = await window.apiClient.login(admin.username, password);
-                
-                if (result.success && result.data && result.data.admin && result.data.admin.is_super_admin === true) {
+                if (result.success && result.data && result.data.token) {
                     console.log('✅ Super admin verification successful!');
                     
                     localStorage.setItem('superAdminToken', result.data.token);
@@ -3315,7 +3316,7 @@ if (section === 'membership-applications') {
                     
                     setTimeout(() => {
                         const basePath = window.location.pathname.includes('/grrc-website/') ? '/grrc-website/' : './';
-                        window.location.href = basePath + 'superadmin-panel.html';
+                        window.location.href = basePath + 'super-admin-panel.html';
                     }, 1000);
                     
                 } else {
