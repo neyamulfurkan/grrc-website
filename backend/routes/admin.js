@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcrypt');
-const { authenticateToken, isAdmin } = require('../middleware/auth');
+const { authenticateToken, isAdmin, checkPermission, checkApprovalRequired, createApprovalRequest, isSuperAdmin } = require('../middleware/auth');
 const {
   updateClubConfig,
   createMember,
@@ -29,6 +29,10 @@ const alumniModel = require('../models/alumniModel');
 
 router.use(authenticateToken);
 router.use(isAdmin);
+
+// ====================================
+// CLUB CONFIGURATION
+// ====================================
 
 router.put('/config', async (req, res) => {
   try {
@@ -62,7 +66,11 @@ router.put('/config', async (req, res) => {
   }
 });
 
-router.post('/members', async (req, res) => {
+// ====================================
+// MEMBERS
+// ====================================
+
+router.post('/members', checkPermission('members', 'create'), async (req, res) => {
   try {
     const { name, department, year, role, email } = req.body;
     
@@ -78,7 +86,34 @@ router.post('/members', async (req, res) => {
       joined_date: req.body.joined_date || req.body.joinedDate
     };
     delete memberData.joinedDate;
+    
+    // Check if approval is required
+    const needsApproval = await checkApprovalRequired('members', 'create');
+    
+    if (needsApproval && !req.user.is_super_admin) {
+      // Create approval request instead of direct creation
+      const approvalResult = await createApprovalRequest(
+        req.user.id,
+        'create',
+        'members',
+        memberData
+      );
+      
+      if (approvalResult.success) {
+        return res.status(202).json({
+          success: true,
+          message: 'Member creation submitted for approval',
+          pending: true
+        });
+      } else {
+        return res.status(500).json({
+          success: false,
+          error: 'Failed to create approval request'
+        });
+      }
+    }
 
+    // Direct creation (no approval needed or super admin)
     const result = await createMember(memberData);
     
     if (!result.success) {
@@ -101,7 +136,7 @@ router.post('/members', async (req, res) => {
   }
 });
 
-router.put('/members/:id', async (req, res) => {
+router.put('/members/:id', checkPermission('members', 'edit'), async (req, res) => {
   try {
     const result = await updateMember(req.params.id, req.body);
     
@@ -125,7 +160,7 @@ router.put('/members/:id', async (req, res) => {
   }
 });
 
-router.delete('/members/:id', async (req, res) => {
+router.delete('/members/:id', checkPermission('members', 'delete'), async (req, res) => {
   try {
     const result = await deleteMember(req.params.id);
     
@@ -149,7 +184,11 @@ router.delete('/members/:id', async (req, res) => {
   }
 });
 
-router.post('/events', async (req, res) => {
+// ====================================
+// EVENTS
+// ====================================
+
+router.post('/events', checkPermission('events', 'create'), async (req, res) => {
   try {
     const { title, description, date, location, venue } = req.body;
     
@@ -167,6 +206,26 @@ router.post('/events', async (req, res) => {
       location: eventLocation
     };
     delete eventData.venue;
+    
+    // Check if approval is required
+    const needsApproval = await checkApprovalRequired('events', 'create');
+    
+    if (needsApproval && !req.user.is_super_admin) {
+      const approvalResult = await createApprovalRequest(
+        req.user.id,
+        'create',
+        'events',
+        eventData
+      );
+      
+      if (approvalResult.success) {
+        return res.status(202).json({
+          success: true,
+          message: 'Event creation submitted for approval',
+          pending: true
+        });
+      }
+    }
 
     const result = await createEvent(eventData);
     
@@ -190,7 +249,7 @@ router.post('/events', async (req, res) => {
   }
 });
 
-router.put('/events/:id', async (req, res) => {
+router.put('/events/:id', checkPermission('events', 'edit'), async (req, res) => {
   try {
     const result = await updateEvent(req.params.id, req.body);
     
@@ -214,7 +273,7 @@ router.put('/events/:id', async (req, res) => {
   }
 });
 
-router.delete('/events/:id', async (req, res) => {
+router.delete('/events/:id', checkPermission('events', 'delete'), async (req, res) => {
   try {
     const result = await deleteEvent(req.params.id);
     
@@ -238,7 +297,11 @@ router.delete('/events/:id', async (req, res) => {
   }
 });
 
-router.post('/projects', async (req, res) => {
+// ====================================
+// PROJECTS
+// ====================================
+
+router.post('/projects', checkPermission('projects', 'create'), async (req, res) => {
   try {
     const { title, description, category, status } = req.body;
     
@@ -254,6 +317,26 @@ router.post('/projects', async (req, res) => {
       category: category || 'Other',
       status: status || 'ongoing'
     };
+    
+    // Check if approval is required
+    const needsApproval = await checkApprovalRequired('projects', 'create');
+    
+    if (needsApproval && !req.user.is_super_admin) {
+      const approvalResult = await createApprovalRequest(
+        req.user.id,
+        'create',
+        'projects',
+        projectData
+      );
+      
+      if (approvalResult.success) {
+        return res.status(202).json({
+          success: true,
+          message: 'Project creation submitted for approval',
+          pending: true
+        });
+      }
+    }
 
     const result = await createProject(projectData);
     
@@ -277,7 +360,7 @@ router.post('/projects', async (req, res) => {
   }
 });
 
-router.put('/projects/:id', async (req, res) => {
+router.put('/projects/:id', checkPermission('projects', 'edit'), async (req, res) => {
   try {
     const result = await updateProject(req.params.id, req.body);
     
@@ -301,7 +384,7 @@ router.put('/projects/:id', async (req, res) => {
   }
 });
 
-router.delete('/projects/:id', async (req, res) => {
+router.delete('/projects/:id', checkPermission('projects', 'delete'), async (req, res) => {
   try {
     const result = await deleteProject(req.params.id);
     
@@ -325,7 +408,11 @@ router.delete('/projects/:id', async (req, res) => {
   }
 });
 
-router.post('/gallery', async (req, res) => {
+// ====================================
+// GALLERY
+// ====================================
+
+router.post('/gallery', checkPermission('gallery', 'upload'), async (req, res) => {
   try {
     const { image, title, category, date } = req.body;
     if (!image || !title || !category || !date) {
@@ -333,6 +420,26 @@ router.post('/gallery', async (req, res) => {
         success: false,
         error: 'Required fields: image, title, category, date',
       });
+    }
+    
+    // Check if approval is required
+    const needsApproval = await checkApprovalRequired('gallery', 'create');
+    
+    if (needsApproval && !req.user.is_super_admin) {
+      const approvalResult = await createApprovalRequest(
+        req.user.id,
+        'create',
+        'gallery',
+        req.body
+      );
+      
+      if (approvalResult.success) {
+        return res.status(202).json({
+          success: true,
+          message: 'Gallery upload submitted for approval',
+          pending: true
+        });
+      }
     }
 
     const result = await createGalleryItem(req.body);
@@ -381,7 +488,7 @@ router.put('/gallery/:id', async (req, res) => {
   }
 });
 
-router.delete('/gallery/:id', async (req, res) => {
+router.delete('/gallery/:id', checkPermission('gallery', 'delete'), async (req, res) => {
   try {
     const result = await deleteGalleryItem(req.params.id);
     
@@ -405,7 +512,11 @@ router.delete('/gallery/:id', async (req, res) => {
   }
 });
 
-router.post('/announcements', async (req, res) => {
+// ====================================
+// ANNOUNCEMENTS
+// ====================================
+
+router.post('/announcements', checkPermission('announcements', 'create'), async (req, res) => {
   try {
     const { title, content } = req.body;
     
@@ -421,6 +532,26 @@ router.post('/announcements', async (req, res) => {
       date: req.body.date || new Date().toISOString().split('T')[0],
       priority: req.body.priority || 'normal'
     };
+    
+    // Check if approval is required
+    const needsApproval = await checkApprovalRequired('announcements', 'create');
+    
+    if (needsApproval && !req.user.is_super_admin) {
+      const approvalResult = await createApprovalRequest(
+        req.user.id,
+        'create',
+        'announcements',
+        announcementData
+      );
+      
+      if (approvalResult.success) {
+        return res.status(202).json({
+          success: true,
+          message: 'Announcement submitted for approval',
+          pending: true
+        });
+      }
+    }
 
     const result = await createAnnouncement(announcementData);
     
@@ -444,7 +575,7 @@ router.post('/announcements', async (req, res) => {
   }
 });
 
-router.put('/announcements/:id', async (req, res) => {
+router.put('/announcements/:id', checkPermission('announcements', 'edit'), async (req, res) => {
   try {
     const result = await updateAnnouncement(req.params.id, req.body);
     
@@ -468,7 +599,7 @@ router.put('/announcements/:id', async (req, res) => {
   }
 });
 
-router.delete('/announcements/:id', async (req, res) => {
+router.delete('/announcements/:id', checkPermission('announcements', 'delete'), async (req, res) => {
   try {
     const result = await deleteAnnouncement(req.params.id);
     
@@ -492,133 +623,36 @@ router.delete('/announcements/:id', async (req, res) => {
   }
 });
 
-router.get('/admins', async (req, res) => {
-  try {
-    const result = await getAllAdmins();
-    res.json(result);
-  } catch (error) {
-    console.error('❌ Error in GET /admins:', {
-      error: error.message,
-      stack: error.stack,
-      body: req.body,
-      params: req.params
-    });
-    res.status(500).json({
-      success: false,
-      error: 'Failed to fetch admins',
-    });
-  }
+// ====================================
+// ADMIN MANAGEMENT (SUPER ADMIN ONLY)
+// ====================================
+
+router.get('/admins', isSuperAdmin, async (req, res) => {
+  res.status(301).json({
+    success: false,
+    error: 'Use /api/superadmin/admins instead'
+  });
 });
 
-router.post('/admins', async (req, res) => {
-  try {
-    const { username, password, role } = req.body;
-    
-    if (!username || !password) {
-      return res.status(400).json({
-        success: false,
-        error: 'Username and password are required',
-      });
-    }
-
-    const saltRounds = 10;
-    const password_hash = await bcrypt.hash(password, saltRounds);
-
-    const result = await createAdmin({
-      username,
-      password_hash,
-      role: role || 'Admin',
-    });
-    
-    if (!result.success) {
-      return res.status(400).json(result);
-    }
-    
-    console.log(`➕ Admin created: ${username} by ${req.user.username}`);
-    res.status(201).json(result);
-  } catch (error) {
-    console.error('❌ Error in POST /admins:', {
-      error: error.message,
-      stack: error.stack,
-      body: req.body,
-      params: req.params
-    });
-    res.status(500).json({
-      success: false,
-      error: 'Failed to create admin',
-    });
-  }
+router.post('/admins', isSuperAdmin, async (req, res) => {
+  res.status(301).json({
+    success: false,
+    error: 'Use /api/superadmin/admins/create instead'
+  });
 });
 
-router.put('/admins/:id', async (req, res) => {
-  try {
-    const { username, password, role } = req.body;
-    const updateData = { username, role };
-
-    if (password) {
-      const saltRounds = 10;
-      updateData.password_hash = await bcrypt.hash(password, saltRounds);
-    }
-
-    const result = await updateAdmin(req.params.id, updateData);
-    
-    if (!result.success) {
-      return res.status(404).json(result);
-    }
-    
-    console.log(`✏️ Admin updated: ID ${req.params.id} by ${req.user.username}`);
-    res.json(result);
-  } catch (error) {
-    console.error('❌ Error in PUT /admins/:id:', {
-      error: error.message,
-      stack: error.stack,
-      body: req.body,
-      params: req.params
-    });
-    res.status(500).json({
-      success: false,
-      error: 'Failed to update admin',
-    });
-  }
+router.put('/admins/:id', isSuperAdmin, async (req, res) => {
+  res.status(301).json({
+    success: false,
+    error: 'Use /api/superadmin/admins/:id/permissions instead'
+  });
 });
 
-router.delete('/admins/:id', async (req, res) => {
-  try {
-    const adminCheck = await getAdminById(req.params.id);
-    if (!adminCheck.success || !adminCheck.data) {
-      return res.status(404).json({
-        success: false,
-        error: 'Admin not found',
-      });
-    }
-
-    if (parseInt(req.params.id) === req.user.id) {
-      return res.status(400).json({
-        success: false,
-        error: 'Cannot delete your own admin account',
-      });
-    }
-
-    const result = await deleteAdmin(req.params.id);
-    
-    if (!result.success) {
-      return res.status(404).json(result);
-    }
-    
-    console.log(`🗑️ Admin deleted: ID ${req.params.id} by ${req.user.username}`);
-    res.json(result);
-  } catch (error) {
-    console.error('❌ Error in DELETE /admins/:id:', {
-      error: error.message,
-      stack: error.stack,
-      body: req.body,
-      params: req.params
-    });
-    res.status(500).json({
-      success: false,
-      error: 'Failed to delete admin',
-    });
-  }
+router.delete('/admins/:id', isSuperAdmin, async (req, res) => {
+  res.status(301).json({
+    success: false,
+    error: 'Use super admin panel for admin deletion'
+  });
 });
 
 // ====================================

@@ -82,6 +82,9 @@ router.post('/login', async (req, res) => {
           id: admin.id,
           username: admin.username,
           role: admin.role,
+          is_super_admin: admin.is_super_admin || false,
+          permissions: admin.permissions || {},
+          is_active: admin.is_active !== false
         },
       },
       message: 'Login successful',
@@ -91,6 +94,84 @@ router.post('/login', async (req, res) => {
     res.status(500).json({
       success: false,
       error: 'Login failed. Please try again.',
+    });
+  }
+});
+
+/**
+ * POST /api/auth/verify-superadmin
+ * Verify super admin password and return short-lived token
+ * Body: { password: string }
+ */
+router.post('/verify-superadmin', authenticateToken, async (req, res) => {
+  try {
+    const { password } = req.body;
+    
+    if (!password) {
+      return res.status(400).json({
+        success: false,
+        error: 'Password is required'
+      });
+    }
+    
+    // Get current user's password hash
+    const { getAdminById } = require('../models/contentModel');
+    const result = await getAdminById(req.user.id);
+    
+    if (!result.success || !result.data) {
+      return res.status(404).json({
+        success: false,
+        error: 'Admin not found'
+      });
+    }
+    
+    const admin = result.data;
+    
+    // Check if user is super admin
+    if (!admin.is_super_admin) {
+      return res.status(403).json({
+        success: false,
+        error: 'Not a super admin'
+      });
+    }
+    
+    // Verify password
+    const isValid = await bcrypt.compare(password, admin.password_hash);
+    
+    if (!isValid) {
+      // Log failed attempt
+      console.log(`❌ Failed super admin access attempt by ${admin.username}`);
+      return res.status(401).json({
+        success: false,
+        error: 'Invalid password'
+      });
+    }
+    
+    // Generate short-lived super admin token (30 minutes)
+    const superAdminToken = generateToken(
+      {
+        id: admin.id,
+        username: admin.username,
+        is_super_admin: true
+      },
+      '30m'
+    );
+    
+    console.log(`✅ Super admin access granted to ${admin.username}`);
+    
+    res.json({
+      success: true,
+      data: {
+        token: superAdminToken
+      },
+      message: 'Super admin access granted'
+    });
+    
+  } catch (error) {
+    console.error('Super admin verification error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Verification failed'
     });
   }
 });

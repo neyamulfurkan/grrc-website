@@ -4,7 +4,7 @@
  * Production-ready backend API server for Render deployment
  * 
  * @author GSTU Robotics & Research Club
- * @version 2.3.0 - Alumni Application Routes Added
+ * @version 2.4.0 - Super Admin Routes Added
  */
 
 // ============ DEPENDENCIES ============
@@ -114,7 +114,7 @@ app.get('/', (req, res) => {
     res.json({
         success: true,
         message: 'GSTU Robotics & Research Club API Server',
-        version: '2.3.0',
+        version: '2.4.0',
         environment: NODE_ENV,
         timestamp: new Date().toISOString(),
         uptime: Math.floor(process.uptime()),
@@ -173,7 +173,8 @@ let routesLoaded = {
     content: false,
     admin: false,
     membership: false,
-    alumniApplication: false
+    alumniApplication: false,
+    superadmin: false
 };
 
 /**
@@ -239,6 +240,19 @@ loadRoute('admin', './routes/admin', '/api/admin');
 loadRoute('membership', './routes/membership', '/api/membership');
 loadRoute('alumniApplication', './routes/alumniApplication', '/api/alumni-application');
 
+// ============ SUPER ADMIN ROUTES ============
+try {
+    console.log('📂 Loading Super Admin routes...');
+    const superadminRoutes = require('./routes/superadmin');
+    app.use('/api/superadmin', superadminRoutes);
+    console.log('✅ Super Admin routes loaded successfully');
+    routesLoaded.superadmin = true;
+} catch (error) {
+    console.error('❌ Failed to load Super Admin routes:', error.message);
+    createPlaceholderRoute('/api/superadmin', 'Super Admin');
+    routesLoaded.superadmin = false;
+}
+
 /**
  * API Documentation
  */
@@ -246,7 +260,7 @@ app.get('/api', (req, res) => {
     res.json({
         success: true,
         message: 'GSTU Robotics & Research Club API Server',
-        version: '2.3.0',
+        version: '2.4.0',
         documentation: 'https://github.com/gstu-robotics/grrc-website',
         routesLoaded: routesLoaded,
         endpoints: {
@@ -258,7 +272,8 @@ app.get('/api', (req, res) => {
                 'POST /api/auth/login': 'Login',
                 'POST /api/auth/logout': 'Logout',
                 'GET /api/auth/verify': 'Verify token',
-                'GET /api/auth/me': 'Get profile'
+                'GET /api/auth/me': 'Get profile',
+                'POST /api/auth/verify-superadmin': 'Verify super admin password'
             } : 'Routes not loaded',
             content: routesLoaded.content ? {
                 'GET /api/content/*': 'Public content endpoints'
@@ -283,6 +298,18 @@ app.get('/api', (req, res) => {
                 'POST /api/alumni-application/applications/:id/reject': 'Reject application',
                 'DELETE /api/alumni-application/applications/:id': 'Delete application',
                 'GET /api/alumni-application/statistics': 'Get application statistics'
+            } : 'Routes not loaded',
+            superadmin: routesLoaded.superadmin ? {
+                'GET /api/superadmin/dashboard': 'Super admin dashboard stats',
+                'GET /api/superadmin/admins': 'Get all admins',
+                'POST /api/superadmin/admins': 'Create new admin',
+                'PUT /api/superadmin/admins/:id': 'Update admin details',
+                'DELETE /api/superadmin/admins/:id': 'Delete admin',
+                'POST /api/superadmin/admins/:id/approve': 'Approve pending admin',
+                'POST /api/superadmin/admins/:id/reject': 'Reject pending admin',
+                'GET /api/superadmin/activity-logs': 'Get system activity logs',
+                'GET /api/superadmin/backup': 'Trigger database backup',
+                'POST /api/superadmin/restore': 'Restore from backup'
             } : 'Routes not loaded'
         }
     });
@@ -335,7 +362,7 @@ app.use((err, req, res, next) => {
 
 async function startServer() {
     try {
-        console.log('\n&#128269; Validating environment configuration...');
+        console.log('\n🔍 Validating environment configuration...');
         
         // Check for DATABASE_URL first (Render/Neon uses this)
         if (process.env.DATABASE_URL) {
@@ -353,7 +380,7 @@ async function startServer() {
         }
 
         // Test database connection
-        console.log('&#128269; Testing database connection...');
+        console.log('🔍 Testing database connection...');
         try {
             const pool = require('./db/pool');
             const result = await Promise.race([
@@ -374,7 +401,7 @@ async function startServer() {
         // Start HTTP server
         const server = app.listen(PORT, '0.0.0.0', () => {
             console.log('\n╔════════════════════════════════════════════════════════╗');
-            console.log('║     GSTU Robotics & Research Club & Research Club API Server - STARTED          ║');
+            console.log('║  GSTU Robotics & Research Club API Server - STARTED   ║');
             console.log('╚════════════════════════════════════════════════════════╝\n');
             console.log(`🚀 Server running on port ${PORT}`);
             console.log(`📝 Environment: ${NODE_ENV}`);
@@ -385,8 +412,9 @@ async function startServer() {
             console.log(`   Admin:               ${routesLoaded.admin ? '✅' : '❌'}`);
             console.log(`   Membership:          ${routesLoaded.membership ? '✅' : '❌'}`);
             console.log(`   Alumni Application:  ${routesLoaded.alumniApplication ? '✅' : '❌'}`);
-            console.log(`\n&#128161; Health Check: http://localhost:${PORT}/health`);
-            console.log(`&#128161; API Docs: http://localhost:${PORT}/api`);
+            console.log(`   Super Admin:         ${routesLoaded.superadmin ? '✅' : '❌'}`);
+            console.log(`\n💡 Health Check: http://localhost:${PORT}/health`);
+            console.log(`💡 API Docs: http://localhost:${PORT}/api`);
             console.log(`\n📖 Server ready!\n`);
         });
 
@@ -450,7 +478,7 @@ async function startServer() {
             console.error('Stack:', error.stack);
         }
         
-        console.error('\n&#128269; Troubleshooting:');
+        console.error('\n🔍 Troubleshooting:');
         console.error('   1. Check environment variables in Render dashboard');
         console.error('   2. Verify database is created and accessible');
         console.error('   3. Check that route files exist');

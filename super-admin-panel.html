@@ -1,0 +1,1311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Super Admin Panel - GSTU Robotics & Research Club">
+    <title>Super Admin Panel - GSTU Robotics & Research Club</title>
+    
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/common.css">
+    <link rel="stylesheet" href="css/components.css">
+    
+    <style>
+        .admin-container {
+            display: flex;
+            min-height: 100vh;
+            background: var(--background-color);
+        }
+
+        .admin-sidebar {
+            width: 260px;
+            background: var(--surface-color);
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            z-index: 1000;
+        }
+
+        .sidebar-header {
+            padding: var(--space-lg);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .admin-logo {
+            width: 50px;
+            height: 50px;
+            border-radius: var(--radius-md);
+            margin-bottom: var(--space-sm);
+        }
+
+        .admin-title {
+            font-size: var(--font-size-lg);
+            font-weight: var(--font-weight-bold);
+            color: var(--text-primary);
+            margin-bottom: var(--space-xs);
+        }
+
+        .admin-subtitle {
+            font-size: var(--font-size-sm);
+            color: var(--text-secondary);
+        }
+
+        .sidebar-nav {
+            padding: var(--space-md);
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: var(--space-sm) var(--space-md);
+            margin-bottom: var(--space-xs);
+            color: var(--text-secondary);
+            text-decoration: none;
+            border-radius: var(--radius-md);
+            transition: all 0.2s ease;
+            cursor: pointer;
+            font-size: var(--font-size-base);
+        }
+
+        .nav-item:hover {
+            background: var(--primary-color);
+            color: white;
+            transform: translateX(4px);
+        }
+
+        .nav-item.active {
+            background: var(--primary-color);
+            color: white;
+            font-weight: var(--font-weight-semibold);
+        }
+
+        .nav-item-icon {
+            margin-right: var(--space-sm);
+            font-size: var(--font-size-lg);
+        }
+
+        .logout-btn {
+            margin-top: var(--space-md);
+            background: var(--error-color);
+            color: white;
+        }
+
+        .logout-btn:hover {
+            background: var(--error-dark);
+            transform: translateX(4px);
+        }
+
+        .admin-main {
+            flex: 1;
+            margin-left: 260px;
+            padding: var(--space-xl);
+            transition: margin-left 0.3s ease;
+        }
+
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-xl);
+        }
+
+        .admin-header h1 {
+            font-size: var(--font-size-3xl);
+            font-weight: var(--font-weight-bold);
+            color: var(--text-primary);
+        }
+
+        .admin-user {
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+            padding: var(--space-sm) var(--space-md);
+            background: var(--surface-color);
+            border-radius: var(--radius-full);
+            border: 1px solid var(--border-color);
+        }
+
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: var(--font-weight-bold);
+        }
+
+        .section-content {
+            display: none;
+        }
+
+        .section-content.active {
+            display: block;
+            animation: fadeInUp 0.4s ease;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: var(--space-lg);
+            margin-bottom: var(--space-xl);
+        }
+
+        .stat-card {
+            background: var(--surface-color);
+            padding: var(--space-lg);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-color);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .stat-number {
+            font-size: var(--font-size-4xl);
+            font-weight: var(--font-weight-bold);
+            color: var(--primary-color);
+            margin-bottom: var(--space-xs);
+        }
+
+        .stat-label {
+            font-size: var(--font-size-sm);
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .admin-form {
+            background: var(--surface-color);
+            padding: var(--space-xl);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-color);
+            margin-bottom: var(--space-xl);
+        }
+
+        .form-group {
+            margin-bottom: var(--space-lg);
+        }
+
+        .form-label {
+            display: block;
+            font-weight: var(--font-weight-semibold);
+            color: var(--text-primary);
+            margin-bottom: var(--space-xs);
+        }
+
+        .form-input,
+        .form-select {
+            width: 100%;
+            padding: var(--space-sm) var(--space-md);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            background: var(--background-color);
+            color: var(--text-primary);
+            font-size: var(--font-size-base);
+            transition: border-color 0.2s ease;
+        }
+
+        .form-input:focus,
+        .form-select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .data-table-wrapper {
+            background: var(--surface-color);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .data-table th {
+            background: var(--background-color);
+            padding: var(--space-md);
+            text-align: left;
+            font-weight: var(--font-weight-semibold);
+            color: var(--text-primary);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .data-table td {
+            padding: var(--space-md);
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-secondary);
+        }
+
+        .data-table tr:hover {
+            background: var(--background-color);
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: var(--radius-full);
+            font-size: var(--font-size-xs);
+            font-weight: var(--font-weight-semibold);
+        }
+
+        .badge-success {
+            background: var(--success-light);
+            color: var(--success-dark);
+        }
+
+        .badge-error {
+            background: #fef2f2;
+            color: #dc2626;
+        }
+
+        .badge-info {
+            background: var(--info-light);
+            color: var(--info-dark);
+        }
+
+        .modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            padding: var(--space-md);
+        }
+
+        .modal-content {
+            background: var(--surface-color);
+            border-radius: var(--radius-lg);
+            padding: var(--space-xl);
+            max-width: 600px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .permission-section {
+            margin-bottom: var(--space-lg);
+            padding: var(--space-md);
+            background: var(--background-color);
+            border-radius: var(--radius-md);
+        }
+
+        .permission-section h4 {
+            margin-bottom: var(--space-sm);
+            color: var(--text-primary);
+        }
+
+        .permission-section label {
+            display: block;
+            margin-bottom: var(--space-xs);
+            color: var(--text-secondary);
+        }
+
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+            cursor: pointer;
+        }
+
+        .approval-card {
+            background: var(--background-color);
+            padding: var(--space-lg);
+            border-radius: var(--radius-md);
+            margin-bottom: var(--space-md);
+            border: 1px solid var(--border-color);
+        }
+
+        .approval-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-sm);
+        }
+
+        .approval-time {
+            font-size: var(--font-size-sm);
+            color: var(--text-secondary);
+        }
+
+        .approval-body {
+            padding: var(--space-md);
+            background: var(--surface-color);
+            border-radius: var(--radius-sm);
+            margin-bottom: var(--space-md);
+        }
+
+        .approval-actions {
+            display: flex;
+            gap: var(--space-sm);
+        }
+
+        .btn-group {
+            display: flex;
+            gap: var(--space-md);
+            margin-top: var(--space-lg);
+        }
+
+        .toast {
+            position: fixed;
+            top: var(--space-lg);
+            right: var(--space-lg);
+            padding: var(--space-md) var(--space-lg);
+            background: var(--surface-color);
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-xl);
+            border-left: 4px solid var(--success-color);
+            display: none;
+            align-items: center;
+            gap: var(--space-sm);
+            z-index: 10000;
+            animation: slideInRight 0.3s ease;
+        }
+
+        .toast.show {
+            display: flex;
+        }
+
+        .toast.error {
+            border-left-color: var(--error-color);
+        }
+
+        @keyframes slideInRight {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 1023px) {
+            .admin-sidebar {
+                transform: translateX(-100%);
+            }
+
+            .admin-main {
+                margin-left: 0;
+            }
+        }
+
+        @media (max-width: 767px) {
+            .admin-main {
+                padding: var(--space-md);
+            }
+
+            .admin-form {
+                padding: var(--space-md);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="toast" id="toast">
+        <span class="toast-icon" id="toastIcon">✓</span>
+        <span class="toast-message" id="toastMessage"></span>
+    </div>
+
+    <div class="admin-container">
+        <aside class="admin-sidebar" id="adminSidebar">
+            <div class="sidebar-header">
+                <img src="assets/default-logo.jpg" alt="Club Logo" class="admin-logo" id="sidebarLogo">
+                <div class="admin-title">Super Admin Panel</div>
+                <div class="admin-subtitle" id="sidebarSubtitle">Loading...</div>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <a class="nav-item active" data-section="dashboard">
+                    <span class="nav-item-icon">📊</span>
+                    Dashboard
+                </a>
+                <a class="nav-item" data-section="admin-management">
+                    <span class="nav-item-icon">👥</span>
+                    Admin Management
+                </a>
+                <a class="nav-item" data-section="approval-settings">
+                    <span class="nav-item-icon">⚙️</span>
+                    Approval Settings
+                </a>
+                <a class="nav-item" data-section="pending-approvals">
+                    <span class="nav-item-icon">⏳</span>
+                    Pending Approvals
+                </a>
+                <a class="nav-item" data-section="audit-logs">
+                    <span class="nav-item-icon">📋</span>
+                    Audit Logs
+                </a>
+                <a class="nav-item logout-btn" id="logoutBtn">
+                    <span class="nav-item-icon">🚪</span>
+                    Logout
+                </a>
+            </nav>
+        </aside>
+
+        <main class="admin-main">
+            <div class="admin-header">
+                <h1 id="sectionTitle">Dashboard</h1>
+                <div class="admin-user">
+                    <div class="user-avatar" id="userAvatar">S</div>
+                    <div>
+                        <div style="font-weight: 600; color: var(--text-primary);" id="userName">Super Admin</div>
+                        <div style="font-size: 0.875rem; color: var(--text-secondary);">Chairman</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dashboard Section -->
+            <div class="section-content active" id="dashboardSection">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-number" id="totalAdmins">0</div>
+                        <div class="stat-label">Total Admins</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="activeAdmins">0</div>
+                        <div class="stat-label">Active Admins</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="pendingApprovals">0</div>
+                        <div class="stat-label">Pending Approvals</div>
+                    </div>
+                </div>
+
+                <div class="admin-form">
+                    <h2 style="margin-bottom: var(--space-lg);">Welcome, Super Admin</h2>
+                    <p style="color: var(--text-secondary); margin-bottom: var(--space-md);">
+                        You have complete control over the admin system. Use the sidebar to manage admins, configure approval settings, and monitor all activities.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Admin Management Section -->
+            <div class="section-content" id="adminManagementSection">
+                <div class="admin-form">
+                    <h2>Admin Management</h2>
+                    <button class="btn btn-primary" onclick="showCreateAdminModal()">
+                        ➕ Create New Admin
+                    </button>
+                    
+                    <div class="data-table-wrapper" style="margin-top: 2rem;">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Username</th>
+                                    <th>Permissions</th>
+                                    <th>Status</th>
+                                    <th>Last Login</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="adminsListBody">
+                                <tr>
+                                    <td colspan="5" style="text-align: center; padding: var(--space-xl);">Loading...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Approval Settings Section -->
+            <div class="section-content" id="approvalSettingsSection">
+                <div class="admin-form">
+                    <h2>Approval Settings</h2>
+                    <p style="color: var(--text-secondary); margin-bottom: var(--space-lg);">
+                        Require your approval before regular admins can perform these actions:
+                    </p>
+                    
+                    <div class="form-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="setting_require_approval_members">
+                            <span>Member additions require approval</span>
+                        </label>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="setting_require_approval_events">
+                            <span>Event additions require approval</span>
+                        </label>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="setting_require_approval_projects">
+                            <span>Project additions require approval</span>
+                        </label>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="setting_require_approval_gallery">
+                            <span>Gallery uploads require approval</span>
+                        </label>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="setting_require_approval_announcements">
+                            <span>Announcements require approval</span>
+                        </label>
+                    </div>
+                    
+                    <button class="btn btn-primary" onclick="saveApprovalSettings()">
+                        💾 Save Settings
+                    </button>
+                </div>
+            </div>
+
+            <!-- Pending Approvals Section -->
+            <div class="section-content" id="pendingApprovalsSection">
+                <div class="admin-form">
+                    <h2>Pending Approvals (<span id="pendingApprovalsCount">0</span>)</h2>
+                    
+                    <div id="pendingApprovalsList">
+                        <p style="text-align: center; color: var(--text-secondary); padding: var(--space-xl);">
+                            Loading...
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Audit Logs Section -->
+            <div class="section-content" id="auditLogsSection">
+                <div class="admin-form">
+                    <h2>Audit Logs</h2>
+                    
+                    <div style="display: flex; gap: var(--space-md); margin-bottom: var(--space-lg);">
+                        <input type="text" class="form-input" id="auditLogSearch" placeholder="Search logs..." style="flex: 1;">
+                        <select class="form-select" id="auditLogModule" style="width: 200px;">
+                            <option value="">All Modules</option>
+                            <option value="members">Members</option>
+                            <option value="events">Events</option>
+                            <option value="projects">Projects</option>
+                            <option value="gallery">Gallery</option>
+                            <option value="announcements">Announcements</option>
+                            <option value="alumni">Alumni</option>
+                            <option value="membership">Membership</option>
+                        </select>
+                        <button class="btn btn-secondary" onclick="exportAuditLogs()">Export CSV</button>
+                    </div>
+                    
+                    <div class="data-table-wrapper">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Timestamp</th>
+                                    <th>Admin</th>
+                                    <th>Action</th>
+                                    <th>Module</th>
+                                    <th>Status</th>
+                                    <th>Details</th>
+                                </tr>
+                            </thead>
+                            <tbody id="auditLogsBody">
+                                <tr>
+                                    <td colspan="6" style="text-align: center; padding: var(--space-xl);">Loading...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Create Admin Modal -->
+    <div id="createAdminModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <h2>Create New Admin</h2>
+            <form id="createAdminForm">
+                <div class="form-group">
+                    <label class="form-label">Username *</label>
+                    <input type="text" class="form-input" id="newAdminUsername" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Email *</label>
+                    <input type="email" class="form-input" id="newAdminEmail" required>
+                </div>
+                
+                <h3 style="margin-top: var(--space-lg);">Permissions</h3>
+                
+                <!-- Members -->
+                <div class="permission-section">
+                    <h4>
+                        <label style="cursor: pointer;">
+                            <input type="checkbox" id="perm_members_all"> Members
+                        </label>
+                    </h4>
+                    <div style="margin-left: 2rem;">
+                        <label><input type="checkbox" class="perm-members" data-perm="view"> View</label>
+                        <label><input type="checkbox" class="perm-members" data-perm="create"> Create</label>
+                        <label><input type="checkbox" class="perm-members" data-perm="edit"> Edit</label>
+                        <label><input type="checkbox" class="perm-members" data-perm="delete"> Delete</label>
+                    </div>
+                </div>
+                
+                <!-- Events -->
+                <div class="permission-section">
+                    <h4>
+                        <label style="cursor: pointer;">
+                            <input type="checkbox" id="perm_events_all"> Events
+                        </label>
+                    </h4>
+                    <div style="margin-left: 2rem;">
+                        <label><input type="checkbox" class="perm-events" data-perm="view"> View</label>
+                        <label><input type="checkbox" class="perm-events" data-perm="create"> Create</label>
+                        <label><input type="checkbox" class="perm-events" data-perm="edit"> Edit</label>
+                        <label><input type="checkbox" class="perm-events" data-perm="delete"> Delete</label>
+                    </div>
+                </div>
+                
+                <!-- Projects -->
+                <div class="permission-section">
+                    <h4>
+                        <label style="cursor: pointer;">
+                            <input type="checkbox" id="perm_projects_all"> Projects
+                        </label>
+                    </h4>
+                    <div style="margin-left: 2rem;">
+                        <label><input type="checkbox" class="perm-projects" data-perm="view"> View</label>
+                        <label><input type="checkbox" class="perm-projects" data-perm="create"> Create</label>
+                        <label><input type="checkbox" class="perm-projects" data-perm="edit"> Edit</label>
+                        <label><input type="checkbox" class="perm-projects" data-perm="delete"> Delete</label>
+                    </div>
+                </div>
+                
+                <!-- Gallery -->
+                <div class="permission-section">
+                    <h4>
+                        <label style="cursor: pointer;">
+                            <input type="checkbox" id="perm_gallery_all"> Gallery
+                        </label>
+                    </h4>
+                    <div style="margin-left: 2rem;">
+                        <label><input type="checkbox" class="perm-gallery" data-perm="view"> View</label>
+                        <label><input type="checkbox" class="perm-gallery" data-perm="upload"> Upload</label>
+                        <label><input type="checkbox" class="perm-gallery" data-perm="delete"> Delete</label>
+                    </div>
+                </div>
+                
+                <!-- Announcements -->
+                <div class="permission-section">
+                    <h4>
+                        <label style="cursor: pointer;">
+                            <input type="checkbox" id="perm_announcements_all"> Announcements
+                        </label>
+                    </h4>
+                    <div style="margin-left: 2rem;">
+                        <label><input type="checkbox" class="perm-announcements" data-perm="view"> View</label>
+                        <label><input type="checkbox" class="perm-announcements" data-perm="create"> Create</label>
+                        <label><input type="checkbox" class="perm-announcements" data-perm="edit"> Edit</label>
+                        <label><input type="checkbox" class="perm-announcements" data-perm="delete"> Delete</label>
+                    </div>
+                </div>
+                
+                <!-- Alumni -->
+                <div class="permission-section">
+                    <h4>
+                        <label style="cursor: pointer;">
+                            <input type="checkbox" id="perm_alumni_all"> Alumni
+                        </label>
+                    </h4>
+                    <div style="margin-left: 2rem;">
+                        <label><input type="checkbox" class="perm-alumni" data-perm="view"> View</label>
+                        <label><input type="checkbox" class="perm-alumni" data-perm="create"> Create</label>
+                        <label><input type="checkbox" class="perm-alumni" data-perm="edit"> Edit</label>
+                        <label><input type="checkbox" class="perm-alumni" data-perm="delete"> Delete</label>
+                        <label><input type="checkbox" class="perm-alumni" data-perm="approve_applications"> Approve Applications</label>
+                    </div>
+                </div>
+                
+                <!-- Membership Applications -->
+                <div class="permission-section">
+                    <h4>
+                        <label style="cursor: pointer;">
+                            <input type="checkbox" id="perm_membership_all"> Membership Applications
+                        </label>
+                    </h4>
+                    <div style="margin-left: 2rem;">
+                        <label><input type="checkbox" class="perm-membership" data-perm="view"> View</label>
+                        <label><input type="checkbox" class="perm-membership" data-perm="approve"> Approve/Reject</label>
+                    </div>
+                </div>
+                
+                <div class="btn-group">
+                    <button type="submit" class="btn btn-primary">Create Admin</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeCreateAdminModal()">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/api-client.js"></script>
+    <script src="js/storage.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/theme.js"></script>
+    <script src="js/utils.js"></script>
+
+    <script>
+        // Page initialization
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (!verifySuperAdminAccess()) {
+                alert('Super Admin access required');
+                window.location.href = 'admin-panel.html';
+                return;
+            }
+            
+            initTheme();
+            await loadDashboard();
+            await loadAdminsList();
+            await loadApprovalSettings();
+            await loadPendingApprovals();
+            await loadAuditLogs();
+            setupNavigation();
+            setupLogout();
+            setupPermissionToggles();
+        });
+
+        function verifySuperAdminAccess() {
+            const token = localStorage.getItem('superAdminToken');
+            if (!token) return false;
+            
+            try {
+                const tokenData = JSON.parse(atob(token.split('.')[1]));
+                const expiryTime = tokenData.exp * 1000;
+                return Date.now() < expiryTime;
+            } catch {
+                return false;
+            }
+        }
+
+        async function loadDashboard() {
+            try {
+                const response = await fetch('/api/superadmin/dashboard', {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('superAdminToken')}` }
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    document.getElementById('totalAdmins').textContent = data.data.totalAdmins || 0;
+                    document.getElementById('activeAdmins').textContent = data.data.activeAdmins || 0;
+                    document.getElementById('pendingApprovals').textContent = data.data.pendingApprovals || 0;
+                }
+            } catch (error) {
+                console.error('Error loading dashboard:', error);
+                document.getElementById('totalAdmins').textContent = '0';
+                document.getElementById('activeAdmins').textContent = '0';
+                document.getElementById('pendingApprovals').textContent = '0';
+            }
+        }
+
+        async function loadAdminsList() {
+            try {
+                const response = await fetch('/api/superadmin/admins', {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('superAdminToken')}` }
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    const tbody = document.getElementById('adminsListBody');
+                    if (data.data.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: var(--space-xl);">No admins found</td></tr>';
+                        return;
+                    }
+                    
+                    tbody.innerHTML = data.data.map(admin => `
+                        <tr>
+                            <td>${admin.username}</td>
+                            <td>${formatPermissions(admin.permissions)}</td>
+                            <td><span class="badge ${admin.is_active ? 'badge-success' : 'badge-error'}">
+                                ${admin.is_active ? 'Active' : 'Inactive'}
+                            </span></td>
+                            <td>${formatDate(admin.last_login)}</td>
+                            <td>
+                                <button class="btn btn-icon btn-edit" onclick="editAdmin(${admin.id})">✏️</button>
+                                <button class="btn btn-icon btn-delete" onclick="deleteAdmin(${admin.id})">🗑️</button>
+                            </td>
+                        </tr>
+                    `).join('');
+                }
+            } catch (error) {
+                console.error('Error loading admins:', error);
+                document.getElementById('adminsListBody').innerHTML = '<tr><td colspan="5" style="text-align: center; padding: var(--space-xl);">Error loading admins</td></tr>';
+            }
+        }
+
+        function formatPermissions(permissions) {
+            if (!permissions) return 'None';
+            const perms = [];
+            if (permissions.members?.view) perms.push('Members');
+            if (permissions.events?.view) perms.push('Events');
+            if (permissions.projects?.view) perms.push('Projects');
+            if (permissions.gallery?.view) perms.push('Gallery');
+            if (permissions.announcements?.view) perms.push('Announcements');
+            if (permissions.alumni?.view) perms.push('Alumni');
+            if (permissions.membership?.view) perms.push('Membership');
+            return perms.join(', ') || 'None';
+        }
+
+        function showCreateAdminModal() {
+            document.getElementById('createAdminModal').style.display = 'flex';
+        }
+
+        function closeCreateAdminModal() {
+            document.getElementById('createAdminModal').style.display = 'none';
+            document.getElementById('createAdminForm').reset();
+        }
+
+        document.getElementById('createAdminForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            await createAdmin(e);
+        });
+
+        async function createAdmin(event) {
+            event.preventDefault();
+            
+            const permissions = {
+                members: getModulePermissions('members'),
+                events: getModulePermissions('events'),
+                projects: getModulePermissions('projects'),
+                gallery: getModulePermissions('gallery'),
+                announcements: getModulePermissions('announcements'),
+                alumni: getModulePermissions('alumni'),
+                membership: getModulePermissions('membership')
+            };
+            
+            try {
+                const response = await fetch('/api/superadmin/admins/create', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('superAdminToken')}`
+                    },
+                    body: JSON.stringify({
+                        username: document.getElementById('newAdminUsername').value,
+                        email: document.getElementById('newAdminEmail').value,
+                        permissions
+                    })
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    showToast('Admin created successfully!', 'success');
+                    closeCreateAdminModal();
+                    await loadAdminsList();
+                    await loadDashboard();
+                } else {
+                    showToast(data.error || 'Failed to create admin', 'error');
+                }
+            } catch (error) {
+                console.error('Error creating admin:', error);
+                showToast('Error creating admin', 'error');
+            }
+        }
+
+        function getModulePermissions(module) {
+            const checkboxes = document.querySelectorAll(`.perm-${module}`);
+            const perms = {};
+            checkboxes.forEach(cb => {
+                perms[cb.dataset.perm] = cb.checked;
+            });
+            return perms;
+        }
+
+        async function editAdmin(id) {
+            showToast('Edit admin functionality coming soon', 'info');
+        }
+
+        async function deleteAdmin(id) {
+            if (!confirm('Are you sure you want to delete this admin?')) return;
+            
+            try {
+                const response = await fetch(`/api/superadmin/admins/${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('superAdminToken')}`
+                    }
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    showToast('Admin deleted successfully', 'success');
+                    await loadAdminsList();
+                    await loadDashboard();
+                } else {
+                    showToast(data.error || 'Failed to delete admin', 'error');
+                }
+            } catch (error) {
+                console.error('Error deleting admin:', error);
+                showToast('Error deleting admin', 'error');
+            }
+        }
+
+        async function loadApprovalSettings() {
+            try {
+                const response = await fetch('/api/superadmin/settings', {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('superAdminToken')}` }
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    data.data.forEach(setting => {
+                        const checkbox = document.getElementById(`setting_${setting.setting_key}`);
+                        if (checkbox) {
+                            checkbox.checked = setting.setting_value === 'true';
+                        }
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading settings:', error);
+            }
+        }
+
+        async function saveApprovalSettings() {
+            const settings = {
+                require_approval_members: document.getElementById('setting_require_approval_members').checked,
+                require_approval_events: document.getElementById('setting_require_approval_events').checked,
+                require_approval_projects: document.getElementById('setting_require_approval_projects').checked,
+                require_approval_gallery: document.getElementById('setting_require_approval_gallery').checked,
+                require_approval_announcements: document.getElementById('setting_require_approval_announcements').checked
+            };
+            
+            try {
+                const response = await fetch('/api/superadmin/settings', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('superAdminToken')}`
+                    },
+                    body: JSON.stringify(settings)
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    showToast('Settings saved!', 'success');
+                } else {
+                    showToast(data.error || 'Failed to save settings', 'error');
+                }
+            } catch (error) {
+                console.error('Error saving settings:', error);
+                showToast('Error saving settings', 'error');
+            }
+        }
+
+        async function loadPendingApprovals() {
+            try {
+                const response = await fetch('/api/superadmin/approvals?status=pending', {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('superAdminToken')}` }
+                });
+                const data = await response.json();
+                
+                document.getElementById('pendingApprovalsCount').textContent = data.success ? data.data.length : 0;
+                
+                const container = document.getElementById('pendingApprovalsList');
+                if (!data.success || data.data.length === 0) {
+                    container.innerHTML = '<p style="text-align: center; color: var(--text-secondary); padding: var(--space-xl);">No pending approvals</p>';
+                    return;
+                }
+                
+                container.innerHTML = data.data.map(approval => `
+                    <div class="approval-card">
+                        <div class="approval-header">
+                            <strong>${approval.admin_username}</strong> wants to ${approval.action_type} a ${approval.module}
+                            <span class="approval-time">${formatDate(approval.created_at)}</span>
+                        </div>
+                        <div class="approval-body">
+                            ${formatApprovalDetails(approval.item_data)}
+                        </div>
+                        <div class="approval-actions">
+                            <button class="btn btn-primary" onclick="approveRequest(${approval.id})">✓ Approve</button>
+                            <button class="btn btn-danger" onclick="rejectRequest(${approval.id})">✕ Reject</button>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading approvals:', error);
+                document.getElementById('pendingApprovalsList').innerHTML = '<p style="text-align: center; color: var(--text-secondary); padding: var(--space-xl);">Error loading approvals</p>';
+            }
+        }
+
+        function formatApprovalDetails(itemData) {
+            if (!itemData) return 'No details available';
+            try {
+                const data = typeof itemData === 'string' ? JSON.parse(itemData) : itemData;
+                return `<pre style="white-space: pre-wrap; word-wrap: break-word;">${JSON.stringify(data, null, 2)}</pre>`;
+            } catch {
+                return String(itemData);
+            }
+        }
+
+        async function approveRequest(approvalId) {
+            try {
+                const response = await fetch(`/api/superadmin/approvals/${approvalId}/approve`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('superAdminToken')}`
+                    }
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    showToast('Request approved!', 'success');
+                    await loadPendingApprovals();
+                    await loadDashboard();
+                } else {
+                    showToast(data.error || 'Failed to approve request', 'error');
+                }
+            } catch (error) {
+                console.error('Error approving request:', error);
+                showToast('Error approving request', 'error');
+            }
+        }
+
+        async function rejectRequest(approvalId) {
+            const notes = prompt('Rejection reason:');
+            if (!notes) return;
+            
+            try {
+                const response = await fetch(`/api/superadmin/approvals/${approvalId}/reject`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('superAdminToken')}`
+                    },
+                    body: JSON.stringify({ notes })
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    showToast('Request rejected', 'success');
+                    await loadPendingApprovals();
+                    await loadDashboard();
+                } else {
+                    showToast(data.error || 'Failed to reject request', 'error');
+                }
+            } catch (error) {
+                console.error('Error rejecting request:', error);
+                showToast('Error rejecting request', 'error');
+            }
+        }
+
+        async function loadAuditLogs() {
+            const search = document.getElementById('auditLogSearch').value;
+            const module = document.getElementById('auditLogModule').value;
+            
+            const params = new URLSearchParams();
+            if (search) params.append('search', search);
+            if (module) params.append('module', module);
+            
+            try {
+                const response = await fetch(`/api/superadmin/audit-logs?${params}`, {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('superAdminToken')}` }
+                });
+                const data = await response.json();
+                
+                const tbody = document.getElementById('auditLogsBody');
+                if (!data.success || data.data.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: var(--space-xl);">No audit logs found</td></tr>';
+                    return;
+                }
+                
+                tbody.innerHTML = data.data.map(log => `
+                    <tr>
+                        <td>${formatDate(log.created_at)}</td>
+                        <td>${log.admin_username}</td>
+                        <td>${log.action_type}</td>
+                        <td><span class="badge badge-info">${log.module}</span></td>
+                        <td><span class="badge ${log.status === 'success' ? 'badge-success' : 'badge-error'}">
+                            ${log.status}
+                        </span></td>
+                        <td><button class="btn btn-sm" onclick="viewLogDetails(${log.id})">View</button></td>
+                    </tr>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading audit logs:', error);
+                document.getElementById('auditLogsBody').innerHTML = '<tr><td colspan="6" style="text-align: center; padding: var(--space-xl);">Error loading logs</td></tr>';
+            }
+        }
+
+        function viewLogDetails(logId) {
+            showToast('View log details functionality coming soon', 'info');
+        }
+
+        function exportAuditLogs() {
+            showToast('Export functionality coming soon', 'info');
+        }
+
+        // Search functionality
+        document.getElementById('auditLogSearch')?.addEventListener('input', debounce(loadAuditLogs, 500));
+        document.getElementById('auditLogModule')?.addEventListener('change', loadAuditLogs);
+
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) return 'Never';
+            const date = new Date(dateString);
+            return date.toLocaleString();
+        }
+
+        function showToast(message, type) {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toastMessage');
+            const toastIcon = document.getElementById('toastIcon');
+
+            toastMessage.textContent = message;
+            toastIcon.textContent = type === 'success' ? '✓' : type === 'error' ? '✕' : 'ℹ';
+            toast.className = `toast ${type === 'error' ? 'error' : ''} show`;
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        function setupNavigation() {
+            const navItems = document.querySelectorAll('.nav-item[data-section]');
+            navItems.forEach(item => {
+                item.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const section = item.dataset.section;
+                    navigateToSection(section);
+                });
+            });
+        }
+
+        function navigateToSection(section) {
+            // Update nav items
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            document.querySelector(`[data-section="${section}"]`)?.classList.add('active');
+
+            // Update content sections
+            document.querySelectorAll('.section-content').forEach(content => {
+                content.classList.remove('active');
+            });
+
+            const sectionMap = {
+                'dashboard': 'dashboardSection',
+                'admin-management': 'adminManagementSection',
+                'approval-settings': 'approvalSettingsSection',
+                'pending-approvals': 'pendingApprovalsSection',
+                'audit-logs': 'auditLogsSection'
+            };
+            
+            const sectionId = sectionMap[section];
+            const sectionElement = document.getElementById(sectionId);
+            if (sectionElement) {
+                sectionElement.classList.add('active');
+            }
+
+            // Update title
+            const titles = {
+                'dashboard': 'Dashboard',
+                'admin-management': 'Admin Management',
+                'approval-settings': 'Approval Settings',
+                'pending-approvals': 'Pending Approvals',
+                'audit-logs': 'Audit Logs'
+            };
+            document.getElementById('sectionTitle').textContent = titles[section] || 'Super Admin Panel';
+
+            // Load section data
+            if (section === 'admin-management') loadAdminsList();
+            if (section === 'approval-settings') loadApprovalSettings();
+            if (section === 'pending-approvals') loadPendingApprovals();
+            if (section === 'audit-logs') loadAuditLogs();
+        }
+
+        function setupLogout() {
+            document.getElementById('logoutBtn').addEventListener('click', (e) => {
+                e.preventDefault();
+                if (confirm('Are you sure you want to logout?')) {
+                    localStorage.removeItem('superAdminToken');
+                    sessionStorage.clear();
+                    window.location.href = 'admin-panel.html';
+                }
+            });
+        }
+
+        function setupPermissionToggles() {
+            // Setup "select all" checkboxes for each module
+            const modules = ['members', 'events', 'projects', 'gallery', 'announcements', 'alumni', 'membership'];
+            
+            modules.forEach(module => {
+                const allCheckbox = document.getElementById(`perm_${module}_all`);
+                if (allCheckbox) {
+                    allCheckbox.addEventListener('change', (e) => {
+                        const checkboxes = document.querySelectorAll(`.perm-${module}`);
+                        checkboxes.forEach(cb => {
+                            cb.checked = e.target.checked;
+                        });
+                    });
+                }
+                
+                // Auto-check "all" if all individual perms are checked
+                const checkboxes = document.querySelectorAll(`.perm-${module}`);
+                checkboxes.forEach(cb => {
+                    cb.addEventListener('change', () => {
+                        const allChecked = Array.from(checkboxes).every(checkbox => checkbox.checked);
+                        const allCheckbox = document.getElementById(`perm_${module}_all`);
+                        if (allCheckbox) {
+                            allCheckbox.checked = allChecked;
+                        }
+                    });
+                });
+            });
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('createAdminModal').addEventListener('click', (e) => {
+            if (e.target.id === 'createAdminModal') {
+                closeCreateAdminModal();
+            }
+        });
+
+        // Initialize theme
+        function initTheme() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        }
+        </script>
+</body>
+</html>

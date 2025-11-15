@@ -4,6 +4,7 @@
  * ====================================
  * Purpose: JWT-based authentication for protecting admin routes
  * Verifies JWT tokens and attaches user info to request object
+ * Includes role-based access control and permission checking
  * ====================================
  */
 
@@ -21,7 +22,7 @@ function authenticateToken(req, res, next) {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1]; // Format: "Bearer TOKEN"
 
- // Check if token exists
+  // Check if token exists
   if (!token) {
     console.log('❌ No token provided in request');
     return res.status(401).json({
@@ -100,6 +101,7 @@ function isAdmin(req, res, next) {
 /**
  * Check if authenticated user is a Super Admin
  * Must be used after authenticateToken middleware
+ * Checks both role-based and flag-based super admin status
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  * @param {Function} next - Express next middleware function
@@ -113,8 +115,11 @@ function isSuperAdmin(req, res, next) {
     });
   }
 
-  // Check if user is Super Admin
-  if (req.user.role !== 'Super Admin') {
+  // Check both role-based and flag-based super admin status
+  const isSuperAdminByRole = req.user.role === 'Super Admin';
+  const isSuperAdminByFlag = req.user.is_super_admin === true;
+  
+  if (!isSuperAdminByRole && !isSuperAdminByFlag) {
     return res.status(403).json({
       success: false,
       error: 'Access denied. Super Admin privileges required.',
@@ -126,14 +131,109 @@ function isSuperAdmin(req, res, next) {
 }
 
 /**
+ * Check if user has specific permission
+ * Usage: checkPermission('members', 'create')
+ * Super admins automatically have all permissions
+ * @param {string} module - Module name (e.g., 'members', 'events')
+ * @param {string} action - Action type (e.g., 'create', 'edit', 'delete')
+ * @returns {Function} Express middleware function
+ */
+function checkPermission(module, action) {
+  return (req, res, next) => {
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        error: 'Authentication required',
+      });
+    }
+    
+    // Super admin has all permissions
+    if (req.user.is_super_admin === true || req.user.role === 'Super Admin') {
+      return next();
+    }
+    
+    // Check if admin account is active
+    if (req.user.is_active === false) {
+      return res.status(403).json({
+        success: false,
+        error: 'Your account has been deactivated. Please contact a Super Admin.',
+      });
+    }
+    
+    // Check specific permission
+    const permissions = req.user.permissions || {};
+    if (!permissions[module] || !permissions[module][action]) {
+      return res.status(403).json({
+        success: false,
+        error: `Permission denied: You don't have permission to ${action} ${module}.`,
+      });
+    }
+    
+    next();
+  };
+}
+
+/**
+ * Check if approval is required for a specific action
+ * Queries super_admin_settings table
+ * @param {string} module - Module name
+ * @param {string} action - Action type
+ * @returns {Promise<boolean>} True if approval required, false otherwise
+ */
+async function checkApprovalRequired(module, action) {
+  try {
+    const pool = require('../db/pool');
+    const settingKey = `require_approval_${module}`;
+    
+    const [result] = await pool.query(
+      'SELECT setting_value FROM super_admin_settings WHERE setting_key = $1',
+      [settingKey]
+    );
+    
+    if (result.length === 0) return false;
+    return result[0].setting_value === 'true';
+  } catch (error) {
+    console.error('❌ Check approval required error:', error);
+    return false; // Default to no approval required on error
+  }
+}
+
+/**
+ * Create a pending approval request
+ * Used when an admin action requires super admin approval
+ * @param {number} adminId - ID of admin making the request
+ * @param {string} actionType - Type of action (e.g., 'create', 'edit', 'delete')
+ * @param {string} module - Module name
+ * @param {Object} itemData - Data for the action
+ * @returns {Promise<Object>} Result object with success status and approval ID
+ */
+async function createApprovalRequest(adminId, actionType, module, itemData) {
+  try {
+    const pool = require('../db/pool');
+    
+    const [result] = await pool.query(
+      `INSERT INTO pending_approvals (admin_id, action_type, module, item_data, status)
+       VALUES ($1, $2, $3, $4, 'pending')
+       RETURNING id`,
+      [adminId, actionType, module, JSON.stringify(itemData)]
+    );
+    
+    return { success: true, id: result[0].id };
+  } catch (error) {
+    console.error('❌ Create approval request error:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+/**
  * Generate JWT token with payload
- * @param {Object} payload - Data to encode in token (e.g., { id, username, role })
+ * @param {Object} payload - Data to encode in token (e.g., { id, username, role, permissions })
  * @param {string} expiresIn - Token expiration (optional, defaults to env variable)
  * @returns {string} JWT token
  */
 function generateToken(payload, expiresIn = null) {
   if (!process.env.JWT_SECRET) {
-    throw new Error('JWT_SECRET is not configured');
+    throw new Error('JWT_SECRET is not configured in environment variables');
   }
   return jwt.sign(
     payload,
@@ -153,7 +253,7 @@ function verifyToken(token) {
   try {
     return jwt.verify(token, process.env.JWT_SECRET);
   } catch (error) {
-    console.error('Token verification failed:', error.message);
+    console.error('❌ Token verification failed:', error.message);
     return null;
   }
 }
@@ -167,7 +267,7 @@ function decodeToken(token) {
   try {
     return jwt.decode(token);
   } catch (error) {
-    console.error('Token decode failed:', error.message);
+    console.error('❌ Token decode failed:', error.message);
     return null;
   }
 }
@@ -176,6 +276,9 @@ module.exports = {
   authenticateToken,
   isAdmin,
   isSuperAdmin,
+  checkPermission,
+  checkApprovalRequired,
+  createApprovalRequest,
   generateToken,
   verifyToken,
   decodeToken,

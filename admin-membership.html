@@ -92,6 +92,26 @@
        async function initializeApplications() {
     console.log('🔄 Initializing membership applications iframe...');
     
+    // Check permissions first
+    const admin = window.parent ? 
+        (window.parent.getCurrentAdmin ? window.parent.getCurrentAdmin() : null) : 
+        null;
+    
+    if (admin && !admin.is_super_admin) {
+        const permissions = admin.permissions || {};
+        if (!permissions.membership || !permissions.membership.view) {
+            document.body.innerHTML = `
+                <div style="display: flex; align-items: center; justify-content: center; height: 100vh; text-align: center; padding: 2rem;">
+                    <div>
+                        <h2 style="color: var(--error-color); margin-bottom: 1rem;">Access Denied</h2>
+                        <p style="color: var(--text-secondary);">You don't have permission to view membership applications.</p>
+                    </div>
+                </div>
+            `;
+            return;
+        }
+    }
+    
     // ✅ CRITICAL FIX: Force use parent's API client and token
     if (window.parent && window.parent.apiClient) {
         window.apiClient = window.parent.apiClient;
@@ -372,6 +392,19 @@
         }
 
         async function approveApplication(id) {
+            // Check permissions
+            const admin = window.parent ? 
+                (window.parent.getCurrentAdmin ? window.parent.getCurrentAdmin() : null) : 
+                null;
+            
+            if (admin && !admin.is_super_admin) {
+                const permissions = admin.permissions || {};
+                if (!permissions.membership || !permissions.membership.approve) {
+                    showToast('You don\'t have permission to approve membership applications', 'error');
+                    return;
+                }
+            }
+            
             const notes = prompt('Add optional notes (press OK to approve):');
             if (notes === null) return;
             
@@ -402,6 +435,19 @@
         }
 
         async function rejectApplication(id) {
+            // Check permissions
+            const admin = window.parent ? 
+                (window.parent.getCurrentAdmin ? window.parent.getCurrentAdmin() : null) : 
+                null;
+            
+            if (admin && !admin.is_super_admin) {
+                const permissions = admin.permissions || {};
+                if (!permissions.membership || !permissions.membership.approve) {
+                    showToast('You don\'t have permission to reject membership applications', 'error');
+                    return;
+                }
+            }
+            
             const reason = prompt('Enter rejection reason (required):');
             if (!reason || reason.trim() === '') {
                 showToast('Rejection reason is required', 'error');
@@ -429,6 +475,19 @@
         }
 
         async function deleteApplication(id) {
+            // Check permissions
+            const admin = window.parent ? 
+                (window.parent.getCurrentAdmin ? window.parent.getCurrentAdmin() : null) : 
+                null;
+            
+            if (admin && !admin.is_super_admin) {
+                const permissions = admin.permissions || {};
+                if (!permissions.membership || !permissions.membership.delete) {
+                    showToast('You don\'t have permission to delete applications', 'error');
+                    return;
+                }
+            }
+            
             if (!confirm('Are you sure you want to delete this application? This cannot be undone.')) return;
             
             try {
