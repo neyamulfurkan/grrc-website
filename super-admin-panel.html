@@ -779,7 +779,8 @@
         document.addEventListener('DOMContentLoaded', async () => {
             if (!verifySuperAdminAccess()) {
                 alert('Super Admin access required');
-                window.location.href = 'admin-panel.html';
+                const basePath = window.location.pathname.includes('/grrc-website/') ? '/grrc-website/' : './';
+                window.location.href = basePath + 'admin-panel.html';
                 return;
             }
             
@@ -1260,7 +1261,8 @@
                 if (confirm('Are you sure you want to logout?')) {
                     localStorage.removeItem('superAdminToken');
                     sessionStorage.clear();
-                    window.location.href = 'admin-panel.html';
+                    const basePath = window.location.pathname.includes('/grrc-website/') ? '/grrc-website/' : './';
+                    window.location.href = basePath + 'admin-panel.html';
                 }
             });
         }
