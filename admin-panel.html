@@ -1338,8 +1338,7 @@
         <button class="mobile-sidebar-toggle" id="mobileSidebarToggle">☰</button>
     </div>
 
-    <!-- Super Admin Password Verification Modal -->
-    <div id="superAdminModal" class="modal" style="display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.8); z-index: 10000; display: flex; align-items: center; justify-content: center;">
+    <!-- This login page does NOT have super admin modal - it's only in admin-panel.html -->
         <div class="modal-content" style="background: var(--surface-color); border-radius: var(--radius-lg); padding: 2rem; max-width: 500px; width: 90%; box-shadow: var(--shadow-xl);">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
                 <h2 style="margin: 0; color: var(--text-primary);">👑 Super Admin Verification</h2>
@@ -1396,21 +1395,18 @@
         document.addEventListener('DOMContentLoaded', () => {
             console.log('Admin Panel Loading...');
             
-            console.log('All authentication checks passed!');
-
-                initTheme();
-                loadAdminInfo();
-                loadClubConfigToSidebar();
-                loadDashboardStats();
-                setupNavigation();
-                setupLogoutButton();
-                setupForms();
-                setupMobileSidebar();
-                loadAllData();
-            }
-
-            setTimeout(initializeAdminPanel, 200);
-        });
+            function initializeAdminPanel() {
+                const session = sessionStorage.getItem('adminSession');
+                const token = localStorage.getItem('grrc_auth_token');
+                
+                console.log('Auth Check - Session:', session ? 'EXISTS' : 'MISSING', 'Token:', token ? 'EXISTS' : 'MISSING');
+                
+                if (!session || !token) {
+                    console.error('Not authenticated - redirecting to login');
+                    alert('Please log in to access the admin panel');
+                    window.location.href = 'admin.html';
+                    return;
+                }
 
                 if (!window.apiClient || !window.apiClient.isReady) {
                     console.warn('API client not ready yet, retrying...');
@@ -1462,12 +1458,12 @@
                 document.getElementById('userRole').textContent = admin.role || 'Admin';
                 document.getElementById('userAvatar').textContent = admin.username.charAt(0).toUpperCase();
                 
-                // Show Super Admin button if user is super admin (NO AUTO-REDIRECT)
-                if (admin.is_super_admin === true || admin.role === 'Super Admin') {
+                // Show Super Admin button if user is super admin
+                if (admin.is_super_admin === true) {
                     const superAdminBtn = document.getElementById('superAdminBtn');
                     if (superAdminBtn) {
                         superAdminBtn.style.display = 'flex';
-                        console.log('✅ Super Admin button shown (requires manual click)');
+                        console.log('✅ Super Admin button shown');
                     }
                 }
             }
@@ -3276,10 +3272,13 @@ if (section === 'membership-applications') {
         }
         
         function closeSuperAdminModal() {
-            document.getElementById('superAdminModal').style.display = 'none';
-            document.getElementById('superAdminPassword').value = '';
-            const errorDiv = document.getElementById('superAdminError');
-            errorDiv.style.display = 'none';
+            const modal = document.getElementById('superAdminModal');
+            if (modal) {
+                modal.style.display = 'none';
+                document.getElementById('superAdminPassword').value = '';
+                const errorDiv = document.getElementById('superAdminError');
+                if (errorDiv) errorDiv.style.display = 'none';
+            }
         }
         
         document.getElementById('superAdminVerificationForm')?.addEventListener('submit', async (e) => {
@@ -3288,29 +3287,33 @@ if (section === 'membership-applications') {
         });
         
         async function verifySuperAdminPassword() {
-            const password = document.getElementById('superAdminPassword').value;
+            const passwordField = document.getElementById('superAdminPassword');
             const errorDiv = document.getElementById('superAdminError');
+            const password = passwordField.value.trim();
             
             if (!password) {
                 errorDiv.textContent = 'Password is required';
                 errorDiv.style.display = 'block';
+                passwordField.focus();
                 return;
             }
             
             try {
                 console.log('🔐 Verifying super admin password...');
                 
-                // Use regular login API to verify password
                 const admin = getCurrentAdmin();
+                if (!admin || !admin.username) {
+                    throw new Error('No admin session found');
+                }
+                
                 const result = await window.apiClient.login(admin.username, password);
                 
-                if (result.success && result.data && result.data.admin.is_super_admin) {
+                if (result.success && result.data && result.data.admin && result.data.admin.is_super_admin === true) {
                     console.log('✅ Super admin verification successful!');
                     
-                    // Generate temporary super admin token (same as regular token but marked)
                     localStorage.setItem('superAdminToken', result.data.token);
                     closeSuperAdminModal();
-                    showToast('Access granted! Redirecting to Super Admin Panel...', 'success');
+                    showToast('Access granted! Redirecting...', 'success');
                     
                     setTimeout(() => {
                         const basePath = window.location.pathname.includes('/grrc-website/') ? '/grrc-website/' : './';
@@ -3318,30 +3321,36 @@ if (section === 'membership-applications') {
                     }, 1000);
                     
                 } else {
-                    console.error('❌ Verification failed');
-                    errorDiv.textContent = 'Invalid password or insufficient permissions';
+                    console.error('❌ Verification failed - not super admin');
+                    errorDiv.textContent = 'Invalid password or you are not a Super Admin';
                     errorDiv.style.display = 'block';
-                    document.getElementById('superAdminPassword').value = '';
-                    document.getElementById('superAdminPassword').focus();
+                    passwordField.value = '';
+                    passwordField.focus();
                 }
                 
             } catch (error) {
                 console.error('❌ Super admin verification error:', error);
-                errorDiv.textContent = 'Verification failed. Please try again.';
+                errorDiv.textContent = 'Verification failed: ' + (error.message || 'Unknown error');
                 errorDiv.style.display = 'block';
+                passwordField.value = '';
+                passwordField.focus();
             }
         }
         
         // Close modal on outside click
-        document.getElementById('superAdminModal')?.addEventListener('click', (e) => {
-            if (e.target.id === 'superAdminModal') {
-                closeSuperAdminModal();
-            }
-        });
+        const superAdminModalEl = document.getElementById('superAdminModal');
+        if (superAdminModalEl) {
+            superAdminModalEl.addEventListener('click', (e) => {
+                if (e.target.id === 'superAdminModal') {
+                    closeSuperAdminModal();
+                }
+            });
+        }
         
         // Close modal on Escape key
         document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && document.getElementById('superAdminModal').style.display === 'flex') {
+            const modal = document.getElementById('superAdminModal');
+            if (e.key === 'Escape' && modal && modal.style.display === 'flex') {
                 closeSuperAdminModal();
             }
         });
