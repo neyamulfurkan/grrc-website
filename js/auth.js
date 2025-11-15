@@ -552,20 +552,22 @@ function isAuthenticated(redirectIfNot = false) {
     return false;
   }
   
-  // If session claims to have token, verify it exists
-  if (session.hasToken && !hasValidToken()) {
-    console.log('⚠️ Token missing but session exists - attempting to restore from localStorage');
+  // CRITICAL FIX: If session claims to have token, ALWAYS restore it to apiClient
+  if (session.hasToken) {
     const token = localStorage.getItem(AUTH_CONFIG.TOKEN_KEY);
     if (token) {
-      // Token exists in localStorage, restore to apiClient if available
+      // Token exists in localStorage, ALWAYS restore to apiClient
       if (typeof window.apiClient !== 'undefined' && window.apiClient.setAuthToken) {
-        console.log('🔄 Restoring token to apiClient from localStorage');
-        window.apiClient.setAuthToken(token);
+        const currentApiToken = window.apiClient.getAuthToken();
+        if (!currentApiToken || currentApiToken !== token) {
+          console.log('🔄 Syncing token to apiClient from localStorage');
+          window.apiClient.setAuthToken(token);
+        }
       }
       return true;
     } else {
-      // No token anywhere, clear session
-      console.log('⚠️ No token found - clearing session');
+      // No token in localStorage, clear session
+      console.log('⚠️ No token found in localStorage - clearing session');
       clearSession();
       if (redirectIfNot && typeof window !== 'undefined') {
         const basePath = window.location.pathname.includes('/grrc-website/') ? '/grrc-website/' : './';

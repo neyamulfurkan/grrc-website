@@ -1408,26 +1408,23 @@
                     return;
                 }
 
+                // CRITICAL FIX: Wait for BOTH apiClient AND ensure token is set
                 if (!window.apiClient || !window.apiClient.isReady) {
                     console.warn('API client not ready yet, retrying...');
                     setTimeout(initializeAdminPanel, 100);
                     return;
                 }
 
-                const apiToken = window.apiClient.getAuthToken();
-                console.log('API Token:', apiToken ? 'LOADED' : 'MISSING');
+                // CRITICAL FIX: ALWAYS set token from localStorage
+                console.log('🔐 Force-loading token into API client from localStorage...');
+                window.apiClient.setAuthToken(token);
                 
-                if (!apiToken && token) {
-                    console.warn('Forcing token into API client...');
-                    window.apiClient.setAuthToken(token);
-                    console.log('Token forcefully loaded');
-                } else if (apiToken) {
-                    console.log('API client already has token');
-                }
-
-                const verifyToken = window.apiClient.getAuthToken();
-                if (!verifyToken) {
-                    console.error('Failed to load token into API client!');
+                // Verify it stuck
+                const apiToken = window.apiClient.getAuthToken();
+                console.log('API Token after force-load:', apiToken ? 'LOADED ✅' : 'MISSING ❌');
+                
+                if (!apiToken) {
+                    console.error('❌ CRITICAL: Failed to load token into API client!');
                     alert('Authentication error. Please log in again.');
                     sessionStorage.clear();
                     localStorage.removeItem('grrc_auth_token');
@@ -1435,7 +1432,7 @@
                     return;
                 }
 
-                console.log('All authentication checks passed!');
+                console.log('✅ All authentication checks passed!');
 
                 initTheme();
                 loadAdminInfo();
@@ -1448,7 +1445,8 @@
                 loadAllData();
             }
 
-            setTimeout(initializeAdminPanel, 200);
+            // CRITICAL FIX: Wait longer for all scripts to load
+            setTimeout(initializeAdminPanel, 500);
         });
 
         function loadAdminInfo() {

@@ -54,14 +54,24 @@ function isAuthenticated() {
         const savedToken = localStorage.getItem(AUTH_TOKEN_KEY);
         if (savedToken) {
             window.__authToken = savedToken;
-            console.log('🔐 Token loaded from localStorage');
+            console.log('🔐 Token loaded from localStorage on init');
+            console.log('🔐 Token preview:', savedToken.substring(0, 20) + '...');
         } else {
-            console.log('🔓 No saved token found');
+            console.log('🔓 No saved token found on init');
         }
     } catch (error) {
         console.error('❌ Failed to initialize auth:', error);
     }
 })();
+
+// CRITICAL FIX: Ensure token is always available before API calls
+window.addEventListener('load', function() {
+    const token = localStorage.getItem(AUTH_TOKEN_KEY);
+    if (token && window.apiClient) {
+        window.__authToken = token;
+        console.log('✅ Token re-verified on window load');
+    }
+});
 
 async function request(endpoint, options = {}) {
     const url = `${API_BASE_URL}${endpoint}`;
@@ -126,14 +136,22 @@ async function request(endpoint, options = {}) {
             console.log(`📊 API Response [${endpoint}]: Status ${response.status} (${duration}ms)`);
             
             if (response.status === 401 || response.status === 403) {
-                clearAuthToken();
-                console.warn('🔐 Authentication failed. Token cleared.');
+                console.error('🔐 Authentication failed:', data.error || 'Token invalid/expired');
                 
-                if (window.location.pathname.includes('admin')) {
-                    setTimeout(() => {
-                        const basePath = window.location.pathname.includes('/grrc-website/') ? '/grrc-website/' : './';
-                        window.location.replace(basePath + 'admin.html');
-                    }, 1000);
+                // CRITICAL FIX: Don't immediately clear token - might be race condition
+                // Only clear if explicitly told token is invalid
+                if (data.error && (data.error.includes('Invalid token') || data.error.includes('expired'))) {
+                    clearAuthToken();
+                    console.warn('🔓 Token cleared due to invalidity');
+                    
+                    if (window.location.pathname.includes('admin')) {
+                        setTimeout(() => {
+                            const basePath = window.location.pathname.includes('/grrc-website/') ? '/grrc-website/' : './';
+                            window.location.replace(basePath + 'admin.html');
+                        }, 1000);
+                    }
+                } else {
+                    console.warn('⚠️ Auth failed but token not cleared - might be temporary issue');
                 }
                 
                 return {
