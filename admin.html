@@ -482,7 +482,10 @@
                             name="password" 
                             class="form-control" 
                             placeholder="Enter your password"
-                            autocomplete="current-password"
+                            autocomplete="off"
+                            autocorrect="off"
+                            autocapitalize="off"
+                            spellcheck="false"
                             required
                         >
                         <button type="button" class="password-toggle" id="passwordToggle" aria-label="Toggle password visibility">
@@ -757,12 +760,9 @@
                         // Step 8: Show success message briefly
                         showSuccess('Login successful! Redirecting...');
 
-                        // Step 9: Redirect with delay to ensure everything is saved
-                        console.log('⏳ Waiting 1000ms before redirect...');
-                        setTimeout(() => {
-                            console.log('🚀 Redirecting to admin-panel.html NOW');
-                            window.location.href = 'admin-panel.html';
-                        }, 1000);
+                        // Step 9: Force immediate redirect using replace (prevents back button issues)
+                        console.log('🚀 Redirecting to admin-panel.html NOW');
+                        window.location.replace('./admin-panel.html');
 
                     } else {
                         console.error('❌ Login failed:', result.error);

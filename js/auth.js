@@ -518,7 +518,7 @@ async function logout(redirectToLogin = true) {
   
   // Redirect to login page
   if (redirectToLogin && typeof window !== 'undefined') {
-    window.location.href = 'admin.html';
+    window.location.replace('./admin.html');
   }
 }
 
@@ -534,7 +534,7 @@ function isAuthenticated(redirectIfNot = false) {
   // No session at all
   if (!session) {
     if (redirectIfNot && typeof window !== 'undefined') {
-      window.location.href = 'admin.html';
+      window.location.replace('./admin.html');
     }
     return false;
   }
@@ -544,7 +544,7 @@ function isAuthenticated(redirectIfNot = false) {
     console.log('⚠️ Session expired');
     clearSession();
     if (redirectIfNot && typeof window !== 'undefined') {
-      window.location.href = 'admin.html';
+      window.location.replace('./admin.html');
     }
     return false;
   }
@@ -565,7 +565,7 @@ function isAuthenticated(redirectIfNot = false) {
       console.log('⚠️ No token found - clearing session');
       clearSession();
       if (redirectIfNot && typeof window !== 'undefined') {
-        window.location.href = 'admin.html';
+        window.location.replace('./admin.html');
       }
       return false;
     }

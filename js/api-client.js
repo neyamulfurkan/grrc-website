@@ -131,7 +131,7 @@ async function request(endpoint, options = {}) {
                 
                 if (window.location.pathname.includes('admin')) {
                     setTimeout(() => {
-                        window.location.href = '/admin.html';
+                        window.location.replace('./admin.html');
                     }, 1000);
                 }
                 
