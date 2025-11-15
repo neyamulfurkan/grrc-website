@@ -440,7 +440,11 @@
             </div>
 
             <!-- Login Form -->
-            <form class="login-form" id="loginForm">
+            <form class="login-form" id="loginForm" autocomplete="off" data-lpignore="true">
+                <!-- Hidden decoy fields to prevent autofill -->
+                <input type="text" name="fake_username" style="position: absolute; top: -9999px; left: -9999px;" tabindex="-1" autocomplete="off">
+                <input type="password" name="fake_password" style="position: absolute; top: -9999px; left: -9999px;" tabindex="-1" autocomplete="off">
+                
                 <!-- Error Message -->
                 <div class="error-message" id="errorMessage">
                     Invalid username or password. Please try again.
@@ -465,7 +469,7 @@
                             name="username" 
                             class="form-control" 
                             placeholder="Enter your username"
-                            autocomplete="username"
+                            autocomplete="off"
                             required
                         >
                     </div>
@@ -479,13 +483,15 @@
                         <input 
                             type="password" 
                             id="password" 
-                            name="password" 
+                            name="admin-login-password-field-unique-name" 
                             class="form-control" 
                             placeholder="Enter your password"
-                            autocomplete="off"
+                            autocomplete="new-password"
                             autocorrect="off"
                             autocapitalize="off"
                             spellcheck="false"
+                            data-lpignore="true"
+                            data-form-type="other"
                             required
                         >
                         <button type="button" class="password-toggle" id="passwordToggle" aria-label="Toggle password visibility">
