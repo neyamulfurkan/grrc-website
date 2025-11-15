@@ -570,6 +570,10 @@
                     <span class="nav-item-icon">🔐</span>
                     Admins
                 </a>
+                <a class="nav-item" id="superAdminBtn" style="display: none; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; margin-top: var(--space-md);">
+                    <span class="nav-item-icon">👑</span>
+                    Super Admin Panel
+                </a>
                 <a class="nav-item logout-btn" id="logoutBtn">
                     <span class="nav-item-icon">🚪</span>
                     Logout
@@ -1334,6 +1338,40 @@
         <button class="mobile-sidebar-toggle" id="mobileSidebarToggle">☰</button>
     </div>
 
+    <!-- Super Admin Password Verification Modal -->
+    <div id="superAdminModal" class="modal" style="display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.8); z-index: 10000; display: flex; align-items: center; justify-content: center;">
+        <div class="modal-content" style="background: var(--surface-color); border-radius: var(--radius-lg); padding: 2rem; max-width: 500px; width: 90%; box-shadow: var(--shadow-xl);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <h2 style="margin: 0; color: var(--text-primary);">👑 Super Admin Verification</h2>
+                <button onclick="closeSuperAdminModal()" style="background: transparent; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-secondary);">&times;</button>
+            </div>
+            
+            <div style="background: rgba(245, 158, 11, 0.1); border: 2px solid #f59e0b; border-radius: var(--radius-md); padding: 1rem; margin-bottom: 1.5rem;">
+                <p style="margin: 0; color: var(--text-primary); font-size: 0.9rem;">
+                    🔒 Enter your password to access the Super Admin Panel. This grants full system control.
+                </p>
+            </div>
+            
+            <form id="superAdminVerificationForm">
+                <div class="form-group" style="margin-bottom: 1.5rem;">
+                    <label class="form-label" style="display: block; font-weight: 600; margin-bottom: 0.5rem;">Password</label>
+                    <input type="password" id="superAdminPassword" class="form-input" placeholder="Enter your password" required autofocus style="width: 100%; padding: 0.75rem; border: 2px solid var(--border-color); border-radius: var(--radius-md); font-size: 1rem;">
+                </div>
+                
+                <div id="superAdminError" style="display: none; background: #fef2f2; border: 1px solid #fecaca; color: #dc2626; padding: 0.75rem; border-radius: var(--radius-md); margin-bottom: 1rem; font-size: 0.9rem;"></div>
+                
+                <div style="display: flex; gap: 1rem;">
+                    <button type="submit" class="btn btn-primary" style="flex: 1; padding: 0.75rem; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); border: none; border-radius: var(--radius-md); color: white; font-weight: 600; cursor: pointer;">
+                        ✓ Verify & Access
+                    </button>
+                    <button type="button" onclick="closeSuperAdminModal()" class="btn btn-secondary" style="flex: 1; padding: 0.75rem; background: var(--surface-color); border: 2px solid var(--border-color); border-radius: var(--radius-md); color: var(--text-primary); font-weight: 600; cursor: pointer;">
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script src="js/api-client.js"></script>
     <script src="js/config.js"></script>
     <script src="js/storage.js"></script>
@@ -1420,6 +1458,15 @@
                 document.getElementById('userName').textContent = admin.username;
                 document.getElementById('userRole').textContent = admin.role || 'Admin';
                 document.getElementById('userAvatar').textContent = admin.username.charAt(0).toUpperCase();
+                
+                // Show Super Admin button if user is super admin
+                if (admin.is_super_admin === true) {
+                    const superAdminBtn = document.getElementById('superAdminBtn');
+                    if (superAdminBtn) {
+                        superAdminBtn.style.display = 'flex';
+                        console.log('✅ Super Admin button shown');
+                    }
+                }
             }
         }
 
@@ -2759,6 +2806,15 @@
                     logout();
                 }
             });
+            
+            // Setup Super Admin button
+            const superAdminBtn = document.getElementById('superAdminBtn');
+            if (superAdminBtn) {
+                superAdminBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    showSuperAdminModal();
+                });
+            }
         }
 
         function navigateToSection(section) {
@@ -3204,6 +3260,83 @@ if (section === 'membership-applications') {
                 await saveMember();
             });
         }
+
+        // ========== SUPER ADMIN ACCESS FUNCTIONS ==========
+        
+        function showSuperAdminModal() {
+            document.getElementById('superAdminModal').style.display = 'flex';
+            document.getElementById('superAdminPassword').value = '';
+            document.getElementById('superAdminPassword').focus();
+            const errorDiv = document.getElementById('superAdminError');
+            errorDiv.style.display = 'none';
+        }
+        
+        function closeSuperAdminModal() {
+            document.getElementById('superAdminModal').style.display = 'none';
+            document.getElementById('superAdminPassword').value = '';
+            const errorDiv = document.getElementById('superAdminError');
+            errorDiv.style.display = 'none';
+        }
+        
+        document.getElementById('superAdminVerificationForm')?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            await verifySuperAdminPassword();
+        });
+        
+        async function verifySuperAdminPassword() {
+            const password = document.getElementById('superAdminPassword').value;
+            const errorDiv = document.getElementById('superAdminError');
+            
+            if (!password) {
+                errorDiv.textContent = 'Password is required';
+                errorDiv.style.display = 'block';
+                return;
+            }
+            
+            try {
+                console.log('🔐 Verifying super admin password...');
+                
+                const result = await window.apiClient.verifySuperAdmin(password);
+                
+                if (result.success && result.data && result.data.token) {
+                    console.log('✅ Super admin verification successful!');
+                    
+                    localStorage.setItem('superAdminToken', result.data.token);
+                    closeSuperAdminModal();
+                    showToast('Access granted! Redirecting to Super Admin Panel...', 'success');
+                    
+                    setTimeout(() => {
+                        window.location.href = 'superadmin-panel.html';
+                    }, 1000);
+                    
+                } else {
+                    console.error('❌ Verification failed:', result.error);
+                    errorDiv.textContent = result.error || 'Invalid password';
+                    errorDiv.style.display = 'block';
+                    document.getElementById('superAdminPassword').value = '';
+                    document.getElementById('superAdminPassword').focus();
+                }
+                
+            } catch (error) {
+                console.error('❌ Super admin verification error:', error);
+                errorDiv.textContent = 'Verification failed. Please try again.';
+                errorDiv.style.display = 'block';
+            }
+        }
+        
+        // Close modal on outside click
+        document.getElementById('superAdminModal')?.addEventListener('click', (e) => {
+            if (e.target.id === 'superAdminModal') {
+                closeSuperAdminModal();
+            }
+        });
+        
+        // Close modal on Escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && document.getElementById('superAdminModal').style.display === 'flex') {
+                closeSuperAdminModal();
+            }
+        });
     </script>
 </body>
 </html>
