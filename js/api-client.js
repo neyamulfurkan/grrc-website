@@ -301,7 +301,9 @@ async function verifySuperAdmin(password) {
         body: JSON.stringify({ password })
     });
 }
-
+async function verifyToken() {
+    return request('/api/auth/verify');
+}
 async function updateConfig(data) {
     return request('/api/admin/config', {
         method: 'PUT',
