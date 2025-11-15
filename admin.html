@@ -622,7 +622,8 @@
 
                     if (hoursDiff < 24) {
                         console.log('✅ Valid session found - redirecting to admin panel');
-                        window.location.href = 'admin-panel.html';
+                        const basePath = window.location.pathname.includes('/grrc-website/') ? '/grrc-website/' : './';
+                        window.location.replace(basePath + 'admin-panel.html');
                     } else {
                         console.log('⚠️ Session expired - clearing');
                         localStorage.removeItem('grrc_auth_token');
@@ -762,7 +763,8 @@
 
                         // Step 9: Force immediate redirect using replace (prevents back button issues)
                         console.log('🚀 Redirecting to admin-panel.html NOW');
-                        window.location.replace('./admin-panel.html');
+                        const basePath = window.location.pathname.includes('/grrc-website/') ? '/grrc-website/' : './';
+                        window.location.replace(basePath + 'admin-panel.html');
 
                     } else {
                         console.error('❌ Login failed:', result.error);

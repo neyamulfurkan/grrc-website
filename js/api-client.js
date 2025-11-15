@@ -131,7 +131,8 @@ async function request(endpoint, options = {}) {
                 
                 if (window.location.pathname.includes('admin')) {
                     setTimeout(() => {
-                        window.location.replace('./admin.html');
+                        const basePath = window.location.pathname.includes('/grrc-website/') ? '/grrc-website/' : './';
+                        window.location.replace(basePath + 'admin.html');
                     }, 1000);
                 }
                 
