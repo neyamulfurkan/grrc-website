@@ -58,9 +58,10 @@ ON CONFLICT (id) DO UPDATE SET
 -- 
 -- Password hash generated with bcrypt (salt rounds: 10)
 -- Hash for "admin123": $2b$10$K7L/MoRZUuyCfsmUs0.mPu.9B8Af4qdBncjU4K6RpW3u4G3rBVMG2
-INSERT INTO admins (username, password_hash, role, is_super_admin, created_at, last_login)
+INSERT INTO admins (username, email, password_hash, role, is_super_admin, created_at, last_login)
 VALUES (
     'admin',
+    'admin@grrc.local',
     '$2b$10$K7L/MoRZUuyCfsmUs0.mPu.9B8Af4qdBncjU4K6RpW3u4G3rBVMG2',
     'Super Admin',
     true,
@@ -68,6 +69,7 @@ VALUES (
     NULL
 )
 ON CONFLICT (username) DO UPDATE SET
+    email = 'admin@grrc.local',
     password_hash = '$2b$10$K7L/MoRZUuyCfsmUs0.mPu.9B8Af4qdBncjU4K6RpW3u4G3rBVMG2',
     role = 'Super Admin',
     is_super_admin = true,
