@@ -52,6 +52,11 @@ router.post('/login', async (req, res) => {
 
     // Compare password with hashed password
     console.log('🔍 Comparing password for admin:', username);
+    console.log('📋 Password received:', password);
+    console.log('📋 Password length:', password.length);
+    console.log('📋 Password hash from DB:', admin.password_hash);
+    console.log('📋 Hash length:', admin.password_hash.length);
+    
     const isPasswordValid = await bcrypt.compare(password, admin.password_hash);
     console.log('🔐 Password valid:', isPasswordValid);
     
