@@ -77,10 +77,9 @@ router.post('/admins', async (req, res) => {
       });
     }
     
-    // Generate temporary password
-    const tempPassword = generateTempPassword();
-    console.log('🔐 Generated password for', username, '- Length:', tempPassword.length);
-    const hashedPassword = await bcrypt.hash(tempPassword, 10);
+    // Hash the provided password
+    const hashedPassword = await bcrypt.hash(password, 10);
+    console.log('🔐 Creating admin:', username, '- Password length:', password.length);
     
     // Insert new admin
     const result = await pool.query(
@@ -100,16 +99,9 @@ router.post('/admins', async (req, res) => {
       req
     );
     
-    // Return temp password in response
-    const responseData = {
+    res.status(201).json({
       success: true,
-      data: {
-        id: result.rows[0].id,
-        username: result.rows[0].username,
-        email: result.rows[0].email,
-        permissions: result.rows[0].permissions
-      },
-      tempPassword: tempPassword,
+      data: result.rows[0],
       message: 'Admin created successfully'
     });
   } catch (error) {
