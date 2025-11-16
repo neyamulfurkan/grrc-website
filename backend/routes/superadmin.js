@@ -11,20 +11,20 @@ router.use(isSuperAdmin);
 // ========== DASHBOARD ==========
 router.get('/dashboard', async (req, res) => {
   try {
-    const [adminsResult] = await pool.query(
+    const adminsResult = await pool.query(
       'SELECT COUNT(*) as total, SUM(CASE WHEN is_active = true THEN 1 ELSE 0 END) as active FROM admins WHERE is_super_admin = false'
     );
     
-    const [approvalsResult] = await pool.query(
+    const approvalsResult = await pool.query(
       "SELECT COUNT(*) as pending FROM pending_approvals WHERE status = 'pending'"
     );
     
     res.json({
       success: true,
       data: {
-        totalAdmins: adminsResult[0].total || 0,
-        activeAdmins: adminsResult[0].active || 0,
-        pendingApprovals: approvalsResult[0].pending || 0
+        totalAdmins: adminsResult.rows[0].total || 0,
+        activeAdmins: adminsResult.rows[0].active || 0,
+        pendingApprovals: approvalsResult.rows[0].pending || 0
       }
     });
   } catch (error) {
@@ -38,14 +38,14 @@ router.get('/dashboard', async (req, res) => {
 // Get all regular admins
 router.get('/admins', async (req, res) => {
   try {
-    const [admins] = await pool.query(
+    const admins = await pool.query(
       `SELECT id, username, permissions, is_active, created_at, last_login, created_by
        FROM admins 
        WHERE is_super_admin = false 
        ORDER BY created_at DESC`
     );
     
-    res.json({ success: true, data: admins });
+    res.json({ success: true, data: admins.rows });
   } catch (error) {
     console.error('Get admins error:', error);
     res.status(500).json({ success: false, error: 'Failed to fetch admins' });
@@ -65,12 +65,12 @@ router.post('/admins', async (req, res) => {
     }
     
     // Check if username or email already exists
-    const [existing] = await pool.query(
+    const existing = await pool.query(
       'SELECT id FROM admins WHERE username = $1 OR email = $2',
       [username, email]
     );
     
-    if (existing.length > 0) {
+    if (existing.rows.length > 0) {
       return res.status(400).json({ 
         success: false, 
         error: 'Username or email already exists' 
@@ -82,7 +82,7 @@ router.post('/admins', async (req, res) => {
     const hashedPassword = await bcrypt.hash(tempPassword, 10);
     
     // Insert new admin
-    const [result] = await pool.query(
+    const result = await pool.query(
       `INSERT INTO admins (username, email, password_hash, permissions, created_by, is_active, is_super_admin)
        VALUES ($1, $2, $3, $4, $5, true, false)
        RETURNING id, username, email, permissions, created_at`,
@@ -94,7 +94,7 @@ router.post('/admins', async (req, res) => {
       req.user.id,
       'create_admin',
       'admin',
-      result[0].id,
+      result.rows[0].id,
       { username, email, permissions },
       req
     );
@@ -104,7 +104,7 @@ router.post('/admins', async (req, res) => {
     
     res.status(201).json({
       success: true,
-      data: result[0],
+      data: result.rows[0],
       tempPassword: tempPassword, // REMOVE IN PRODUCTION
       message: 'Admin created successfully'
     });
@@ -121,16 +121,16 @@ router.put('/admins/:id/permissions', async (req, res) => {
     const adminId = req.params.id;
     
     // Prevent editing super admin
-    const [admin] = await pool.query(
+    const admin = await pool.query(
       'SELECT is_super_admin FROM admins WHERE id = $1',
       [adminId]
     );
     
-    if (admin.length === 0) {
+    if (admin.rows.length === 0) {
       return res.status(404).json({ success: false, error: 'Admin not found' });
     }
     
-    if (admin[0].is_super_admin) {
+    if (admin.rows[0].is_super_admin) {
       return res.status(403).json({ 
         success: false, 
         error: 'Cannot modify super admin permissions' 
@@ -165,16 +165,16 @@ router.put('/admins/:id/status', async (req, res) => {
     const adminId = req.params.id;
     
     // Prevent deactivating super admin
-    const [admin] = await pool.query(
+    const admin = await pool.query(
       'SELECT is_super_admin FROM admins WHERE id = $1',
       [adminId]
     );
     
-    if (admin.length === 0) {
+    if (admin.rows.length === 0) {
       return res.status(404).json({ success: false, error: 'Admin not found' });
     }
     
-    if (admin[0].is_super_admin) {
+    if (admin.rows[0].is_super_admin) {
       return res.status(403).json({ 
         success: false, 
         error: 'Cannot deactivate super admin' 
@@ -211,16 +211,16 @@ router.delete('/admins/:id', async (req, res) => {
     const adminId = req.params.id;
     
     // Prevent deleting super admin
-    const [admin] = await pool.query(
+    const admin = await pool.query(
       'SELECT is_super_admin, username FROM admins WHERE id = $1',
       [adminId]
     );
     
-    if (admin.length === 0) {
+    if (admin.rows.length === 0) {
       return res.status(404).json({ success: false, error: 'Admin not found' });
     }
     
-    if (admin[0].is_super_admin) {
+    if (admin.rows[0].is_super_admin) {
       return res.status(403).json({ 
         success: false, 
         error: 'Cannot delete super admin' 
@@ -234,7 +234,7 @@ router.delete('/admins/:id', async (req, res) => {
       'delete_admin',
       'admin',
       adminId,
-      { username: admin[0].username },
+      { username: admin.rows[0].username },
       req
     );
     
@@ -251,16 +251,16 @@ router.post('/admins/:id/reset-password', async (req, res) => {
     const adminId = req.params.id;
     
     // Prevent resetting super admin password
-    const [admin] = await pool.query(
+    const admin = await pool.query(
       'SELECT is_super_admin, username FROM admins WHERE id = $1',
       [adminId]
     );
     
-    if (admin.length === 0) {
+    if (admin.rows.length === 0) {
       return res.status(404).json({ success: false, error: 'Admin not found' });
     }
     
-    if (admin[0].is_super_admin) {
+    if (admin.rows[0].is_super_admin) {
       return res.status(403).json({ 
         success: false, 
         error: 'Cannot reset super admin password' 
@@ -280,7 +280,7 @@ router.post('/admins/:id/reset-password', async (req, res) => {
       'reset_admin_password',
       'admin',
       adminId,
-      { username: admin[0].username },
+      { username: admin.rows[0].username },
       req
     );
     
@@ -316,9 +316,9 @@ router.get('/approvals', async (req, res) => {
     
     query += ' ORDER BY pa.created_at DESC';
     
-    const [approvals] = await pool.query(query, params);
+    const approvals = await pool.query(query, params);
     
-    res.json({ success: true, data: approvals });
+    res.json({ success: true, data: approvals.rows });
   } catch (error) {
     console.error('Get approvals error:', error);
     res.status(500).json({ success: false, error: 'Failed to fetch approvals' });
@@ -335,12 +335,12 @@ router.post('/approvals/:id/approve', async (req, res) => {
     const approvalId = req.params.id;
     
     // Get approval details
-    const [approval] = await client.query(
+    const approval = await client.query(
       'SELECT * FROM pending_approvals WHERE id = $1 AND status = $2',
       [approvalId, 'pending']
     );
     
-    if (approval.length === 0) {
+    if (approval.rows.length === 0) {
       await client.query('ROLLBACK');
       return res.status(404).json({ 
         success: false, 
@@ -348,7 +348,7 @@ router.post('/approvals/:id/approve', async (req, res) => {
       });
     }
     
-    const { action_type, module, item_data } = approval[0];
+    const { action_type, module, item_data } = approval.rows[0];
     
     // Execute the original action based on module and action_type
     let executionResult;
@@ -451,7 +451,7 @@ router.post('/approvals/:id/approve', async (req, res) => {
     res.json({ 
       success: true, 
       message: 'Request approved and executed',
-      itemId: executionResult ? executionResult[0].id : null
+      itemId: executionResult ? executionResult.rows[0].id : null
     });
     
   } catch (error) {
@@ -469,7 +469,7 @@ router.post('/approvals/:id/reject', async (req, res) => {
     const { notes } = req.body;
     const approvalId = req.params.id;
     
-    const [result] = await pool.query(
+    const result = await pool.query(
       `UPDATE pending_approvals 
        SET status = 'rejected', reviewed_by = $1, reviewed_at = NOW(), review_notes = $2
        WHERE id = $3 AND status = 'pending'
@@ -477,7 +477,7 @@ router.post('/approvals/:id/reject', async (req, res) => {
       [req.user.id, notes, approvalId]
     );
     
-    if (result.length === 0) {
+    if (result.rows.length === 0) {
       return res.status(404).json({ 
         success: false, 
         error: 'Approval not found or already processed' 
@@ -487,9 +487,9 @@ router.post('/approvals/:id/reject', async (req, res) => {
     await logAuditAction(
       req.user.id,
       'reject_request',
-      result[0].module,
+      result.rows[0].module,
       approvalId,
-      { action_type: result[0].action_type, notes },
+      { action_type: result.rows[0].action_type, notes },
       req
     );
     
@@ -505,11 +505,11 @@ router.post('/approvals/:id/reject', async (req, res) => {
 // Get all settings
 router.get('/settings', async (req, res) => {
   try {
-    const [settings] = await pool.query(
+    const settings = await pool.query(
       'SELECT * FROM super_admin_settings ORDER BY setting_key'
     );
     
-    res.json({ success: true, data: settings });
+    res.json({ success: true, data: settings.rows });
   } catch (error) {
     console.error('Get settings error:', error);
     res.status(500).json({ success: false, error: 'Failed to fetch settings' });
@@ -585,9 +585,9 @@ router.get('/audit-logs', async (req, res) => {
     query += ` ORDER BY al.created_at DESC LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
     params.push(limit, offset);
     
-    const [logs] = await pool.query(query, params);
+    const logs = await pool.query(query, params);
     
-    res.json({ success: true, data: logs });
+    res.json({ success: true, data: logs.rows });
   } catch (error) {
     console.error('Get audit logs error:', error);
     res.status(500).json({ success: false, error: 'Failed to fetch audit logs' });
@@ -597,7 +597,7 @@ router.get('/audit-logs', async (req, res) => {
 // Export audit logs as CSV
 router.get('/audit-logs/export', async (req, res) => {
   try {
-    const [logs] = await pool.query(`
+    const logs = await pool.query(`
       SELECT al.created_at, a.username, al.action_type, al.module, al.status, al.ip_address
       FROM admin_audit_log al
       JOIN admins a ON al.admin_id = a.id
@@ -607,7 +607,7 @@ router.get('/audit-logs/export', async (req, res) => {
     
     // Generate CSV
     let csv = 'Timestamp,Admin,Action,Module,Status,IP Address\n';
-    logs.forEach(log => {
+    logs.rows.forEach(log => {
       csv += `"${log.created_at}","${log.username}","${log.action_type}","${log.module}","${log.status}","${log.ip_address || 'N/A'}"\n`;
     });
     
