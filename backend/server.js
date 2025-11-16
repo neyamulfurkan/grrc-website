@@ -241,11 +241,7 @@ loadRoute('membership', './routes/membership', '/api/membership');
 loadRoute('alumniApplication', './routes/alumniApplication', '/api/alumni-application');
 
 // ============ SUPER ADMIN ROUTES ============
-try {
-    console.log('📂 Loading Super Admin routes...');
-    const superadminRoutes = require('./routes/superadmin');
-    app.use('/api/superadmin', superadminRoutes);
-    console.log('✅ Super Admin routes loaded successfully');
+loadRoute('superadmin', './routes/superadmin', '/api/superadmin');
     routesLoaded.superadmin = true;
 } catch (error) {
     console.error('❌ Failed to load Super Admin routes:', error.message);

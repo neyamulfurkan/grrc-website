@@ -53,7 +53,7 @@ router.get('/admins', async (req, res) => {
 });
 
 // Create new admin
-router.post('/admins/create', async (req, res) => {
+router.post('/admins', async (req, res) => {
   try {
     const { username, email, permissions } = req.body;
     
@@ -64,16 +64,16 @@ router.post('/admins/create', async (req, res) => {
       });
     }
     
-    // Check if username already exists
+    // Check if username or email already exists
     const [existing] = await pool.query(
-      'SELECT id FROM admins WHERE username = $1',
-      [username]
+      'SELECT id FROM admins WHERE username = $1 OR email = $2',
+      [username, email]
     );
     
     if (existing.length > 0) {
       return res.status(400).json({ 
         success: false, 
-        error: 'Username already exists' 
+        error: 'Username or email already exists' 
       });
     }
     
@@ -83,10 +83,10 @@ router.post('/admins/create', async (req, res) => {
     
     // Insert new admin
     const [result] = await pool.query(
-      `INSERT INTO admins (username, password_hash, permissions, created_by, is_active, is_super_admin)
-       VALUES ($1, $2, $3, $4, true, false)
-       RETURNING id, username, permissions, created_at`,
-      [username, hashedPassword, JSON.stringify(permissions), req.user.id]
+      `INSERT INTO admins (username, email, password_hash, permissions, created_by, is_active, is_super_admin)
+       VALUES ($1, $2, $3, $4, $5, true, false)
+       RETURNING id, username, email, permissions, created_at`,
+      [username, email, hashedPassword, JSON.stringify(permissions), req.user.id]
     );
     
     // Log the action
