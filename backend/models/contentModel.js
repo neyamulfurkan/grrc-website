@@ -989,7 +989,7 @@ async function getAllAdmins() {
 
 async function getAdminById(id) {
   try {
-    const result = await pool.query('SELECT id, username, role, created_at, last_login FROM admins WHERE id = $1', [id]);
+    const result = await pool.query('SELECT id, username, role, is_super_admin, permissions, is_active, password_hash, created_at, last_login FROM admins WHERE id = $1', [id]);
     return { success: true, data: result.rows[0] || null, error: null };
   } catch (error) {
     console.error('❌ Error in getAdminById:', error.message);
