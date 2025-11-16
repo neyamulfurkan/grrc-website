@@ -55,7 +55,7 @@ router.get('/admins', async (req, res) => {
 // Create new admin
 router.post('/admins', async (req, res) => {
   try {
-    const { username, email, permissions } = req.body;
+    const { username, email, permissions, password } = req.body;
     
     if (!username || !email || !permissions) {
       return res.status(400).json({ 
@@ -79,6 +79,7 @@ router.post('/admins', async (req, res) => {
     
     // Generate temporary password
     const tempPassword = generateTempPassword();
+    console.log('🔐 Generated password for', username, '- Length:', tempPassword.length);
     const hashedPassword = await bcrypt.hash(tempPassword, 10);
     
     // Insert new admin
@@ -99,13 +100,16 @@ router.post('/admins', async (req, res) => {
       req
     );
     
-    // TODO: Send email with temporary password
-    // For now, return it in response (in production, only send via email)
-    
-    res.status(201).json({
+    // Return temp password in response
+    const responseData = {
       success: true,
-      data: result.rows[0],
-      tempPassword: tempPassword, // REMOVE IN PRODUCTION
+      data: {
+        id: result.rows[0].id,
+        username: result.rows[0].username,
+        email: result.rows[0].email,
+        permissions: result.rows[0].permissions
+      },
+      tempPassword: tempPassword,
       message: 'Admin created successfully'
     });
   } catch (error) {

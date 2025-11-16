@@ -654,6 +654,14 @@
                     <label class="form-label">Email *</label>
                     <input type="email" class="form-input" id="newAdminEmail" required>
                 </div>
+
+                <div style="background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.3); border-radius: var(--radius-md); padding: 1rem; margin-bottom: var(--space-lg);">
+                    <p style="margin: 0; color: var(--text-primary); font-size: 0.9rem;">
+                        🔐 <strong>Password Generation:</strong><br>
+                        A secure temporary password will be automatically generated and displayed after creation. 
+                        The admin must change this password on first login.
+                    </p>
+                </div>
                 
                 <h3 style="margin-top: var(--space-lg);">Permissions</h3>
                 
@@ -919,14 +927,34 @@
                 });
                 
                 const data = await response.json();
-                if (data.success) {
-                    showToast('Admin created successfully!', 'success');
-                    closeCreateAdminModal();
-                    await loadAdminsList();
-                    await loadDashboard();
-                } else {
-                    showToast(data.error || 'Failed to create admin', 'error');
-                }
+if (data.success) {
+    // Show temporary password to super admin
+    if (data.tempPassword) {
+        const credHTML = `<div id="credModal" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);z-index:99999;display:flex;align-items:center;justify-content:center;">
+            <div style="background:white;border-radius:16px;padding:2rem;max-width:500px;width:90%;">
+                <h2 style="margin:0 0 1rem 0;color:#10b981;">✅ Admin Created!</h2>
+                <div style="background:#fef3c7;border:2px solid #f59e0b;border-radius:8px;padding:1.5rem;margin-bottom:1.5rem;">
+                    <p style="margin:0 0 1rem 0;color:#92400e;font-weight:600;">⚠️ SAVE THESE CREDENTIALS:</p>
+                    <div style="background:white;padding:1rem;border-radius:6px;font-family:monospace;">
+                        <div style="margin-bottom:0.75rem;"><strong>Username:</strong><br><span style="color:#6366f1;font-size:1.1rem;">${data.data.username}</span></div>
+                        <div><strong>Password:</strong><br><span style="color:#dc2626;font-size:1.1rem;font-weight:600;">${data.tempPassword}</span></div>
+                    </div>
+                </div>
+                <button onclick="navigator.clipboard.writeText('Username: ${data.data.username}\\nPassword: ${data.tempPassword}');this.textContent='✓ Copied!';setTimeout(()=>this.textContent='📋 Copy',2000);" style="width:48%;padding:0.75rem;background:#6366f1;color:white;border:none;border-radius:8px;font-weight:600;cursor:pointer;margin-right:4%;">📋 Copy</button>
+                <button onclick="document.getElementById('credModal').remove();" style="width:48%;padding:0.75rem;background:#10b981;color:white;border:none;border-radius:8px;font-weight:600;cursor:pointer;">✓ Done</button>
+            </div>
+        </div>`;
+        document.body.insertAdjacentHTML('beforeend', credHTML);
+        console.log('🔐 Username:', data.data.username, '| Password:', data.tempPassword);
+    }
+    
+    showToast('Admin created successfully!', 'success');
+    closeCreateAdminModal();
+    await loadAdminsList();
+    await loadDashboardStats();
+} else {
+    showToast(data.error || 'Failed to create admin', 'error');
+}
             } catch (error) {
                 console.error('Error creating admin:', error);
                 showToast('Error creating admin', 'error');
