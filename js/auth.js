@@ -194,6 +194,8 @@ function createSession(admin, hasToken = false) {
     adminId: admin.id,
     username: admin.username,
     role: admin.role || 'Admin',
+    is_super_admin: admin.is_super_admin || false,
+    permissions: admin.permissions || {},
     timestamp: new Date().toISOString(),
     userAgent: navigator.userAgent.substring(0, 100), // Track device
     hasToken: hasToken // Track if session has JWT token
@@ -605,12 +607,14 @@ function getCurrentAdmin() {
   const session = getSession();
   if (!session) return null;
   
-  // If using API authentication, return session data directly
+  // If using API authentication, return session data directly WITH is_super_admin flag
   if (session.hasToken) {
     return {
       id: session.adminId,
       username: session.username,
-      role: session.role
+      role: session.role,
+      is_super_admin: session.is_super_admin || false,
+      permissions: session.permissions || {}
     };
   }
   

@@ -1397,10 +1397,36 @@
             console.log('Admin Panel Loading...');
             
             function initializeAdminPanel() {
-                const session = sessionStorage.getItem('adminSession');
+                // CRITICAL: Check token FIRST, create session if missing
                 const token = localStorage.getItem('grrc_auth_token');
+                let session = sessionStorage.getItem('adminSession');
                 
-                console.log('Auth Check - Session:', session ? 'EXISTS' : 'MISSING', 'Token:', token ? 'EXISTS' : 'MISSING');
+                console.log('Auth Check - Token:', token ? 'EXISTS' : 'MISSING', 'Session:', session ? 'EXISTS' : 'MISSING');
+                
+                // If token exists but session missing, recreate session
+                if (token && !session) {
+                    console.warn('Token exists but session missing - recreating session');
+                    try {
+                        const tokenData = JSON.parse(atob(token.split('.')[1]));
+                        console.log('🔍 Token payload:', tokenData);
+                        
+                        const newSession = {
+                            username: tokenData.username || 'admin',
+                            role: tokenData.role || 'Admin',
+                            adminId: tokenData.id || tokenData.adminId,
+                            timestamp: new Date().toISOString(),
+                            hasToken: true,
+                            is_super_admin: tokenData.is_super_admin || false,
+                            permissions: tokenData.permissions || {}
+                        };
+                        
+                        sessionStorage.setItem('adminSession', JSON.stringify(newSession));
+                        session = sessionStorage.getItem('adminSession');
+                        console.log('✅ Session recreated with is_super_admin:', newSession.is_super_admin);
+                    } catch (error) {
+                        console.error('Failed to recreate session:', error);
+                    }
+                }
                 
                 if (!session || !token) {
                     console.error('Not authenticated - redirecting to login');
@@ -1452,18 +1478,34 @@
 
         function loadAdminInfo() {
             const admin = getCurrentAdmin();
+            console.log('👤 Loading admin info:', admin);
+            
             if (admin) {
                 document.getElementById('userName').textContent = admin.username;
                 document.getElementById('userRole').textContent = admin.role || 'Admin';
                 document.getElementById('userAvatar').textContent = admin.username.charAt(0).toUpperCase();
                 
-                // Show Super Admin button if user is super admin
-                if (admin.is_super_admin === true) {
+                // Show Super Admin button - check multiple conditions
+                const isSuperAdmin = admin.is_super_admin === true || 
+                                    admin.is_super_admin === 1 ||
+                                    admin.role === 'Super Admin';
+                
+                console.log('🔍 Super Admin check:', {
+                    is_super_admin: admin.is_super_admin,
+                    role: admin.role,
+                    isSuperAdmin: isSuperAdmin
+                });
+                
+                if (isSuperAdmin) {
                     const superAdminBtn = document.getElementById('superAdminBtn');
                     if (superAdminBtn) {
                         superAdminBtn.style.display = 'flex';
                         console.log('✅ Super Admin button shown');
+                    } else {
+                        console.error('❌ Super Admin button element not found!');
                     }
+                } else {
+                    console.log('ℹ️ Not a super admin - button hidden');
                 }
             }
         }

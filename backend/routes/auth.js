@@ -63,18 +63,20 @@ router.post('/login', async (req, res) => {
       });
     }
 
-    // Generate JWT token
+    // Generate JWT token WITH is_super_admin flag
     const token = generateToken({
       id: admin.id,
       username: admin.username,
       role: admin.role,
+      is_super_admin: admin.is_super_admin || false,
+      permissions: admin.permissions || {}
     });
 
     // Update last login timestamp
     await updateLastLogin(admin.id);
 
     // Log successful login
-    console.log(`✅ Admin logged in: ${admin.username} (${admin.role})`);
+    console.log(`✅ Admin logged in: ${admin.username} (${admin.role}) [Super: ${admin.is_super_admin}]`);
 
     // Return response (without password hash)
     res.json({
