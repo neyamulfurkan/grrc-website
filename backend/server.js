@@ -242,12 +242,6 @@ loadRoute('alumniApplication', './routes/alumniApplication', '/api/alumni-applic
 
 // ============ SUPER ADMIN ROUTES ============
 loadRoute('superadmin', './routes/superadmin', '/api/superadmin');
-    routesLoaded.superadmin = true;
-} catch (error) {
-    console.error('❌ Failed to load Super Admin routes:', error.message);
-    createPlaceholderRoute('/api/superadmin', 'Super Admin');
-    routesLoaded.superadmin = false;
-}
 
 /**
  * API Documentation
