@@ -2918,49 +2918,74 @@
 if (section === 'membership-applications') {
     const iframe = document.getElementById('membershipIframe');
     if (iframe && iframe.contentWindow) {
-        // ✅ CRITICAL FIX: Pass token to iframe BEFORE reload
         try {
             const token = window.apiClient.getAuthToken();
-            if (token && iframe.contentWindow.apiClient) {
-                iframe.contentWindow.apiClient.setAuthToken(token);
+            const admin = getCurrentAdmin();
+            
+            // Wait for iframe to be ready
+            setTimeout(() => {
+                if (iframe.contentWindow.apiClient) {
+                    iframe.contentWindow.apiClient.setAuthToken(token);
+                    console.log('✅ Token passed to membership iframe');
+                }
+                // Pass admin info directly
+                if (admin) {
+                    iframe.contentWindow.postMessage({
+                        type: 'ADMIN_INFO',
+                        admin: admin
+                    }, '*');
+                    console.log('✅ Admin info passed to membership iframe:', admin);
+                }
+                iframe.contentWindow.location.reload();
+            }, 100);
+            
+            // Update dashboard stat after reload
+            setTimeout(async () => {
+                try {
+                    const stats = await window.apiClient.getMembershipStatistics();
+                    if (stats.success && stats.data) {
+                        document.getElementById('statPendingApplications').textContent = stats.data.pending || 0;
+                    }
+                } catch (error) {
+                    console.error('Error updating pending applications stat:', error);
+                }
+            }, 1000);
+        } catch (e) {
+            console.warn('Could not set membership iframe token:', e);
+        }
+    }
+}
+           // ✅ CRITICAL FIX: Alumni section with token passing
+if (section === 'alumni') {
+    const iframe = document.getElementById('alumniIframe');
+    if (iframe && iframe.contentWindow) {
+        try {
+            const token = window.apiClient.getAuthToken();
+            const admin = getCurrentAdmin();
+            
+            if (token) {
+                // Wait for iframe to load
+                setTimeout(() => {
+                    if (iframe.contentWindow.apiClient) {
+                        iframe.contentWindow.apiClient.setAuthToken(token);
+                        console.log('✅ Token passed to alumni iframe');
+                    }
+                    // Pass admin info directly
+                    if (admin) {
+                        iframe.contentWindow.postMessage({
+                            type: 'ADMIN_INFO',
+                            admin: admin
+                        }, '*');
+                        console.log('✅ Admin info passed to alumni iframe:', admin);
+                    }
+                    iframe.contentWindow.location.reload();
+                }, 100);
             }
         } catch (e) {
-            console.warn('Could not set iframe token:', e);
+            console.warn('Could not set alumni iframe token:', e);
         }
-        iframe.contentWindow.location.reload();
-                    // Update dashboard stat after reload
-                    setTimeout(async () => {
-                        try {
-                            const stats = await window.apiClient.getMembershipStatistics();
-                            if (stats.success && stats.data) {
-                                document.getElementById('statPendingApplications').textContent = stats.data.pending || 0;
-                            }
-                        } catch (error) {
-                            console.error('Error updating pending applications stat:', error);
-                        }
-                    }, 1000);
-                }
-            }
-            // ✅ CRITICAL FIX: Alumni section with token passing
-            if (section === 'alumni') {
-                const iframe = document.getElementById('alumniIframe');
-                if (iframe && iframe.contentWindow) {
-                    try {
-                        const token = window.apiClient.getAuthToken();
-                        if (token) {
-                            // Wait for iframe to load
-                            setTimeout(() => {
-                                if (iframe.contentWindow.apiClient) {
-                                    iframe.contentWindow.apiClient.setAuthToken(token);
-                                }
-                                iframe.contentWindow.location.reload();
-                            }, 500);
-                        }
-                    } catch (e) {
-                        console.warn('Could not set alumni iframe token:', e);
-                    }
-                }
-            }
+    }
+}
         }
 
         function setupMobileSidebar() {
