@@ -2332,84 +2332,43 @@
             }
         }
 
-        // ========== CLOUDINARY UPLOAD FUNCTION ==========
-        async function uploadToCloudinary(file) {
-            try {
-                const CLOUDINARY_CLOUD_NAME = 'dot1uykrf'; // Your actual cloud name
-const CLOUDINARY_UPLOAD_PRESET = 'moon123noom'; // Your actual upload preset
-                
-                showToast('Uploading image to cloud storage...', 'info');
-                
-                const formData = new FormData();
-                formData.append('file', file);
-                formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
-                formData.append('folder', 'grrc-gallery'); // Optional: organize in folders
-                
-                const response = await fetch(
-                    `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
-                    {
-                        method: 'POST',
-                        body: formData
-                    }
-                );
-                
-                if (!response.ok) {
-                    throw new Error('Failed to upload image to Cloudinary');
-                }
-                
-                const data = await response.json();
-                console.log('✅ Image uploaded to Cloudinary:', data.secure_url);
-                
-                return data.secure_url; // This is the permanent image URL
-            } catch (error) {
-                console.error('❌ Cloudinary upload failed:', error);
-                throw new Error('Image upload failed: ' + error.message);
-            }
+        async function saveGalleryItem() {
+    try {
+        if (!isAuthenticated()) {
+            showToast('Please log in again', 'error');
+            setTimeout(() => window.location.href = 'admin.html', 1000);
+            return;
         }
 
-        async function saveGalleryItem() {
-            try {
-                if (!isAuthenticated()) {
-                    showToast('Please log in again', 'error');
-                    setTimeout(() => window.location.href = 'admin.html', 1000);
-                    return;
-                }
+        const imageFile = document.getElementById('galleryImage').files[0];
+        const imageUrl = document.getElementById('galleryImageUrl').value.trim();
+        let image = imageUrl;
 
-                const imageFile = document.getElementById('galleryImage').files[0];
-                const imageUrl = document.getElementById('galleryImageUrl').value.trim();
-                let image = imageUrl;
+        if (imageFile) {
+            image = await imageToBase64(imageFile);
+        }
 
-                // ✅ NEW: Upload to Cloudinary instead of base64
-                if (imageFile) {
-                    try {
-                        image = await uploadToCloudinary(imageFile);
-                    } catch (uploadError) {
-                        showToast(uploadError.message, 'error');
-                        return;
-                    }
-                }
+        if (!image) {
+            showToast('Image is required', 'error');
+            return;
+        }
 
-                if (!image) {
-                    showToast('Image is required', 'error');
-                    return;
-                }
+        const galleryData = {
+            image: image,
+            title: document.getElementById('galleryTitle').value.trim(),
+            description: document.getElementById('galleryDescription').value.trim(),
+            category: document.getElementById('galleryCategory').value,
+            date: document.getElementById('galleryDate').value,
+            photographer: document.getElementById('galleryPhotographer').value.trim()
+        };
 
-                const galleryData = {
-                    image: image, // Now contains Cloudinary URL, not base64!
-                    title: document.getElementById('galleryTitle').value.trim(),
-                    description: document.getElementById('galleryDescription').value.trim(),
-                    category: document.getElementById('galleryCategory').value,
-                    date: document.getElementById('galleryDate').value,
-                    photographer: document.getElementById('galleryPhotographer').value.trim()
-                };
-
-                await window.storage.addGalleryItem(galleryData);
+        await window.storage.addGalleryItem(galleryData);
+        
+        // ✅ CRITICAL FIX: Clear ALL gallery caches
+        localStorage.removeItem('cache_gallery');
+        localStorage.removeItem(STORAGE_KEYS.GALLERY);
+        localStorage.removeItem('gallery');
                 
-                // Clear gallery caches
-                localStorage.removeItem('cache_gallery');
-                localStorage.removeItem(STORAGE_KEYS.GALLERY);
-                localStorage.removeItem('gallery');
-                        
                 showToast('Gallery item added successfully!', 'success');
                 resetGalleryForm();
                 await loadGallery();
@@ -2959,74 +2918,49 @@ const CLOUDINARY_UPLOAD_PRESET = 'moon123noom'; // Your actual upload preset
 if (section === 'membership-applications') {
     const iframe = document.getElementById('membershipIframe');
     if (iframe && iframe.contentWindow) {
+        // ✅ CRITICAL FIX: Pass token to iframe BEFORE reload
         try {
             const token = window.apiClient.getAuthToken();
-            const admin = getCurrentAdmin();
-            
-            // Wait for iframe to be ready
-            setTimeout(() => {
-                if (iframe.contentWindow.apiClient) {
-                    iframe.contentWindow.apiClient.setAuthToken(token);
-                    console.log('✅ Token passed to membership iframe');
-                }
-                // Pass admin info directly
-                if (admin) {
-                    iframe.contentWindow.postMessage({
-                        type: 'ADMIN_INFO',
-                        admin: admin
-                    }, '*');
-                    console.log('✅ Admin info passed to membership iframe:', admin);
-                }
-                iframe.contentWindow.location.reload();
-            }, 100);
-            
-            // Update dashboard stat after reload
-            setTimeout(async () => {
-                try {
-                    const stats = await window.apiClient.getMembershipStatistics();
-                    if (stats.success && stats.data) {
-                        document.getElementById('statPendingApplications').textContent = stats.data.pending || 0;
-                    }
-                } catch (error) {
-                    console.error('Error updating pending applications stat:', error);
-                }
-            }, 1000);
-        } catch (e) {
-            console.warn('Could not set membership iframe token:', e);
-        }
-    }
-}
-           // ✅ CRITICAL FIX: Alumni section with token passing
-if (section === 'alumni') {
-    const iframe = document.getElementById('alumniIframe');
-    if (iframe && iframe.contentWindow) {
-        try {
-            const token = window.apiClient.getAuthToken();
-            const admin = getCurrentAdmin();
-            
-            if (token) {
-                // Wait for iframe to load
-                setTimeout(() => {
-                    if (iframe.contentWindow.apiClient) {
-                        iframe.contentWindow.apiClient.setAuthToken(token);
-                        console.log('✅ Token passed to alumni iframe');
-                    }
-                    // Pass admin info directly
-                    if (admin) {
-                        iframe.contentWindow.postMessage({
-                            type: 'ADMIN_INFO',
-                            admin: admin
-                        }, '*');
-                        console.log('✅ Admin info passed to alumni iframe:', admin);
-                    }
-                    iframe.contentWindow.location.reload();
-                }, 100);
+            if (token && iframe.contentWindow.apiClient) {
+                iframe.contentWindow.apiClient.setAuthToken(token);
             }
         } catch (e) {
-            console.warn('Could not set alumni iframe token:', e);
+            console.warn('Could not set iframe token:', e);
         }
-    }
-}
+        iframe.contentWindow.location.reload();
+                    // Update dashboard stat after reload
+                    setTimeout(async () => {
+                        try {
+                            const stats = await window.apiClient.getMembershipStatistics();
+                            if (stats.success && stats.data) {
+                                document.getElementById('statPendingApplications').textContent = stats.data.pending || 0;
+                            }
+                        } catch (error) {
+                            console.error('Error updating pending applications stat:', error);
+                        }
+                    }, 1000);
+                }
+            }
+            // ✅ CRITICAL FIX: Alumni section with token passing
+            if (section === 'alumni') {
+                const iframe = document.getElementById('alumniIframe');
+                if (iframe && iframe.contentWindow) {
+                    try {
+                        const token = window.apiClient.getAuthToken();
+                        if (token) {
+                            // Wait for iframe to load
+                            setTimeout(() => {
+                                if (iframe.contentWindow.apiClient) {
+                                    iframe.contentWindow.apiClient.setAuthToken(token);
+                                }
+                                iframe.contentWindow.location.reload();
+                            }, 500);
+                        }
+                    } catch (e) {
+                        console.warn('Could not set alumni iframe token:', e);
+                    }
+                }
+            }
         }
 
         function setupMobileSidebar() {
