@@ -1,6 +1,6 @@
 const API_BASE_URL = 'https://grrc-website-10.onrender.com';
 const AUTH_TOKEN_KEY = 'grrc_auth_token';
-const REQUEST_TIMEOUT = 3000;
+const REQUEST_TIMEOUT = 30000;
 
 const activeRequests = new Map();
 
@@ -102,26 +102,15 @@ async function request(endpoint, options = {}) {
     
     const requestPromise = (async () => {
         try {
-            const timeoutPromise = new Promise((_, reject) => {
-                setTimeout(() => reject(new Error('Request timeout')), REQUEST_TIMEOUT);
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT);
+            
+            const fetchPromise = fetch(url, {
+                ...config,
+                signal: controller.signal
             });
             
-            const fetchPromise = fetch(url, config);
-            const response = await Promise.race([
-                fetchPromise,
-                timeoutPromise
-            ]).catch(error => {
-                if (error.message === 'Request timeout') {
-                    console.error('⏱️ Request timed out, retrying with longer timeout...');
-                    return Promise.race([
-                        fetch(url, { ...config, signal: AbortSignal.timeout(10000) }),
-                        new Promise((_, reject) => 
-                            setTimeout(() => reject(new Error('Extended timeout')), 10000)
-                        )
-                    ]);
-                }
-                throw error;
-            });
+            const response = await fetchPromise.finally(() => clearTimeout(timeoutId));
             const duration = Date.now() - startTime;
             
             const contentType = response.headers.get('content-type');
@@ -182,12 +171,16 @@ async function request(endpoint, options = {}) {
             console.error(`❌ API Error [${endpoint}]: ${error.message}`);
             console.error(`⏱️ Duration: ${duration}ms`);
             
+            let errorMessage = error.message || 'Network error. Please check your connection.';
+            
+            if (error.name === 'AbortError') {
+                errorMessage = `Request timeout (${REQUEST_TIMEOUT/1000}s). Server may be slow or starting up.`;
+            }
+            
             return {
                 success: false,
                 data: null,
-                error: error.message === 'Request timeout' 
-                    ? 'Request timeout (5s). Please check your connection.'
-                    : error.message || 'Network error. Please check your connection.'
+                error: errorMessage
             };
         } finally {
             activeRequests.delete(requestKey);
