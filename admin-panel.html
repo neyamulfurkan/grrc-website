@@ -2332,43 +2332,84 @@
             }
         }
 
-        async function saveGalleryItem() {
-    try {
-        if (!isAuthenticated()) {
-            showToast('Please log in again', 'error');
-            setTimeout(() => window.location.href = 'admin.html', 1000);
-            return;
-        }
-
-        const imageFile = document.getElementById('galleryImage').files[0];
-        const imageUrl = document.getElementById('galleryImageUrl').value.trim();
-        let image = imageUrl;
-
-        if (imageFile) {
-            image = await imageToBase64(imageFile);
-        }
-
-        if (!image) {
-            showToast('Image is required', 'error');
-            return;
-        }
-
-        const galleryData = {
-            image: image,
-            title: document.getElementById('galleryTitle').value.trim(),
-            description: document.getElementById('galleryDescription').value.trim(),
-            category: document.getElementById('galleryCategory').value,
-            date: document.getElementById('galleryDate').value,
-            photographer: document.getElementById('galleryPhotographer').value.trim()
-        };
-
-        await window.storage.addGalleryItem(galleryData);
-        
-        // ✅ CRITICAL FIX: Clear ALL gallery caches
-        localStorage.removeItem('cache_gallery');
-        localStorage.removeItem(STORAGE_KEYS.GALLERY);
-        localStorage.removeItem('gallery');
+        // ========== CLOUDINARY UPLOAD FUNCTION ==========
+        async function uploadToCloudinary(file) {
+            try {
+                const CLOUDINARY_CLOUD_NAME = 'dxyz123abc'; // Your actual cloud name
+const CLOUDINARY_UPLOAD_PRESET = 'grrc_gallery'; // Your actual upload preset
                 
+                showToast('Uploading image to cloud storage...', 'info');
+                
+                const formData = new FormData();
+                formData.append('file', file);
+                formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+                formData.append('folder', 'grrc-gallery'); // Optional: organize in folders
+                
+                const response = await fetch(
+                    `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
+                    {
+                        method: 'POST',
+                        body: formData
+                    }
+                );
+                
+                if (!response.ok) {
+                    throw new Error('Failed to upload image to Cloudinary');
+                }
+                
+                const data = await response.json();
+                console.log('✅ Image uploaded to Cloudinary:', data.secure_url);
+                
+                return data.secure_url; // This is the permanent image URL
+            } catch (error) {
+                console.error('❌ Cloudinary upload failed:', error);
+                throw new Error('Image upload failed: ' + error.message);
+            }
+        }
+
+        async function saveGalleryItem() {
+            try {
+                if (!isAuthenticated()) {
+                    showToast('Please log in again', 'error');
+                    setTimeout(() => window.location.href = 'admin.html', 1000);
+                    return;
+                }
+
+                const imageFile = document.getElementById('galleryImage').files[0];
+                const imageUrl = document.getElementById('galleryImageUrl').value.trim();
+                let image = imageUrl;
+
+                // ✅ NEW: Upload to Cloudinary instead of base64
+                if (imageFile) {
+                    try {
+                        image = await uploadToCloudinary(imageFile);
+                    } catch (uploadError) {
+                        showToast(uploadError.message, 'error');
+                        return;
+                    }
+                }
+
+                if (!image) {
+                    showToast('Image is required', 'error');
+                    return;
+                }
+
+                const galleryData = {
+                    image: image, // Now contains Cloudinary URL, not base64!
+                    title: document.getElementById('galleryTitle').value.trim(),
+                    description: document.getElementById('galleryDescription').value.trim(),
+                    category: document.getElementById('galleryCategory').value,
+                    date: document.getElementById('galleryDate').value,
+                    photographer: document.getElementById('galleryPhotographer').value.trim()
+                };
+
+                await window.storage.addGalleryItem(galleryData);
+                
+                // Clear gallery caches
+                localStorage.removeItem('cache_gallery');
+                localStorage.removeItem(STORAGE_KEYS.GALLERY);
+                localStorage.removeItem('gallery');
+                        
                 showToast('Gallery item added successfully!', 'success');
                 resetGalleryForm();
                 await loadGallery();
