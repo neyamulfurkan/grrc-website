@@ -1107,13 +1107,7 @@ async function getGallery(filters = {}) {
             createdAt: item.created_at || item.createdAt
           }));
           
-          try {
-            localStorage.setItem(STORAGE_KEYS.GALLERY, JSON.stringify(mappedData));
-            localStorage.setItem('gallery', JSON.stringify(mappedData));
-          } catch (e) {
-            console.warn('⚠️ Could not save gallery to localStorage:', e.message);
-          }
-          
+          // DON'T cache gallery in localStorage - images are too large
           let result = mappedData;
           
           if (filters.category) {
@@ -1124,19 +1118,14 @@ async function getGallery(filters = {}) {
           return { success: true, data: result };
         }
       } catch (apiError) {
-        console.warn('⚠️ API call failed, using cached gallery:', apiError.message);
+        console.warn('⚠️ API call failed for gallery:', apiError.message);
+        return { success: true, data: [] };
       }
     }
     
-    const cached = localStorage.getItem(STORAGE_KEYS.GALLERY) || localStorage.getItem('gallery');
-    let result = cached ? JSON.parse(cached) : [];
-    console.log('✅ getGallery() returned', result.length, 'items from cache');
-    
-    if (filters.category) {
-      result = result.filter(g => g.category === filters.category);
-    }
-    
-    return { success: true, data: result };
+    // No cache fallback for gallery - too large for localStorage
+    console.log('⚠️ API not available, returning empty gallery');
+    return { success: true, data: [] };
   } catch (error) {
     console.error('Error getting gallery:', error);
     return { success: true, data: [] };
@@ -1153,9 +1142,6 @@ async function addGalleryItem(galleryData) {
   }
   
   try {
-    const galleryResult = await getGallery();
-    const gallery = galleryResult.data || [];
-    
     const newItem = {
       id: generateUniqueId('gallery'),
       image: galleryData.image,
@@ -1187,10 +1173,8 @@ async function addGalleryItem(galleryData) {
             newItem.id = apiResult.data.id;
           }
           
-          gallery.push(newItem);
-          localStorage.setItem(STORAGE_KEYS.GALLERY, JSON.stringify(gallery));
-          localStorage.removeItem('cache_gallery');
-          console.log('✅ Gallery item saved');
+          // DON'T cache gallery - images too large for localStorage
+          console.log('✅ Gallery item saved to backend');
           return { success: true, data: newItem };
         } else {
           throw new Error(apiResult.error || 'Failed to save gallery item');
@@ -1200,11 +1184,7 @@ async function addGalleryItem(galleryData) {
         throw apiError;
       }
     } else {
-      gallery.push(newItem);
-      localStorage.setItem(STORAGE_KEYS.GALLERY, JSON.stringify(gallery));
-      localStorage.removeItem('cache_gallery');
-      console.log('✅ Gallery item saved locally (API not available)');
-      return { success: true, data: newItem };
+      throw new Error('API not available - cannot save gallery item');
     }
   } catch (error) {
     console.error('❌ Failed to add gallery item:', error);
@@ -1221,26 +1201,13 @@ async function deleteGalleryItem(galleryId) {
     throw new Error('Authentication required');
   }
   
-  localStorage.removeItem('cache_gallery');
-  localStorage.removeItem(STORAGE_KEYS.GALLERY);
-  
-  const galleryResult = await getGallery();
-  const gallery = galleryResult.data || [];
-  const filtered = gallery.filter(g => g.id !== galleryId);
-  
-  if (filtered.length === gallery.length) {
-    console.warn('Gallery item not found in local list, attempting API delete anyway...');
-  }
-  
   try {
     if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady) {
       try {
         const apiResult = await window.apiClient.deleteGalleryItem(galleryId);
         
         if (apiResult.success) {
-          localStorage.setItem(STORAGE_KEYS.GALLERY, JSON.stringify(filtered));
-          localStorage.removeItem('cache_gallery');
-          console.log('✅ Gallery item deleted');
+          console.log('✅ Gallery item deleted from backend');
           return { success: true };
         } else {
           throw new Error(apiResult.error || 'Failed to delete gallery item');
@@ -1250,10 +1217,7 @@ async function deleteGalleryItem(galleryId) {
         throw apiError;
       }
     } else {
-      localStorage.setItem(STORAGE_KEYS.GALLERY, JSON.stringify(filtered));
-      localStorage.removeItem('cache_gallery');
-      console.log('✅ Gallery item deleted locally (API not available)');
-      return { success: true };
+      throw new Error('API not available - cannot delete gallery item');
     }
   } catch (error) {
     console.error('❌ Failed to delete gallery item:', error);
