@@ -179,23 +179,28 @@
 }
 
         async function loadApplicationStatistics() {
-            try {
-                const result = await window.apiClient.getMembershipStatistics();
-                if (result.success && result.data) {
-                    document.getElementById('totalApplications').textContent = result.data.total || 0;
-                    document.getElementById('pendingApplications').textContent = result.data.pending || 0;
-                    document.getElementById('approvedApplications').textContent = result.data.approved || 0;
-                    document.getElementById('rejectedApplications').textContent = result.data.rejected || 0;
-                    
-                    // Update parent dashboard stat if accessible
-                    if (window.parent && window.parent.document.getElementById('statPendingApplications')) {
-                        window.parent.document.getElementById('statPendingApplications').textContent = result.data.pending || 0;
-                    }
-                }
-            } catch (error) {
-                console.error('Error loading application statistics:', error);
+    try {
+        const result = await window.apiClient.getMembershipStatistics();
+        if (result.success && result.data) {
+            const totalEl = document.getElementById('totalApplications');
+            const pendingEl = document.getElementById('pendingApplications');
+            const approvedEl = document.getElementById('approvedApplications');
+            const rejectedEl = document.getElementById('rejectedApplications');
+            
+            if (totalEl) totalEl.textContent = result.data.total || 0;
+            if (pendingEl) pendingEl.textContent = result.data.pending || 0;
+            if (approvedEl) approvedEl.textContent = result.data.approved || 0;
+            if (rejectedEl) rejectedEl.textContent = result.data.rejected || 0;
+            
+            // Update parent dashboard stat if accessible
+            if (window.parent && window.parent.document.getElementById('statPendingApplications')) {
+                window.parent.document.getElementById('statPendingApplications').textContent = result.data.pending || 0;
             }
         }
+    } catch (error) {
+        console.error('Error loading application statistics:', error);
+    }
+}
 
                 async function loadMembershipApplications(status = null) {
     try {
@@ -222,18 +227,23 @@
                 console.log('📦 API response:', result);
                 
                 const tbody = document.getElementById('applicationsTableBody');
-                
-                if (!result.success) {
-                    console.error('❌ API call failed:', result.error);
-                    tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: var(--space-xl); color: var(--error-color);">Error: ${result.error || 'Failed to load applications'}</td></tr>`;
-                    return;
-                }
-                
-                if (!result.data || result.data.length === 0) {
-                    console.log('ℹ️ No applications found');
-                    tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: var(--space-xl);">No applications found</td></tr>';
-                    return;
-                }
+        
+        if (!tbody) {
+            console.error('❌ Table body element not found - UI not loaded');
+            return;
+        }
+        
+        if (!result.success) {
+            console.error('❌ API call failed:', result.error);
+            tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: var(--space-xl); color: var(--error-color);">Error: ${result.error || 'Failed to load applications'}</td></tr>`;
+            return;
+        }
+        
+        if (!result.data || result.data.length === 0) {
+            console.log('ℹ️ No applications found');
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: var(--space-xl);">No applications found</td></tr>';
+            return;
+        }
                 
                 console.log(`✅ Loaded ${result.data.length} applications`);
                 

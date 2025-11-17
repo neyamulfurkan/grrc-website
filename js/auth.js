@@ -609,13 +609,39 @@ function getCurrentAdmin() {
   
   // If using API authentication, return session data directly WITH is_super_admin flag
   if (session.hasToken) {
-    return {
+    // CRITICAL FIX: Properly detect super admin status
+    const isSuperAdmin = session.is_super_admin === true || 
+                         session.is_super_admin === 1;
+    
+    const admin = {
       id: session.adminId,
       username: session.username,
-      role: session.role,
-      is_super_admin: session.is_super_admin || false,
+      role: isSuperAdmin ? 'Super Admin' : session.role,
+      is_super_admin: isSuperAdmin,
       permissions: session.permissions || {}
     };
+    
+    // If super admin, grant ALL permissions automatically
+    if (isSuperAdmin) {
+      admin.permissions = {
+        members: { view: true, create: true, edit: true, delete: true },
+        events: { view: true, create: true, edit: true, delete: true },
+        projects: { view: true, create: true, edit: true, delete: true },
+        gallery: { view: true, upload: true, delete: true },
+        announcements: { view: true, create: true, edit: true, delete: true },
+        alumni: { view: true, create: true, edit: true, delete: true, approve_applications: true },
+        membership: { view: true, approve: true, delete: true }
+      };
+    }
+    
+    console.log('🔍 getCurrentAdmin() result:', {
+      username: admin.username,
+      isSuperAdmin: admin.is_super_admin,
+      role: admin.role,
+      hasPermissions: Object.keys(admin.permissions).length > 0
+    });
+    
+    return admin;
   }
   
   // Fallback: Get from localStorage
