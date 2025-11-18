@@ -818,7 +818,10 @@
        
         // Page initialization
         document.addEventListener('DOMContentLoaded', async () => {
+            console.log('🔐 Verifying super admin access...');
+            
             if (!verifySuperAdminAccess()) {
+                console.error('❌ Super admin verification failed');
                 console.warn('No super admin token found, redirecting...');
                 setTimeout(() => {
                     const basePath = window.location.pathname.includes('/grrc-website/') ? '/grrc-website/' : './';

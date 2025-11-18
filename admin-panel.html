@@ -1609,13 +1609,21 @@ async function loadAdminDashboardInfo() {
             const admin = getCurrentAdmin();
             if (!admin) return;
             
-            const isSuperAdmin = admin.is_super_admin === true || admin.is_super_admin === 1;
+            const isSuperAdmin = admin.is_super_admin === true || admin.is_super_admin === 1 || admin.role === 'Super Admin';
             
-            // Show for ALL admins (both super and regular)
-            document.getElementById('adminPermissionsOverview').style.display = 'block';
-            document.getElementById('otherAdminsOverview').style.display = 'block';
+            console.log('📊 Loading dashboard info for:', admin.username, 'Super Admin:', isSuperAdmin);
+            
+            // ✅ CRITICAL FIX: Show permissions section for ALL admins
+            const permissionsSection = document.getElementById('adminPermissionsOverview');
+            const otherAdminsSection = document.getElementById('otherAdminsOverview');
+            
+            if (permissionsSection) permissionsSection.style.display = 'block';
+            if (otherAdminsSection) otherAdminsSection.style.display = 'block';
+            
+            console.log('✅ Dashboard sections displayed');
             
             if (!isSuperAdmin) {
+                console.log('📋 Displaying regular admin permissions');
                 
                 const permissions = admin.permissions || {};
                 const permissionsHTML = Object.keys(permissions).map(module => {
@@ -1679,7 +1687,8 @@ async function loadAdminDashboardInfo() {
                 `;
                 document.getElementById('permissionsDisplay').innerHTML = permissionsHTML;
                 
-                // Show ALL admins including self
+                // ✅ Show ALL admins for Super Admin view
+                console.log('👑 Loading all admins for Super Admin');
                 try {
                     const result = await window.apiClient.getAdmins();
                     if (result.success && result.data) {

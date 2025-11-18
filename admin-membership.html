@@ -139,18 +139,24 @@
         permissions: permissions.membership
     });
     
-    if (!isSuperAdmin && !hasViewPermission) {
-        document.body.innerHTML = `
-            <div style="display: flex; align-items: center; justify-content: center; height: 100vh; text-align: center; padding: 2rem;">
-                <div>
-                    <h2 style="color: var(--error-color); margin-bottom: 1rem;">🚫 Access Denied</h2>
-                    <p style="color: var(--text-secondary);">You don't have permission to view membership applications.</p>
-                    <p style="color: var(--text-secondary); font-size: 0.875rem; margin-top: 1rem;">Contact your Super Admin to grant you access.</p>
+    // ✅ CRITICAL FIX: Super admins ALWAYS get access, regular admins need permission check
+    if (!isSuperAdmin) {
+        // Check permissions only for non-super admins
+        if (!hasViewPermission) {
+            document.body.innerHTML = `
+                <div style="display: flex; align-items: center; justify-content: center; height: 100vh; text-align: center; padding: 2rem;">
+                    <div>
+                        <h2 style="color: var(--error-color); margin-bottom: 1rem;">🚫 Access Denied</h2>
+                        <p style="color: var(--text-secondary);">You don't have permission to view membership applications.</p>
+                        <p style="color: var(--text-secondary); font-size: 0.875rem; margin-top: 1rem;">Contact your Super Admin to grant you access.</p>
+                    </div>
                 </div>
-            </div>
-        `;
-        return;
+            `;
+            return;
+        }
     }
+    
+    console.log('✅ Access granted - isSuperAdmin:', isSuperAdmin, 'hasViewPermission:', hasViewPermission);
     
     console.log('✅ Access granted');
     
