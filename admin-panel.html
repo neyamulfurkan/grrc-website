@@ -1611,9 +1611,11 @@ async function loadAdminDashboardInfo() {
             
             const isSuperAdmin = admin.is_super_admin === true || admin.is_super_admin === 1;
             
+            // Show for ALL admins (both super and regular)
+            document.getElementById('adminPermissionsOverview').style.display = 'block';
+            document.getElementById('otherAdminsOverview').style.display = 'block';
+            
             if (!isSuperAdmin) {
-                document.getElementById('adminPermissionsOverview').style.display = 'block';
-                document.getElementById('otherAdminsOverview').style.display = 'block';
                 
                 const permissions = admin.permissions || {};
                 const permissionsHTML = Object.keys(permissions).map(module => {
@@ -1639,7 +1641,7 @@ async function loadAdminDashboardInfo() {
                 try {
                     const result = await window.apiClient.getAdmins();
                     if (result.success && result.data) {
-                        const otherAdmins = result.data.filter(a => a.id !== admin.id);
+                        const otherAdmins = result.data.filter(a => a.id !== admin.id && a.is_super_admin !== true);
                         
                         const adminsHTML = otherAdmins.map(a => {
                             const perms = a.permissions || {};
@@ -1665,6 +1667,51 @@ async function loadAdminDashboardInfo() {
                     }
                 } catch (error) {
                     console.error('Error loading other admins:', error);
+                }
+            } else {
+                // Super Admin view - show ALL admins
+                const perms = admin.permissions || {};
+                const permissionsHTML = `
+                    <div style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); padding: var(--space-md); border-radius: var(--radius-md); color: white;">
+                        <h3 style="margin: 0 0 var(--space-sm) 0;">👑 Super Admin</h3>
+                        <p style="margin: 0; font-size: 0.9rem;">You have full system access and control over all features.</p>
+                    </div>
+                `;
+                document.getElementById('permissionsDisplay').innerHTML = permissionsHTML;
+                
+                // Show ALL admins including self
+                try {
+                    const result = await window.apiClient.getAdmins();
+                    if (result.success && result.data) {
+                        const allAdmins = result.data;
+                        
+                        const adminsHTML = allAdmins.map(a => {
+                            const perms = a.permissions || {};
+                            const modules = Object.keys(perms).filter(m => Object.values(perms[m]).some(v => v === true));
+                            const isSelf = a.id === admin.id;
+                            const isSuperAdminAccount = a.is_super_admin === true || a.role === 'Super Admin';
+                            
+                            return `
+                                <div style="background: var(--background-color); padding: var(--space-md); border-radius: var(--radius-md); margin-bottom: var(--space-sm); ${isSelf ? 'border: 2px solid var(--primary-color);' : ''}">
+                                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                                        <div>
+                                            <strong style="color: var(--text-primary);">${a.username}</strong>
+                                            ${isSelf ? '<span class="badge" style="background: var(--primary-color); color: white; margin-left: 0.5rem;">You</span>' : ''}
+                                            ${isSuperAdminAccount ? '<span class="badge" style="background: linear-gradient(135deg, #f59e0b, #d97706); color: white; margin-left: 0.5rem;">👑 Super Admin</span>' : `<span class="badge badge-info" style="margin-left: var(--space-xs);">${a.role || 'Admin'}</span>`}
+                                        </div>
+                                        <span class="badge ${a.is_active ? 'badge-success' : 'badge-error'}">${a.is_active ? 'Active' : 'Inactive'}</span>
+                                    </div>
+                                    <div style="margin-top: var(--space-xs); font-size: 0.875rem; color: var(--text-secondary);">
+                                        ${isSuperAdminAccount ? 'Full system access' : `Can manage: ${modules.join(', ') || 'No permissions'}`}
+                                    </div>
+                                </div>
+                            `;
+                        }).join('');
+                        
+                        document.getElementById('otherAdminsDisplay').innerHTML = adminsHTML || '<p style="color: var(--text-secondary);">No other administrators.</p>';
+                    }
+                } catch (error) {
+                    console.error('Error loading admins list:', error);
                 }
             }
         }
@@ -1704,6 +1751,8 @@ async function loadAdminDashboardInfo() {
                     const gallery = JSON.parse(localStorage.getItem('gallery')) || [];
                     document.getElementById('statGallery').textContent = gallery.length;
                 }
+                // Load admin dashboard info
+            await loadAdminDashboardInfo();
             } catch (error) {
                 console.error('Error loading stats:', error);
                 const members = JSON.parse(localStorage.getItem('members')) || [];

@@ -819,9 +819,11 @@
         // Page initialization
         document.addEventListener('DOMContentLoaded', async () => {
             if (!verifySuperAdminAccess()) {
-                alert('Super Admin access required');
-                const basePath = window.location.pathname.includes('/grrc-website/') ? '/grrc-website/' : './';
-                window.location.href = basePath + 'admin-panel.html';
+                console.warn('No super admin token found, redirecting...');
+                setTimeout(() => {
+                    const basePath = window.location.pathname.includes('/grrc-website/') ? '/grrc-website/' : './';
+                    window.location.href = basePath + 'admin-panel.html';
+                }, 100);
                 return;
             }
             
@@ -838,13 +840,21 @@
 
         function verifySuperAdminAccess() {
             const token = localStorage.getItem('superAdminToken');
-            if (!token) return false;
+            console.log('🔍 Checking super admin token:', token ? 'EXISTS' : 'MISSING');
+            
+            if (!token) {
+                console.warn('❌ No super admin token');
+                return false;
+            }
             
             try {
                 const tokenData = JSON.parse(atob(token.split('.')[1]));
                 const expiryTime = tokenData.exp * 1000;
-                return Date.now() < expiryTime;
-            } catch {
+                const isValid = Date.now() < expiryTime;
+                console.log('✅ Token valid:', isValid, 'Expires:', new Date(expiryTime));
+                return isValid;
+            } catch (e) {
+                console.error('❌ Token verification failed:', e);
                 return false;
             }
         }

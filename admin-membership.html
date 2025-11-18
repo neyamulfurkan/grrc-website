@@ -130,12 +130,13 @@
     
     const isSuperAdmin = admin.is_super_admin === true || admin.is_super_admin === 1 || admin.role === 'Super Admin';
     const permissions = admin.permissions || {};
-    const hasViewPermission = permissions.membership?.view === true;
+    const hasViewPermission = permissions.membership?.view === true || permissions.membership?.approve === true;
     
     console.log('🔍 Access check:', {
         username: admin.username,
         isSuperAdmin: isSuperAdmin,
-        hasViewPermission: hasViewPermission
+        hasViewPermission: hasViewPermission,
+        permissions: permissions.membership
     });
     
     if (!isSuperAdmin && !hasViewPermission) {
