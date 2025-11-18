@@ -421,26 +421,30 @@ router.post('/gallery', checkPermission('gallery', 'upload'), async (req, res) =
     if (!image || !title || !category || !date) {
       return res.status(400).json({
         success: false,
-        error: 'Required fields: image (URL or Base64), title, category, date',
+        error: 'Required fields: image (Cloudinary URL), title, category, date',
       });
     }
     
-    // Check if image is a Cloudinary URL or Base64
-    let imageUrl = image;
+    // ✅ CRITICAL: REJECT Base64 images completely
     if (image.startsWith('data:image')) {
-      // Legacy Base64 support (discouraged)
-      console.warn('⚠️ Base64 image received - consider uploading to Cloudinary first');
-      imageUrl = image;
-    } else if (image.startsWith('http://') || image.startsWith('https://')) {
-      // Cloudinary URL - perfect!
-      console.log('✅ Cloudinary URL received');
-      imageUrl = image;
-    } else {
+      console.error('❌ Base64 image rejected');
       return res.status(400).json({
         success: false,
-        error: 'Image must be a valid URL or Base64 string',
+        error: 'Base64 images not allowed. Please upload to Cloudinary first and provide the secure_url.',
       });
     }
+    
+    // ✅ ONLY accept Cloudinary URLs
+    if (!image.startsWith('https://res.cloudinary.com/')) {
+      console.error('❌ Invalid image URL:', image.substring(0, 50));
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid image URL. Must be a Cloudinary URL starting with https://res.cloudinary.com/',
+      });
+    }
+    
+    console.log('✅ Cloudinary URL validated:', image);
+    let imageUrl = image;
     
     // Create gallery item data
     const galleryData = {
