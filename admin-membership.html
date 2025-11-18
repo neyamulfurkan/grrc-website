@@ -92,20 +92,32 @@
        async function initializeApplications() {
     console.log('🔄 Initializing membership applications iframe...');
     
-    // Listen for admin info from parent
-    let adminInfo = null;
-    window.addEventListener('message', (event) => {
-        if (event.data.type === 'ADMIN_INFO') {
-            adminInfo = event.data.admin;
-            console.log('📨 Received admin info:', adminInfo);
+    // ✅ FIX: Get admin from parent OR token
+    let admin = null;
+    
+    // Try getting from parent window first
+    if (window.parent && window.parent.getCurrentAdmin) {
+        admin = window.parent.getCurrentAdmin();
+    }
+    
+    // If not found, decode token directly
+    if (!admin) {
+        const token = localStorage.getItem('grrc_auth_token') || sessionStorage.getItem('grrc_auth_token');
+        if (token) {
+            try {
+                const tokenData = JSON.parse(atob(token.split('.')[1]));
+                admin = {
+                    id: tokenData.id || tokenData.adminId,
+                    username: tokenData.username,
+                    role: tokenData.role,
+                    is_super_admin: tokenData.is_super_admin === true || tokenData.is_super_admin === 1,
+                    permissions: tokenData.permissions || {}
+                };
+            } catch (e) {
+                console.error('Failed to decode token:', e);
+            }
         }
-    });
-    
-    // Wait a bit for admin info
-    await new Promise(resolve => setTimeout(resolve, 200));
-    
-    // Check permissions - but ALLOW super admins
-    const admin = adminInfo || (window.parent && window.parent.getCurrentAdmin ? window.parent.getCurrentAdmin() : null);
+    }
     
     console.log('🔍 Permission check:', {
         hasAdmin: !!admin,
@@ -113,25 +125,35 @@
         permissions: admin?.permissions
     });
     
-    if (admin) {
-        // Super admins have full access
-        if (admin.is_super_admin === true || admin.is_super_admin === 1) {
-            console.log('✅ Super admin detected - granting full access');
-        } else {
-            // Check regular admin permissions
-            const permissions = admin.permissions || {};
-            if (!permissions.membership || !permissions.membership.view) {
-                document.body.innerHTML = `
-                    <div style="display: flex; align-items: center; justify-content: center; height: 100vh; text-align: center; padding: 2rem;">
-                        <div>
-                            <h2 style="color: var(--error-color); margin-bottom: 1rem;">Access Denied</h2>
-                            <p style="color: var(--text-secondary);">You don't have permission to view membership applications.</p>
-                        </div>
+    // ✅ FIX: Super admins bypass ALL permission checks
+    if (admin && (admin.is_super_admin === true || admin.is_super_admin === 1 || admin.role === 'Super Admin')) {
+        console.log('✅ Super admin detected - FULL ACCESS GRANTED');
+        // Skip permission check entirely for super admins
+    } else if (admin) {
+        // Regular admin - check permissions
+        const permissions = admin.permissions || {};
+        if (!permissions.membership || !permissions.membership.view) {
+            document.body.innerHTML = `
+                <div style="display: flex; align-items: center; justify-content: center; height: 100vh; text-align: center; padding: 2rem;">
+                    <div>
+                        <h2 style="color: var(--error-color); margin-bottom: 1rem;">Access Denied</h2>
+                        <p style="color: var(--text-secondary);">You don't have permission to view membership applications.</p>
                     </div>
-                `;
-                return;
-            }
+                </div>
+            `;
+            return;
         }
+    } else {
+        // No admin found at all
+        document.body.innerHTML = `
+            <div style="display: flex; align-items: center; justify-content: center; height: 100vh; text-align: center; padding: 2rem;">
+                <div>
+                    <h2 style="color: var(--error-color); margin-bottom: 1rem;">Authentication Required</h2>
+                    <p style="color: var(--text-secondary);">Please log in to access this page.</p>
+                </div>
+            </div>
+        `;
+        return;
     }
     
     // ✅ CRITICAL FIX: Force use parent's API client and token

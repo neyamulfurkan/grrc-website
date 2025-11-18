@@ -1,28 +1,13 @@
-/**
- * ====================================
- * Authentication Routes
- * ====================================
- * Purpose: Handle admin login, logout, and token verification
- * Routes: /api/auth/*
- * ====================================
- */
-
 const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcrypt');
 const { getAdminByUsername, updateLastLogin } = require('../models/contentModel');
-const { generateToken, authenticateToken } = require('../middleware/auth');
+const { generateToken, authenticateToken, isSuperAdmin } = require('../middleware/auth');
 
-/**
- * POST /api/auth/login
- * Authenticate admin and return JWT token
- * Body: { username: string, password: string }
- */
 router.post('/login', async (req, res) => {
   try {
     const { username, password } = req.body;
 
-    // Validate input
     if (!username || !password) {
       return res.status(400).json({
         success: false,
@@ -30,7 +15,6 @@ router.post('/login', async (req, res) => {
       });
     }
 
-    // Validate input types
     if (typeof username !== 'string' || typeof password !== 'string') {
       return res.status(400).json({
         success: false,
@@ -38,7 +22,6 @@ router.post('/login', async (req, res) => {
       });
     }
 
-    // Get admin from database
     const result = await getAdminByUsername(username);
     
     if (!result.success || !result.data) {
@@ -50,7 +33,6 @@ router.post('/login', async (req, res) => {
 
     const admin = result.data;
 
-    // Compare password with hashed password
     console.log('🔍 Comparing password for admin:', username);
     console.log('📋 Password received:', password);
     console.log('📋 Password length:', password.length);
@@ -68,7 +50,6 @@ router.post('/login', async (req, res) => {
       });
     }
 
-    // Generate JWT token WITH is_super_admin flag
     const token = generateToken({
       id: admin.id,
       username: admin.username,
@@ -77,13 +58,10 @@ router.post('/login', async (req, res) => {
       permissions: admin.permissions || {}
     });
 
-    // Update last login timestamp
     await updateLastLogin(admin.id);
 
-    // Log successful login
     console.log(`✅ Admin logged in: ${admin.username} (${admin.role}) [Super: ${admin.is_super_admin}]`);
 
-    // Return response (without password hash)
     res.json({
       success: true,
       data: {
@@ -108,11 +86,6 @@ router.post('/login', async (req, res) => {
   }
 });
 
-/**
- * POST /api/auth/verify-superadmin
- * Verify super admin password and return short-lived token
- * Body: { password: string }
- */
 router.post('/verify-superadmin', authenticateToken, async (req, res) => {
   try {
     const { password } = req.body;
@@ -124,7 +97,6 @@ router.post('/verify-superadmin', authenticateToken, async (req, res) => {
       });
     }
     
-    // Get current user's password hash
     const { getAdminById } = require('../models/contentModel');
     const result = await getAdminById(req.user.id);
     
@@ -137,7 +109,6 @@ router.post('/verify-superadmin', authenticateToken, async (req, res) => {
     
     const admin = result.data;
     
-    // Check if user is super admin
     if (!admin.is_super_admin) {
       return res.status(403).json({
         success: false,
@@ -145,11 +116,9 @@ router.post('/verify-superadmin', authenticateToken, async (req, res) => {
       });
     }
     
-    // Verify password
     const isValid = await bcrypt.compare(password, admin.password_hash);
     
     if (!isValid) {
-      // Log failed attempt
       console.log(`❌ Failed super admin access attempt by ${admin.username}`);
       return res.status(401).json({
         success: false,
@@ -157,7 +126,6 @@ router.post('/verify-superadmin', authenticateToken, async (req, res) => {
       });
     }
     
-    // Generate short-lived super admin token (30 minutes)
     const superAdminToken = generateToken(
       {
         id: admin.id,
@@ -186,14 +154,61 @@ router.post('/verify-superadmin', authenticateToken, async (req, res) => {
   }
 });
 
-/**
- * POST /api/auth/logout
- * Logout admin (client-side token deletion)
- * This is mostly handled on client side, but endpoint exists for logging
- */
+router.post('/change-password', authenticateToken, isSuperAdmin, async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({
+        success: false,
+        error: 'Current password and new password are required'
+      });
+    }
+    
+    const { pool } = require('../config/database');
+    
+    const admin = await pool.query(
+      'SELECT password_hash FROM admins WHERE id = $1',
+      [req.user.id]
+    );
+    
+    if (admin.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'Admin not found'
+      });
+    }
+    
+    const validPassword = await bcrypt.compare(currentPassword, admin.rows[0].password_hash);
+    if (!validPassword) {
+      return res.status(401).json({
+        success: false,
+        error: 'Current password is incorrect'
+      });
+    }
+    
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    
+    await pool.query(
+      'UPDATE admins SET password_hash = $1 WHERE id = $2',
+      [hashedPassword, req.user.id]
+    );
+    
+    res.json({
+      success: true,
+      message: 'Password changed successfully'
+    });
+  } catch (error) {
+    console.error('Error changing password:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to change password'
+    });
+  }
+});
+
 router.post('/logout', authenticateToken, (req, res) => {
   try {
-    // Log logout
     console.log(`👋 Admin logged out: ${req.user.username}`);
 
     res.json({
@@ -209,14 +224,8 @@ router.post('/logout', authenticateToken, (req, res) => {
   }
 });
 
-/**
- * GET /api/auth/verify
- * Verify if current JWT token is valid
- * Requires: Authorization header with Bearer token
- */
 router.get('/verify', authenticateToken, (req, res) => {
   try {
-    // If authenticateToken middleware passed, token is valid
     res.json({
       success: true,
       data: {
@@ -235,11 +244,6 @@ router.get('/verify', authenticateToken, (req, res) => {
   }
 });
 
-/**
- * GET /api/auth/me
- * Get current authenticated admin's full profile
- * Requires: Authorization header with Bearer token
- */
 router.get('/me', authenticateToken, async (req, res) => {
   try {
     const { getAdminById } = require('../models/contentModel');

@@ -461,6 +461,10 @@
                     <span class="nav-item-icon">📋</span>
                     Audit Logs
                 </a>
+                <a class="nav-item" data-section="change-password">
+                    <span class="nav-item-icon">🔑</span>
+                    Change Password
+                </a>
                 <a class="nav-item logout-btn" id="logoutBtn">
                     <span class="nav-item-icon">🚪</span>
                     Logout
@@ -596,8 +600,34 @@
                 </div>
             </div>
 
-            <!-- Audit Logs Section -->
-            <div class="section-content" id="auditLogsSection">
+            <!-- Change Password Section -->
+            <div class="section-content" id="changePasswordSection">
+                <div class="admin-form">
+                    <h2>Change Super Admin Password</h2>
+                    <p style="color: var(--text-secondary); margin-bottom: var(--space-lg);">
+                        Update your super admin password. Make sure to use a strong, unique password.
+                    </p>
+                    
+                    <form id="changePasswordForm" onsubmit="changeSuperAdminPassword(event)">
+                        <div class="form-group">
+                            <label class="form-label">Current Password *</label>
+                            <input type="password" class="form-input" id="currentPassword" required minlength="6">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">New Password * (min 6 characters)</label>
+                            <input type="password" class="form-input" id="newPassword" required minlength="6">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Confirm New Password *</label>
+                            <input type="password" class="form-input" id="confirmNewPassword" required minlength="6">
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary">🔑 Change Password</button>
+                    </form>
+                </div>
+            </div>
                 <div class="admin-form">
                     <h2>Audit Logs</h2>
                     
@@ -892,11 +922,22 @@
         }
 
         function closeCreateAdminModal() {
-            document.getElementById('createAdminModal').style.display = 'none';
-            document.getElementById('createAdminForm').reset();
-            document.getElementById('newAdminPassword').value = '';
-            document.getElementById('newAdminPasswordConfirm').value = '';
-        }
+    const form = document.getElementById('createAdminForm');
+    form.reset();
+    delete form.dataset.editingId;
+    
+    // Reset form title and button
+    document.querySelector('#createAdminModal h2').textContent = 'Create New Admin';
+    document.querySelector('#createAdminForm button[type="submit"]').textContent = 'Create Admin';
+    
+    // Make password required again
+    document.getElementById('newAdminPassword').required = true;
+    document.getElementById('newAdminPasswordConfirm').required = true;
+    
+    document.getElementById('newAdminPassword').value = '';
+    document.getElementById('newAdminPasswordConfirm').value = '';
+    document.getElementById('createAdminModal').style.display = 'none';
+}
 
         document.getElementById('createAdminForm').addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -904,69 +945,100 @@
         });
 
         async function createAdmin(event) {
-            event.preventDefault();
-            
-            const username = document.getElementById('newAdminUsername').value.trim();
-            const email = document.getElementById('newAdminEmail').value.trim();
-            const password = document.getElementById('newAdminPassword').value;
-            const confirmPassword = document.getElementById('newAdminPasswordConfirm').value;
+    event.preventDefault();
+    
+    const form = document.getElementById('createAdminForm');
+    const editingId = form.dataset.editingId;
+    const isEditing = !!editingId;
+    
+    const username = document.getElementById('newAdminUsername').value.trim();
+    const email = document.getElementById('newAdminEmail').value.trim();
+    const password = document.getElementById('newAdminPassword').value;
+    const confirmPassword = document.getElementById('newAdminPasswordConfirm').value;
 
-            // Validation
-            if (!username || !email || !password || !confirmPassword) {
-                showToast('Please fill all required fields', 'error');
-                return;
-            }
+    // Validation
+    if (!username || !email) {
+        showToast('Please fill username and email', 'error');
+        return;
+    }
 
-            if (password !== confirmPassword) {
-                showToast('Passwords do not match', 'error');
-                return;
-            }
-
-            if (password.length < 6) {
-                showToast('Password must be at least 6 characters', 'error');
-                return;
-            }
-            
-            const permissions = {
-                members: getModulePermissions('members'),
-                events: getModulePermissions('events'),
-                projects: getModulePermissions('projects'),
-                gallery: getModulePermissions('gallery'),
-                announcements: getModulePermissions('announcements'),
-                alumni: getModulePermissions('alumni'),
-                membership: getModulePermissions('membership')
-            };
-            
-            try {
-                const response = await fetch(`${API_BASE_URL}/api/superadmin/admins`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${localStorage.getItem('superAdminToken')}`
-                    },
-                    body: JSON.stringify({
-                        username: username,
-                        email: email,
-                        password: password,
-                        permissions
-                    })
-                });
-                
-                const data = await response.json();
-if (data.success) {
-    showToast('Admin created successfully!', 'success');
-    closeCreateAdminModal();
-    await loadAdminsList();
-    await loadDashboard();
-} else {
-    showToast(data.error || 'Failed to create admin', 'error');
-}
-            } catch (error) {
-                console.error('Error creating admin:', error);
-                showToast('Error creating admin', 'error');
-            }
+    // Password validation only for create or if password is filled during edit
+    if (!isEditing) {
+        if (!password || !confirmPassword) {
+            showToast('Please fill all required fields', 'error');
+            return;
         }
-
+        if (password !== confirmPassword) {
+            showToast('Passwords do not match', 'error');
+            return;
+        }
+        if (password.length < 6) {
+            showToast('Password must be at least 6 characters', 'error');
+            return;
+        }
+    } else if (password || confirmPassword) {
+        // Editing and password fields are filled
+        if (password !== confirmPassword) {
+            showToast('Passwords do not match', 'error');
+            return;
+        }
+        if (password.length < 6) {
+            showToast('Password must be at least 6 characters', 'error');
+            return;
+        }
+    }
+    
+    const permissions = {
+        members: getModulePermissions('members'),
+        events: getModulePermissions('events'),
+        projects: getModulePermissions('projects'),
+        gallery: getModulePermissions('gallery'),
+        announcements: getModulePermissions('announcements'),
+        alumni: getModulePermissions('alumni'),
+        membership: getModulePermissions('membership')
+    };
+    
+    try {
+        const payload = {
+            username,
+            email,
+            permissions
+        };
+        
+        // Only include password if it's filled
+        if (password) {
+            payload.password = password;
+        }
+        
+        const url = isEditing 
+            ? `${API_BASE_URL}/api/superadmin/admins/${editingId}/permissions`
+            : `${API_BASE_URL}/api/superadmin/admins`;
+        
+        const method = isEditing ? 'PUT' : 'POST';
+        
+        const response = await fetch(url, {
+            method,
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('superAdminToken')}`
+            },
+            body: JSON.stringify(payload)
+        });
+        
+        const data = await response.json();
+        if (data.success) {
+            showToast(isEditing ? 'Admin updated successfully!' : 'Admin created successfully!', 'success');
+            closeCreateAdminModal();
+            await loadAdminsList();
+            await loadDashboard();
+        } else {
+            showToast(data.error || `Failed to ${isEditing ? 'update' : 'create'} admin`, 'error');
+        }
+    } catch (error) {
+        console.error(`Error ${isEditing ? 'updating' : 'creating'} admin:`, error);
+        showToast(`Error ${isEditing ? 'updating' : 'creating'} admin`, 'error');
+    }
+}
         function getModulePermissions(module) {
             const checkboxes = document.querySelectorAll(`.perm-${module}`);
             const perms = {};
@@ -976,9 +1048,58 @@ if (data.success) {
             return perms;
         }
 
-        async function editAdmin(id) {
-            showToast('Edit admin functionality coming soon', 'info');
+       async function editAdmin(id) {
+    try {
+        // Fetch admin details
+        const response = await fetch(`${API_BASE_URL}/api/superadmin/admins`, {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('superAdminToken')}` }
+        });
+        const data = await response.json();
+        
+        if (!data.success) {
+            showToast('Failed to load admin details', 'error');
+            return;
         }
+        
+        const admin = data.data.find(a => a.id === id);
+        if (!admin) {
+            showToast('Admin not found', 'error');
+            return;
+        }
+        
+        // Populate form with existing data
+        document.getElementById('newAdminUsername').value = admin.username;
+        document.getElementById('newAdminEmail').value = admin.email || '';
+        
+        // Clear password fields (will only update if filled)
+        document.getElementById('newAdminPassword').value = '';
+        document.getElementById('newAdminPasswordConfirm').value = '';
+        document.getElementById('newAdminPassword').required = false;
+        document.getElementById('newAdminPasswordConfirm').required = false;
+        
+        // Set permissions checkboxes
+        const permissions = admin.permissions || {};
+        ['members', 'events', 'projects', 'gallery', 'announcements', 'alumni', 'membership'].forEach(module => {
+            const modulePerms = permissions[module] || {};
+            document.querySelectorAll(`.perm-${module}`).forEach(cb => {
+                cb.checked = modulePerms[cb.dataset.perm] || false;
+            });
+        });
+        
+        // Change form title and button
+        document.querySelector('#createAdminModal h2').textContent = 'Edit Admin';
+        document.querySelector('#createAdminForm button[type="submit"]').textContent = 'Update Admin';
+        
+        // Store admin ID for update
+        document.getElementById('createAdminForm').dataset.editingId = id;
+        
+        // Show modal
+        showCreateAdminModal();
+    } catch (error) {
+        console.error('Error loading admin for edit:', error);
+        showToast('Error loading admin details', 'error');
+    }
+}
 
         async function deleteAdmin(id) {
             if (!confirm('Are you sure you want to delete this admin?')) return;
@@ -1264,7 +1385,8 @@ if (data.success) {
                 'admin-management': 'adminManagementSection',
                 'approval-settings': 'approvalSettingsSection',
                 'pending-approvals': 'pendingApprovalsSection',
-                'audit-logs': 'auditLogsSection'
+                'audit-logs': 'auditLogsSection',
+                'change-password': 'changePasswordSection'
             };
             
             const sectionId = sectionMap[section];
@@ -1279,7 +1401,8 @@ if (data.success) {
                 'admin-management': 'Admin Management',
                 'approval-settings': 'Approval Settings',
                 'pending-approvals': 'Pending Approvals',
-                'audit-logs': 'Audit Logs'
+                'audit-logs': 'Audit Logs',
+                'change-password': 'Change Password'
             };
             document.getElementById('sectionTitle').textContent = titles[section] || 'Super Admin Panel';
 
@@ -1342,6 +1465,50 @@ if (data.success) {
         function initTheme() {
             const savedTheme = localStorage.getItem('theme') || 'light';
             document.documentElement.setAttribute('data-theme', savedTheme);
+        }
+        // Change super admin password
+        async function changeSuperAdminPassword(event) {
+            event.preventDefault();
+            
+            const currentPassword = document.getElementById('currentPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmNewPassword = document.getElementById('confirmNewPassword').value;
+            
+            if (newPassword !== confirmNewPassword) {
+                showToast('New passwords do not match', 'error');
+                return;
+            }
+            
+            if (newPassword.length < 6) {
+                showToast('Password must be at least 6 characters', 'error');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/auth/change-password`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('superAdminToken')}`
+                    },
+                    body: JSON.stringify({
+                        currentPassword,
+                        newPassword
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showToast('Password changed successfully!', 'success');
+                    document.getElementById('changePasswordForm').reset();
+                } else {
+                    showToast(data.error || 'Failed to change password', 'error');
+                }
+            } catch (error) {
+                console.error('Error changing password:', error);
+                showToast('Error changing password', 'error');
+            }
         }
         </script>
 </body>
