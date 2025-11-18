@@ -174,7 +174,8 @@ let routesLoaded = {
     admin: false,
     membership: false,
     alumniApplication: false,
-    superadmin: false
+    superadmin: false,
+    upload: false
 };
 
 /**
@@ -399,13 +400,14 @@ async function startServer() {
             console.log(`🚀 Server running on port ${PORT}`);
             console.log(`📝 Environment: ${NODE_ENV}`);
             console.log(`🔒 CORS: ${NODE_ENV === 'development' ? 'Permissive (dev)' : 'Configured'}`);
-            console.log(`\n📊 Routes Status:`);
+             console.log(`\n📊 Routes Status:`);
             console.log(`   Auth:                ${routesLoaded.auth ? '✅' : '❌'}`);
             console.log(`   Content:             ${routesLoaded.content ? '✅' : '❌'}`);
             console.log(`   Admin:               ${routesLoaded.admin ? '✅' : '❌'}`);
             console.log(`   Membership:          ${routesLoaded.membership ? '✅' : '❌'}`);
             console.log(`   Alumni Application:  ${routesLoaded.alumniApplication ? '✅' : '❌'}`);
             console.log(`   Super Admin:         ${routesLoaded.superadmin ? '✅' : '❌'}`);
+            console.log(`   Upload (Cloudinary): ${routesLoaded.upload ? '✅' : '❌'}`);
             console.log(`\n💡 Health Check: http://localhost:${PORT}/health`);
             console.log(`💡 API Docs: http://localhost:${PORT}/api`);
             console.log(`\n📖 Server ready!\n`);
