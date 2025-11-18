@@ -162,7 +162,9 @@ function checkPermission(module, action) {
     
     // Check specific permission
     const permissions = req.user.permissions || {};
-    if (!permissions[module] || !permissions[module][action]) {
+    
+    // Check if module exists and has the action permission set to true
+    if (!permissions[module] || permissions[module][action] !== true) {
       return res.status(403).json({
         success: false,
         error: `Permission denied: You don't have permission to ${action} ${module}.`,

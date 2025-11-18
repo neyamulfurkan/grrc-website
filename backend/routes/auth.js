@@ -165,7 +165,7 @@ router.post('/change-password', authenticateToken, isSuperAdmin, async (req, res
       });
     }
     
-    const { pool } = require('../config/database');
+    const pool = require('../db/pool');
     
     const admin = await pool.query(
       'SELECT password_hash FROM admins WHERE id = $1',

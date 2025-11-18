@@ -241,6 +241,90 @@ CREATE INDEX idx_alumni_batch_year_display_order ON alumni(batch_year DESC, disp
 CREATE INDEX idx_alumni_featured_display_order ON alumni(is_featured DESC, display_order ASC);
 
 -- ====================================
+-- Table: pending_approvals
+-- Purpose: Stores pending actions that require super admin approval
+-- ====================================
+CREATE TABLE pending_approvals (
+    id SERIAL PRIMARY KEY,
+    admin_id INTEGER NOT NULL REFERENCES admins(id) ON DELETE CASCADE,
+    action_type VARCHAR(50) NOT NULL, -- 'create', 'update', 'delete'
+    module VARCHAR(50) NOT NULL, -- 'members', 'events', 'projects', etc.
+    item_data JSONB NOT NULL,
+    status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected')),
+    reviewed_by INTEGER REFERENCES admins(id) ON DELETE SET NULL,
+    reviewed_at TIMESTAMP,
+    review_notes TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_pending_approvals_status ON pending_approvals(status, created_at DESC);
+CREATE INDEX idx_pending_approvals_admin ON pending_approvals(admin_id);
+
+-- ====================================
+-- Table: super_admin_settings
+-- Purpose: Stores super admin configuration settings
+-- ====================================
+CREATE TABLE super_admin_settings (
+    id SERIAL PRIMARY KEY,
+    setting_key VARCHAR(100) UNIQUE NOT NULL,
+    setting_value TEXT,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TRIGGER update_super_admin_settings_updated_at BEFORE UPDATE ON super_admin_settings
+FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- ====================================
+-- Table: admin_audit_log
+-- Purpose: Tracks all admin actions for security and accountability
+-- ====================================
+CREATE TABLE admin_audit_log (
+    id SERIAL PRIMARY KEY,
+    admin_id INTEGER NOT NULL REFERENCES admins(id) ON DELETE CASCADE,
+    action_type VARCHAR(100) NOT NULL,
+    module VARCHAR(50) NOT NULL,
+    item_id INTEGER,
+    action_details JSONB,
+    ip_address VARCHAR(45),
+    user_agent TEXT,
+    status VARCHAR(20) DEFAULT 'success',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_admin_audit_log_admin ON admin_audit_log(admin_id, created_at DESC);
+CREATE INDEX idx_admin_audit_log_module ON admin_audit_log(module, created_at DESC);
+
+-- ====================================
+-- Table: alumni_applications
+-- Purpose: Stores alumni profile applications
+-- ====================================
+CREATE TABLE alumni_applications (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    photo TEXT,
+    batch_year VARCHAR(10) NOT NULL,
+    department VARCHAR(255) NOT NULL,
+    role_in_club VARCHAR(255),
+    achievements TEXT,
+    current_position VARCHAR(255),
+    current_company VARCHAR(255),
+    bio TEXT,
+    email VARCHAR(255),
+    phone VARCHAR(20),
+    linkedin VARCHAR(255),
+    github VARCHAR(255),
+    facebook VARCHAR(255),
+    status VARCHAR(20) NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected')),
+    applied_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    reviewed_date TIMESTAMP,
+    reviewed_by INTEGER REFERENCES admins(id) ON DELETE SET NULL,
+    admin_notes TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_alumni_applications_status ON alumni_applications(status, applied_date DESC);
+
+-- ====================================
 -- Database Initialization Complete
 -- ====================================
 -- Next step: Run seed.sql to populate with initial data
