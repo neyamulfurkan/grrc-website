@@ -2394,37 +2394,45 @@
                 const statusText = document.getElementById('uploadStatus');
                 
                 progressDiv.style.display = 'block';
-                progressBar.style.width = '20%';
+                progressBar.style.width = '30%';
                 statusText.textContent = `Preparing ${imageFile.name}...`;
 
-                // Upload directly to Cloudinary using unsigned preset
-                const formData = new FormData();
-                formData.append('file', imageFile);
-                formData.append('upload_preset', 'grrc_gallery_upload');
-                formData.append('folder', 'grrc-gallery');
+                // Convert image to Base64
+                const base64Image = await imageToBase64(imageFile);
 
-                progressBar.style.width = '40%';
-                statusText.textContent = 'Uploading to Cloudinary...';
+                progressBar.style.width = '50%';
+                statusText.textContent = 'Uploading to Cloudinary via backend...';
 
-                console.log('📤 Uploading directly to Cloudinary...');
-
-                const cloudinaryResponse = await fetch('https://api.cloudinary.com/v1_1/dotluykrf/image/upload', {
-                    method: 'POST',
-                    body: formData
-                }).then(res => res.json());
-
-                if (cloudinaryResponse.error) {
-                    throw new Error(cloudinaryResponse.error.message || 'Cloudinary upload failed');
+                // Get token
+                const token = localStorage.getItem('grrc_auth_token') || sessionStorage.getItem('grrc_auth_token');
+                if (!token) {
+                    throw new Error('No authentication token found');
                 }
 
-                console.log('✅ Cloudinary upload successful:', cloudinaryResponse.secure_url);
+                // Upload via backend
+                const uploadResponse = await fetch(`${window.apiClient.baseURL}/api/upload/image`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ image: base64Image })
+                });
+
+                const uploadData = await uploadResponse.json();
+
+                if (!uploadResponse.ok || !uploadData.success) {
+                    throw new Error(uploadData.error || 'Upload failed');
+                }
+
+                console.log('✅ Cloudinary upload successful:', uploadData.url);
 
                 progressBar.style.width = '70%';
                 statusText.textContent = 'Saving to database...';
 
                 // Save to database with Cloudinary URL
                 const galleryData = {
-                    image: cloudinaryResponse.secure_url,
+                    image: uploadData.url,
                     title: title,
                     category: category,
                     date: date,
@@ -2441,8 +2449,7 @@
                 progressBar.style.width = '100%';
                 statusText.textContent = '✅ Upload complete!';
                 
-                const sizeInMB = (cloudinaryResponse.bytes / 1024 / 1024).toFixed(2);
-                showToast(`Gallery item added successfully! (${sizeInMB} MB)`, 'success');
+                showToast('Gallery item added successfully!', 'success');
                 
                 resetGalleryForm();
                 await loadGallery();
