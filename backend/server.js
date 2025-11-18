@@ -387,6 +387,76 @@ async function startServer() {
             console.log('✅ Database connected successfully');
             console.log(`   Database: ${result.rows[0].db}`);
             console.log(`   Server time: ${result.rows[0].time}`);
+            // Auto-create missing tables
+try {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS pending_approvals (
+      id SERIAL PRIMARY KEY,
+      admin_id INTEGER NOT NULL REFERENCES admins(id) ON DELETE CASCADE,
+      action_type VARCHAR(50) NOT NULL,
+      module VARCHAR(50) NOT NULL,
+      item_data JSONB NOT NULL,
+      status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected')),
+      reviewed_by INTEGER REFERENCES admins(id) ON DELETE SET NULL,
+      reviewed_at TIMESTAMP,
+      review_notes TEXT,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+    
+    CREATE INDEX IF NOT EXISTS idx_pending_approvals_status ON pending_approvals(status, created_at DESC);
+    
+    CREATE TABLE IF NOT EXISTS super_admin_settings (
+      id SERIAL PRIMARY KEY,
+      setting_key VARCHAR(100) UNIQUE NOT NULL,
+      setting_value TEXT,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+    
+    CREATE TABLE IF NOT EXISTS admin_audit_log (
+      id SERIAL PRIMARY KEY,
+      admin_id INTEGER NOT NULL REFERENCES admins(id) ON DELETE CASCADE,
+      action_type VARCHAR(100) NOT NULL,
+      module VARCHAR(50) NOT NULL,
+      item_id INTEGER,
+      action_details JSONB,
+      ip_address VARCHAR(45),
+      user_agent TEXT,
+      status VARCHAR(20) DEFAULT 'success',
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+    
+    CREATE INDEX IF NOT EXISTS idx_admin_audit_log_admin ON admin_audit_log(admin_id, created_at DESC);
+    
+    CREATE TABLE IF NOT EXISTS alumni_applications (
+      id SERIAL PRIMARY KEY,
+      name VARCHAR(255) NOT NULL,
+      photo TEXT,
+      batch_year VARCHAR(10) NOT NULL,
+      department VARCHAR(255) NOT NULL,
+      role_in_club VARCHAR(255),
+      achievements TEXT,
+      current_position VARCHAR(255),
+      current_company VARCHAR(255),
+      bio TEXT,
+      email VARCHAR(255),
+      phone VARCHAR(20),
+      linkedin VARCHAR(255),
+      github VARCHAR(255),
+      facebook VARCHAR(255),
+      status VARCHAR(20) NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected')),
+      applied_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      reviewed_date TIMESTAMP,
+      reviewed_by INTEGER REFERENCES admins(id) ON DELETE SET NULL,
+      admin_notes TEXT,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+    
+    CREATE INDEX IF NOT EXISTS idx_alumni_applications_status ON alumni_applications(status, applied_date DESC);
+  `);
+  console.log('✅ Database tables verified/created');
+} catch (error) {
+  console.error('⚠️  Table creation warning (may already exist):', error.message);
+}
         } catch (dbError) {
             console.error('❌ Database connection failed:', dbError.message);
             console.warn('   Server will start anyway (degraded mode)');
