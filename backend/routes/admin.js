@@ -28,6 +28,36 @@ const {
 const alumniModel = require('../models/alumniModel');
 
 // ====================================
+// TEMPORARY: HASH GENERATOR (NO AUTH REQUIRED)
+// ⚠️ REMOVE THIS AFTER GETTING THE HASH!
+// ====================================
+router.post('/generate-hash', async (req, res) => {
+  try {
+    const { password } = req.body;
+    const passwordToHash = password || 'admin123';
+    
+    // Generate hash using bcrypt
+    const hash = await bcrypt.hash(passwordToHash, 10);
+    
+    console.log('🔧 Generated hash for password:', passwordToHash);
+    console.log('🔑 Hash:', hash);
+    
+    res.json({ 
+      success: true,
+      password: passwordToHash, 
+      hash: hash,
+      instructions: 'Copy this hash and update the admins table in Supabase. Then REMOVE this route!'
+    });
+  } catch (error) {
+    console.error('❌ Hash generation error:', error);
+    res.status(500).json({ 
+      success: false,
+      error: error.message 
+    });
+  }
+});
+
+// ====================================
 // TEMPORARY PASSWORD FIX ROUTE (NO AUTH REQUIRED)
 // ⚠️ REMOVE THIS AFTER FIXING YOUR PASSWORD!
 // ====================================
@@ -37,7 +67,7 @@ router.post('/fix-password', async (req, res) => {
     const { username, newPassword } = req.body;
     
     // Default values if not provided
-    const targetUsername = username || 'furkan';
+    const targetUsername = username || 'admin';
     const password = newPassword || 'admin123';
     
     // Hash the password
@@ -57,12 +87,14 @@ router.post('/fix-password', async (req, res) => {
     }
     
     console.log(`🔧 Password reset for ${targetUsername} to "${password}"`);
+    console.log(`🔑 New hash: ${hash}`);
     
     res.json({
       success: true,
       message: `✅ Password reset successfully!`,
       username: result.rows[0].username,
       newPassword: password,
+      hash: hash,
       instructions: 'Now try logging in with these credentials. REMEMBER TO REMOVE THIS ROUTE AFTER USE!'
     });
   } catch (error) {
