@@ -1211,7 +1211,7 @@ const photoFile = document.getElementById('photoFile').files[0];
 if (photoFile) {
     try {
         const photoBase64 = await imageToBase64(photoFile);
-        const uploadRes = await fetch(`${window.apiClient.baseURL}/api/upload/image`, {
+        const uploadRes = await fetch(`${window.apiClient.baseURL}/api/upload/public-image`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -1242,7 +1242,7 @@ if (!paymentFile) {
 
 try {
     const paymentBase64 = await imageToBase64(paymentFile);
-    const uploadRes = await fetch(`${window.apiClient.baseURL}/api/upload/image`, {
+    const uploadRes = await fetch(`${window.apiClient.baseURL}/api/upload/public-image`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
