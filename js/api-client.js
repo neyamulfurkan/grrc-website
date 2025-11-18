@@ -584,6 +584,7 @@ function formatErrorMessage(error) {
 }
 
 window.apiClient = {
+    baseURL: API_BASE_URL,
     setAuthToken,
     getAuthToken,
     clearAuthToken,
