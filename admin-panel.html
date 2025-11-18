@@ -2474,23 +2474,23 @@
         }
 
         async function loadGallery(searchTerm = '') {
-    try {
-        // ✅ CRITICAL FIX: Clear ALL caches before loading
-        localStorage.removeItem('cache_gallery');
-        localStorage.removeItem(STORAGE_KEYS.GALLERY);
-        localStorage.removeItem('gallery');
-        
-        const result = await window.apiClient.getGallery();
-        let gallery = [];
+            try {
+                console.log('📸 Loading gallery...');
+                
+                localStorage.removeItem('cache_gallery');
+                localStorage.removeItem(STORAGE_KEYS.GALLERY);
+                localStorage.removeItem('gallery');
+                
+                const result = await window.apiClient.getGallery();
+                let gallery = [];
 
-        if (result.success && Array.isArray(result.data)) {
-            gallery = result.data;
-            // ✅ Force update cache with fresh data
-            localStorage.setItem('gallery', JSON.stringify(gallery));
-        } else {
-            console.warn('API returned invalid data, using localStorage fallback:', result);
-            gallery = JSON.parse(localStorage.getItem('gallery')) || [];
-        }
+                if (result.success && Array.isArray(result.data)) {
+                    gallery = result.data;
+                    console.log('✅ Gallery loaded:', gallery.length, 'items');
+                } else {
+                    console.warn('❌ API failed, using fallback');
+                    gallery = JSON.parse(localStorage.getItem('gallery') || '[]');
+                }
                 
                 if (searchTerm) {
                     gallery = gallery.filter(g => 
@@ -2500,6 +2500,11 @@
                 }
 
                 const tbody = document.getElementById('galleryTableBody');
+                
+                if (!tbody) {
+                    console.error('❌ Table not found!');
+                    return;
+                }
                 
                 if (gallery.length === 0) {
                     tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: var(--space-xl);">No gallery items found</td></tr>';
@@ -2517,8 +2522,14 @@
                         </td>
                     </tr>
                 `).join('');
+                
+                console.log('✅ Gallery rendered!');
             } catch (error) {
-                console.error('Error loading gallery:', error);
+                console.error('❌ Gallery error:', error);
+                const tbody = document.getElementById('galleryTableBody');
+                if (tbody) {
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: red;">Error: ' + error.message + '</td></tr>';
+                }
             }
         }
 
