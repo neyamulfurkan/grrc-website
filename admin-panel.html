@@ -2394,57 +2394,37 @@
                 const statusText = document.getElementById('uploadStatus');
                 
                 progressDiv.style.display = 'block';
-                progressBar.style.width = '30%';
+                progressBar.style.width = '20%';
                 statusText.textContent = `Preparing ${imageFile.name}...`;
 
-                // Convert image to Base64
-                const base64Image = await imageToBase64(imageFile);
+                // Upload directly to Cloudinary using unsigned preset
+                const formData = new FormData();
+                formData.append('file', imageFile);
+                formData.append('upload_preset', 'grrc_gallery_upload');
+                formData.append('folder', 'grrc-gallery');
 
-                progressBar.style.width = '50%';
-                statusText.textContent = 'Uploading to Cloudinary via backend...';
+                progressBar.style.width = '40%';
+                statusText.textContent = 'Uploading to Cloudinary...';
 
-                // Get token
-                const token = localStorage.getItem('grrc_auth_token') || sessionStorage.getItem('grrc_auth_token');
-                if (!token) {
-                    throw new Error('No authentication token found');
-                }
+                console.log('📤 Uploading directly to Cloudinary...');
 
-                // Upload to Cloudinary via backend with better error handling
-                const uploadResponse = await fetch(`${window.apiClient.baseURL}/api/upload/image`, {
+                const cloudinaryResponse = await fetch('https://api.cloudinary.com/v1_1/dotluykrf/image/upload', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
-                    body: JSON.stringify({ image: base64Image })
-                }).then(async res => {
-                    const text = await res.text();
-                    console.log('Raw response:', text);
-                    
-                    // Check if response is HTML (error page)
-                    if (text.startsWith('<!DOCTYPE') || text.startsWith('<html')) {
-                        throw new Error('Server returned HTML instead of JSON. Upload endpoint may not exist.');
-                    }
-                    
-                    try {
-                        return JSON.parse(text);
-                    } catch (e) {
-                        throw new Error('Invalid JSON response from server: ' + text.substring(0, 100));
-                    }
-                });
+                    body: formData
+                }).then(res => res.json());
 
-                if (!uploadResponse.success) {
-                    throw new Error(uploadResponse.error || 'Upload failed');
+                if (cloudinaryResponse.error) {
+                    throw new Error(cloudinaryResponse.error.message || 'Cloudinary upload failed');
                 }
 
-                progressBar.style.width = '80%';
-                statusText.textContent = 'Saving to database...';
+                console.log('✅ Cloudinary upload successful:', cloudinaryResponse.secure_url);
 
-                console.log('✅ Cloudinary upload successful:', uploadResponse.url);
+                progressBar.style.width = '70%';
+                statusText.textContent = 'Saving to database...';
 
                 // Save to database with Cloudinary URL
                 const galleryData = {
-                    image: uploadResponse.url,
+                    image: cloudinaryResponse.secure_url,
                     title: title,
                     category: category,
                     date: date,
@@ -2461,7 +2441,7 @@
                 progressBar.style.width = '100%';
                 statusText.textContent = '✅ Upload complete!';
                 
-                const sizeInMB = (uploadResponse.size / 1024 / 1024).toFixed(2);
+                const sizeInMB = (cloudinaryResponse.bytes / 1024 / 1024).toFixed(2);
                 showToast(`Gallery item added successfully! (${sizeInMB} MB)`, 'success');
                 
                 resetGalleryForm();
