@@ -19,13 +19,24 @@ async function uploadToCloudinary(file) {
     const formData = new FormData();
     formData.append('file', file);
     formData.append('upload_preset', CLOUDINARY_CONFIG.uploadPreset);
-    formData.append('folder', CLOUDINARY_CONFIG.folder);
     formData.append('tags', 'gallery,grrc');
+    formData.append('folder', CLOUDINARY_CONFIG.folder);
+
+    console.log('🔧 Cloudinary config:', {
+      cloudName: CLOUDINARY_CONFIG.cloudName,
+      uploadPreset: CLOUDINARY_CONFIG.uploadPreset,
+      folder: CLOUDINARY_CONFIG.folder
+    });
 
     const response = await fetch(
       `https://api.cloudinary.com/v1_1/${CLOUDINARY_CONFIG.cloudName}/image/upload`,
-      { method: 'POST', body: formData }
+      { 
+        method: 'POST', 
+        body: formData
+      }
     );
+
+    console.log('📡 Response status:', response.status);
 
     if (!response.ok) {
       const error = await response.json();
