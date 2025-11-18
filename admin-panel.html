@@ -2403,15 +2403,35 @@
                 progressBar.style.width = '50%';
                 statusText.textContent = 'Uploading to Cloudinary via backend...';
 
-                // Upload to Cloudinary via backend
+                // Get token
+                const token = localStorage.getItem('grrc_auth_token') || sessionStorage.getItem('grrc_auth_token');
+                if (!token) {
+                    throw new Error('No authentication token found');
+                }
+
+                // Upload to Cloudinary via backend with better error handling
                 const uploadResponse = await fetch(`${window.apiClient.baseURL}/api/upload/image`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${sessionStorage.getItem('grrc_auth_token')}`
+                        'Authorization': `Bearer ${token}`
                     },
                     body: JSON.stringify({ image: base64Image })
-                }).then(res => res.json());
+                }).then(async res => {
+                    const text = await res.text();
+                    console.log('Raw response:', text);
+                    
+                    // Check if response is HTML (error page)
+                    if (text.startsWith('<!DOCTYPE') || text.startsWith('<html')) {
+                        throw new Error('Server returned HTML instead of JSON. Upload endpoint may not exist.');
+                    }
+                    
+                    try {
+                        return JSON.parse(text);
+                    } catch (e) {
+                        throw new Error('Invalid JSON response from server: ' + text.substring(0, 100));
+                    }
+                });
 
                 if (!uploadResponse.success) {
                     throw new Error(uploadResponse.error || 'Upload failed');
