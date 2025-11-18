@@ -1205,35 +1205,80 @@
                     });
                 };
                 
-                // Get photo
-                const photoFile = document.getElementById('photoFile').files[0];
-                let photoBase64 = null;
-                if (photoFile) {
-                    photoBase64 = await imageToBase64(photoFile);
-                }
+                // Upload photo to Cloudinary FIRST (if provided)
+let photoUrl = null;
+const photoFile = document.getElementById('photoFile').files[0];
+if (photoFile) {
+    try {
+        const photoBase64 = await imageToBase64(photoFile);
+        const uploadRes = await fetch(`${window.apiClient.baseURL}/api/upload/image`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ image: photoBase64 })
+        });
+        const uploadData = await uploadRes.json();
+        if (uploadData.success) {
+            photoUrl = uploadData.url;
+            console.log('✅ Photo uploaded to Cloudinary:', photoUrl);
+        } else {
+            throw new Error('Photo upload failed');
+        }
+    } catch (error) {
+        console.error('❌ Photo upload error:', error);
+        showError('Failed to upload photo. Please try again.');
+        return;
+    }
+}
 
-                // Get payment screenshot
-                const paymentFile = document.getElementById('paymentScreenshot').files[0];
-                const paymentBase64 = await imageToBase64(paymentFile);
-                const transactionId = document.getElementById('transactionId').value.trim();
+// Upload payment screenshot to Cloudinary FIRST
+let paymentUrl = null;
+const paymentFile = document.getElementById('paymentScreenshot').files[0];
+if (!paymentFile) {
+    showError('Payment screenshot is required');
+    return;
+}
+
+try {
+    const paymentBase64 = await imageToBase64(paymentFile);
+    const uploadRes = await fetch(`${window.apiClient.baseURL}/api/upload/image`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ image: paymentBase64 })
+    });
+    const uploadData = await uploadRes.json();
+    if (uploadData.success) {
+        paymentUrl = uploadData.url;
+        console.log('✅ Payment screenshot uploaded to Cloudinary:', paymentUrl);
+    } else {
+        throw new Error('Payment screenshot upload failed');
+    }
+} catch (error) {
+    console.error('❌ Payment screenshot upload error:', error);
+    showError('Failed to upload payment screenshot. Please try again.');
+    return;
+}
 
                 // Prepare data with correct variable names
                 const applicationData = {
-                    full_name: fullName,
-                    email: email,
-                    phone: phone,
-                    student_id: studentId || null,
-                    department: department,
-                    year: year,
-                    bio: bio,
-                    skills: skills,
-                    previous_experience: previousExperience || null,
-                    github_profile: github || null,
-                    linkedin_profile: linkedin || null,
-                    photo: photoBase64,
-                    payment_screenshot: paymentBase64,
-                    transaction_id: transactionId || null
-                };
+    full_name: fullName,
+    email: email,
+    phone: phone,
+    student_id: studentId || null,
+    department: department,
+    year: year,
+    bio: bio,
+    skills: skills,
+    previous_experience: previousExperience || null,
+    github_profile: github || null,
+    linkedin_profile: linkedin || null,
+    photo: photoUrl,  // ✅ Cloudinary URL, not Base64
+    payment_screenshot: paymentUrl,  // ✅ Cloudinary URL, not Base64
+    transaction_id: transactionId || null
+};
                 
                 // Show loading
                 setLoadingState(true);
