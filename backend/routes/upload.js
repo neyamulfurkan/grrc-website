@@ -12,7 +12,9 @@ cloudinary.config({
 
 console.log('☁️ Cloudinary configured:', {
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY ? '✅ Set' : '❌ Missing'
+  api_key: process.env.CLOUDINARY_API_KEY ? '✅ Set' : '❌ Missing',
+  api_secret: process.env.CLOUDINARY_API_SECRET ? `✅ Set (${process.env.CLOUDINARY_API_SECRET.substring(0, 5)}...${process.env.CLOUDINARY_API_SECRET.slice(-3)})` : '❌ Missing',
+  all_env_keys: Object.keys(process.env).filter(k => k.includes('CLOUDINARY'))
 });
 
 // Upload image to Cloudinary
