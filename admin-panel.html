@@ -2349,6 +2349,16 @@
             }
         }
 
+        // Helper function to convert image to Base64
+        function imageToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = (error) => reject(error);
+                reader.readAsDataURL(file);
+            });
+        }
+
         async function saveGalleryItem() {
             try {
                 if (!isAuthenticated()) {
@@ -2394,10 +2404,14 @@
                 statusText.textContent = 'Uploading to Cloudinary via backend...';
 
                 // Upload to Cloudinary via backend
-                const uploadResponse = await window.apiClient.fetch('/api/upload/image', {
+                const uploadResponse = await fetch(`${window.apiClient.baseURL}/api/upload/image`, {
                     method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${sessionStorage.getItem('grrc_auth_token')}`
+                    },
                     body: JSON.stringify({ image: base64Image })
-                });
+                }).then(res => res.json());
 
                 if (!uploadResponse.success) {
                     throw new Error(uploadResponse.error || 'Upload failed');
