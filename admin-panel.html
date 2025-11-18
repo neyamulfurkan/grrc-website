@@ -2376,7 +2376,7 @@
                 // Disable submit button
                 const submitBtn = document.getElementById('gallerySubmitBtn');
                 submitBtn.disabled = true;
-                submitBtn.textContent = '⏳ Uploading...';
+                submitBtn.textContent = '⏳ Processing...';
 
                 // Show upload progress
                 const progressDiv = document.getElementById('uploadProgress');
@@ -2385,24 +2385,32 @@
                 
                 progressDiv.style.display = 'block';
                 progressBar.style.width = '30%';
-                statusText.textContent = `Uploading ${imageFile.name} to Cloudinary...`;
+                statusText.textContent = `Preparing ${imageFile.name}...`;
 
-                // Upload to Cloudinary
-                console.log('📤 Uploading to Cloudinary:', imageFile.name);
-                const cloudinaryResult = await uploadToCloudinary(imageFile);
+                // Convert image to Base64
+                const base64Image = await imageToBase64(imageFile);
 
-                if (!cloudinaryResult.success) {
-                    throw new Error(cloudinaryResult.error || 'Cloudinary upload failed');
+                progressBar.style.width = '50%';
+                statusText.textContent = 'Uploading to Cloudinary via backend...';
+
+                // Upload to Cloudinary via backend
+                const uploadResponse = await window.apiClient.fetch('/api/upload/image', {
+                    method: 'POST',
+                    body: JSON.stringify({ image: base64Image })
+                });
+
+                if (!uploadResponse.success) {
+                    throw new Error(uploadResponse.error || 'Upload failed');
                 }
 
-                progressBar.style.width = '70%';
+                progressBar.style.width = '80%';
                 statusText.textContent = 'Saving to database...';
 
-                console.log('✅ Cloudinary upload successful:', cloudinaryResult.url);
+                console.log('✅ Cloudinary upload successful:', uploadResponse.url);
 
                 // Save to database with Cloudinary URL
                 const galleryData = {
-                    image: cloudinaryResult.url,
+                    image: uploadResponse.url,
                     title: title,
                     category: category,
                     date: date,
@@ -2419,7 +2427,8 @@
                 progressBar.style.width = '100%';
                 statusText.textContent = '✅ Upload complete!';
                 
-                showToast(`Gallery item added successfully! (${(cloudinaryResult.size / 1024 / 1024).toFixed(2)} MB)`, 'success');
+                const sizeInMB = (uploadResponse.size / 1024 / 1024).toFixed(2);
+                showToast(`Gallery item added successfully! (${sizeInMB} MB)`, 'success');
                 
                 resetGalleryForm();
                 await loadGallery();
