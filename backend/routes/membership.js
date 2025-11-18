@@ -124,18 +124,23 @@ router.post(
       }),
     
     body('photo')
-      .optional({ nullable: true, checkFalsy: true })
-      .custom((value) => {
-        if (!value) return true;
-        // Allow data URLs (base64) or regular URLs
-        if (value.startsWith('data:image/')) return true;
-        try {
-          new URL(value);
-          return true;
-        } catch (e) {
-          throw new Error('Photo must be a valid URL or base64 image');
-        }
-      }),
+  .optional({ nullable: true, checkFalsy: true })
+  .custom((value) => {
+    if (!value) return true;
+    // ✅ ONLY accept Cloudinary URLs
+    if (value.startsWith('https://res.cloudinary.com/')) return true;
+    throw new Error('Photo must be a Cloudinary URL');
+  }),
+
+body('payment_screenshot')
+  .custom((value) => {
+    if (!value || value === '') {
+      throw new Error('Payment screenshot is required');
+    }
+    // ✅ ONLY accept Cloudinary URLs
+    if (value.startsWith('https://res.cloudinary.com/')) return true;
+    throw new Error('Payment screenshot must be a Cloudinary URL');
+  }),
     
     body('payment_screenshot')
       .custom((value) => {
