@@ -19,9 +19,7 @@ async function uploadToCloudinary(file) {
     const formData = new FormData();
     formData.append('file', file);
     formData.append('upload_preset', CLOUDINARY_CONFIG.uploadPreset);
-    formData.append('tags', 'gallery,grrc');
-    // folder is set in the upload preset itself for unsigned uploads
-
+    // Note: folder and tags are configured in the preset, not sent in request for unsigned uploads
     console.log('🔧 Cloudinary config:', {
       cloudName: CLOUDINARY_CONFIG.cloudName,
       uploadPreset: CLOUDINARY_CONFIG.uploadPreset,
