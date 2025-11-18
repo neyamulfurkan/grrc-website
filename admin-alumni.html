@@ -364,15 +364,12 @@
         async function initializeAlumni() {
     console.log('🔄 Initializing alumni management iframe...');
     
-    // ✅ FIX: Get admin from parent OR token
     let admin = null;
     
-    // Try getting from parent window first
     if (window.parent && window.parent.getCurrentAdmin) {
         admin = window.parent.getCurrentAdmin();
     }
     
-    // If not found, decode token directly
     if (!admin) {
         const token = localStorage.getItem('grrc_auth_token') || sessionStorage.getItem('grrc_auth_token');
         if (token) {
@@ -391,42 +388,42 @@
         }
     }
     
-    console.log('🔍 Permission check:', {
-        hasAdmin: !!admin,
-        isSuperAdmin: admin?.is_super_admin,
-        permissions: admin?.permissions
-    });
-    
-    // ✅ FIX: Super admins bypass ALL permission checks
-    if (admin && (admin.is_super_admin === true || admin.is_super_admin === 1 || admin.role === 'Super Admin')) {
-        console.log('✅ Super admin detected - FULL ACCESS GRANTED');
-        // Skip permission check entirely for super admins
-    } else if (admin) {
-        // Regular admin - check permissions
-        const permissions = admin.permissions || {};
-        if (!permissions.alumni || !permissions.alumni.view) {
-            document.body.innerHTML = `
-                <div style="display: flex; align-items: center; justify-content: center; height: 100vh; text-align: center; padding: 2rem;">
-                    <div>
-                        <h2 style="color: var(--error-color); margin-bottom: 1rem;">Access Denied</h2>
-                        <p style="color: var(--text-secondary);">You don't have permission to view alumni management.</p>
-                    </div>
-                </div>
-            `;
-            return;
-        }
-    } else {
-        // No admin found at all
+    if (!admin) {
         document.body.innerHTML = `
             <div style="display: flex; align-items: center; justify-content: center; height: 100vh; text-align: center; padding: 2rem;">
                 <div>
-                    <h2 style="color: var(--error-color); margin-bottom: 1rem;">Authentication Required</h2>
+                    <h2 style="color: var(--error-color); margin-bottom: 1rem;">🔐 Authentication Required</h2>
                     <p style="color: var(--text-secondary);">Please log in to access this page.</p>
                 </div>
             </div>
         `;
         return;
     }
+    
+    const isSuperAdmin = admin.is_super_admin === true || admin.is_super_admin === 1 || admin.role === 'Super Admin';
+    const permissions = admin.permissions || {};
+    const hasViewPermission = permissions.alumni?.view === true;
+    
+    console.log('🔍 Access check:', {
+        username: admin.username,
+        isSuperAdmin: isSuperAdmin,
+        hasViewPermission: hasViewPermission
+    });
+    
+    if (!isSuperAdmin && !hasViewPermission) {
+        document.body.innerHTML = `
+            <div style="display: flex; align-items: center; justify-content: center; height: 100vh; text-align: center; padding: 2rem;">
+                <div>
+                    <h2 style="color: var(--error-color); margin-bottom: 1rem;">🚫 Access Denied</h2>
+                    <p style="color: var(--text-secondary);">You don't have permission to view alumni management.</p>
+                    <p style="color: var(--text-secondary); font-size: 0.875rem; margin-top: 1rem;">Contact your Super Admin to grant you access.</p>
+                </div>
+            </div>
+        `;
+        return;
+    }
+    
+    console.log('✅ Access granted');
             // Force use parent's API client and token
             if (window.parent && window.parent.apiClient) {
                 window.apiClient = window.parent.apiClient;

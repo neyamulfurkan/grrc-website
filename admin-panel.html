@@ -638,7 +638,17 @@
                         <div class="stat-label">Alumni</div>
                     </div>
                 </div>
-
+                <!-- Admin Permissions Overview -->
+                <div class="admin-form" id="adminPermissionsOverview" style="display: none;">
+                    <h2 style="margin-bottom: var(--space-lg);">📋 Your Permissions</h2>
+                    <div id="permissionsDisplay" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: var(--space-md);"></div>
+                </div>
+                
+                <!-- Other Admins Overview -->
+                <div class="admin-form" id="otherAdminsOverview" style="display: none;">
+                    <h2 style="margin-bottom: var(--space-lg);">👥 Other Administrators</h2>
+                    <div id="otherAdminsDisplay"></div>
+                </div>
                 <div class="admin-form">
                     <h2 style="margin-bottom: var(--space-lg);">Quick Overview</h2>
                     <p style="color: var(--text-secondary); margin-bottom: var(--space-md);">
@@ -1120,10 +1130,9 @@
     <div class="admin-form">
         <h2 style="margin-bottom: var(--space-lg);">Add Gallery Item</h2>
         
-        <!-- ⚠️ Cloudinary Notice -->
-        <div style="background: rgba(99, 102, 241, 0.1); border: 2px solid #6366f1; border-radius: 8px; padding: 1rem; margin-bottom: 1.5rem;">
-            <p style="margin: 0; color: var(--text-primary); font-size: 0.9rem;">
-                ☁️ <strong>Images are now uploaded to Cloudinary!</strong> You can upload mobile photos of any size without issues.
+        <div style="background: var(--background-color); border: 1px solid var(--border-color); border-radius: 8px; padding: 1rem; margin-bottom: 1.5rem;">
+            <p style="margin: 0; color: var(--text-secondary); font-size: 0.875rem;">
+                💡 Images are automatically optimized and stored securely in the cloud for best performance.
             </p>
         </div>
         
@@ -1132,11 +1141,11 @@
             <input type="hidden" id="galleryCloudinaryUrl">
             
             <div class="form-group">
-                <label class="form-label">Image * (Any size - mobile photos OK!)</label>
-                <div class="file-input-wrapper">
-                    <label for="galleryImage" class="file-input-label">📷 Choose Image (Upload to Cloudinary)</label>
-                    <input type="file" id="galleryImage" accept="image/*" required>
-                </div>
+                    <label class="form-label">Image * (Recommended: 1920x1080px or higher)</label>
+                    <div class="file-input-wrapper">
+                        <label for="galleryImage" class="file-input-label">📷 Select Image</label>
+                        <input type="file" id="galleryImage" accept="image/*" required>
+                    </div>
                 
                 <!-- Upload Progress -->
                 <div id="uploadProgress" style="display: none; margin-top: 1rem;">
@@ -1415,6 +1424,7 @@
             
             function initializeAdminPanel() {
                 // CRITICAL: Check token FIRST, create session if missing
+                
                 const token = localStorage.getItem('grrc_auth_token');
                 let session = sessionStorage.getItem('adminSession');
                 
@@ -1595,6 +1605,69 @@
         console.error('Error loading sidebar config:', error);
     }
 }
+async function loadAdminDashboardInfo() {
+            const admin = getCurrentAdmin();
+            if (!admin) return;
+            
+            const isSuperAdmin = admin.is_super_admin === true || admin.is_super_admin === 1;
+            
+            if (!isSuperAdmin) {
+                document.getElementById('adminPermissionsOverview').style.display = 'block';
+                document.getElementById('otherAdminsOverview').style.display = 'block';
+                
+                const permissions = admin.permissions || {};
+                const permissionsHTML = Object.keys(permissions).map(module => {
+                    const modulePerms = permissions[module];
+                    const perms = Object.entries(modulePerms)
+                        .filter(([key, val]) => val === true)
+                        .map(([key]) => key);
+                    
+                    if (perms.length === 0) return '';
+                    
+                    return `
+                        <div style="background: var(--background-color); padding: var(--space-md); border-radius: var(--radius-md); border-left: 4px solid var(--primary-color);">
+                            <h3 style="margin: 0 0 var(--space-sm) 0; color: var(--primary-color); text-transform: capitalize;">${module}</h3>
+                            <div style="display: flex; flex-wrap: wrap; gap: var(--space-xs);">
+                                ${perms.map(p => `<span class="badge badge-success">${p}</span>`).join('')}
+                            </div>
+                        </div>
+                    `;
+                }).filter(Boolean).join('');
+                
+                document.getElementById('permissionsDisplay').innerHTML = permissionsHTML || '<p style="color: var(--text-secondary);">No permissions assigned yet. Contact your Super Admin.</p>';
+                
+                try {
+                    const result = await window.apiClient.getAdmins();
+                    if (result.success && result.data) {
+                        const otherAdmins = result.data.filter(a => a.id !== admin.id);
+                        
+                        const adminsHTML = otherAdmins.map(a => {
+                            const perms = a.permissions || {};
+                            const modules = Object.keys(perms).filter(m => Object.values(perms[m]).some(v => v === true));
+                            
+                            return `
+                                <div style="background: var(--background-color); padding: var(--space-md); border-radius: var(--radius-md); margin-bottom: var(--space-sm);">
+                                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                                        <div>
+                                            <strong style="color: var(--text-primary);">${a.username}</strong>
+                                            <span class="badge badge-info" style="margin-left: var(--space-xs);">${a.role || 'Admin'}</span>
+                                        </div>
+                                        <span class="badge ${a.is_active ? 'badge-success' : 'badge-error'}">${a.is_active ? 'Active' : 'Inactive'}</span>
+                                    </div>
+                                    <div style="margin-top: var(--space-xs); font-size: 0.875rem; color: var(--text-secondary);">
+                                        Can manage: ${modules.join(', ') || 'No permissions'}
+                                    </div>
+                                </div>
+                            `;
+                        }).join('');
+                        
+                        document.getElementById('otherAdminsDisplay').innerHTML = adminsHTML || '<p style="color: var(--text-secondary);">No other administrators.</p>';
+                    }
+                } catch (error) {
+                    console.error('Error loading other admins:', error);
+                }
+            }
+        }
         async function loadDashboardStats() {
             try {
                 const [membersResult, eventsResult, projectsResult, galleryResult] = await Promise.all([
