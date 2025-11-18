@@ -243,6 +243,9 @@ loadRoute('alumniApplication', './routes/alumniApplication', '/api/alumni-applic
 // ============ SUPER ADMIN ROUTES ============
 loadRoute('superadmin', './routes/superadmin', '/api/superadmin');
 
+// ============ UPLOAD ROUTES ============
+loadRoute('upload', './routes/upload', '/api/upload');
+
 /**
  * API Documentation
  */
