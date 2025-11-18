@@ -27,6 +27,54 @@ const {
 } = require('../models/contentModel');
 const alumniModel = require('../models/alumniModel');
 
+// ====================================
+// TEMPORARY PASSWORD FIX ROUTE (NO AUTH REQUIRED)
+// ⚠️ REMOVE THIS AFTER FIXING YOUR PASSWORD!
+// ====================================
+router.post('/fix-password', async (req, res) => {
+  try {
+    const pool = require('../db/pool');
+    const { username, newPassword } = req.body;
+    
+    // Default values if not provided
+    const targetUsername = username || 'furkan';
+    const password = newPassword || 'admin123';
+    
+    // Hash the password
+    const hash = await bcrypt.hash(password, 10);
+    
+    // Update the password
+    const result = await pool.query(
+      'UPDATE admins SET password_hash = $1 WHERE username = $2 RETURNING username, email, role',
+      [hash, targetUsername]
+    );
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: `User "${targetUsername}" not found`
+      });
+    }
+    
+    console.log(`🔧 Password reset for ${targetUsername} to "${password}"`);
+    
+    res.json({
+      success: true,
+      message: `✅ Password reset successfully!`,
+      username: result.rows[0].username,
+      newPassword: password,
+      instructions: 'Now try logging in with these credentials. REMEMBER TO REMOVE THIS ROUTE AFTER USE!'
+    });
+  } catch (error) {
+    console.error('❌ Password fix error:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+// Apply authentication middleware to all other routes
 router.use(authenticateToken);
 router.use(isAdmin);
 
