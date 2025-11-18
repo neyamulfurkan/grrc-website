@@ -62,5 +62,56 @@ router.post('/image', authenticateToken, async (req, res) => {
     });
   }
 });
+// ✅ Public upload for membership/alumni forms (no auth required)
+router.post('/public-image', async (req, res) => {
+  try {
+    const { image } = req.body;
+    
+    if (!image) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'No image provided' 
+      });
+    }
+
+    if (!image.startsWith('data:image/')) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid image format'
+      });
+    }
+
+    console.log('📤 Uploading public image to Cloudinary...');
+
+    const result = await cloudinary.uploader.upload(image, {
+      folder: 'grrc-applications',
+      resource_type: 'auto',
+      transformation: [
+        { width: 1920, crop: 'limit' },
+        { quality: 'auto:good' },
+        { fetch_format: 'auto' }
+      ]
+    });
+
+    console.log('✅ Public upload successful:', result.secure_url);
+
+    res.json({
+      success: true,
+      url: result.secure_url,
+      publicId: result.public_id,
+      width: result.width,
+      height: result.height,
+      size: result.bytes,
+      format: result.format
+    });
+
+  } catch (error) {
+    console.error('❌ Public upload error:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
 
 module.exports = router;
