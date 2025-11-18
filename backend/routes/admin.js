@@ -415,13 +415,42 @@ router.delete('/projects/:id', checkPermission('projects', 'delete'), async (req
 
 router.post('/gallery', checkPermission('gallery', 'upload'), async (req, res) => {
   try {
-    const { image, title, category, date } = req.body;
+    const { image, title, category, date, description, photographer } = req.body;
+    
+    // Validate required fields
     if (!image || !title || !category || !date) {
       return res.status(400).json({
         success: false,
-        error: 'Required fields: image, title, category, date',
+        error: 'Required fields: image (URL or Base64), title, category, date',
       });
     }
+    
+    // Check if image is a Cloudinary URL or Base64
+    let imageUrl = image;
+    if (image.startsWith('data:image')) {
+      // Legacy Base64 support (discouraged)
+      console.warn('⚠️ Base64 image received - consider uploading to Cloudinary first');
+      imageUrl = image;
+    } else if (image.startsWith('http://') || image.startsWith('https://')) {
+      // Cloudinary URL - perfect!
+      console.log('✅ Cloudinary URL received');
+      imageUrl = image;
+    } else {
+      return res.status(400).json({
+        success: false,
+        error: 'Image must be a valid URL or Base64 string',
+      });
+    }
+    
+    // Create gallery item data
+    const galleryData = {
+      image: imageUrl,
+      title,
+      category,
+      date,
+      description: description || null,
+      photographer: photographer || null
+    };
     
     // Check if approval is required
     const needsApproval = await checkApprovalRequired('gallery', 'create');
@@ -431,7 +460,7 @@ router.post('/gallery', checkPermission('gallery', 'upload'), async (req, res) =
         req.user.id,
         'create',
         'gallery',
-        req.body
+        galleryData
       );
       
       if (approvalResult.success) {
@@ -443,7 +472,7 @@ router.post('/gallery', checkPermission('gallery', 'upload'), async (req, res) =
       }
     }
 
-    const result = await createGalleryItem(req.body);
+    const result = await createGalleryItem(galleryData);
     
     if (!result.success) {
       return res.status(400).json(result);
@@ -452,12 +481,7 @@ router.post('/gallery', checkPermission('gallery', 'upload'), async (req, res) =
     console.log(`➕ Gallery item created: ${title} by ${req.user.username}`);
     res.status(201).json(result);
   } catch (error) {
-    console.error('❌ Error in POST /gallery:', {
-      error: error.message,
-      stack: error.stack,
-      body: req.body,
-      params: req.params
-    });
+    console.error('❌ Error in POST /gallery:', error);
     res.status(500).json({
       success: false,
       error: 'Failed to create gallery item',

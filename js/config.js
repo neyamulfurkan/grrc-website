@@ -1,3 +1,62 @@
+// ====================================
+// CLOUDINARY UPLOAD HELPER
+// ====================================
+const CLOUDINARY_CONFIG = {
+  cloudName: 'dotluykrf',
+  uploadPreset: 'grrc_gallery_upload',
+  folder: 'grrc-gallery'
+};
+
+async function uploadToCloudinary(file) {
+  try {
+    if (!file || !file.type.startsWith('image/')) {
+      throw new Error('Invalid file type. Please select an image.');
+    }
+
+    console.log(`📤 Uploading to Cloudinary: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`);
+
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('upload_preset', CLOUDINARY_CONFIG.uploadPreset);
+    formData.append('folder', CLOUDINARY_CONFIG.folder);
+    formData.append('tags', 'gallery,grrc');
+
+    const response = await fetch(
+      `https://api.cloudinary.com/v1_1/${CLOUDINARY_CONFIG.cloudName}/image/upload`,
+      { method: 'POST', body: formData }
+    );
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error?.message || 'Upload failed');
+    }
+
+    const data = await response.json();
+    
+    console.log(`✅ Cloudinary upload successful: ${data.secure_url}`);
+    
+    return {
+      success: true,
+      url: data.secure_url,
+      publicId: data.public_id,
+      width: data.width,
+      height: data.height,
+      size: data.bytes,
+      format: data.format
+    };
+  } catch (error) {
+    console.error('❌ Cloudinary upload failed:', error);
+    return { 
+      success: false, 
+      error: error.message 
+    };
+  }
+}
+
+// ====================================
+// END CLOUDINARY HELPER
+// ====================================
+
 // Global flag to prevent duplicate page initialization
 let isPageLoading = false;
 
@@ -497,10 +556,28 @@ async function loadFromCache(key) {
 
 async function saveToCache(key, data) {
   try {
+    // Skip caching for gallery to avoid quota issues with Base64 images
+    if (key === 'gallery' || key.includes('gallery')) {
+      console.log('⏭️ Skipping gallery cache (using Cloudinary URLs instead)');
+      return true;
+    }
+    
     localStorage.setItem(`cache_${key}`, JSON.stringify(data));
     return true;
   } catch (error) {
-    console.warn(`Error saving ${key} to cache:`, error);
+    console.error(`Error saving ${key} to cache:`, error);
+    
+    // If quota exceeded, clear old caches
+    if (error.name === 'QuotaExceededError') {
+      console.warn('⚠️ LocalStorage quota exceeded, clearing old caches...');
+      const keys = Object.keys(localStorage);
+      keys.forEach(k => {
+        if (k.startsWith('cache_')) {
+          localStorage.removeItem(k);
+        }
+      });
+    }
+    
     return false;
   }
 }
