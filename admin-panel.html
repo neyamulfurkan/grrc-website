@@ -3094,16 +3094,28 @@ async function loadAdminDashboardInfo() {
         }
 
         function navigateToSection(section) {
+            console.log('🔄 Navigating to section:', section);
+            
+            // Remove active class from all nav items
             document.querySelectorAll('.nav-item').forEach(item => {
                 item.classList.remove('active');
             });
-            document.querySelector(`[data-section="${section}"]`)?.classList.add('active');
+            
+            // Add active class to clicked nav item
+            const navItem = document.querySelector(`[data-section="${section}"]`);
+            if (navItem) {
+                navItem.classList.add('active');
+                console.log('✅ Nav item activated:', section);
+            } else {
+                console.error('❌ Nav item not found for section:', section);
+            }
 
+            // Hide all section content
             document.querySelectorAll('.section-content').forEach(content => {
                 content.classList.remove('active');
             });
 
-            // Fixed section ID mapping
+            // Show the selected section
             const sectionMap = {
                 'dashboard': 'dashboardSection',
                 'club-config': 'clubConfigSection',
@@ -3117,12 +3129,22 @@ async function loadAdminDashboardInfo() {
                 'admins': 'adminsSection'
             };
             
-            const sectionId = sectionMap[section] || section + 'Section';
+            const sectionId = sectionMap[section];
+            if (!sectionId) {
+                console.error('❌ No section ID mapping found for:', section);
+                return;
+            }
+            
             const sectionElement = document.getElementById(sectionId);
             if (sectionElement) {
                 sectionElement.classList.add('active');
+                console.log('✅ Section displayed:', sectionId);
+            } else {
+                console.error('❌ Section element not found:', sectionId);
+                return;
             }
 
+            // Update page title
             const titles = {
                 'dashboard': 'Dashboard',
                 'club-config': 'Club Configuration',
@@ -3135,13 +3157,27 @@ async function loadAdminDashboardInfo() {
                 'alumni': 'Alumni Management',
                 'admins': 'Manage Admins'
             };
-            document.getElementById('sectionTitle').textContent = titles[section] || 'Admin Panel';
+            
+            const titleElement = document.getElementById('sectionTitle');
+            if (titleElement) {
+                titleElement.textContent = titles[section] || 'Admin Panel';
+            }
 
             currentSection = section;
 
-            document.getElementById('adminSidebar').classList.remove('mobile-open');
+            // Close mobile sidebar
+            const sidebar = document.getElementById('adminSidebar');
+            if (sidebar) {
+                sidebar.classList.remove('mobile-open');
+            }
 
-           if (section === 'club-config') loadClubConfig();
+            // Load section-specific data
+            console.log('📊 Loading data for section:', section);
+            if (section === 'dashboard') {
+                loadDashboardStats();
+                loadAdminDashboardInfo();
+            }
+            if (section === 'club-config') loadClubConfig();
             if (section === 'members') loadMembers();
             if (section === 'events') loadEvents();
             if (section === 'projects') loadProjects();
@@ -3465,7 +3501,7 @@ if (section === 'membership-applications') {
                 localStorage.removeItem('cache_clubConfig');
                 localStorage.removeItem('clubConfig');
                 if (typeof STORAGE_KEYS !== 'undefined') {
-                    localStorage.removeItem(STORAGE_KEYS.CLUB_CONFIG');
+                    localStorage.removeItem(STORAGE_KEYS.CLUB_CONFIG);
                 }
                 
                 // Clear service worker cache
