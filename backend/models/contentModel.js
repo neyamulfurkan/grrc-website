@@ -2,7 +2,9 @@ const pool = require('../db/pool');
 
 async function getClubConfig() {
   try {
+    console.log('🔍 Fetching club_config from database...');
     const result = await pool.query('SELECT * FROM club_config LIMIT 1');
+    console.log('✅ Database returned:', result.rows[0] ? 'CONFIG FOUND' : 'NO CONFIG');
     return { success: true, data: result.rows[0] || null, error: null };
   } catch (error) {
     console.error('❌ Error in getClubConfig:', error.message);
@@ -13,6 +15,7 @@ async function getClubConfig() {
 async function updateClubConfig(data) {
   try {
     console.log('🔍 updateClubConfig received data:', JSON.stringify(data, null, 2));
+    console.log('📊 Updating club_config table...');
     
     const { 
       logo, logo_url, 

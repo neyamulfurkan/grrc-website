@@ -3391,11 +3391,24 @@ if (section === 'membership-applications') {
             
             console.log('💾 Attempting to save config:', config);
 
-            // Clear ALL caches BEFORE saving
+            // ✅ CRITICAL FIX: Clear ALL possible cache locations BEFORE save
             console.log('🗑️ Clearing all config caches...');
             localStorage.removeItem('cache_clubConfig');
-            localStorage.removeItem(STORAGE_KEYS.CLUB_CONFIG);
             localStorage.removeItem('clubConfig');
+            if (typeof STORAGE_KEYS !== 'undefined') {
+                localStorage.removeItem(STORAGE_KEYS.CLUB_CONFIG);
+            }
+            
+            // Clear service worker cache if exists
+            if ('caches' in window) {
+                caches.keys().then(names => {
+                    names.forEach(name => {
+                        if (name.includes('config')) {
+                            caches.delete(name);
+                        }
+                    });
+                });
+            }
 
             // Save to backend with error handling
             let saveResult;
@@ -3442,20 +3455,29 @@ if (section === 'membership-applications') {
                 console.log('✅ Sidebar name updated');
             }
 
-            showToast('Configuration saved! Payment settings updated. Reloading...', 'success');
+            showToast('Configuration saved successfully! Refreshing page...', 'success');
 
-            // ✅ CRITICAL FIX: Wait longer and clear service worker cache
+            // ✅ CRITICAL FIX: Clear everything and force reload
             setTimeout(async () => {
-                console.log('🔄 Clearing service worker caches...');
+                console.log('🔄 Final cache clear before reload...');
+                
+                // Clear all localStorage config
+                localStorage.removeItem('cache_clubConfig');
+                localStorage.removeItem('clubConfig');
+                if (typeof STORAGE_KEYS !== 'undefined') {
+                    localStorage.removeItem(STORAGE_KEYS.CLUB_CONFIG');
+                }
+                
+                // Clear service worker cache
                 if ('caches' in window) {
                     const cacheNames = await caches.keys();
                     await Promise.all(cacheNames.map(name => caches.delete(name)));
                 }
                 
-                console.log('🔄 Performing hard reload...');
-                // Hard reload - bypasses cache
-                window.location.reload(true);
-            }, 2000);
+                console.log('🔄 Performing hard reload with timestamp...');
+                // Force reload with cache bust
+                window.location.href = window.location.href.split('?')[0] + '?_=' + Date.now();
+            }, 1500);
         } catch (error) {
             console.error('Error saving config:', error);
             

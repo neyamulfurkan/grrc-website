@@ -71,9 +71,9 @@ async function uploadToCloudinary(file) {
 let isPageLoading = false;
 
 // FIXED: Cache-first approach with graceful fallback
-async function loadClubConfiguration() {
+async function loadClubConfiguration(forceRefresh = false) {
   try {
-    console.log('Loading club configuration...');
+    console.log('Loading club configuration... Force refresh:', forceRefresh);
     
     // Check if API client exists
     if (!window.apiClient || !window.apiClient.isReady) {
@@ -85,15 +85,18 @@ async function loadClubConfiguration() {
       return cached !== null;
     }
     
-    // Try to get from cache first
-    const cached = await loadFromCache('clubConfig');
-    if (cached) {
+    // ✅ CRITICAL FIX: Skip cache if force refresh requested
+    if (!forceRefresh) {
+      const cached = await loadFromCache('clubConfig');
+      if (cached) {
       console.log('Using cached club configuration');
       updateClubConfigDOM(cached);
       return true;
+      }
     }
     
-    // Cache miss - try API call
+    // Force refresh OR cache miss - call API
+    console.log('📡 Calling API for fresh config...');
     const result = await getClubConfig();
     
     if (result.success && result.data) {
