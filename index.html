@@ -1254,30 +1254,13 @@
             const savedTheme = localStorage.getItem('theme') || 'dark';
             document.documentElement.setAttribute('data-theme', savedTheme);
             
+            // ✅ INSTANT UI - Set year and initialize immediately
             document.getElementById('currentYear').textContent = new Date().getFullYear();
             window.addEventListener('scroll', handleScroll);
             handleScroll();
             initializeMobileMenu();
             
-            // ✅ SPEED FIX: Start loading immediately, don't wait for API client
-            const loadingPromises = [
-                loadClubConfig(),
-                loadGalleryForSlideshow(),
-                loadUpcomingEvents(),
-                loadExecutiveMembers(),
-                loadLatestAnnouncements()
-            ];
-            
-            // Wait for API client with shorter timeout
-            let retries = 0;
-            while ((!window.apiClient || !window.apiClient.isReady) && retries < 20) {
-                await new Promise(resolve => setTimeout(resolve, 50));
-                retries++;
-            }
-            
-            // ✅ PARALLEL LOADING - All at once
-            await Promise.all(loadingPromises);
-            
+            // ✅ Initialize theme and navigation FIRST (no API needed)
             if (typeof initTheme === 'function') {
                 initTheme();
             }
@@ -1285,6 +1268,22 @@
             if (typeof initNavigation === 'function') {
                 initNavigation();
             }
+            
+            // ✅ PROGRESSIVE LOADING - Load critical content first, then others
+            // Load config first (needed for logo/name)
+            loadClubConfig().catch(e => console.warn('Config load failed:', e));
+            
+            // Load slideshow in background (non-blocking)
+            setTimeout(() => {
+                loadGalleryForSlideshow().catch(e => console.warn('Slideshow load failed:', e));
+            }, 100);
+            
+            // Load content progressively
+            setTimeout(() => {
+                loadUpcomingEvents().catch(e => console.warn('Events load failed:', e));
+                loadExecutiveMembers().catch(e => console.warn('Members load failed:', e));
+                loadLatestAnnouncements().catch(e => console.warn('Announcements load failed:', e));
+            }, 200);
         });
         
         function initializeMobileMenu() {
@@ -1324,37 +1323,50 @@
         console.log('🎬 Starting slideshow load...');
         
         let galleryItems = [];
-        let usedCache = false;
         
-        // Try API first
-        if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady) {
+        // ✅ TRY CACHE FIRST for instant load
+        const cached = localStorage.getItem('gallery');
+        if (cached) {
             try {
-                console.log('📡 Calling API for gallery...');
-                const response = await window.apiClient.getGallery();
-                console.log('📊 API response:', response);
+                galleryItems = JSON.parse(cached);
+                console.log('✅ Loaded', galleryItems.length, 'images from cache (instant)');
                 
-                if (response.success && Array.isArray(response.data) && response.data.length > 0) {
-                    galleryItems = response.data;
-                    console.log('✅ Slideshow loaded', galleryItems.length, 'images from API');
-                    try {
-                        localStorage.setItem('gallery', JSON.stringify(galleryItems));
-                    } catch (e) {
-                        console.warn('⚠️ Could not save to cache:', e.message);
+                // Show immediately
+                if (galleryItems.length > 0) {
+                    slideshowImages = galleryItems
+                        .filter(item => {
+                            const imageUrl = item.image || item.image_url;
+                            return imageUrl && imageUrl.trim() !== '';
+                        })
+                        .map(item => ({
+                            url: item.image || item.image_url,
+                            title: item.title || 'Untitled',
+                            description: item.description || item.category || ''
+                        }))
+                        .slice(0, 10);
+                    
+                    if (slideshowImages.length > 0) {
+                        initializeSlideshow();
                     }
                 }
-            } catch (apiError) {
-                console.error('❌ API call failed:', apiError);
+            } catch (e) {
+                console.warn('Cache parse failed:', e);
             }
         }
         
-        // Fallback to cache if API didn't work
-        if (galleryItems.length === 0) {
-            const cached = localStorage.getItem('gallery');
-            if (cached) {
-                galleryItems = JSON.parse(cached);
-                usedCache = true;
-                console.log('✅ Loaded', galleryItems.length, 'images from cache');
-            }
+        // ✅ UPDATE FROM API IN BACKGROUND (non-blocking)
+        if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady) {
+            setTimeout(async () => {
+                try {
+                    const response = await window.apiClient.getGallery();
+                    if (response.success && Array.isArray(response.data) && response.data.length > 0) {
+                        localStorage.setItem('gallery', JSON.stringify(response.data));
+                        console.log('✅ Gallery cache updated from API');
+                    }
+                } catch (apiError) {
+                    console.warn('Background API update failed:', apiError);
+                }
+            }, 2000); // Update cache after 2 seconds
         }
         
         // Process images

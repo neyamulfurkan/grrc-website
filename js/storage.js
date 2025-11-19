@@ -80,23 +80,26 @@ function isAuthenticated() {
 
 async function getClubConfig() {
   try {
+    // ✅ CACHE-FIRST STRATEGY: Check cache age
+    const cached = localStorage.getItem(STORAGE_KEYS.CLUB_CONFIG) || localStorage.getItem('clubConfig');
+    const cacheTime = localStorage.getItem('clubConfig_timestamp');
+    const now = Date.now();
+    
+    // Use cache if less than 5 minutes old
+    if (cached && cacheTime && (now - parseInt(cacheTime)) < 300000) {
+      console.log('📦 Using fresh cache (< 5 min old)');
+      return { success: true, data: JSON.parse(cached) };
+    }
+    
     if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady) {
-      console.log('🔄 Fetching club config from API with cache-bust...');
+      console.log('🔄 Fetching club config from API...');
       try {
-        // ✅ CRITICAL FIX: Add timestamp to force fresh request
-        const timestamp = Date.now();
         const response = await Promise.race([
-          window.apiClient.request(`/api/content/config?_t=${timestamp}`, {
-            method: 'GET',
-            headers: {
-              'Cache-Control': 'no-cache, no-store, must-revalidate',
-              'Pragma': 'no-cache',
-              'Expires': '0'
-            },
-            cache: 'no-store'
+          window.apiClient.request(`/api/content/config`, {
+            method: 'GET'
           }),
           new Promise((_, reject) => 
-            setTimeout(() => reject(new Error('API timeout')), 5000)
+            setTimeout(() => reject(new Error('API timeout')), 3000)
           )
         ]);
         
@@ -113,9 +116,9 @@ async function getClubConfig() {
             membership_fee: response.data.membership_fee || 500
           };
           
-          localStorage.removeItem('cache_clubConfig');
           localStorage.setItem(STORAGE_KEYS.CLUB_CONFIG, JSON.stringify(mappedData));
           localStorage.setItem('clubConfig', JSON.stringify(mappedData));
+          localStorage.setItem('clubConfig_timestamp', now.toString());
           
           return { success: true, data: mappedData };
         }
@@ -124,10 +127,9 @@ async function getClubConfig() {
       }
     }
     
-    const cached = localStorage.getItem(STORAGE_KEYS.CLUB_CONFIG) || 
-                   localStorage.getItem('clubConfig');
+    // Use stale cache as fallback
     if (cached) {
-      console.log('📦 Using cached config');
+      console.log('📦 Using stale cache (API unavailable)');
       return { success: true, data: JSON.parse(cached) };
     }
     

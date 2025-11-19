@@ -440,7 +440,7 @@
         <span class="toast-message" id="toastMessage"></span>
     </div>
 
-    <button class="mobile-sidebar-toggle" id="mobileSidebarToggle" style="display: none; position: fixed; bottom: 20px; right: 20px; width: 56px; height: 56px; border-radius: 50%; background: var(--primary-color); color: white; border: none; box-shadow: var(--shadow-xl); z-index: 999; cursor: pointer; font-size: 24px;">☰</button>
+    <button class="mobile-sidebar-toggle" id="mobileSidebarToggle" style="display: block; position: fixed; bottom: 20px; right: 20px; width: 56px; height: 56px; border-radius: 50%; background: var(--primary-color); color: white; border: none; box-shadow: var(--shadow-xl); z-index: 999; cursor: pointer; font-size: 24px;">☰</button>
     
     <div class="admin-container">
         <aside class="admin-sidebar" id="adminSidebar">
@@ -1484,14 +1484,38 @@
                 closeCreateAdminModal();
             }
         });
-        // Setup mobile sidebar toggle
+        // Setup mobile sidebar toggle - FIXED
         const mobileSidebarToggle = document.getElementById('mobileSidebarToggle');
         const adminSidebar = document.getElementById('adminSidebar');
         
         if (mobileSidebarToggle && adminSidebar) {
+            // Show button on mobile
+            if (window.innerWidth <= 1023) {
+                mobileSidebarToggle.style.display = 'flex';
+            }
+            
+            // Toggle sidebar
             mobileSidebarToggle.addEventListener('click', () => {
                 adminSidebar.classList.toggle('mobile-open');
                 mobileSidebarToggle.textContent = adminSidebar.classList.contains('mobile-open') ? '✕' : '☰';
+            });
+            
+            // Close sidebar when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!adminSidebar.contains(e.target) && !mobileSidebarToggle.contains(e.target)) {
+                    adminSidebar.classList.remove('mobile-open');
+                    mobileSidebarToggle.textContent = '☰';
+                }
+            });
+            
+            // Handle resize
+            window.addEventListener('resize', () => {
+                if (window.innerWidth <= 1023) {
+                    mobileSidebarToggle.style.display = 'flex';
+                } else {
+                    mobileSidebarToggle.style.display = 'none';
+                    adminSidebar.classList.remove('mobile-open');
+                }
             });
         }
 
