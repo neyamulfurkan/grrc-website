@@ -92,14 +92,22 @@
               async function initializeApplications() {
     console.log('🔄 Initializing membership applications iframe...');
     
-    // Wait for DOM to be ready
-    await new Promise(resolve => {
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', resolve);
-        } else {
-            resolve();
-        }
-    });
+    // CRITICAL FIX: Wait for COMPLETE DOM load including all elements
+    if (document.readyState !== 'complete') {
+        await new Promise(resolve => {
+            window.addEventListener('load', resolve);
+        });
+    }
+    
+    // Verify critical DOM elements exist
+    const tbody = document.getElementById('applicationsTableBody');
+    if (!tbody) {
+        console.error('❌ CRITICAL: Table body not found - DOM not ready');
+        setTimeout(initializeApplications, 100); // Retry
+        return;
+    }
+    
+    console.log('✅ DOM fully loaded, proceeding with authentication...');
     
     // CRITICAL FIX: Get admin with proper fallback chain
     let admin = null;
@@ -192,11 +200,21 @@
             hasAccess: hasAccess
         });
         
-        if (!hasAccess) {
+                if (!hasAccess) {
+            console.error('❌ Access denied - insufficient permissions');
             const tbody = document.getElementById('applicationsTableBody');
             if (tbody) {
-                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 2rem; color: var(--error-color);">🚫 Access Denied - Contact Super Admin for access</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 2rem; color: var(--error-color);">🚫 Access Denied - You need membership.view or membership.approve permission. Contact Super Admin.</td></tr>';
+            } else {
+                console.error('❌ Cannot display error - tbody not found');
             }
+            
+            // Also update the statistics to show zeros
+            document.getElementById('totalApplications').textContent = '0';
+            document.getElementById('pendingApplications').textContent = '0';
+            document.getElementById('approvedApplications').textContent = '0';
+            document.getElementById('rejectedApplications').textContent = '0';
+            
             return;
         }
     }
