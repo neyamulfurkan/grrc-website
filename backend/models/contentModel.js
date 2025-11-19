@@ -999,26 +999,41 @@ async function getAdminById(id) {
 
 async function getAdminByUsername(username) {
   try {
-    console.log('🔍 Looking up admin:', username);
-    const result = await pool.query('SELECT * FROM admins WHERE username = $1', [username]);
+    console.log('🔍 Fetching admin by username:', username);
+    
+    const result = await pool.query(
+      `SELECT 
+        id, 
+        username, 
+        email,
+        password_hash, 
+        role, 
+        is_super_admin,
+        COALESCE(permissions, '{}'::jsonb) as permissions,
+        is_active, 
+        created_at, 
+        last_login
+      FROM admins 
+      WHERE LOWER(username) = LOWER($1)`,
+      [username]
+    );
     
     if (result.rows.length === 0) {
       console.log('❌ Admin not found:', username);
-      return { success: false, data: null, error: 'Admin not found' };
+      return { success: false, error: 'Admin not found' };
     }
     
     const admin = result.rows[0];
     console.log('✅ Admin found:', {
       username: admin.username,
       role: admin.role,
-      is_super_admin: admin.is_super_admin,
-      has_password: !!admin.password_hash
+      permissions: admin.permissions
     });
     
-    return { success: true, data: admin, error: null };
+    return { success: true, data: admin };
   } catch (error) {
-    console.error('❌ Error in getAdminByUsername:', error.message);
-    return { success: false, data: null, error: error.message };
+    console.error('❌ Error fetching admin by username:', error);
+    return { success: false, error: error.message };
   }
 }
 

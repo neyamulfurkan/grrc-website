@@ -32,6 +32,15 @@ router.post('/login', async (req, res) => {
     }
 
     const admin = result.data;
+    
+    // CRITICAL DEBUG: Check permissions from database
+    console.log('📋 Admin data from database:', {
+      username: admin.username,
+      role: admin.role,
+      is_super_admin: admin.is_super_admin,
+      permissions: admin.permissions,
+      permissions_type: typeof admin.permissions
+    });
 
     console.log('🔍 Comparing password for admin:', username);
     console.log('📋 Password received:', password);
@@ -65,6 +74,15 @@ router.post('/login', async (req, res) => {
     
     console.log('🔐 Creating token with permissions:', permissions);
     
+    
+    console.log('🔐 Generating token with payload:', {
+      id: admin.id,
+      username: admin.username,
+      role: admin.role,
+      is_super_admin: admin.is_super_admin || false,
+      permissions: permissions
+    });
+    
     const token = generateToken({
       id: admin.id,
       username: admin.username,
@@ -72,6 +90,8 @@ router.post('/login', async (req, res) => {
       is_super_admin: admin.is_super_admin || false,
       permissions: permissions
     });
+    
+    console.log('✅ Token generated successfully');
 
     await updateLastLogin(admin.id);
 
