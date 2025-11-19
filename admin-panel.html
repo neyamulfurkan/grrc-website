@@ -3166,8 +3166,8 @@ async function loadAdminDashboardInfo() {
             console.log('📊 Loading data for section:', section);
             if (section === 'dashboard') {
                 // ✅ CRITICAL FIX: Force fresh stats load
-                loadDashboardStats();
-                loadAdminDashboardInfo();
+                await loadDashboardStats();
+                await loadAdminDashboardInfo();
             }
             if (section === 'club-config') loadClubConfig();
             if (section === 'members') loadMembers();
@@ -3535,7 +3535,8 @@ if (section === 'membership-applications') {
                     const config = result.data;
                     console.log('📋 Loading config into form:', {
                         bkash: config.bkash_number,
-                        fee: config.membership_fee
+                        fee: config.membership_fee,
+                        fullConfig: config
                     });
 
                     const logoValue = config.logo || config.logo_url;
@@ -3550,12 +3551,22 @@ if (section === 'membership-applications') {
                     }
 
                     document.getElementById('clubName').value = config.name || config.club_name || 'GSTU Robotics & Research Club';
-                    document.getElementById('clubMotto').value = config.motto || '';
-                    document.getElementById('clubDescription').value = config.description || '';
+                    document.getElementById('clubMotto').value = config.motto || config.club_motto || '';
+                                        document.getElementById('clubDescription').value = config.description || config.club_description || '';
                     
-                    // Load membership settings with proper fallbacks
-                    const bkashValue = config.bkash_number || '01712345678';
-                    const feeValue = config.membership_fee || 500;
+                    // ✅ CRITICAL FIX: Load membership settings from BOTH possible field names
+                    const bkashValue = config.bkash_number || config.bkashNumber || '01712345678';
+                    const feeValue = config.membership_fee || config.membershipFee || 500;
+                    
+                    console.log('🔍 Payment config values:', {
+                        bkash_number: config.bkash_number,
+                        bkashNumber: config.bkashNumber,
+                        membership_fee: config.membership_fee,
+                        membershipFee: config.membershipFee,
+                        finalBkash: bkashValue,
+                        finalFee: feeValue
+                    });
+                    
                     document.getElementById('bkashNumber').value = bkashValue;
                     document.getElementById('membershipFee').value = feeValue;
                     console.log('✅ Payment form fields populated:', {
