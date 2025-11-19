@@ -190,19 +190,38 @@ function isAccountLocked(username) {
  * @returns {object} Session object
  */
 function createSession(admin, hasToken = false) {
+  // CRITICAL FIX: Normalize permissions before storing in session
+  let permissions = admin.permissions || {};
+  if (typeof permissions === 'string') {
+    try {
+      permissions = JSON.parse(permissions);
+    } catch (e) {
+      console.error('Failed to parse admin permissions during session creation:', e);
+      permissions = {};
+    }
+  }
+  
   const session = {
     adminId: admin.id,
     username: admin.username,
     role: admin.role || 'Admin',
     is_super_admin: admin.is_super_admin || false,
-    permissions: admin.permissions || {},
+    permissions: permissions,
     timestamp: new Date().toISOString(),
     userAgent: navigator.userAgent.substring(0, 100), // Track device
     hasToken: hasToken // Track if session has JWT token
   };
   
+  console.log('📝 Creating session with permissions:', {
+    username: session.username,
+    permissionsType: typeof session.permissions,
+    permissionsKeys: Object.keys(session.permissions),
+    hasToken: hasToken
+  });
+  
   try {
     sessionStorage.setItem(AUTH_CONFIG.SESSION_KEY, JSON.stringify(session));
+    console.log('✅ Session saved to sessionStorage');
     return session;
   } catch (error) {
     console.error('Error creating session:', error);
@@ -625,6 +644,9 @@ function getCurrentAdmin() {
       }
     }
     
+    // CRITICAL FIX: Check if permissions object is truly empty
+    const hasPermissionsSet = permissions && typeof permissions === 'object' && Object.keys(permissions).length > 0;
+    
     const admin = {
       id: session.adminId,
       username: session.username,
@@ -650,8 +672,11 @@ function getCurrentAdmin() {
       username: admin.username,
       isSuperAdmin: admin.is_super_admin,
       role: admin.role,
-      permissionsType: typeof permissions,
-      hasPermissions: Object.keys(admin.permissions).length > 0
+      permissionsType: typeof admin.permissions,
+      permissionsKeys: admin.permissions ? Object.keys(admin.permissions) : [],
+      hasPermissions: hasPermissionsSet,
+      membershipPerms: admin.permissions.membership,
+      alumniPerms: admin.permissions.alumni
     });
     
     return admin;

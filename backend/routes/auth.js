@@ -39,8 +39,14 @@ router.post('/login', async (req, res) => {
       role: admin.role,
       is_super_admin: admin.is_super_admin,
       permissions: admin.permissions,
-      permissions_type: typeof admin.permissions
+      permissions_type: typeof admin.permissions,
+      permissions_content: admin.permissions ? JSON.stringify(admin.permissions) : 'null'
     });
+    
+    // CRITICAL FIX: Verify permissions exist and are valid
+    if (!admin.permissions || Object.keys(admin.permissions).length === 0) {
+      console.warn('⚠️ Admin has no permissions set!');
+    }
 
     console.log('🔍 Comparing password for admin:', username);
     console.log('📋 Password received:', password);
@@ -108,18 +114,26 @@ router.post('/login', async (req, res) => {
 
     console.log(`✅ Admin logged in: ${admin.username} (${admin.role}) [Super: ${admin.is_super_admin}]`);
 
+    // CRITICAL FIX: Ensure permissions are properly formatted in response
+    const adminResponse = {
+      id: admin.id,
+      username: admin.username,
+      role: admin.role,
+      is_super_admin: admin.is_super_admin || false,
+      permissions: finalPermissions, // Use the normalized permissions
+      is_active: admin.is_active !== false
+    };
+    
+    console.log('📤 Sending login response with permissions:', {
+      username: adminResponse.username,
+      permissionsKeys: Object.keys(adminResponse.permissions)
+    });
+    
     res.json({
       success: true,
       data: {
         token,
-        admin: {
-          id: admin.id,
-          username: admin.username,
-          role: admin.role,
-          is_super_admin: admin.is_super_admin || false,
-          permissions: admin.permissions || {},
-          is_active: admin.is_active !== false
-        },
+        admin: adminResponse,
       },
       message: 'Login successful',
     });

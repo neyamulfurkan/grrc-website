@@ -57,10 +57,24 @@ router.post('/admins', async (req, res) => {
   try {
     const { username, email, permissions, password } = req.body;
     
+    console.log('📝 Creating admin with data:', {
+      username,
+      email,
+      permissionsType: typeof permissions,
+      permissionsKeys: permissions ? Object.keys(permissions) : []
+    });
+    
     if (!username || !email || !permissions) {
       return res.status(400).json({ 
         success: false, 
         error: 'Username, email, and permissions are required' 
+      });
+    }
+    
+    if (!password || password.length < 6) {
+      return res.status(400).json({
+        success: false,
+        error: 'Password must be at least 6 characters'
       });
     }
     
@@ -79,15 +93,21 @@ router.post('/admins', async (req, res) => {
     
     // Hash the provided password
     const hashedPassword = await bcrypt.hash(password, 10);
-    console.log('🔐 Creating admin:', username, '- Password length:', password.length);
+    console.log('🔐 Creating admin:', username);
+    console.log('📋 Permissions to save:', JSON.stringify(permissions, null, 2));
+    
+    // CRITICAL FIX: Ensure permissions is properly stringified as JSONB
+    const permissionsJson = JSON.stringify(permissions);
     
     // Insert new admin
     const result = await pool.query(
       `INSERT INTO admins (username, email, password_hash, permissions, created_by, is_active, is_super_admin)
-       VALUES ($1, $2, $3, $4, $5, true, false)
+       VALUES ($1, $2, $3, $4::jsonb, $5, true, false)
        RETURNING id, username, email, permissions, created_at`,
-      [username, email, hashedPassword, JSON.stringify(permissions), req.user.id]
+      [username, email, hashedPassword, permissionsJson, req.user.id]
     );
+    
+    console.log('✅ Admin created with permissions:', result.rows[0].permissions);
     
     // Log the action
     await logAuditAction(
@@ -113,8 +133,17 @@ router.post('/admins', async (req, res) => {
 // Update admin permissions
 router.put('/admins/:id/permissions', async (req, res) => {
   try {
-    const { permissions } = req.body;
+    const { username, email, password, permissions } = req.body;
     const adminId = req.params.id;
+    
+    console.log('📝 Updating admin permissions:', {
+      adminId,
+      username,
+      email,
+      hasPassword: !!password,
+      permissionsType: typeof permissions,
+      permissionsKeys: permissions ? Object.keys(permissions) : []
+    });
     
     // Prevent editing super admin
     const admin = await pool.query(
@@ -133,10 +162,56 @@ router.put('/admins/:id/permissions', async (req, res) => {
       });
     }
     
-    await pool.query(
-      'UPDATE admins SET permissions = $1 WHERE id = $2',
-      [JSON.stringify(permissions), adminId]
-    );
+    // CRITICAL FIX: Build dynamic update query
+    const updates = [];
+    const values = [];
+    let paramIndex = 1;
+    
+    if (username) {
+      updates.push(`username = $${paramIndex}`);
+      values.push(username);
+      paramIndex++;
+    }
+    
+    if (email) {
+      updates.push(`email = $${paramIndex}`);
+      values.push(email);
+      paramIndex++;
+    }
+    
+    if (password) {
+      const hashedPassword = await bcrypt.hash(password, 10);
+      updates.push(`password_hash = $${paramIndex}`);
+      values.push(hashedPassword);
+      paramIndex++;
+    }
+    
+    if (permissions) {
+      console.log('📋 Permissions to save:', JSON.stringify(permissions, null, 2));
+      updates.push(`permissions = $${paramIndex}::jsonb`);
+      values.push(JSON.stringify(permissions));
+      paramIndex++;
+    }
+    
+    if (updates.length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'No fields to update'
+      });
+    }
+    
+    values.push(adminId);
+    
+    const query = `
+      UPDATE admins 
+      SET ${updates.join(', ')}
+      WHERE id = $${paramIndex}
+      RETURNING id, username, email, permissions, is_active
+    `;
+    
+    const result = await pool.query(query, values);
+    
+    console.log('✅ Admin updated with permissions:', result.rows[0].permissions);
     
     await logAuditAction(
       req.user.id,
