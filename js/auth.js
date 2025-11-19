@@ -628,6 +628,40 @@ function getCurrentAdmin() {
   
   // If using API authentication, return session data directly WITH is_super_admin flag
   if (session.hasToken) {
+    // CRITICAL FIX: If session has no permissions, decode JWT token directly
+    if (!session.permissions || Object.keys(session.permissions).length === 0) {
+      console.warn('⚠️ Session has no permissions - decoding JWT token...');
+      
+      try {
+        const token = localStorage.getItem(AUTH_CONFIG.TOKEN_KEY);
+        if (token) {
+          const payload = JSON.parse(atob(token.split('.')[1]));
+          console.log('🔓 Decoded token payload:', {
+            username: payload.username,
+            permissionsKeys: payload.permissions ? Object.keys(payload.permissions) : []
+          });
+          
+          if (payload.permissions && Object.keys(payload.permissions).length > 0) {
+            console.log('✅ Found permissions in token - updating session');
+            
+            // Update session with permissions from token
+            session.permissions = payload.permissions;
+            session.role = payload.role;
+            session.is_super_admin = payload.is_super_admin;
+            
+            // Save updated session
+            try {
+              sessionStorage.setItem(AUTH_CONFIG.SESSION_KEY, JSON.stringify(session));
+            } catch (e) {
+              console.error('Failed to update session:', e);
+            }
+          }
+        }
+      } catch (e) {
+        console.error('Failed to decode token:', e);
+      }
+    }
+    
     // CRITICAL FIX: Detect super admin from role FIRST, then flag
     const isSuperAdmin = session.role === 'Super Admin' ||
                          session.is_super_admin === true || 
