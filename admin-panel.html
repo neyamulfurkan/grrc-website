@@ -1561,17 +1561,25 @@
             
             if (logo && (config.logo || config.logo_url)) {
     const logoUrl = config.logo || config.logo_url;
-    // Add timestamp to force cache bypass
-    const cacheBustedUrl = logoUrl.includes('?') 
-        ? logoUrl + '&t=' + Date.now()
-        : logoUrl + '?t=' + Date.now();
+    
+    // ✅ FIX: Don't add cache-busting to base64 data URLs
+    let cacheBustedUrl;
+    if (logoUrl.startsWith('data:')) {
+        // Base64 data URL - use as-is
+        cacheBustedUrl = logoUrl;
+    } else {
+        // Regular URL - add cache-busting timestamp
+        cacheBustedUrl = logoUrl.includes('?') 
+            ? logoUrl + '&t=' + Date.now()
+            : logoUrl + '?t=' + Date.now();
+    }
         
     logo.src = cacheBustedUrl;
     logo.onerror = function() {
         console.warn('Logo failed to load, using default');
         this.src = 'assets/default-logo.jpg';
     };
-    console.log('✅ Logo updated to:', cacheBustedUrl);
+    console.log('✅ Logo updated to:', cacheBustedUrl.startsWith('data:') ? 'base64 image' : cacheBustedUrl);
 }
             
             if (subtitle) {
@@ -3569,7 +3577,14 @@ if (section === 'membership-applications') {
                     if (logoValue) {
                         document.getElementById('logoUrl').value = logoValue;
                         const preview = document.getElementById('logoPreview');
-                        preview.src = logoValue + '?t=' + Date.now();
+                        
+                        // ✅ FIX: Don't add cache-busting to base64 data URLs
+                        if (logoValue.startsWith('data:')) {
+                            preview.src = logoValue;
+                        } else {
+                            preview.src = logoValue + '?t=' + Date.now();
+                        }
+                        
                         preview.style.display = 'block';
                         preview.onerror = function() {
                             this.src = 'assets/default-logo.jpg';
