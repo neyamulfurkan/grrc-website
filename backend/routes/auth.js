@@ -50,12 +50,27 @@ router.post('/login', async (req, res) => {
       });
     }
 
+    // CRITICAL: Ensure permissions is properly serialized
+    let permissions = admin.permissions || {};
+    
+    // If permissions is a string (from JSONB), parse it
+    if (typeof permissions === 'string') {
+      try {
+        permissions = JSON.parse(permissions);
+      } catch (e) {
+        console.error('Failed to parse permissions:', e);
+        permissions = {};
+      }
+    }
+    
+    console.log('🔐 Creating token with permissions:', permissions);
+    
     const token = generateToken({
       id: admin.id,
       username: admin.username,
       role: admin.role,
       is_super_admin: admin.is_super_admin || false,
-      permissions: admin.permissions || {}
+      permissions: permissions
     });
 
     await updateLastLogin(admin.id);

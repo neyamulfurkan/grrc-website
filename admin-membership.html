@@ -106,14 +106,31 @@
         if (token) {
             try {
                 const tokenData = JSON.parse(atob(token.split('.')[1]));
+                
+                // CRITICAL: Parse permissions if it's a string
+                let permissions = tokenData.permissions || {};
+                if (typeof permissions === 'string') {
+                    try {
+                        permissions = JSON.parse(permissions);
+                    } catch (e) {
+                        console.error('Failed to parse permissions string:', e);
+                        permissions = {};
+                    }
+                }
+                
                 admin = {
                     id: tokenData.id || tokenData.adminId,
                     username: tokenData.username,
                     role: tokenData.role,
                     is_super_admin: tokenData.is_super_admin === true || tokenData.is_super_admin === 1,
-                    permissions: tokenData.permissions || {}
+                    permissions: permissions
                 };
-                console.log('✅ Admin decoded from token:', admin.username);
+                
+                console.log('✅ Admin decoded from token:', {
+                    username: admin.username,
+                    role: admin.role,
+                    permissions: admin.permissions
+                });
             } catch (e) {
                 console.error('❌ Failed to decode token:', e);
             }
