@@ -213,15 +213,20 @@ function checkPermission(module, action) {
       });
     }
     
-    // ✅ NEW: Check if approval is required for CREATE actions
+    // ✅ FIXED: Check if approval is required for CREATE actions
     if (action === 'create') {
-      const approvalRequired = await checkApprovalRequired(module, action);
+      const approvalRequired = await checkApprovalRequired(module);
       if (approvalRequired) {
-        console.log(`⏳ Approval required for ${req.user.username}: ${module}.${action}`);
-        // Store the request data for approval
-        req.requiresApproval = true;
-        req.approvalModule = module;
-        req.approvalAction = action;
+        console.log(`⏳ Approval required for ${req.user.username}: ${module}.${action} - blocking action`);
+        
+        // CRITICAL FIX: Block the action and require approval
+        return res.status(403).json({
+          success: false,
+          error: `Your ${action} action for ${module} requires Super Admin approval. Please contact your administrator.`,
+          requiresApproval: true,
+          module: module,
+          action: action
+        });
       }
     }
     
@@ -237,7 +242,7 @@ function checkPermission(module, action) {
  * @param {string} action - Action type
  * @returns {Promise<boolean>} True if approval required, false otherwise
  */
-async function checkApprovalRequired(module, action) {
+async function checkApprovalRequired(module) {
   try {
     const pool = require('../db/pool');
     const settingKey = `require_approval_${module}`;
@@ -247,8 +252,14 @@ async function checkApprovalRequired(module, action) {
       [settingKey]
     );
     
-    if (!result.rows || result.rows.length === 0) return false;
-    return result.rows[0].setting_value === 'true';
+    if (!result.rows || result.rows.length === 0) {
+      console.log(`ℹ️ No approval setting found for ${module}, defaulting to false`);
+      return false;
+    }
+    
+    const isRequired = result.rows[0].setting_value === 'true';
+    console.log(`🔍 Approval required for ${module}: ${isRequired}`);
+    return isRequired;
   } catch (error) {
     console.error('❌ Check approval required error:', error);
     return false; // Default to no approval required on error

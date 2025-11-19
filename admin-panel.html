@@ -3506,28 +3506,32 @@ if (section === 'membership-applications') {
                 fee: membershipFee
             });
 
-             const config = {
+             const socialLinksArray = [];
+            const socials = ['facebook', 'twitter', 'instagram', 'linkedin', 'youtube', 'github', 'email'];
+            socials.forEach(platform => {
+                const value = document.getElementById(`social${platform.charAt(0).toUpperCase() + platform.slice(1)}`).value.trim();
+                if (value) {
+                    socialLinksArray.push({ platform, url: value });
+                }
+            });
+            
+            console.log('🔗 Social links collected:', socialLinksArray);
+
+            const config = {
                 logo: logo,
                 club_name: document.getElementById('clubName').value.trim(),
                 club_motto: document.getElementById('clubMotto').value.trim(),
                 club_description: document.getElementById('clubDescription').value.trim(),
                 bkash_number: bkashNumber,
                 membership_fee: membershipFee,
-                social_links: []
+                social_links: socialLinksArray,
+                socialLinks: socialLinksArray // CRITICAL: Add both field names for compatibility
             };
-
-            const socials = ['facebook', 'twitter', 'instagram', 'linkedin', 'youtube', 'github', 'email'];
-            socials.forEach(platform => {
-                const value = document.getElementById(`social${platform.charAt(0).toUpperCase() + platform.slice(1)}`).value.trim();
-                if (value) {
-                    config.social_links.push({ platform, url: value });
-                }
-            });
 
             // Show saving toast
             showToast('Saving configuration...', 'info');
             
-            console.log('💾 Attempting to save config:', config);
+            console.log('💾 Attempting to save config:', JSON.stringify(config, null, 2));
 
             // ✅ CRITICAL FIX: Clear ALL possible cache locations BEFORE save
             console.log('🗑️ Clearing all config caches...');
