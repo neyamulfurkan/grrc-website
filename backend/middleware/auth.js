@@ -217,16 +217,34 @@ function checkPermission(module, action) {
     if (action === 'create') {
       const approvalRequired = await checkApprovalRequired(module);
       if (approvalRequired) {
-        console.log(`⏳ Approval required for ${req.user.username}: ${module}.${action} - blocking action`);
+        console.log(`⏳ Approval required for ${req.user.username}: ${module}.${action} - BLOCKING AND CREATING PENDING APPROVAL`);
         
-        // CRITICAL FIX: Block the action and require approval
-        return res.status(403).json({
-          success: false,
-          error: `Your ${action} action for ${module} requires Super Admin approval. Please contact your administrator.`,
-          requiresApproval: true,
-          module: module,
-          action: action
-        });
+        // Create pending approval request
+        const pool = require('../db/pool');
+        try {
+          const result = await pool.query(
+            `INSERT INTO pending_approvals (admin_id, action_type, module, item_data, status)
+             VALUES ($1, $2, $3, $4, 'pending')
+             RETURNING id`,
+            [req.user.id, action, module, JSON.stringify(req.body)]
+          );
+          
+          console.log(`✅ Pending approval created: ID ${result.rows[0].id}`);
+          
+          return res.status(202).json({
+            success: true,
+            message: `Your ${module} creation request has been submitted for Super Admin approval.`,
+            requiresApproval: true,
+            pending: true,
+            approvalId: result.rows[0].id
+          });
+        } catch (error) {
+          console.error('❌ Failed to create approval request:', error);
+          return res.status(500).json({
+            success: false,
+            error: 'Failed to submit approval request. Please contact your administrator.'
+          });
+        }
       }
     }
     

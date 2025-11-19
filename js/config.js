@@ -73,11 +73,17 @@ let isPageLoading = false;
 // FIXED: Cache-first approach with graceful fallback
 async function loadClubConfiguration(forceRefresh = false) {
   try {
-    console.log('Loading club configuration... Force refresh:', forceRefresh);
+    console.log('🔄 Loading club configuration... Force refresh:', forceRefresh);
+    
+    // ✅ CRITICAL FIX: ALWAYS skip cache if force refresh requested
+    if (forceRefresh) {
+      console.log('🗑️ Force refresh - clearing cache');
+      localStorage.removeItem('cache_clubConfig');
+    }
     
     // Check if API client exists
     if (!window.apiClient || !window.apiClient.isReady) {
-      console.warn('API client not ready, using cached data');
+      console.warn('⚠️ API client not ready, using cached data');
       const cached = await loadFromCache('clubConfig');
       if (cached) {
         updateClubConfigDOM(cached);
@@ -85,11 +91,11 @@ async function loadClubConfiguration(forceRefresh = false) {
       return cached !== null;
     }
     
-    // ✅ CRITICAL FIX: Skip cache if force refresh requested
+    // Try cache ONLY if NOT force refresh
     if (!forceRefresh) {
       const cached = await loadFromCache('clubConfig');
       if (cached) {
-      console.log('Using cached club configuration');
+      console.log('📦 Using cached club configuration');
       updateClubConfigDOM(cached);
       return true;
       }
@@ -120,6 +126,28 @@ async function loadClubConfiguration(forceRefresh = false) {
     return false;
   }
 }
+
+// Force refresh club config from API and clear cache
+async function forceRefreshClubConfig() {
+  try {
+    console.log('🔄 Force refreshing club config from API...');
+    
+    // Clear cache completely
+    localStorage.removeItem('cache_clubConfig');
+    
+    // Force reload from API
+    await loadClubConfiguration(true);
+    
+    console.log('✅ Force refresh complete');
+    return true;
+  } catch (error) {
+    console.error('❌ Force refresh failed:', error);
+    return false;
+  }
+}
+
+// Expose globally for admin panel
+window.forceRefreshClubConfig = forceRefreshClubConfig;
 
 // Helper function to update DOM with club config
 function updateClubConfigDOM(config) {

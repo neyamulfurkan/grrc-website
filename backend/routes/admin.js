@@ -50,8 +50,12 @@ router.put('/config', async (req, res) => {
     
     console.log(`✏️ Club config updated by ${req.user.username}:`, {
       bkash: result.data?.bkash_number,
-      fee: result.data?.membership_fee
+      fee: result.data?.membership_fee,
+      logo: result.data?.logo ? result.data.logo.substring(0, 50) + '...' : 'none'
     });
+    
+    // Add cache invalidation header
+    res.setHeader('X-Config-Updated', 'true');
     res.json(result);
   } catch (error) {
     console.error('❌ Error in PUT /config:', {

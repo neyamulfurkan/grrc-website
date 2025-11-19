@@ -934,6 +934,7 @@
             }
             
             initTheme();
+            await loadClubConfigToSidebar();
             await loadDashboard();
             await loadAdminsList();
             await loadApprovalSettings();
@@ -1576,6 +1577,41 @@
                 closeCreateAdminModal();
             }
         });
+        // Load club config to sidebar
+        async function loadClubConfigToSidebar() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/content/config`);
+                const data = await response.json();
+                
+                if (data.success && data.data) {
+                    const config = data.data;
+                    
+                    // Update sidebar subtitle (club name)
+                    const subtitleEl = document.getElementById('sidebarSubtitle');
+                    if (subtitleEl) {
+                        subtitleEl.textContent = config.club_name || config.name || 'GSTU Robotics & Research Club';
+                    }
+                    
+                    // Update sidebar logo
+                    const logoEl = document.getElementById('sidebarLogo');
+                    if (logoEl && (config.logo || config.logo_url)) {
+                        logoEl.src = config.logo || config.logo_url;
+                        logoEl.onerror = function() {
+                            this.src = 'assets/default-logo.jpg';
+                        };
+                    }
+                    
+                    console.log('✅ Club config loaded to sidebar:', config.club_name || config.name);
+                }
+            } catch (error) {
+                console.error('❌ Error loading club config:', error);
+                const subtitleEl = document.getElementById('sidebarSubtitle');
+                if (subtitleEl) {
+                    subtitleEl.textContent = 'GSTU Robotics & Research Club';
+                }
+            }
+        }
+
         // Setup mobile sidebar toggle - FIXED
         const mobileSidebarToggle = document.getElementById('mobileSidebarToggle');
         const adminSidebar = document.getElementById('adminSidebar');

@@ -119,22 +119,29 @@ function updateClubConfigDOM(config) {
   
   console.log('🎨 Updating DOM with config:', config);
   
-  // Update ALL logo elements
+  // Update ALL logo elements with aggressive cache-busting
   const logoElements = document.querySelectorAll('.club-logo, .admin-logo, #sidebarLogo, #headerLogo, #clubLogo, #footerLogo, .logo, img.logo');
   logoElements.forEach(el => {
     const logoValue = config.logo || config.logo_url;
     if (logoValue) {
-      // Add timestamp to force cache bypass
+      // CRITICAL: Force complete cache bypass with timestamp
+      const cacheBuster = Date.now() + Math.random();
       const logoUrl = logoValue.includes('?') 
-        ? logoValue + '&t=' + Date.now()
-        : logoValue + '?t=' + Date.now();
-      el.src = logoUrl;
+        ? logoValue.split('?')[0] + '?cb=' + cacheBuster
+        : logoValue + '?cb=' + cacheBuster;
+      
+      // Force reload by changing src
+      el.src = '';
+      setTimeout(() => {
+        el.src = logoUrl;
+      }, 10);
+      
       el.alt = config.shortName || config.short_name || 'Club Logo';
       el.onerror = function() {
         this.src = 'assets/default-logo.jpg';
       };
       el.style.display = 'block';
-      console.log('✅ Logo updated:', el.id || el.className);
+      console.log('✅ Logo updated with cache-buster:', el.id || el.className, logoUrl.substring(0, 80));
     }
   });
   
