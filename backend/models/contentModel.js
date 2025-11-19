@@ -27,11 +27,11 @@ async function updateClubConfig(data) {
       membership_fee
     } = data;
     
-    // Handle field name variations
-    const finalLogo = logo_url || logo;
-    const finalName = club_name || name || 'GSTU Robotics & Research Club';
-    const finalMotto = club_motto || motto || '';
-    const finalDescription = club_description || description || '';
+    // Handle field name variations - prioritize frontend field names
+    const finalLogo = logo || logo_url;
+    const finalName = name || club_name || 'GSTU Robotics & Research Club';
+    const finalMotto = motto || club_motto || '';
+    const finalDescription = description || club_description || '';
     const finalBkash = bkash_number || '01712345678';
     const finalFee = membership_fee || 500;
     
