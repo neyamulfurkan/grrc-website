@@ -3157,14 +3157,18 @@ async function loadAdminDashboardInfo() {
 if (section === 'membership-applications') {
     const iframe = document.getElementById('membershipIframe');
     if (iframe && iframe.contentWindow) {
-        // ✅ CRITICAL FIX: Pass token to iframe BEFORE reload
+        console.log('🔄 Reloading membership iframe...');
+        // ✅ CRITICAL FIX: Ensure token is available in both places
         try {
-            const token = window.apiClient.getAuthToken();
-            if (token && iframe.contentWindow.apiClient) {
-                iframe.contentWindow.apiClient.setAuthToken(token);
+            const token = window.apiClient ? window.apiClient.getAuthToken() : localStorage.getItem('grrc_auth_token');
+            if (token) {
+                console.log('🔐 Token available for iframe');
+                // Token will be read by iframe from localStorage
+            } else {
+                console.error('❌ No token found for iframe');
             }
         } catch (e) {
-            console.warn('Could not set iframe token:', e);
+            console.warn('Could not verify iframe token:', e);
         }
         iframe.contentWindow.location.reload();
                     // Update dashboard stat after reload

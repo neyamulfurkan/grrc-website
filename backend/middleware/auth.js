@@ -35,15 +35,22 @@ function authenticateToken(req, res, next) {
     // Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     
-    // CRITICAL FIX: Ensure permissions are parsed if string
-    if (decoded.permissions && typeof decoded.permissions === 'string') {
-      try {
-        decoded.permissions = JSON.parse(decoded.permissions);
-      } catch (e) {
-        console.error('❌ Failed to parse token permissions:', e);
-        decoded.permissions = {};
+    // CRITICAL FIX: Normalize permissions - ensure it's always an object
+    if (decoded.permissions) {
+      if (typeof decoded.permissions === 'string') {
+        try {
+          decoded.permissions = JSON.parse(decoded.permissions);
+        } catch (e) {
+          console.error('❌ Failed to parse token permissions string:', e);
+          decoded.permissions = {};
+        }
       }
+    } else {
+      decoded.permissions = {};
     }
+    
+    // Normalize is_super_admin flag
+    decoded.is_super_admin = decoded.is_super_admin === true || decoded.is_super_admin === 1 || decoded.role === 'Super Admin';
     
     // Attach user info to request object
     req.user = decoded;

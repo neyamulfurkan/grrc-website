@@ -72,15 +72,26 @@ router.post('/login', async (req, res) => {
       }
     }
     
-    console.log('🔐 Creating token with permissions:', permissions);
+    console.log('🔐 Preparing token payload with permissions...');
     
+    // CRITICAL FIX: Ensure permissions is always a plain object, never a string
+    let finalPermissions = permissions;
+    if (typeof permissions === 'string') {
+      try {
+        finalPermissions = JSON.parse(permissions);
+      } catch (e) {
+        console.error('Failed to parse permissions:', e);
+        finalPermissions = {};
+      }
+    }
     
-    console.log('🔐 Generating token with payload:', {
+    console.log('🔐 Token payload:', {
       id: admin.id,
       username: admin.username,
       role: admin.role,
       is_super_admin: admin.is_super_admin || false,
-      permissions: permissions
+      permissions: finalPermissions,
+      permissionsType: typeof finalPermissions
     });
     
     const token = generateToken({
@@ -88,7 +99,7 @@ router.post('/login', async (req, res) => {
       username: admin.username,
       role: admin.role,
       is_super_admin: admin.is_super_admin || false,
-      permissions: permissions
+      permissions: finalPermissions
     });
     
     console.log('✅ Token generated successfully');

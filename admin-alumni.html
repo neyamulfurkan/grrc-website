@@ -425,26 +425,32 @@
         }
     }
     
-    console.log('✅ Access granted');
+    console.log('✅ Access granted - initializing API client...');
     
-    console.log('✅ Access granted');
-            // Force use parent's API client and token
-            if (window.parent && window.parent.apiClient) {
-                window.apiClient = window.parent.apiClient;
-                console.log('✅ Using parent window API client');
-                
-                const token = window.parent.apiClient.getAuthToken();
-                if (token) {
-                    window.apiClient.setAuthToken(token);
-                    console.log('✅ Token loaded from parent');
-                }
-            } else {
-                let retries = 0;
-                while ((!window.apiClient || !window.apiClient.isReady) && retries < 30) {
-                    await new Promise(resolve => setTimeout(resolve, 100));
-                    retries++;
-                }
+    // CRITICAL FIX: Force use parent's API client and token
+    if (window.parent && window.parent.apiClient) {
+        window.apiClient = window.parent.apiClient;
+        console.log('✅ Using parent window API client');
+        
+        const token = window.parent.apiClient.getAuthToken();
+        if (token) {
+            console.log('🔐 Token found in parent API client');
+        } else {
+            console.warn('⚠️ No token in parent API client - attempting to restore from localStorage');
+            const storedToken = localStorage.getItem('grrc_auth_token');
+            if (storedToken && window.apiClient.setAuthToken) {
+                window.apiClient.setAuthToken(storedToken);
+                console.log('✅ Token restored from localStorage');
             }
+        }
+    } else {
+        console.log('⚠️ Parent API client not available - waiting for own client...');
+        let retries = 0;
+        while ((!window.apiClient || !window.apiClient.isReady) && retries < 30) {
+            await new Promise(resolve => setTimeout(resolve, 100));
+            retries++;
+        }
+    }
             
             if (!window.apiClient || !window.apiClient.isReady) {
                 console.error('❌ API client not available');

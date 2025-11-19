@@ -92,13 +92,26 @@
               async function initializeApplications() {
     console.log('🔄 Initializing membership applications iframe...');
     
-    // CRITICAL FIX: Get admin from parent window OR session
+    // Wait for DOM to be ready
+    await new Promise(resolve => {
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', resolve);
+        } else {
+            resolve();
+        }
+    });
+    
+    // CRITICAL FIX: Get admin with proper fallback chain
     let admin = null;
     
-    // Try parent window first
-    if (window.parent && window.parent.getCurrentAdmin) {
-        admin = window.parent.getCurrentAdmin();
-        console.log('👤 Admin from parent:', admin ? admin.username : 'null');
+    // Try parent window's getCurrentAdmin first
+    if (window.parent && typeof window.parent.getCurrentAdmin === 'function') {
+        try {
+            admin = window.parent.getCurrentAdmin();
+            console.log('👤 Admin from parent getCurrentAdmin:', admin ? admin.username : 'null');
+        } catch (e) {
+            console.warn('Failed to get admin from parent:', e);
+        }
     }
     
     // Fallback: Try sessionStorage
@@ -107,16 +120,16 @@
         if (sessionData) {
             try {
                 admin = JSON.parse(sessionData);
-                console.log('👤 Admin from session:', admin.username);
+                console.log('👤 Admin from sessionStorage:', admin.username);
             } catch (e) {
                 console.error('Failed to parse session:', e);
             }
         }
     }
     
-    // Last resort: Decode token
+    // Last resort: Decode token from localStorage
     if (!admin) {
-        const token = localStorage.getItem('grrc_auth_token') || sessionStorage.getItem('grrc_auth_token');
+        const token = localStorage.getItem('grrc_auth_token');
         if (token) {
             try {
                 const tokenData = JSON.parse(atob(token.split('.')[1]));
@@ -132,6 +145,7 @@
                     is_super_admin: tokenData.is_super_admin === true || tokenData.is_super_admin === 1,
                     permissions: permissions
                 };
+                console.log('👤 Admin from token decode:', admin.username);
             } catch (e) {
                 console.error('Failed to decode token:', e);
             }
@@ -139,31 +153,55 @@
     }
     
     if (!admin) {
-        document.body.innerHTML = `<div style="display: flex; align-items: center; justify-content: center; height: 100vh; text-align: center; padding: 2rem;"><div><h2 style="color: var(--error-color);">🔐 Authentication Required</h2><p style="color: var(--text-secondary);">Please log in.</p></div></div>`;
+        console.error('❌ No admin found in any source');
+        const tbody = document.getElementById('applicationsTableBody');
+        if (tbody) {
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 2rem; color: var(--error-color);">🔐 Authentication Required - Please log in</td></tr>';
+        }
         return;
     }
     
-    // ✅ CRITICAL FIX: Check role FIRST, BEFORE permissions
-    const isSuperAdmin = admin.role === 'Super Admin' || admin.is_super_admin === true;
+    // ✅ CRITICAL FIX: Check role FIRST, normalize permissions
+    const isSuperAdmin = admin.role === 'Super Admin' || admin.is_super_admin === true || admin.is_super_admin === 1;
     
-    console.log('🔑 Authentication:', {
+    // Normalize permissions - ensure it's an object
+    let permissions = admin.permissions || {};
+    if (typeof permissions === 'string') {
+        try {
+            permissions = JSON.parse(permissions);
+        } catch (e) {
+            console.error('Failed to parse permissions:', e);
+            permissions = {};
+        }
+    }
+    
+    console.log('🔑 Authentication check:', {
         username: admin.username,
         role: admin.role,
-        isSuperAdmin: isSuperAdmin
+        isSuperAdmin: isSuperAdmin,
+        permissions: permissions
     });
     
     // ✅ Super admins bypass ALL permission checks
     if (!isSuperAdmin) {
-        const permissions = admin.permissions || {};
-        const hasAccess = permissions.membership?.view === true || permissions.membership?.approve === true;
+        const membershipPerms = permissions.membership || {};
+        const hasAccess = membershipPerms.view === true || membershipPerms.approve === true;
+        
+        console.log('🔍 Permission check for regular admin:', {
+            membershipPerms: membershipPerms,
+            hasAccess: hasAccess
+        });
         
         if (!hasAccess) {
-            document.body.innerHTML = `<div style="display: flex; align-items: center; justify-content: center; height: 100vh; text-align: center; padding: 2rem;"><div><h2 style="color: var(--error-color);">🚫 Access Denied</h2><p style="color: var(--text-secondary);">Contact Super Admin for access.</p></div></div>`;
+            const tbody = document.getElementById('applicationsTableBody');
+            if (tbody) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 2rem; color: var(--error-color);">🚫 Access Denied - Contact Super Admin for access</td></tr>';
+            }
             return;
         }
     }
     
-    console.log('✅ Access granted');
+    console.log('✅ Access granted - initializing...');
     
     console.log('✅ Access granted');
     
@@ -206,27 +244,35 @@
         return;
     }
             
-            if (!window.apiClient || !window.apiClient.isReady) {
-                console.error('❌ API client not available after 5 seconds');
-                document.getElementById('applicationsTableBody').innerHTML = 
-                    '<tr><td colspan="7" style="text-align: center; padding: var(--space-xl); color: var(--error-color);">Failed to initialize API client</td></tr>';
-                return;
-            }
-            
-            console.log('🔐 API client ready, checking authentication...');
-            const token = window.apiClient.getAuthToken();
-            if (!token) {
-                console.error('❌ No authentication token found');
-                document.getElementById('applicationsTableBody').innerHTML = 
-                    '<tr><td colspan="7" style="text-align: center; padding: var(--space-xl); color: var(--error-color);">Not authenticated. Please reload the page.</td></tr>';
-                return;
-            }
-            
-            console.log('✅ Authentication token found');
+            // Final verification
+    if (!window.apiClient || !window.apiClient.isReady) {
+        console.error('❌ API client not available');
+        const tbody = document.getElementById('applicationsTableBody');
+        if (tbody) {
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: var(--space-xl); color: var(--error-color);">API client failed to initialize. Please refresh the page.</td></tr>';
+        }
+        return;
+    }
     
+    console.log('🔐 API client ready, verifying token...');
+    const token = window.apiClient.getAuthToken();
+    if (!token) {
+        console.error('❌ No authentication token found');
+        const tbody = document.getElementById('applicationsTableBody');
+        if (tbody) {
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: var(--space-xl); color: var(--error-color);">Not authenticated. Please log in again.</td></tr>';
+        }
+        return;
+    }
+    
+    console.log('✅ Token verified - loading data...');
+    
+    // Load data
     await loadApplicationStatistics();
-    await loadMembershipApplications('pending'); // ✅ FIX: Load pending by default
+    await loadMembershipApplications('pending');
     initializeApplicationFilters();
+    
+    console.log('✅ Membership applications initialized successfully');
 }
 
         async function loadApplicationStatistics() {

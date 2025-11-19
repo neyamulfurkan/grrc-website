@@ -609,20 +609,31 @@ function getCurrentAdmin() {
   
   // If using API authentication, return session data directly WITH is_super_admin flag
   if (session.hasToken) {
-    // CRITICAL FIX: Detect super admin from multiple sources - check ROLE FIRST
+    // CRITICAL FIX: Detect super admin from role FIRST, then flag
     const isSuperAdmin = session.role === 'Super Admin' ||
                          session.is_super_admin === true || 
                          session.is_super_admin === 1;
+    
+    // Normalize permissions - handle string or object
+    let permissions = session.permissions || {};
+    if (typeof permissions === 'string') {
+      try {
+        permissions = JSON.parse(permissions);
+      } catch (e) {
+        console.error('Failed to parse session permissions:', e);
+        permissions = {};
+      }
+    }
     
     const admin = {
       id: session.adminId,
       username: session.username,
       role: session.role || 'Admin',
       is_super_admin: isSuperAdmin,
-      permissions: session.permissions || {}
+      permissions: permissions
     };
     
-    // If super admin, grant ALL permissions automatically
+    // If super admin, grant ALL permissions automatically (override any stored permissions)
     if (isSuperAdmin) {
       admin.permissions = {
         members: { view: true, create: true, edit: true, delete: true },
@@ -639,6 +650,7 @@ function getCurrentAdmin() {
       username: admin.username,
       isSuperAdmin: admin.is_super_admin,
       role: admin.role,
+      permissionsType: typeof permissions,
       hasPermissions: Object.keys(admin.permissions).length > 0
     });
     
