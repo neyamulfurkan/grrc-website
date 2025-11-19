@@ -1422,7 +1422,7 @@
         document.addEventListener('DOMContentLoaded', () => {
             console.log('Admin Panel Loading...');
             
-            function initializeAdminPanel() {
+            async function initializeAdminPanel() {
                 // CRITICAL: Check token FIRST, create session if missing
                 
                 const token = localStorage.getItem('grrc_auth_token');
@@ -1490,13 +1490,13 @@
 
                 initTheme();
                 loadAdminInfo();
-                loadClubConfigToSidebar();
-                loadDashboardStats();
+                await loadClubConfigToSidebar();
+                await loadDashboardStats();
                 setupNavigation();
                 setupLogoutButton();
                 setupForms();
                 setupMobileSidebar();
-                loadAllData();
+                await loadAllData();
             }
 
             // CRITICAL FIX: Wait longer for all scripts to load
@@ -1726,61 +1726,50 @@ async function loadAdminDashboardInfo() {
         }
         async function loadDashboardStats() {
             try {
-                const [statsResult, adminsResult] = await Promise.all([
-                    fetch(`${API_BASE_URL}/api/superadmin/dashboard`, {
-                        headers: { 'Authorization': `Bearer ${localStorage.getItem('superAdminToken')}` }
-                    }),
-                    fetch(`${API_BASE_URL}/api/superadmin/admins`, {
-                        headers: { 'Authorization': `Bearer ${localStorage.getItem('superAdminToken')}` }
-                    })
+                console.log('📊 Loading dashboard statistics...');
+                
+                // Clear all caches first
+                localStorage.removeItem('cache_members');
+                localStorage.removeItem('cache_events');
+                localStorage.removeItem('cache_projects');
+                localStorage.removeItem('cache_gallery');
+                localStorage.removeItem('cache_announcements');
+                localStorage.removeItem('cache_alumni');
+                
+                // Fetch fresh data from APIs
+                const [membersResult, eventsResult, projectsResult, galleryResult, applicationsResult, alumniResult] = await Promise.all([
+                    window.apiClient.getMembers(),
+                    window.apiClient.getEvents(),
+                    window.apiClient.getProjects(),
+                    window.apiClient.getGallery(),
+                    window.apiClient.getMembershipApplications('pending'),
+                    window.apiClient.getAlumni()
                 ]);
                 
-                const statsData = await statsResult.json();
-                const adminsData = await adminsResult.json();
+                // Update statistics
+                const membersCount = (membersResult.success && Array.isArray(membersResult.data)) ? membersResult.data.length : 0;
+                const eventsCount = (eventsResult.success && Array.isArray(eventsResult.data)) ? eventsResult.data.length : 0;
+                const projectsCount = (projectsResult.success && Array.isArray(projectsResult.data)) ? projectsResult.data.length : 0;
+                const galleryCount = (galleryResult.success && Array.isArray(galleryResult.data)) ? galleryResult.data.length : 0;
+                const pendingCount = (applicationsResult.success && Array.isArray(applicationsResult.data)) ? applicationsResult.data.length : 0;
+                const alumniCount = (alumniResult.success && Array.isArray(alumniResult.data)) ? alumniResult.data.length : 0;
                 
-                if (statsData.success) {
-                    document.getElementById('totalAdmins').textContent = statsData.data.totalAdmins || 0;
-                    document.getElementById('activeAdmins').textContent = statsData.data.activeAdmins || 0;
-                    document.getElementById('pendingApprovals').textContent = statsData.data.pendingApprovals || 0;
-                }
+                document.getElementById('statMembers').textContent = membersCount;
+                document.getElementById('statEvents').textContent = eventsCount;
+                document.getElementById('statProjects').textContent = projectsCount;
+                document.getElementById('statGallery').textContent = galleryCount;
+                document.getElementById('statPendingApplications').textContent = pendingCount;
+                document.getElementById('statAlumni').textContent = alumniCount;
                 
-                // Show "Other Administrators" section
-                const otherAdminsSection = document.getElementById('otherAdminsOverview');
-                if (otherAdminsSection && adminsData.success && adminsData.data) {
-                    otherAdminsSection.style.display = 'block';
-                    
-                    const adminsHTML = adminsData.data.map(admin => {
-                        const permissions = admin.permissions || {};
-                        const modules = Object.keys(permissions).filter(m => 
-                            Object.values(permissions[m]).some(v => v === true)
-                        );
-                        
-                        return `
-                            <div style="background: var(--background-color); padding: var(--space-md); border-radius: var(--radius-md); margin-bottom: var(--space-sm); border: 1px solid var(--border-color);">
-                                <div style="display: flex; justify-content: space-between; align-items: center;">
-                                    <div>
-                                        <strong style="color: var(--text-primary); font-size: 1.1rem;">${admin.username}</strong>
-                                        <span class="badge badge-info" style="margin-left: 0.5rem;">${admin.role || 'Admin'}</span>
-                                    </div>
-                                    <div style="display: flex; gap: 0.5rem; align-items: center;">
-                                        <span class="badge ${admin.is_active ? 'badge-success' : 'badge-error'}">${admin.is_active ? 'Active' : 'Inactive'}</span>
-                                        <span style="color: var(--text-secondary); font-size: 0.875rem;">Last login: ${admin.last_login ? new Date(admin.last_login).toLocaleDateString() : 'Never'}</span>
-                                    </div>
-                                </div>
-                                <div style="margin-top: var(--space-xs); font-size: 0.875rem; color: var(--text-secondary);">
-                                    Can manage: <strong>${modules.length > 0 ? modules.join(', ') : 'No permissions'}</strong>
-                                </div>
-                            </div>
-                        `;
-                    }).join('');
-                    
-                    document.getElementById('otherAdminsDisplay').innerHTML = adminsHTML || '<p style="color: var(--text-secondary);">No other administrators.</p>';
-                }
+                console.log('✅ Dashboard stats updated:', { membersCount, eventsCount, projectsCount, galleryCount, pendingCount, alumniCount });
             } catch (error) {
-                console.error('Error loading dashboard:', error);
-                document.getElementById('totalAdmins').textContent = '0';
-                document.getElementById('activeAdmins').textContent = '0';
-                document.getElementById('pendingApprovals').textContent = '0';
+                console.error('❌ Error loading dashboard stats:', error);
+                document.getElementById('statMembers').textContent = '0';
+                document.getElementById('statEvents').textContent = '0';
+                document.getElementById('statProjects').textContent = '0';
+                document.getElementById('statGallery').textContent = '0';
+                document.getElementById('statPendingApplications').textContent = '0';
+                document.getElementById('statAlumni').textContent = '0';
             }
         }
 
@@ -3033,6 +3022,8 @@ async function loadAdminDashboardInfo() {
                     loadAdmins()
                 ]);
                 console.log('All data loaded successfully');
+                // ✅ CRITICAL FIX: Update dashboard stats after all data loads
+                await loadDashboardStats();
             } catch (error) {
                 console.error('Error loading data:', error);
                 
@@ -3093,7 +3084,7 @@ async function loadAdminDashboardInfo() {
             }
         }
 
-        function navigateToSection(section) {
+        async function navigateToSection(section) {
             console.log('🔄 Navigating to section:', section);
             
             // Remove active class from all nav items
@@ -3174,6 +3165,7 @@ async function loadAdminDashboardInfo() {
             // Load section-specific data
             console.log('📊 Loading data for section:', section);
             if (section === 'dashboard') {
+                // ✅ CRITICAL FIX: Force fresh stats load
                 loadDashboardStats();
                 loadAdminDashboardInfo();
             }
