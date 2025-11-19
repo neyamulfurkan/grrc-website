@@ -47,15 +47,23 @@ async function updateClubConfig(data) {
       console.log('➕ No config found, inserting new row...');
       const insertQuery = `
         INSERT INTO club_config (logo, club_name, club_motto, club_description, social_links, bkash_number, membership_fee)
-        VALUES ($1, $2, $3, $4, $5::jsonb, $6, $7)
+        VALUES (
+          COALESCE($1, 'assets/default-logo.jpg'), 
+          COALESCE($2, 'GSTU Robotics & Research Club'), 
+          COALESCE($3, ''), 
+          COALESCE($4, ''), 
+          COALESCE($5::jsonb, '[]'::jsonb), 
+          COALESCE($6, '01712345678'), 
+          COALESCE($7, 500)
+        )
         RETURNING *
       `;
       const insertValues = [
-        finalLogo || 'assets/default-logo.jpg',
+        finalLogo,
         finalName,
         finalMotto,
         finalDescription,
-        finalSocialLinks || '[]',
+        finalSocialLinks,
         finalBkash,
         finalFee
       ];
