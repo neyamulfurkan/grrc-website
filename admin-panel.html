@@ -3494,7 +3494,14 @@ if (section === 'membership-applications') {
 
             showToast('Configuration saved successfully!', 'success');
 
-            // ✅ FIX: Don't reload page - just update UI and stay on form
+            // ✅ FIX: Keep form data populated after save
+            // Update form fields with saved data to prevent clearing
+            document.getElementById('clubName').value = savedConfig.club_name || savedConfig.name || config.club_name;
+            document.getElementById('clubMotto').value = savedConfig.club_motto || config.club_motto;
+            document.getElementById('clubDescription').value = savedConfig.club_description || config.club_description;
+            document.getElementById('bkashNumber').value = savedConfig.bkash_number || config.bkash_number;
+            document.getElementById('membershipFee').value = savedConfig.membership_fee || config.membership_fee;
+            
             // Update preview images if they exist
             const logoPreview = document.getElementById('logoPreview');
             if (logoPreview && savedConfig.logo) {
@@ -3542,11 +3549,6 @@ if (section === 'membership-applications') {
                 const timestamp = Date.now();
                 const result = await window.apiClient.request(`/api/content/config?_t=${timestamp}`, {
                     method: 'GET',
-                    headers: {
-                        'Cache-Control': 'no-cache, no-store, must-revalidate',
-                        'Pragma': 'no-cache',
-                        'Expires': '0'
-                    },
                     cache: 'no-store'
                 });
                 

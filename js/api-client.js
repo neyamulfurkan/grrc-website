@@ -259,7 +259,7 @@ async function getStatistics() {
 }
 
 async function getAdmins() {
-    return request('/api/admin/admins');
+    return request('/api/superadmin/admins');
 }
 
 async function login(username, password) {

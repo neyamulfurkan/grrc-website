@@ -62,7 +62,9 @@ const corsOptions = {
         'Accept',
         'Origin',
         'Cache-Control',
-        'X-File-Name'
+        'X-File-Name',
+        'Pragma',
+        'Expires'
     ],
     exposedHeaders: ['Content-Range', 'X-Content-Range', 'X-Total-Count'],
     maxAge: 600,
