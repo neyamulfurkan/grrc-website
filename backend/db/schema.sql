@@ -56,6 +56,7 @@ CREATE TABLE admins (
     role VARCHAR(50) DEFAULT 'Admin' CHECK (role IN ('Super Admin', 'Admin', 'Moderator')),
     is_super_admin BOOLEAN DEFAULT false,
     permissions JSONB DEFAULT '{}'::jsonb,
+    permissions_type VARCHAR(20) DEFAULT 'object',
     is_active BOOLEAN DEFAULT true,
     created_by INTEGER REFERENCES admins(id) ON DELETE SET NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

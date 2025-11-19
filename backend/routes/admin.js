@@ -693,7 +693,7 @@ router.delete('/admins/:id', isSuperAdmin, async (req, res) => {
  * Create new alumni record
  * Required fields: name, batch_year, department
  */
-router.post('/alumni', async (req, res) => {
+router.post('/alumni', checkPermission('alumni', 'create'), async (req, res) => {
   try {
     const { name, batch_year, department } = req.body;
     
@@ -730,7 +730,7 @@ router.post('/alumni', async (req, res) => {
  * PUT /api/admin/alumni/:id
  * Update alumni record
  */
-router.put('/alumni/:id', async (req, res) => {
+router.put('/alumni/:id', checkPermission('alumni', 'edit'), async (req, res) => {
   try {
     const result = await alumniModel.updateAlumni(req.params.id, req.body);
     
@@ -758,7 +758,7 @@ router.put('/alumni/:id', async (req, res) => {
  * DELETE /api/admin/alumni/:id
  * Delete alumni record
  */
-router.delete('/alumni/:id', async (req, res) => {
+router.delete('/alumni/:id', checkPermission('alumni', 'delete'), async (req, res) => {
   try {
     const result = await alumniModel.deleteAlumni(req.params.id);
     
@@ -786,7 +786,7 @@ router.delete('/alumni/:id', async (req, res) => {
  * GET /api/admin/alumni/statistics
  * Get alumni statistics
  */
-router.get('/alumni/statistics', async (req, res) => {
+router.get('/alumni/statistics', checkPermission('alumni', 'view'), async (req, res) => {
   try {
     const result = await alumniModel.getAlumniStatistics();
     res.json(result);

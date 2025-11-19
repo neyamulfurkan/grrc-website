@@ -35,12 +35,22 @@ function authenticateToken(req, res, next) {
     // Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     
+    // CRITICAL FIX: Ensure permissions are parsed if string
+    if (decoded.permissions && typeof decoded.permissions === 'string') {
+      try {
+        decoded.permissions = JSON.parse(decoded.permissions);
+      } catch (e) {
+        console.error('❌ Failed to parse token permissions:', e);
+        decoded.permissions = {};
+      }
+    }
+    
     // Attach user info to request object
     req.user = decoded;
     
     // Log authentication (optional, for debugging)
     if (process.env.NODE_ENV === 'development') {
-      console.log('✅ User authenticated:', decoded.username);
+      console.log('✅ User authenticated:', decoded.username, 'Permissions:', decoded.permissions);
     }
     
     // Proceed to next middleware/route handler
@@ -162,16 +172,41 @@ function checkPermission(module, action) {
     }
     
     // Check specific permission
-    const permissions = req.user.permissions || {};
+    let permissions = req.user.permissions;
+    
+    // CRITICAL FIX: Handle permissions being a string (JSON)
+    if (typeof permissions === 'string') {
+      try {
+        permissions = JSON.parse(permissions);
+      } catch (e) {
+        console.error('❌ Failed to parse permissions JSON:', e);
+        permissions = {};
+      }
+    }
+    
+    // Ensure permissions is an object
+    if (!permissions || typeof permissions !== 'object') {
+      console.warn(`⚠️ Admin ${req.user.username} has invalid permissions:`, permissions);
+      return res.status(403).json({
+        success: false,
+        error: `Permission denied: Invalid permissions structure. Contact your Super Admin.`,
+      });
+    }
     
     // Check if module exists and has the action permission set to true
     if (!permissions[module] || permissions[module][action] !== true) {
+      console.warn(`❌ Permission denied for ${req.user.username}: ${module}.${action}`, {
+        hasModule: !!permissions[module],
+        modulePerms: permissions[module],
+        actionValue: permissions[module]?.[action]
+      });
       return res.status(403).json({
         success: false,
         error: `Permission denied: You don't have permission to ${action} ${module}.`,
       });
     }
     
+    console.log(`✅ Permission granted for ${req.user.username}: ${module}.${action}`);
     next();
   };
 }
@@ -188,13 +223,13 @@ async function checkApprovalRequired(module, action) {
     const pool = require('../db/pool');
     const settingKey = `require_approval_${module}`;
     
-    const [result] = await pool.query(
+    const result = await pool.query(
       'SELECT setting_value FROM super_admin_settings WHERE setting_key = $1',
       [settingKey]
     );
     
-    if (result.length === 0) return false;
-    return result[0].setting_value === 'true';
+    if (!result.rows || result.rows.length === 0) return false;
+    return result.rows[0].setting_value === 'true';
   } catch (error) {
     console.error('❌ Check approval required error:', error);
     return false; // Default to no approval required on error
