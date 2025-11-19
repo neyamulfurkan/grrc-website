@@ -1492,11 +1492,17 @@
                 loadAdminInfo();
                 await loadClubConfigToSidebar();
                 await loadDashboardStats();
+                await loadAdminDashboardInfo(); // ✅ FIX: Load dashboard info on initial load
                 setupNavigation();
                 setupLogoutButton();
                 setupForms();
                 setupMobileSidebar();
                 await loadAllData();
+                
+                // ✅ FIX: Load club config data immediately after initialization
+                if (currentSection === 'club-config') {
+                    await loadClubConfig();
+                }
             }
 
             // CRITICAL FIX: Wait longer for all scripts to load
@@ -3478,34 +3484,29 @@ if (section === 'membership-applications') {
                 console.log('✅ Sidebar logo updated');
             }
 
-            if (sidebarSubtitle && savedConfig.name) {
-                sidebarSubtitle.textContent = savedConfig.name;
+            if (sidebarSubtitle && (savedConfig.club_name || savedConfig.name)) {
+                sidebarSubtitle.textContent = savedConfig.club_name || savedConfig.name;
                 console.log('✅ Sidebar name updated');
             }
 
-            showToast('Configuration saved successfully! Refreshing page...', 'success');
+            showToast('Configuration saved successfully!', 'success');
 
-            // ✅ CRITICAL FIX: Clear everything and force reload
-            setTimeout(async () => {
-                console.log('🔄 Final cache clear before reload...');
-                
-                // Clear all localStorage config
-                localStorage.removeItem('cache_clubConfig');
-                localStorage.removeItem('clubConfig');
-                if (typeof STORAGE_KEYS !== 'undefined') {
-                    localStorage.removeItem(STORAGE_KEYS.CLUB_CONFIG);
-                }
-                
-                // Clear service worker cache
-                if ('caches' in window) {
-                    const cacheNames = await caches.keys();
-                    await Promise.all(cacheNames.map(name => caches.delete(name)));
-                }
-                
-                console.log('🔄 Performing hard reload with timestamp...');
-                // Force reload with cache bust
-                window.location.href = window.location.href.split('?')[0] + '?_=' + Date.now();
-            }, 1500);
+            // ✅ FIX: Don't reload page - just update UI and stay on form
+            // Update preview images if they exist
+            const logoPreview = document.getElementById('logoPreview');
+            if (logoPreview && savedConfig.logo) {
+                const previewUrl = savedConfig.logo.includes('?') 
+                    ? savedConfig.logo + '&t=' + Date.now()
+                    : savedConfig.logo + '?t=' + Date.now();
+                logoPreview.src = previewUrl;
+                logoPreview.style.display = 'block';
+            }
+
+            // Re-trigger a data load for the club config section to show updates
+            setTimeout(() => {
+                loadClubConfig();
+            }, 500);
+
         } catch (error) {
             console.error('Error saving config:', error);
             
@@ -3528,7 +3529,9 @@ if (section === 'membership-applications') {
                 // ✅ CRITICAL: Clear cache FIRST to force fresh API fetch
                 localStorage.removeItem('cache_clubConfig');
                 localStorage.removeItem('clubConfig');
-                localStorage.removeItem(STORAGE_KEYS.CLUB_CONFIG);
+                if (typeof STORAGE_KEYS !== 'undefined') {
+                    localStorage.removeItem(STORAGE_KEYS.CLUB_CONFIG);
+                }
                 
                 const result = await getClubConfig();
                 if (result.success && result.data) {
@@ -3543,16 +3546,16 @@ if (section === 'membership-applications') {
                     if (logoValue) {
                         document.getElementById('logoUrl').value = logoValue;
                         const preview = document.getElementById('logoPreview');
-                        preview.src = logoValue;
+                        preview.src = logoValue + '?t=' + Date.now(); // Cache-bust
                         preview.style.display = 'block';
                         preview.onerror = function() {
                             this.src = 'assets/default-logo.jpg';
                         };
                     }
 
-                    document.getElementById('clubName').value = config.name || config.club_name || 'GSTU Robotics & Research Club';
-                    document.getElementById('clubMotto').value = config.motto || config.club_motto || '';
-                                        document.getElementById('clubDescription').value = config.description || config.club_description || '';
+                    document.getElementById('clubName').value = config.club_name || config.name || 'GSTU Robotics & Research Club';
+                    document.getElementById('clubMotto').value = config.club_motto || config.motto || '';
+                    document.getElementById('clubDescription').value = config.club_description || config.description || '';
                     
                     // ✅ CRITICAL FIX: Load membership settings from BOTH possible field names
                     const bkashValue = config.bkash_number || config.bkashNumber || '01712345678';
@@ -3574,9 +3577,17 @@ if (section === 'membership-applications') {
                         fee: feeValue
                     });
 
-                    if (config.socialLinks || config.social_links) {
-                        const links = config.socialLinks || config.social_links;
+                    if (config.social_links || config.socialLinks) {
+                        const links = config.social_links || config.socialLinks;
                         if (Array.isArray(links)) {
+                            // ✅ FIX: Clear all social fields first
+                            ['facebook', 'twitter', 'instagram', 'linkedin', 'youtube', 'github', 'email'].forEach(platform => {
+                                const inputId = `social${platform.charAt(0).toUpperCase() + platform.slice(1)}`;
+                                const input = document.getElementById(inputId);
+                                if (input) input.value = '';
+                            });
+                            
+                            // Now populate with actual data
                             links.forEach(link => {
                                 const inputId = `social${link.platform.charAt(0).toUpperCase() + link.platform.slice(1)}`;
                                 const input = document.getElementById(inputId);
