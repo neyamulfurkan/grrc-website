@@ -92,10 +92,16 @@ async function request(endpoint, options = {}) {
             ...defaultHeaders,
             ...options.headers,
         },
+        // CRITICAL FIX: Disable browser cache for GET requests
+        cache: options.cache || 'no-store'
     };
     
+    // CRITICAL FIX: Only deduplicate POST/PUT/DELETE, NOT GET requests
+    const method = config.method || 'GET';
+    const shouldDeduplicate = method !== 'GET' && !endpoint.includes('?_t=');
+    
     const requestKey = getRequestKey(url, config);
-    if (activeRequests.has(requestKey)) {
+    if (shouldDeduplicate && activeRequests.has(requestKey)) {
         console.log(`♻️ Reusing existing request: ${endpoint}`);
         return activeRequests.get(requestKey);
     }
@@ -193,47 +199,61 @@ async function request(endpoint, options = {}) {
 }
 
 async function getConfig() {
-    return request('/api/content/config');
+    const timestamp = Date.now();
+    return request(`/api/content/config?_t=${timestamp}`);
 }
 
 async function getMembers(filters = {}) {
+    const timestamp = Date.now();
+    filters._t = timestamp;
     const queryParams = new URLSearchParams(filters).toString();
-    const endpoint = `/api/content/members${queryParams ? '?' + queryParams : ''}`;
+    const endpoint = `/api/content/members?${queryParams}`;
     return request(endpoint);
 }
 
 async function getMemberById(id) {
-    return request(`/api/content/members/${id}`);
+    const timestamp = Date.now();
+    return request(`/api/content/members/${id}?_t=${timestamp}`);
 }
 
 async function getEvents(filters = {}) {
+    const timestamp = Date.now();
+    filters._t = timestamp;
     const queryParams = new URLSearchParams(filters).toString();
-    const endpoint = `/api/content/events${queryParams ? '?' + queryParams : ''}`;
+    const endpoint = `/api/content/events?${queryParams}`;
     return request(endpoint);
 }
 
 async function getEventById(id) {
-    return request(`/api/content/events/${id}`);
+    const timestamp = Date.now();
+    return request(`/api/content/events/${id}?_t=${timestamp}`);
 }
 
 async function getProjects(filters = {}) {
+    const timestamp = Date.now();
+    filters._t = timestamp;
     const queryParams = new URLSearchParams(filters).toString();
-    const endpoint = `/api/content/projects${queryParams ? '?' + queryParams : ''}`;
+    const endpoint = `/api/content/projects?${queryParams}`;
     return request(endpoint);
 }
 
 async function getProjectById(id) {
-    return request(`/api/content/projects/${id}`);
+    const timestamp = Date.now();
+    return request(`/api/content/projects/${id}?_t=${timestamp}`);
 }
 
 async function getGallery(filters = {}) {
+    const timestamp = Date.now();
+    filters._t = timestamp;
     const queryParams = new URLSearchParams(filters).toString();
-    const endpoint = `/api/content/gallery${queryParams ? '?' + queryParams : ''}`;
+    const endpoint = `/api/content/gallery?${queryParams}`;
     return request(endpoint);
 }
 
 async function getGalleryItems(filters = {}) {
     try {
+        const timestamp = Date.now();
+        filters._t = timestamp;
         const result = await getGallery(filters);
         return result;
     } catch (error) {
@@ -247,19 +267,23 @@ async function getGalleryItems(filters = {}) {
 }
 
 async function getGalleryItemById(id) {
-    return request(`/api/content/gallery/${id}`);
+    const timestamp = Date.now();
+    return request(`/api/content/gallery/${id}?_t=${timestamp}`);
 }
 
 async function getAnnouncements() {
-    return request('/api/content/announcements');
+    const timestamp = Date.now();
+    return request(`/api/content/announcements?_t=${timestamp}`);
 }
 
 async function getStatistics() {
-    return request('/api/content/statistics');
+    const timestamp = Date.now();
+    return request(`/api/content/statistics?_t=${timestamp}`);
 }
 
 async function getAdmins() {
-    return request('/api/superadmin/admins');
+    const timestamp = Date.now();
+    return request(`/api/superadmin/admins?_t=${timestamp}`);
 }
 
 async function login(username, password) {
@@ -432,30 +456,37 @@ async function submitMembershipApplication(data) {
 }
 
 async function getAlumni(filters = {}) {
+    const timestamp = Date.now();
+    filters._t = timestamp;
     const queryParams = new URLSearchParams(filters).toString();
-    const endpoint = `/api/content/alumni${queryParams ? '?' + queryParams : ''}`;
+    const endpoint = `/api/content/alumni?${queryParams}`;
     return request(endpoint);
 }
 
 async function getAlumniById(id) {
-    return request(`/api/content/alumni/${id}`);
+    const timestamp = Date.now();
+    return request(`/api/content/alumni/${id}?_t=${timestamp}`);
 }
 
 async function getFeaturedAlumni(limit = 6) {
-    return request(`/api/content/alumni/featured?limit=${limit}`);
+    const timestamp = Date.now();
+    return request(`/api/content/alumni/featured?limit=${limit}&_t=${timestamp}`);
 }
 
 async function getAlumniBatches() {
-    return request('/api/content/alumni/batches');
+    const timestamp = Date.now();
+    return request(`/api/content/alumni/batches?_t=${timestamp}`);
 }
 
 async function getMembershipApplications(status = null) {
-    const endpoint = `/api/membership/applications${status ? '?status=' + status : ''}`;
+    const timestamp = Date.now();
+    const endpoint = `/api/membership/applications${status ? '?status=' + status + '&_t=' + timestamp : '?_t=' + timestamp}`;
     return request(endpoint);
 }
 
 async function getMembershipApplicationById(id) {
-    return request(`/api/membership/applications/${id}`);
+    const timestamp = Date.now();
+    return request(`/api/membership/applications/${id}?_t=${timestamp}`);
 }
 
 async function approveMembershipApplication(id, adminNotes = '') {
@@ -479,7 +510,8 @@ async function deleteMembershipApplication(id) {
 }
 
 async function getMembershipStatistics() {
-    return request('/api/membership/statistics');
+    const timestamp = Date.now();
+    return request(`/api/membership/statistics?_t=${timestamp}`);
 }
 
 async function createAlumni(data) {
@@ -503,7 +535,8 @@ async function deleteAlumni(id) {
 }
 
 async function getAlumniStatistics() {
-    return request('/api/admin/alumni/statistics');
+    const timestamp = Date.now();
+    return request(`/api/admin/alumni/statistics?_t=${timestamp}`);
 }
 
 // ============ ALUMNI APPLICATION API METHODS ============
@@ -516,12 +549,14 @@ async function submitAlumniApplication(data) {
 }
 
 async function getAlumniApplications(status = null) {
-    const endpoint = `/api/alumni-application/applications${status ? '?status=' + status : ''}`;
+    const timestamp = Date.now();
+    const endpoint = `/api/alumni-application/applications${status ? '?status=' + status + '&_t=' + timestamp : '?_t=' + timestamp}`;
     return request(endpoint);
 }
 
 async function getAlumniApplicationById(id) {
-    return request(`/api/alumni-application/applications/${id}`);
+    const timestamp = Date.now();
+    return request(`/api/alumni-application/applications/${id}?_t=${timestamp}`);
 }
 
 async function approveAlumniApplication(id, adminNotes = '') {
@@ -545,7 +580,8 @@ async function deleteAlumniApplication(id) {
 }
 
 async function getAlumniApplicationStatistics() {
-    return request('/api/alumni-application/statistics');
+    const timestamp = Date.now();
+    return request(`/api/alumni-application/statistics?_t=${timestamp}`);
 }
 
 async function checkAPIHealth() {
