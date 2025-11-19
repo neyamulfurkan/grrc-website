@@ -170,7 +170,18 @@ function updateClubConfigDOM(config) {
       console.log('✅ Description updated:', el.id || el.className);
     }
   });
+  // ✅ Update payment info if elements exist
+  const bkashElement = document.getElementById('displayBkashNumber');
+  if (bkashElement && config.bkash_number) {
+    bkashElement.textContent = config.bkash_number;
+    console.log('✅ bKash number updated:', config.bkash_number);
+  }
   
+  const feeElement = document.getElementById('displayMembershipFee');
+  if (feeElement && config.membership_fee) {
+    feeElement.textContent = '৳' + config.membership_fee;
+    console.log('✅ Membership fee updated:', config.membership_fee);
+  }
   // Update social links
   const socialLinks = config.social_links || config.socialLinks;
   if (socialLinks && Array.isArray(socialLinks) && socialLinks.length > 0) {

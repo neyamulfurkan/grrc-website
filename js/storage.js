@@ -98,7 +98,9 @@ async function getClubConfig() {
             motto: response.data.club_motto || response.data.motto,
             description: response.data.club_description || response.data.description,
             logo: response.data.logo_url || response.data.logo,
-            socialLinks: response.data.social_links || response.data.socialLinks || []
+            socialLinks: response.data.social_links || response.data.socialLinks || [],
+            bkash_number: response.data.bkash_number || '01712345678',
+            membership_fee: response.data.membership_fee || 500
           };
           
           localStorage.removeItem('cache_clubConfig');
@@ -152,7 +154,9 @@ async function setClubConfig(configData) {
           logo_url: updatedConfig.logo || updatedConfig.logo_url,
           social_links: Array.isArray(updatedConfig.socialLinks) 
             ? updatedConfig.socialLinks 
-            : (Array.isArray(updatedConfig.social_links) ? updatedConfig.social_links : [])
+            : (Array.isArray(updatedConfig.social_links) ? updatedConfig.social_links : []),
+          bkash_number: updatedConfig.bkash_number || '01712345678',
+          membership_fee: updatedConfig.membership_fee || 500
         };
         
         console.log('📤 Sending to backend:', backendConfig);
@@ -171,7 +175,9 @@ async function setClubConfig(configData) {
             motto: backendConfig.club_motto,
             description: backendConfig.club_description,
             logo: backendConfig.logo_url,
-            socialLinks: backendConfig.social_links
+            socialLinks: backendConfig.social_links,
+            bkash_number: backendConfig.bkash_number,
+            membership_fee: backendConfig.membership_fee
           };
           
           localStorage.setItem(STORAGE_KEYS.CLUB_CONFIG, JSON.stringify(savedConfig));
