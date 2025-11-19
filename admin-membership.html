@@ -92,30 +92,37 @@
               async function initializeApplications() {
     console.log('🔄 Initializing membership applications iframe...');
     
-    // Get admin from parent window FIRST
+    // CRITICAL FIX: Get admin from parent window OR session
     let admin = null;
+    
+    // Try parent window first
     if (window.parent && window.parent.getCurrentAdmin) {
         admin = window.parent.getCurrentAdmin();
         console.log('👤 Admin from parent:', admin ? admin.username : 'null');
     }
     
-    // Fallback: Try to decode token manually
+    // Fallback: Try sessionStorage
     if (!admin) {
-        console.log('⚠️ No admin from parent, trying token decode...');
+        const sessionData = sessionStorage.getItem('adminSession');
+        if (sessionData) {
+            try {
+                admin = JSON.parse(sessionData);
+                console.log('👤 Admin from session:', admin.username);
+            } catch (e) {
+                console.error('Failed to parse session:', e);
+            }
+        }
+    }
+    
+    // Last resort: Decode token
+    if (!admin) {
         const token = localStorage.getItem('grrc_auth_token') || sessionStorage.getItem('grrc_auth_token');
         if (token) {
             try {
                 const tokenData = JSON.parse(atob(token.split('.')[1]));
-                
-                // CRITICAL: Parse permissions if it's a string
                 let permissions = tokenData.permissions || {};
                 if (typeof permissions === 'string') {
-                    try {
-                        permissions = JSON.parse(permissions);
-                    } catch (e) {
-                        console.error('Failed to parse permissions string:', e);
-                        permissions = {};
-                    }
+                    permissions = JSON.parse(permissions);
                 }
                 
                 admin = {
@@ -125,68 +132,38 @@
                     is_super_admin: tokenData.is_super_admin === true || tokenData.is_super_admin === 1,
                     permissions: permissions
                 };
-                
-                console.log('✅ Admin decoded from token:', {
-                    username: admin.username,
-                    role: admin.role,
-                    permissions: admin.permissions
-                });
             } catch (e) {
-                console.error('❌ Failed to decode token:', e);
+                console.error('Failed to decode token:', e);
             }
         }
     }
     
     if (!admin) {
-        document.body.innerHTML = `
-            <div style="display: flex; align-items: center; justify-content: center; height: 100vh; text-align: center; padding: 2rem;">
-                <div>
-                    <h2 style="color: var(--error-color); margin-bottom: 1rem;">🔐 Authentication Required</h2>
-                    <p style="color: var(--text-secondary);">Please log in to access this page.</p>
-                </div>
-            </div>
-        `;
+        document.body.innerHTML = `<div style="display: flex; align-items: center; justify-content: center; height: 100vh; text-align: center; padding: 2rem;"><div><h2 style="color: var(--error-color);">🔐 Authentication Required</h2><p style="color: var(--text-secondary);">Please log in.</p></div></div>`;
         return;
     }
     
-    // Check role FIRST for Super Admin
-    const isSuperAdmin = admin.role === 'Super Admin' || admin.is_super_admin === true || admin.is_super_admin === 1;
-    const permissions = admin.permissions || {};
-    const hasViewPermission = permissions.membership?.view === true || permissions.membership?.approve === true;
+    // ✅ CRITICAL FIX: Check role FIRST, BEFORE permissions
+    const isSuperAdmin = admin.role === 'Super Admin' || admin.is_super_admin === true;
     
-    console.log('🔍 Access check:', {
+    console.log('🔑 Authentication:', {
         username: admin.username,
         role: admin.role,
-        isSuperAdmin: isSuperAdmin,
-        hasViewPermission: hasViewPermission,
-        permissions: permissions.membership
+        isSuperAdmin: isSuperAdmin
     });
     
-    // ✅ CRITICAL FIX: Super admins ALWAYS get access, regular admins need permission check
-    if (!isSuperAdmin && !hasViewPermission) {
-        document.body.innerHTML = `
-            <div style="display: flex; align-items: center; justify-content: center; height: 100vh; text-align: center; padding: 2rem;">
-                <div>
-                    <h2 style="color: var(--error-color); margin-bottom: 1rem;">🚫 Access Denied</h2>
-                    <p style="color: var(--text-secondary);">You don't have permission to view membership applications.</p>
-                    <p style="color: var(--text-secondary); font-size: 0.875rem; margin-top: 1rem;">Contact your Super Admin to grant you access.</p>
-                    <details style="margin-top: 1rem; text-align: left;">
-                        <summary style="cursor: pointer; color: var(--text-secondary);">Debug Info</summary>
-                        <pre style="background: var(--surface-color); padding: 1rem; border-radius: 8px; margin-top: 0.5rem; font-size: 0.75rem; overflow: auto;">
-Username: ${admin.username}
-Role: ${admin.role}
-Is Super Admin: ${isSuperAdmin}
-Has View Permission: ${hasViewPermission}
-Permissions: ${JSON.stringify(permissions.membership, null, 2)}
-                        </pre>
-                    </details>
-                </div>
-            </div>
-        `;
-        return;
+    // ✅ Super admins bypass ALL permission checks
+    if (!isSuperAdmin) {
+        const permissions = admin.permissions || {};
+        const hasAccess = permissions.membership?.view === true || permissions.membership?.approve === true;
+        
+        if (!hasAccess) {
+            document.body.innerHTML = `<div style="display: flex; align-items: center; justify-content: center; height: 100vh; text-align: center; padding: 2rem;"><div><h2 style="color: var(--error-color);">🚫 Access Denied</h2><p style="color: var(--text-secondary);">Contact Super Admin for access.</p></div></div>`;
+            return;
+        }
     }
     
-    console.log('✅ Access granted - isSuperAdmin:', isSuperAdmin, 'hasViewPermission:', hasViewPermission);
+    console.log('✅ Access granted');
     
     console.log('✅ Access granted');
     

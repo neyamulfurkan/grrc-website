@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="css/variables.css">
     <link rel="stylesheet" href="css/common.css">
     <link rel="stylesheet" href="css/components.css">
-    <link rel="stylesheet" href="css/admin-panel.css">
+    
 </head>
 <body>
     <!-- This file is loaded as an iframe in admin-panel.html -->
@@ -366,21 +366,39 @@
     
     let admin = null;
     
+    // Try parent window
     if (window.parent && window.parent.getCurrentAdmin) {
         admin = window.parent.getCurrentAdmin();
     }
     
+    // Try sessionStorage
+    if (!admin) {
+        const sessionData = sessionStorage.getItem('adminSession');
+        if (sessionData) {
+            try {
+                admin = JSON.parse(sessionData);
+            } catch (e) {
+                console.error('Failed to parse session:', e);
+            }
+        }
+    }
+    
+    // Decode token
     if (!admin) {
         const token = localStorage.getItem('grrc_auth_token') || sessionStorage.getItem('grrc_auth_token');
         if (token) {
             try {
                 const tokenData = JSON.parse(atob(token.split('.')[1]));
+                let permissions = tokenData.permissions || {};
+                if (typeof permissions === 'string') {
+                    permissions = JSON.parse(permissions);
+                }
                 admin = {
                     id: tokenData.id || tokenData.adminId,
                     username: tokenData.username,
                     role: tokenData.role,
                     is_super_admin: tokenData.is_super_admin === true || tokenData.is_super_admin === 1,
-                    permissions: tokenData.permissions || {}
+                    permissions: permissions
                 };
             } catch (e) {
                 console.error('Failed to decode token:', e);
@@ -389,46 +407,25 @@
     }
     
     if (!admin) {
-        document.body.innerHTML = `
-            <div style="display: flex; align-items: center; justify-content: center; height: 100vh; text-align: center; padding: 2rem;">
-                <div>
-                    <h2 style="color: var(--error-color); margin-bottom: 1rem;">🔐 Authentication Required</h2>
-                    <p style="color: var(--text-secondary);">Please log in to access this page.</p>
-                </div>
-            </div>
-        `;
+        document.body.innerHTML = `<div style="display: flex; align-items: center; justify-content: center; height: 100vh; text-align: center; padding: 2rem;"><div><h2 style="color: var(--error-color);">🔐 Authentication Required</h2></div></div>`;
         return;
     }
     
-    const isSuperAdmin = admin.is_super_admin === true || admin.is_super_admin === 1 || admin.role === 'Super Admin';
-    const permissions = admin.permissions || {};
-    const hasViewPermission = permissions.alumni?.view === true || permissions.alumni?.approve_applications === true;
+    // ✅ Check role FIRST
+    const isSuperAdmin = admin.role === 'Super Admin' || admin.is_super_admin === true;
     
-    console.log('🔍 Access check:', {
-        username: admin.username,
-        isSuperAdmin: isSuperAdmin,
-        hasViewPermission: hasViewPermission,
-        permissions: permissions.alumni
-    });
-    
-    // ✅ CRITICAL FIX: Super admins ALWAYS get access
+    // Super admins bypass permission checks
     if (!isSuperAdmin) {
-        // Check permissions only for non-super admins
-        if (!hasViewPermission) {
-            document.body.innerHTML = `
-                <div style="display: flex; align-items: center; justify-content: center; height: 100vh; text-align: center; padding: 2rem;">
-                    <div>
-                        <h2 style="color: var(--error-color); margin-bottom: 1rem;">🚫 Access Denied</h2>
-                        <p style="color: var(--text-secondary);">You don't have permission to view alumni management.</p>
-                        <p style="color: var(--text-secondary); font-size: 0.875rem; margin-top: 1rem;">Contact your Super Admin to grant you access.</p>
-                    </div>
-                </div>
-            `;
+        const permissions = admin.permissions || {};
+        const hasAccess = permissions.alumni?.view === true || permissions.alumni?.approve_applications === true;
+        
+        if (!hasAccess) {
+            document.body.innerHTML = `<div style="display: flex; align-items: center; justify-content: center; height: 100vh; text-align: center; padding: 2rem;"><div><h2 style="color: var(--error-color);">🚫 Access Denied</h2><p style="color: var(--text-secondary);">Contact Super Admin.</p></div></div>`;
             return;
         }
     }
     
-    console.log('✅ Access granted - isSuperAdmin:', isSuperAdmin, 'hasViewPermission:', hasViewPermission);
+    console.log('✅ Access granted');
     
     console.log('✅ Access granted');
             // Force use parent's API client and token
