@@ -3175,7 +3175,10 @@ async function loadAdminDashboardInfo() {
                 await loadDashboardStats();
                 await loadAdminDashboardInfo();
             }
-            if (section === 'club-config') loadClubConfig();
+            if (section === 'club-config') {
+                console.log('🔄 Loading club config section...');
+                await loadClubConfig();
+            }
             if (section === 'members') loadMembers();
             if (section === 'events') loadEvents();
             if (section === 'projects') loadProjects();
@@ -3526,78 +3529,92 @@ if (section === 'membership-applications') {
 
         async function loadClubConfig() {
             try {
-                // ✅ CRITICAL: Clear cache FIRST to force fresh API fetch
+                console.log('🔄 Loading club config with forced cache bypass...');
+                
+                // ✅ CRITICAL: Clear ALL cache locations
                 localStorage.removeItem('cache_clubConfig');
                 localStorage.removeItem('clubConfig');
                 if (typeof STORAGE_KEYS !== 'undefined') {
                     localStorage.removeItem(STORAGE_KEYS.CLUB_CONFIG);
                 }
                 
-                const result = await getClubConfig();
+                // ✅ CRITICAL FIX: Force fresh API call with cache-busting
+                const timestamp = Date.now();
+                const result = await window.apiClient.request(`/api/content/config?_t=${timestamp}`, {
+                    method: 'GET',
+                    headers: {
+                        'Cache-Control': 'no-cache, no-store, must-revalidate',
+                        'Pragma': 'no-cache',
+                        'Expires': '0'
+                    },
+                    cache: 'no-store'
+                });
+                
+                console.log('📦 Raw API response:', result);
+                
                 if (result.success && result.data) {
                     const config = result.data;
-                    console.log('📋 Loading config into form:', {
-                        bkash: config.bkash_number,
-                        fee: config.membership_fee,
+                    console.log('📋 Config data received:', {
+                        club_name: config.club_name,
+                        name: config.name,
+                        bkash_number: config.bkash_number,
+                        membership_fee: config.membership_fee,
                         fullConfig: config
                     });
 
-                    const logoValue = config.logo || config.logo_url;
+                    // ✅ CRITICAL: Use correct field names from backend
+                    const logoValue = config.logo_url || config.logo;
                     if (logoValue) {
                         document.getElementById('logoUrl').value = logoValue;
                         const preview = document.getElementById('logoPreview');
-                        preview.src = logoValue + '?t=' + Date.now(); // Cache-bust
+                        preview.src = logoValue + '?t=' + Date.now();
                         preview.style.display = 'block';
                         preview.onerror = function() {
                             this.src = 'assets/default-logo.jpg';
                         };
                     }
 
+                    // ✅ CRITICAL: Field name mapping from backend response
                     document.getElementById('clubName').value = config.club_name || config.name || 'GSTU Robotics & Research Club';
                     document.getElementById('clubMotto').value = config.club_motto || config.motto || '';
                     document.getElementById('clubDescription').value = config.club_description || config.description || '';
                     
-                    // ✅ CRITICAL FIX: Load membership settings from BOTH possible field names
-                    const bkashValue = config.bkash_number || config.bkashNumber || '01712345678';
-                    const feeValue = config.membership_fee || config.membershipFee || 500;
+                    // ✅ CRITICAL: Load payment settings
+                    const bkashValue = config.bkash_number || '01712345678';
+                    const feeValue = config.membership_fee || 500;
                     
-                    console.log('🔍 Payment config values:', {
-                        bkash_number: config.bkash_number,
-                        bkashNumber: config.bkashNumber,
-                        membership_fee: config.membership_fee,
-                        membershipFee: config.membershipFee,
-                        finalBkash: bkashValue,
-                        finalFee: feeValue
+                    console.log('💰 Payment settings loaded:', {
+                        bkash: bkashValue,
+                        fee: feeValue
                     });
                     
                     document.getElementById('bkashNumber').value = bkashValue;
                     document.getElementById('membershipFee').value = feeValue;
-                    console.log('✅ Payment form fields populated:', {
-                        bkash: bkashValue,
-                        fee: feeValue
-                    });
 
-                    if (config.social_links || config.socialLinks) {
-                        const links = config.social_links || config.socialLinks;
-                        if (Array.isArray(links)) {
-                            // ✅ FIX: Clear all social fields first
-                            ['facebook', 'twitter', 'instagram', 'linkedin', 'youtube', 'github', 'email'].forEach(platform => {
-                                const inputId = `social${platform.charAt(0).toUpperCase() + platform.slice(1)}`;
-                                const input = document.getElementById(inputId);
-                                if (input) input.value = '';
-                            });
-                            
-                            // Now populate with actual data
-                            links.forEach(link => {
-                                const inputId = `social${link.platform.charAt(0).toUpperCase() + link.platform.slice(1)}`;
-                                const input = document.getElementById(inputId);
-                                if (input) input.value = link.url;
-                            });
-                        }
+                    // ✅ Load social links
+                    const links = config.social_links || [];
+                    console.log('🔗 Social links:', links);
+                    
+                    // Clear all fields first
+                    ['facebook', 'twitter', 'instagram', 'linkedin', 'youtube', 'github', 'email'].forEach(platform => {
+                        const inputId = `social${platform.charAt(0).toUpperCase() + platform.slice(1)}`;
+                        const input = document.getElementById(inputId);
+                        if (input) input.value = '';
+                    });
+                    
+                    // Populate with data
+                    if (Array.isArray(links)) {
+                        links.forEach(link => {
+                            const inputId = `social${link.platform.charAt(0).toUpperCase() + link.platform.slice(1)}`;
+                            const input = document.getElementById(inputId);
+                            if (input) input.value = link.url;
+                        });
                     }
+                    
+                    console.log('✅ Form populated successfully');
                 }
             } catch (error) {
-                console.error('Error loading club config:', error);
+                console.error('❌ Error loading club config:', error);
                 showToast('Error loading configuration', 'error');
                 // Set defaults on error
                 document.getElementById('bkashNumber').value = '01712345678';

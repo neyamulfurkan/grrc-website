@@ -81,10 +81,20 @@ function isAuthenticated() {
 async function getClubConfig() {
   try {
     if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady) {
-      console.log('🔄 Fetching club config from API...');
+      console.log('🔄 Fetching club config from API with cache-bust...');
       try {
+        // ✅ CRITICAL FIX: Add timestamp to force fresh request
+        const timestamp = Date.now();
         const response = await Promise.race([
-          window.apiClient.getConfig(),
+          window.apiClient.request(`/api/content/config?_t=${timestamp}`, {
+            method: 'GET',
+            headers: {
+              'Cache-Control': 'no-cache, no-store, must-revalidate',
+              'Pragma': 'no-cache',
+              'Expires': '0'
+            },
+            cache: 'no-store'
+          }),
           new Promise((_, reject) => 
             setTimeout(() => reject(new Error('API timeout')), 5000)
           )
