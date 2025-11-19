@@ -450,17 +450,16 @@
         }
 
         async function approveApplication(id) {
-    // Check permissions - but ALLOW super admins
+    // Check permissions - ALWAYS allow super admins
     const admin = window.parent && window.parent.getCurrentAdmin ? window.parent.getCurrentAdmin() : null;
     
     if (admin) {
-        // Super admins can always approve
-        if (admin.is_super_admin === true || admin.is_super_admin === 1) {
-            console.log('✅ Super admin approving application');
-        } else {
-            // Check regular admin permissions
+        const isSuperAdmin = admin.is_super_admin === true || admin.is_super_admin === 1 || admin.role === 'Super Admin';
+        
+        if (!isSuperAdmin) {
+            // Only check permissions for non-super admins
             const permissions = admin.permissions || {};
-            if (!permissions.membership || !permissions.membership.approve) {
+            if (!permissions.membership || permissions.membership.approve !== true) {
                 showToast('You don\'t have permission to approve membership applications', 'error');
                 return;
             }
@@ -497,17 +496,16 @@
         }
 
         async function rejectApplication(id) {
-    // Check permissions - but ALLOW super admins
+    // Check permissions - ALWAYS allow super admins
     const admin = window.parent && window.parent.getCurrentAdmin ? window.parent.getCurrentAdmin() : null;
     
     if (admin) {
-        // Super admins can always reject
-        if (admin.is_super_admin === true || admin.is_super_admin === 1) {
-            console.log('✅ Super admin rejecting application');
-        } else {
-            // Check regular admin permissions
+        const isSuperAdmin = admin.is_super_admin === true || admin.is_super_admin === 1 || admin.role === 'Super Admin';
+        
+        if (!isSuperAdmin) {
+            // Only check permissions for non-super admins
             const permissions = admin.permissions || {};
-            if (!permissions.membership || !permissions.membership.approve) {
+            if (!permissions.membership || permissions.membership.approve !== true) {
                 showToast('You don\'t have permission to reject membership applications', 'error');
                 return;
             }
@@ -541,23 +539,21 @@
         }
 
         async function deleteApplication(id) {
-    // Check permissions - but ALLOW super admins
+    // Check permissions - ALWAYS allow super admins
     const admin = window.parent && window.parent.getCurrentAdmin ? window.parent.getCurrentAdmin() : null;
     
     if (admin) {
-        // Super admins can always delete
-        if (admin.is_super_admin === true || admin.is_super_admin === 1) {
-            console.log('✅ Super admin deleting application');
-        } else {
-            // Check regular admin permissions
+        const isSuperAdmin = admin.is_super_admin === true || admin.is_super_admin === 1 || admin.role === 'Super Admin';
+        
+        if (!isSuperAdmin) {
+            // Only check permissions for non-super admins
             const permissions = admin.permissions || {};
-            if (!permissions.membership || !permissions.membership.delete) {
+            if (!permissions.membership || permissions.membership.delete !== true) {
                 showToast('You don\'t have permission to delete applications', 'error');
                 return;
             }
         }
-    }
-            
+    }    
             if (!confirm('Are you sure you want to delete this application? This cannot be undone.')) return;
             
             try {

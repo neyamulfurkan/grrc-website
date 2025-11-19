@@ -340,7 +340,19 @@ router.get('/applications/:id', authenticateToken, isAdmin, async (req, res) => 
 router.post(
   '/applications/:id/approve',
   authenticateToken,
-  isAdmin,
+  async (req, res, next) => {
+    // Check if user is super admin OR has membership.approve permission
+    const isSuperAdmin = req.user.is_super_admin === true || req.user.role === 'Super Admin';
+    const hasPermission = req.user.permissions?.membership?.approve === true;
+    
+    if (!isSuperAdmin && !hasPermission) {
+      return res.status(403).json({
+        success: false,
+        error: 'Permission denied: You need membership approval permission'
+      });
+    }
+    next();
+  },
   [
     body('admin_notes')
       .optional({ checkFalsy: true })
@@ -505,7 +517,19 @@ router.post(
 router.post(
   '/applications/:id/reject',
   authenticateToken,
-  isAdmin,
+  async (req, res, next) => {
+    // Check if user is super admin OR has membership.approve permission
+    const isSuperAdmin = req.user.is_super_admin === true || req.user.role === 'Super Admin';
+    const hasPermission = req.user.permissions?.membership?.approve === true;
+    
+    if (!isSuperAdmin && !hasPermission) {
+      return res.status(403).json({
+        success: false,
+        error: 'Permission denied: You need membership approval permission'
+      });
+    }
+    next();
+  },
   [
     body('admin_notes')
       .trim()
@@ -584,7 +608,17 @@ router.post(
 );
 
 // 6. DELETE /api/membership/applications/:id (ADMIN - Auth Required)
-router.delete('/applications/:id', authenticateToken, isAdmin, async (req, res) => {
+router.delete('/applications/:id', authenticateToken, async (req, res) => {
+  // Check if user is super admin OR has membership.delete permission
+  const isSuperAdmin = req.user.is_super_admin === true || req.user.role === 'Super Admin';
+  const hasPermission = req.user.permissions?.membership?.delete === true;
+  
+  if (!isSuperAdmin && !hasPermission) {
+    return res.status(403).json({
+      success: false,
+      error: 'Permission denied: You need membership delete permission'
+    });
+  }
   try {
     const { id } = req.params;
 

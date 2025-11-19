@@ -609,14 +609,15 @@ function getCurrentAdmin() {
   
   // If using API authentication, return session data directly WITH is_super_admin flag
   if (session.hasToken) {
-    // CRITICAL FIX: Properly detect super admin status
+    // CRITICAL FIX: Detect super admin from multiple sources
     const isSuperAdmin = session.is_super_admin === true || 
-                         session.is_super_admin === 1;
+                         session.is_super_admin === 1 ||
+                         session.role === 'Super Admin';
     
     const admin = {
       id: session.adminId,
       username: session.username,
-      role: isSuperAdmin ? 'Super Admin' : session.role,
+      role: session.role || 'Admin',
       is_super_admin: isSuperAdmin,
       permissions: session.permissions || {}
     };
@@ -643,7 +644,6 @@ function getCurrentAdmin() {
     
     return admin;
   }
-  
   // Fallback: Get from localStorage
   try {
     const admins = JSON.parse(localStorage.getItem(STORAGE.ADMINS) || '[]');
