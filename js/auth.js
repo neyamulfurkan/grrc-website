@@ -609,10 +609,10 @@ function getCurrentAdmin() {
   
   // If using API authentication, return session data directly WITH is_super_admin flag
   if (session.hasToken) {
-    // CRITICAL FIX: Detect super admin from multiple sources
-    const isSuperAdmin = session.is_super_admin === true || 
-                         session.is_super_admin === 1 ||
-                         session.role === 'Super Admin';
+    // CRITICAL FIX: Detect super admin from multiple sources - check ROLE FIRST
+    const isSuperAdmin = session.role === 'Super Admin' ||
+                         session.is_super_admin === true || 
+                         session.is_super_admin === 1;
     
     const admin = {
       id: session.adminId,

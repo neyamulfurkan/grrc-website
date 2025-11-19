@@ -341,8 +341,8 @@ router.post(
   '/applications/:id/approve',
   authenticateToken,
   async (req, res, next) => {
-    // Check if user is super admin OR has membership.approve permission
-    const isSuperAdmin = req.user.is_super_admin === true || req.user.role === 'Super Admin';
+    // Check if user is super admin OR has membership.approve permission - CHECK ROLE FIRST
+    const isSuperAdmin = req.user.role === 'Super Admin' || req.user.is_super_admin === true;
     const hasPermission = req.user.permissions?.membership?.approve === true;
     
     if (!isSuperAdmin && !hasPermission) {
@@ -518,8 +518,8 @@ router.post(
   '/applications/:id/reject',
   authenticateToken,
   async (req, res, next) => {
-    // Check if user is super admin OR has membership.approve permission
-    const isSuperAdmin = req.user.is_super_admin === true || req.user.role === 'Super Admin';
+    // Check if user is super admin OR has membership.approve permission - CHECK ROLE FIRST
+    const isSuperAdmin = req.user.role === 'Super Admin' || req.user.is_super_admin === true;
     const hasPermission = req.user.permissions?.membership?.approve === true;
     
     if (!isSuperAdmin && !hasPermission) {
@@ -609,8 +609,8 @@ router.post(
 
 // 6. DELETE /api/membership/applications/:id (ADMIN - Auth Required)
 router.delete('/applications/:id', authenticateToken, async (req, res) => {
-  // Check if user is super admin OR has membership.delete permission
-  const isSuperAdmin = req.user.is_super_admin === true || req.user.role === 'Super Admin';
+  // Check if user is super admin OR has membership.delete permission - CHECK ROLE FIRST
+  const isSuperAdmin = req.user.role === 'Super Admin' || req.user.is_super_admin === true;
   const hasPermission = req.user.permissions?.membership?.delete === true;
   
   if (!isSuperAdmin && !hasPermission) {

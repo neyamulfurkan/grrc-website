@@ -147,8 +147,9 @@ function checkPermission(module, action) {
       });
     }
     
-    // Super admin has all permissions
-    if (req.user.is_super_admin === true || req.user.role === 'Super Admin') {
+    // Super admin has all permissions - CHECK ROLE FIRST
+    if (req.user.role === 'Super Admin' || req.user.is_super_admin === true) {
+      console.log(`✅ Super Admin bypassing permission check for ${module}.${action}`);
       return next();
     }
     

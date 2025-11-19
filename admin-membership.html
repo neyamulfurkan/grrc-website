@@ -454,7 +454,14 @@
     const admin = window.parent && window.parent.getCurrentAdmin ? window.parent.getCurrentAdmin() : null;
     
     if (admin) {
-        const isSuperAdmin = admin.is_super_admin === true || admin.is_super_admin === 1 || admin.role === 'Super Admin';
+        // Check role FIRST for Super Admin
+        const isSuperAdmin = admin.role === 'Super Admin' || admin.is_super_admin === true || admin.is_super_admin === 1;
+        
+        console.log('🔍 Permission check:', {
+            username: admin.username,
+            role: admin.role,
+            isSuperAdmin: isSuperAdmin
+        });
         
         if (!isSuperAdmin) {
             // Only check permissions for non-super admins
@@ -500,7 +507,8 @@
     const admin = window.parent && window.parent.getCurrentAdmin ? window.parent.getCurrentAdmin() : null;
     
     if (admin) {
-        const isSuperAdmin = admin.is_super_admin === true || admin.is_super_admin === 1 || admin.role === 'Super Admin';
+        // Check role FIRST for Super Admin
+        const isSuperAdmin = admin.role === 'Super Admin' || admin.is_super_admin === true || admin.is_super_admin === 1;
         
         if (!isSuperAdmin) {
             // Only check permissions for non-super admins
@@ -543,7 +551,8 @@
     const admin = window.parent && window.parent.getCurrentAdmin ? window.parent.getCurrentAdmin() : null;
     
     if (admin) {
-        const isSuperAdmin = admin.is_super_admin === true || admin.is_super_admin === 1 || admin.role === 'Super Admin';
+        // Check role FIRST for Super Admin
+        const isSuperAdmin = admin.role === 'Super Admin' || admin.is_super_admin === true || admin.is_super_admin === 1;
         
         if (!isSuperAdmin) {
             // Only check permissions for non-super admins
