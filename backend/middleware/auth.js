@@ -156,7 +156,7 @@ function isSuperAdmin(req, res, next) {
  * @returns {Function} Express middleware function
  */
 function checkPermission(module, action) {
-  return (req, res, next) => {
+  return async (req, res, next) => {
     if (!req.user) {
       return res.status(401).json({
         success: false,
@@ -211,6 +211,18 @@ function checkPermission(module, action) {
         success: false,
         error: `Permission denied: You don't have permission to ${action} ${module}.`,
       });
+    }
+    
+    // ✅ NEW: Check if approval is required for CREATE actions
+    if (action === 'create') {
+      const approvalRequired = await checkApprovalRequired(module, action);
+      if (approvalRequired) {
+        console.log(`⏳ Approval required for ${req.user.username}: ${module}.${action}`);
+        // Store the request data for approval
+        req.requiresApproval = true;
+        req.approvalModule = module;
+        req.approvalAction = action;
+      }
     }
     
     console.log(`✅ Permission granted for ${req.user.username}: ${module}.${action}`);

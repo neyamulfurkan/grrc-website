@@ -1326,7 +1326,11 @@
         
         // ✅ TRY CACHE FIRST for instant load
         const cached = localStorage.getItem('gallery');
-        if (cached) {
+        const cacheTime = localStorage.getItem('gallery_cache_time');
+        const now = Date.now();
+        const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+        
+        if (cached && cacheTime && (now - parseInt(cacheTime)) < CACHE_DURATION) {
             try {
                 galleryItems = JSON.parse(cached);
                 console.log('✅ Loaded', galleryItems.length, 'images from cache (instant)');
@@ -1361,12 +1365,13 @@
                     const response = await window.apiClient.getGallery();
                     if (response.success && Array.isArray(response.data) && response.data.length > 0) {
                         localStorage.setItem('gallery', JSON.stringify(response.data));
+                        localStorage.setItem('gallery_cache_time', Date.now().toString());
                         console.log('✅ Gallery cache updated from API');
                     }
                 } catch (apiError) {
                     console.warn('Background API update failed:', apiError);
                 }
-            }, 2000); // Update cache after 2 seconds
+            }, 3000); // Update cache after 3 seconds (reduced network load)
         }
         
         // Process images
@@ -1416,6 +1421,10 @@
                 img.src = imageData.url;
                 img.alt = imageData.title;
                 img.loading = index === 0 ? 'eager' : 'lazy';
+                img.decoding = 'async';
+                if (index > 2) {
+                    img.fetchpriority = 'low';
+                }
                 
                 img.onerror = function() {
                     console.error('❌ Failed to load image:', imageData.url);

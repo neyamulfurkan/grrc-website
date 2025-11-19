@@ -1772,13 +1772,23 @@ async function loadAdminDashboardInfo() {
         }
         async function loadDashboardStats() {
             try {
-                console.log('📊 Loading dashboard statistics with forced cache bypass...');
+                console.log('📊 Loading dashboard statistics...');
                 
-                // CRITICAL: Clear ALL possible cache locations
-                const cacheKeys = ['cache_members', 'members', 'cache_events', 'events', 
-                                  'cache_projects', 'projects', 'cache_gallery', 'gallery',
-                                  'cache_announcements', 'announcements', 'cache_alumni', 'alumni'];
-                cacheKeys.forEach(key => localStorage.removeItem(key));
+                // Check if we have recent stats in sessionStorage (faster than API calls)
+                const cachedStats = sessionStorage.getItem('dashboard_stats');
+                const cacheTime = sessionStorage.getItem('dashboard_stats_time');
+                const now = Date.now();
+                const STATS_CACHE_DURATION = 30 * 1000; // 30 seconds
+                
+                if (cachedStats && cacheTime && (now - parseInt(cacheTime)) < STATS_CACHE_DURATION) {
+                    const stats = JSON.parse(cachedStats);
+                    Object.entries(stats).forEach(([id, value]) => {
+                        const element = document.getElementById(id);
+                        if (element) element.textContent = value;
+                    });
+                    console.log('✅ Dashboard stats loaded from cache');
+                    return;
+                }
                 
                 // Add cache-busting timestamp to force fresh API calls
                 const timestamp = Date.now();
@@ -1833,6 +1843,10 @@ async function loadAdminDashboardInfo() {
                         element.style.display = '';
                     }
                 });
+                
+                // Store in sessionStorage for quick reload
+                sessionStorage.setItem('dashboard_stats', JSON.stringify(statElements));
+                sessionStorage.setItem('dashboard_stats_time', Date.now().toString());
                 
                 console.log('✅ Dashboard stats updated:', statElements);
             } catch (error) {
