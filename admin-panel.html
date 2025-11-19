@@ -1740,24 +1740,37 @@ async function loadAdminDashboardInfo() {
         }
         async function loadDashboardStats() {
             try {
-                console.log('📊 Loading dashboard statistics...');
+                console.log('📊 Loading dashboard statistics with forced cache bypass...');
                 
-                // Clear all caches first
-                localStorage.removeItem('cache_members');
-                localStorage.removeItem('cache_events');
-                localStorage.removeItem('cache_projects');
-                localStorage.removeItem('cache_gallery');
-                localStorage.removeItem('cache_announcements');
-                localStorage.removeItem('cache_alumni');
+                // CRITICAL: Clear ALL possible cache locations
+                const cacheKeys = ['cache_members', 'members', 'cache_events', 'events', 
+                                  'cache_projects', 'projects', 'cache_gallery', 'gallery',
+                                  'cache_announcements', 'announcements', 'cache_alumni', 'alumni'];
+                cacheKeys.forEach(key => localStorage.removeItem(key));
                 
-                // Fetch fresh data from APIs
+                // Add cache-busting timestamp to force fresh API calls
+                const timestamp = Date.now();
+                
+                // Fetch fresh data from APIs with cache-busting
                 const [membersResult, eventsResult, projectsResult, galleryResult, applicationsResult, alumniResult] = await Promise.all([
-                    window.apiClient.getMembers(),
-                    window.apiClient.getEvents(),
-                    window.apiClient.getProjects(),
-                    window.apiClient.getGallery(),
-                    window.apiClient.getMembershipApplications('pending'),
-                    window.apiClient.getAlumni()
+                    fetch(`${window.apiClient.baseURL}/api/content/members?_t=${timestamp}`, {
+                        headers: { 'Authorization': `Bearer ${window.apiClient.getAuthToken()}` }
+                    }).then(r => r.json()),
+                    fetch(`${window.apiClient.baseURL}/api/content/events?_t=${timestamp}`, {
+                        headers: { 'Authorization': `Bearer ${window.apiClient.getAuthToken()}` }
+                    }).then(r => r.json()),
+                    fetch(`${window.apiClient.baseURL}/api/content/projects?_t=${timestamp}`, {
+                        headers: { 'Authorization': `Bearer ${window.apiClient.getAuthToken()}` }
+                    }).then(r => r.json()),
+                    fetch(`${window.apiClient.baseURL}/api/content/gallery?_t=${timestamp}`, {
+                        headers: { 'Authorization': `Bearer ${window.apiClient.getAuthToken()}` }
+                    }).then(r => r.json()),
+                    fetch(`${window.apiClient.baseURL}/api/membership/applications?status=pending&_t=${timestamp}`, {
+                        headers: { 'Authorization': `Bearer ${window.apiClient.getAuthToken()}` }
+                    }).then(r => r.json()),
+                    fetch(`${window.apiClient.baseURL}/api/alumni?_t=${timestamp}`, {
+                        headers: { 'Authorization': `Bearer ${window.apiClient.getAuthToken()}` }
+                    }).then(r => r.json())
                 ]);
                 
                 // Update statistics
@@ -1768,22 +1781,34 @@ async function loadAdminDashboardInfo() {
                 const pendingCount = (applicationsResult.success && Array.isArray(applicationsResult.data)) ? applicationsResult.data.length : 0;
                 const alumniCount = (alumniResult.success && Array.isArray(alumniResult.data)) ? alumniResult.data.length : 0;
                 
-                document.getElementById('statMembers').textContent = membersCount;
-                document.getElementById('statEvents').textContent = eventsCount;
-                document.getElementById('statProjects').textContent = projectsCount;
-                document.getElementById('statGallery').textContent = galleryCount;
-                document.getElementById('statPendingApplications').textContent = pendingCount;
-                document.getElementById('statAlumni').textContent = alumniCount;
+                // Force DOM update
+                const statElements = {
+                    'statMembers': membersCount,
+                    'statEvents': eventsCount,
+                    'statProjects': projectsCount,
+                    'statGallery': galleryCount,
+                    'statPendingApplications': pendingCount,
+                    'statAlumni': alumniCount
+                };
                 
-                console.log('✅ Dashboard stats updated:', { membersCount, eventsCount, projectsCount, galleryCount, pendingCount, alumniCount });
+                Object.entries(statElements).forEach(([id, value]) => {
+                    const element = document.getElementById(id);
+                    if (element) {
+                        element.textContent = value;
+                        // Force browser repaint
+                        element.style.display = 'none';
+                        element.offsetHeight; // Trigger reflow
+                        element.style.display = '';
+                    }
+                });
+                
+                console.log('✅ Dashboard stats updated:', statElements);
             } catch (error) {
                 console.error('❌ Error loading dashboard stats:', error);
-                document.getElementById('statMembers').textContent = '0';
-                document.getElementById('statEvents').textContent = '0';
-                document.getElementById('statProjects').textContent = '0';
-                document.getElementById('statGallery').textContent = '0';
-                document.getElementById('statPendingApplications').textContent = '0';
-                document.getElementById('statAlumni').textContent = '0';
+                ['statMembers', 'statEvents', 'statProjects', 'statGallery', 'statPendingApplications', 'statAlumni'].forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.textContent = '0';
+                });
             }
         }
 
@@ -3027,17 +3052,22 @@ async function loadAdminDashboardInfo() {
 
             try {
                 console.log('Loading all data...');
-                await Promise.all([
-                    loadMembers(),
-                    loadEvents(),
-                    loadProjects(),
-                    loadGallery(),
-                    loadAnnouncements(),
-                    loadAdmins()
-                ]);
+                
+                // Load data sequentially to avoid race conditions
+                await loadMembers();
+                await loadEvents();
+                await loadProjects();
+                await loadGallery();
+                await loadAnnouncements();
+                await loadAdmins();
+                
                 console.log('All data loaded successfully');
-                // ✅ CRITICAL FIX: Update dashboard stats after all data loads
+                
+                // ✅ CRITICAL FIX: Force dashboard stats reload after ALL data loads
+                await new Promise(resolve => setTimeout(resolve, 300));
                 await loadDashboardStats();
+                
+                console.log('✅ Initial data load complete');
             } catch (error) {
                 console.error('Error loading data:', error);
                 
@@ -3179,19 +3209,36 @@ async function loadAdminDashboardInfo() {
             // Load section-specific data
             console.log('📊 Loading data for section:', section);
             if (section === 'dashboard') {
-                // ✅ CRITICAL FIX: Force fresh stats load
-                await loadDashboardStats();
-                await loadAdminDashboardInfo();
+                // ✅ CRITICAL FIX: Force fresh stats load with delay to ensure DOM ready
+                setTimeout(async () => {
+                    await loadDashboardStats();
+                    await loadAdminDashboardInfo();
+                }, 100);
             }
             if (section === 'club-config') {
                 console.log('🔄 Loading club config section...');
                 await loadClubConfig();
             }
-            if (section === 'members') loadMembers();
-            if (section === 'events') loadEvents();
-            if (section === 'projects') loadProjects();
-            if (section === 'gallery') loadGallery();
-            if (section === 'announcements') loadAnnouncements();
+            if (section === 'members') {
+                await loadMembers();
+                setTimeout(() => loadDashboardStats(), 500);
+            }
+            if (section === 'events') {
+                await loadEvents();
+                setTimeout(() => loadDashboardStats(), 500);
+            }
+            if (section === 'projects') {
+                await loadProjects();
+                setTimeout(() => loadDashboardStats(), 500);
+            }
+            if (section === 'gallery') {
+                await loadGallery();
+                setTimeout(() => loadDashboardStats(), 500);
+            }
+            if (section === 'announcements') {
+                await loadAnnouncements();
+                setTimeout(() => loadDashboardStats(), 500);
+            }
             if (section === 'admins') loadAdmins();
             
            // Load iframe content for new sections
