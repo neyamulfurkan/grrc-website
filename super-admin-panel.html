@@ -410,8 +410,16 @@
                 transform: translateX(-100%);
             }
 
+            .admin-sidebar.mobile-open {
+                transform: translateX(0);
+            }
+
             .admin-main {
                 margin-left: 0;
+            }
+
+            .mobile-sidebar-toggle {
+                display: block;
             }
         }
 
@@ -432,6 +440,8 @@
         <span class="toast-message" id="toastMessage"></span>
     </div>
 
+    <button class="mobile-sidebar-toggle" id="mobileSidebarToggle" style="display: none; position: fixed; bottom: 20px; right: 20px; width: 56px; height: 56px; border-radius: 50%; background: var(--primary-color); color: white; border: none; box-shadow: var(--shadow-xl); z-index: 999; cursor: pointer; font-size: 24px;">☰</button>
+    
     <div class="admin-container">
         <aside class="admin-sidebar" id="adminSidebar">
             <div class="sidebar-header">
@@ -797,6 +807,7 @@
                     <div style="margin-left: 2rem;">
                         <label><input type="checkbox" class="perm-membership" data-perm="view"> View</label>
                         <label><input type="checkbox" class="perm-membership" data-perm="approve"> Approve/Reject</label>
+                        <label><input type="checkbox" class="perm-membership" data-perm="delete"> Delete</label>
                     </div>
                 </div>
                 
@@ -1473,6 +1484,16 @@
                 closeCreateAdminModal();
             }
         });
+        // Setup mobile sidebar toggle
+        const mobileSidebarToggle = document.getElementById('mobileSidebarToggle');
+        const adminSidebar = document.getElementById('adminSidebar');
+        
+        if (mobileSidebarToggle && adminSidebar) {
+            mobileSidebarToggle.addEventListener('click', () => {
+                adminSidebar.classList.toggle('mobile-open');
+                mobileSidebarToggle.textContent = adminSidebar.classList.contains('mobile-open') ? '✕' : '☰';
+            });
+        }
 
         // Initialize theme
         function initTheme() {
