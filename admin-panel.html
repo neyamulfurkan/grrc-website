@@ -2565,6 +2565,42 @@ async function loadAdminDashboardInfo() {
             }
         }
 
+        // Helper function to compress images for mobile upload
+        async function compressImage(file, maxWidth = 1920, maxHeight = 1080, quality = 0.85) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        let width = img.width;
+                        let height = img.height;
+
+                        // Calculate new dimensions while maintaining aspect ratio
+                        if (width > maxWidth || height > maxHeight) {
+                            const ratio = Math.min(maxWidth / width, maxHeight / height);
+                            width = width * ratio;
+                            height = height * ratio;
+                        }
+
+                        canvas.width = width;
+                        canvas.height = height;
+
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+
+                        // Convert to base64 with quality compression
+                        const compressedBase64 = canvas.toDataURL('image/jpeg', quality);
+                        resolve(compressedBase64);
+                    };
+                    img.onerror = reject;
+                    img.src = e.target.result;
+                };
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+        }
+
         // Helper function to convert image to Base64
         function imageToBase64(file) {
             return new Promise((resolve, reject) => {
@@ -2591,6 +2627,13 @@ async function loadAdminDashboardInfo() {
                     return;
                 }
 
+                // ✅ FIX: Check file size limit (10MB for mobile)
+                const maxSize = 10 * 1024 * 1024; // 10MB
+                if (imageFile.size > maxSize) {
+                    showToast('Image too large. Maximum size is 10MB. Please compress the image.', 'error');
+                    return;
+                }
+
                 const title = document.getElementById('galleryTitle').value.trim();
                 const category = document.getElementById('galleryCategory').value;
                 const date = document.getElementById('galleryDate').value;
@@ -2611,16 +2654,28 @@ async function loadAdminDashboardInfo() {
                 const statusText = document.getElementById('uploadStatus');
                 
                 progressDiv.style.display = 'block';
-                progressBar.style.width = '30%';
-                statusText.textContent = `Preparing ${imageFile.name}...`;
+                progressBar.style.width = '10%';
+                statusText.textContent = `Preparing ${imageFile.name} (${(imageFile.size / 1024 / 1024).toFixed(2)}MB)...`;
 
-                // Convert image to Base64
-                console.log('📱 Converting image to base64...', imageFile.name, imageFile.size);
-                const base64Image = await imageToBase64(imageFile);
-                console.log('✅ Base64 conversion complete, length:', base64Image.length);
-
-                progressBar.style.width = '50%';
-                statusText.textContent = 'Uploading to Cloudinary via backend...';
+                // ✅ FIX: Compress image on mobile before upload
+                console.log('📱 Processing image...', imageFile.name, imageFile.size);
+                
+                let processedImage;
+                try {
+                    progressBar.style.width = '20%';
+                    statusText.textContent = 'Compressing image...';
+                    
+                    // Compress image to reduce upload size
+                    processedImage = await compressImage(imageFile, 1920, 1080, 0.85);
+                    console.log('✅ Image compressed:', processedImage.length, 'bytes');
+                    
+                    progressBar.style.width = '40%';
+                    statusText.textContent = 'Compression complete. Uploading...';
+                } catch (compressionError) {
+                    console.warn('Compression failed, using original:', compressionError);
+                    processedImage = await imageToBase64(imageFile);
+                    progressBar.style.width = '40%';
+                }
 
                 // Get token
                 const token = localStorage.getItem('grrc_auth_token') || sessionStorage.getItem('grrc_auth_token');
@@ -2628,29 +2683,60 @@ async function loadAdminDashboardInfo() {
                     throw new Error('No authentication token found');
                 }
 
-                // Upload via backend with longer timeout for mobile
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
-                
-                const uploadResponse = await fetch(`${window.apiClient.baseURL}/api/upload/image`, {
-                    signal: controller.signal,
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
-                    body: JSON.stringify({ image: base64Image })
-                });
-                
-                clearTimeout(timeoutId);
+                // ✅ FIX: Mobile-optimized upload with retry logic
+                let uploadSuccess = false;
+                let uploadData = null;
+                let retryCount = 0;
+                const maxRetries = 2;
 
-                const uploadData = await uploadResponse.json();
+                while (!uploadSuccess && retryCount <= maxRetries) {
+                    try {
+                        progressBar.style.width = '50%';
+                        statusText.textContent = retryCount > 0 
+                            ? `Retrying upload (attempt ${retryCount + 1}/${maxRetries + 1})...` 
+                            : 'Uploading to cloud storage...';
 
-                if (!uploadResponse.ok || !uploadData.success) {
-                    throw new Error(uploadData.error || 'Upload failed');
+                        const controller = new AbortController();
+                        const timeoutId = setTimeout(() => controller.abort(), 90000); // 90 second timeout
+                        
+                        const uploadResponse = await fetch(`${window.apiClient.baseURL}/api/upload/image`, {
+                            signal: controller.signal,
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${token}`
+                            },
+                            body: JSON.stringify({ image: processedImage })
+                        });
+                        
+                        clearTimeout(timeoutId);
+
+                        if (!uploadResponse.ok) {
+                            const errorText = await uploadResponse.text();
+                            throw new Error(`Upload failed: ${uploadResponse.status} - ${errorText}`);
+                        }
+
+                        uploadData = await uploadResponse.json();
+
+                        if (!uploadData.success) {
+                            throw new Error(uploadData.error || 'Upload failed');
+                        }
+
+                        uploadSuccess = true;
+                        console.log('✅ Upload successful:', uploadData.url);
+
+                    } catch (uploadError) {
+                        retryCount++;
+                        console.error(`Upload attempt ${retryCount} failed:`, uploadError);
+                        
+                        if (retryCount > maxRetries) {
+                            throw new Error(`Upload failed after ${maxRetries + 1} attempts: ${uploadError.message}`);
+                        }
+                        
+                        // Wait before retry
+                        await new Promise(resolve => setTimeout(resolve, 2000));
+                    }
                 }
-
-                console.log('✅ Cloudinary upload successful:', uploadData.url);
 
                 progressBar.style.width = '70%';
                 statusText.textContent = 'Saving to database...';
@@ -2684,7 +2770,7 @@ async function loadAdminDashboardInfo() {
                 console.error('❌ Error saving gallery item:', error);
                 
                 if (error.name === 'AbortError') {
-                    showToast('Upload timeout - image may be too large. Try a smaller image.', 'error');
+                    showToast('Upload timeout. Please check your internet connection and try again.', 'error');
                 } else if (error.message.includes('Authentication') || error.message.includes('401')) {
                     showToast('Session expired. Please log in again.', 'error');
                     setTimeout(() => {
@@ -2693,9 +2779,11 @@ async function loadAdminDashboardInfo() {
                         window.location.href = 'admin.html';
                     }, 2000);
                 } else if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
-                    showToast('Network error - check your connection and try again', 'error');
+                    showToast('Network error. Please check your connection and try again.', 'error');
+                } else if (error.message.includes('too large') || error.message.includes('size')) {
+                    showToast('Image file is too large. Please use a smaller image (max 10MB).', 'error');
                 } else {
-                    showToast(error.message || 'Error saving gallery item', 'error');
+                    showToast(`Upload failed: ${error.message}`, 'error');
                 }
             } finally {
                 const submitBtn = document.getElementById('gallerySubmitBtn');
