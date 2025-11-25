@@ -263,6 +263,23 @@
             margin-top: 0.25rem;
         }
 
+        .skills-input-wrapper {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .skills-input-wrapper .form-input {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .skills-add-btn {
+            padding: 0.875rem 1.5rem;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
         .skills-container {
             display: flex;
             flex-wrap: wrap;
@@ -482,6 +499,26 @@
                 font-size: 1.5rem;
             }
 
+            .skills-input-wrapper {
+                flex-direction: column;
+                gap: 0.75rem;
+            }
+
+            .skills-input-wrapper .form-input {
+                width: 100%;
+            }
+
+            .skills-add-btn {
+                width: 100%;
+                padding: 1rem;
+                font-size: 1rem;
+            }
+
+            .form-label {
+                font-size: 1rem;
+                margin-bottom: 0.75rem;
+            }
+
             .section-title {
                 font-size: 1.1rem;
             }
@@ -672,6 +709,28 @@
                 width: 60px;
                 height: 60px;
                 font-size: 2rem;
+            }
+
+            .skills-input-wrapper {
+                gap: 0.5rem;
+            }
+
+            .skills-add-btn {
+                padding: 0.875rem;
+                font-size: 0.95rem;
+            }
+
+            .skills-container {
+                min-height: 80px;
+                padding: 1rem;
+            }
+
+            .section-title {
+                font-size: 1rem;
+            }
+
+            .form-label {
+                font-size: 0.95rem;
             }
         }
     </style>
@@ -878,11 +937,11 @@
                             <label class="form-label">
                                 Skills<span class="required">*</span>
                             </label>
-                            <div style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem;">
-                                <input type="text" id="skillsInput" class="form-input" placeholder="Type a skill" style="flex: 1;">
-                                <button type="button" class="btn btn-primary" onclick="addSkillFromButton()" style="white-space: nowrap;">+ Add</button>
+                            <div class="skills-input-wrapper">
+                                <input type="text" id="skillsInput" class="form-input" placeholder="e.g., Python, Arduino, CAD">
+                                <button type="button" class="btn btn-primary skills-add-btn" onclick="addSkillFromButton()">Add</button>
                             </div>
-                            <div class="skills-container" id="skillsContainer" style="min-height: 60px; padding: 0.5rem; border: 2px solid var(--border-color); border-radius: var(--radius-md); background: var(--background-color); display: flex; flex-wrap: wrap; gap: 0.5rem;"></div>
+                            <div class="skills-container" id="skillsContainer"></div>
                             <div class="form-help">💡 Add at least 2 skills (e.g., Python, Arduino, CAD Design)</div>
                         </div>
 
@@ -1263,6 +1322,7 @@ try {
 }
 
                 // Prepare data with correct variable names
+                const transactionId = document.getElementById('transactionId').value.trim();
                 const applicationData = {
     full_name: fullName,
     email: email,

@@ -436,6 +436,21 @@
                 overflow-x: auto;
                 -webkit-overflow-scrolling: touch;
             }
+            
+            .file-input-label {
+                display: block;
+                width: 100%;
+                text-align: center;
+                padding: var(--space-md);
+                font-size: var(--font-size-base);
+            }
+            
+            .btn-primary, .btn-secondary, .btn-outline {
+                width: 100%;
+                padding: var(--space-md);
+                font-size: var(--font-size-base);
+                margin-bottom: var(--space-xs);
+            }
 
             .data-table {
                 min-width: 600px;
@@ -1176,7 +1191,7 @@
                     <label class="form-label">Image * (Recommended: 1920x1080px or higher)</label>
                     <div class="file-input-wrapper">
                         <label for="galleryImage" class="file-input-label">📷 Select Image</label>
-                        <input type="file" id="galleryImage" accept="image/*" required>
+                        <input type="file" id="galleryImage" accept="image/*" capture="environment">
                     </div>
                 
                 <!-- Upload Progress -->
@@ -2568,7 +2583,8 @@ async function loadAdminDashboardInfo() {
                     return;
                 }
 
-                const imageFile = document.getElementById('galleryImage').files[0];
+                const imageFileInput = document.getElementById('galleryImage');
+                const imageFile = imageFileInput ? imageFileInput.files[0] : null;
                 
                 if (!imageFile) {
                     showToast('Please select an image', 'error');
@@ -2599,7 +2615,9 @@ async function loadAdminDashboardInfo() {
                 statusText.textContent = `Preparing ${imageFile.name}...`;
 
                 // Convert image to Base64
+                console.log('📱 Converting image to base64...', imageFile.name, imageFile.size);
                 const base64Image = await imageToBase64(imageFile);
+                console.log('✅ Base64 conversion complete, length:', base64Image.length);
 
                 progressBar.style.width = '50%';
                 statusText.textContent = 'Uploading to Cloudinary via backend...';
@@ -2610,8 +2628,12 @@ async function loadAdminDashboardInfo() {
                     throw new Error('No authentication token found');
                 }
 
-                // Upload via backend
+                // Upload via backend with longer timeout for mobile
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
+                
                 const uploadResponse = await fetch(`${window.apiClient.baseURL}/api/upload/image`, {
+                    signal: controller.signal,
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -2619,6 +2641,8 @@ async function loadAdminDashboardInfo() {
                     },
                     body: JSON.stringify({ image: base64Image })
                 });
+                
+                clearTimeout(timeoutId);
 
                 const uploadData = await uploadResponse.json();
 
@@ -2657,15 +2681,19 @@ async function loadAdminDashboardInfo() {
                 await loadDashboardStats();
 
             } catch (error) {
-                console.error('Error saving gallery item:', error);
+                console.error('❌ Error saving gallery item:', error);
                 
-                if (error.message.includes('Authentication') || error.message.includes('401')) {
+                if (error.name === 'AbortError') {
+                    showToast('Upload timeout - image may be too large. Try a smaller image.', 'error');
+                } else if (error.message.includes('Authentication') || error.message.includes('401')) {
                     showToast('Session expired. Please log in again.', 'error');
                     setTimeout(() => {
                         sessionStorage.clear();
                         localStorage.removeItem('grrc_auth_token');
                         window.location.href = 'admin.html';
                     }, 2000);
+                } else if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+                    showToast('Network error - check your connection and try again', 'error');
                 } else {
                     showToast(error.message || 'Error saving gallery item', 'error');
                 }
