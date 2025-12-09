@@ -1323,94 +1323,92 @@
         console.log('🎬 Starting slideshow load...');
         
         let galleryItems = [];
+        let shouldInitialize = false;
         
-        // ✅ TRY CACHE FIRST for instant load
-        const cached = localStorage.getItem('gallery');
-        const cacheTime = localStorage.getItem('gallery_cache_time');
-        const now = Date.now();
-        const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
-        
-        if (cached && cacheTime && (now - parseInt(cacheTime)) < CACHE_DURATION) {
+        // ✅ TRY API FIRST (most reliable)
+        if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady) {
             try {
-                galleryItems = JSON.parse(cached);
-                console.log('✅ Loaded', galleryItems.length, 'images from cache (instant)');
-                
-                // Show immediately
-                if (galleryItems.length > 0) {
-                    slideshowImages = galleryItems
-                        .filter(item => {
-                            const imageUrl = item.image || item.image_url;
-                            return imageUrl && imageUrl.trim() !== '';
-                        })
-                        .map(item => ({
-                            url: item.image || item.image_url,
-                            title: item.title || 'Untitled',
-                            description: item.description || item.category || ''
-                        }))
-                        .slice(0, 10);
-                    
-                    if (slideshowImages.length > 0) {
-                        initializeSlideshow();
-                    }
+                const response = await window.apiClient.getGallery();
+                if (response.success && Array.isArray(response.data) && response.data.length > 0) {
+                    galleryItems = response.data;
+                    localStorage.setItem('gallery', JSON.stringify(response.data));
+                    localStorage.setItem('gallery_cache_time', Date.now().toString());
+                    console.log('✅ Loaded', galleryItems.length, 'images from API');
+                    shouldInitialize = true;
                 }
-            } catch (e) {
-                console.warn('Cache parse failed:', e);
+            } catch (apiError) {
+                console.warn('⚠️ API fetch failed:', apiError);
             }
         }
         
-        // ✅ UPDATE FROM API IN BACKGROUND (non-blocking)
-        if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady) {
-            setTimeout(async () => {
+        // ✅ FALLBACK TO CACHE if API fails
+        if (galleryItems.length === 0) {
+            const cached = localStorage.getItem('gallery');
+            if (cached) {
                 try {
-                    const response = await window.apiClient.getGallery();
-                    if (response.success && Array.isArray(response.data) && response.data.length > 0) {
-                        localStorage.setItem('gallery', JSON.stringify(response.data));
-                        localStorage.setItem('gallery_cache_time', Date.now().toString());
-                        console.log('✅ Gallery cache updated from API');
-                    }
-                } catch (apiError) {
-                    console.warn('Background API update failed:', apiError);
+                    galleryItems = JSON.parse(cached);
+                    console.log('✅ Loaded', galleryItems.length, 'images from cache');
+                    shouldInitialize = true;
+                } catch (e) {
+                    console.warn('Cache parse failed:', e);
                 }
-            }, 3000); // Update cache after 3 seconds (reduced network load)
+            }
         }
         
-        // Process images
-        
-        console.log('🔍 Total gallery items:', galleryItems.length);
-        
-        if (galleryItems.length > 0) {
+        // ✅ PROCESS AND VALIDATE IMAGES
+        if (galleryItems.length > 0 && shouldInitialize) {
             slideshowImages = galleryItems
-                .filter(item => {
-                    const imageUrl = item.image || item.image_url;
-                    return imageUrl && imageUrl.trim() !== '';
+                .map(item => {
+                    // Support both 'image' and 'image_url' properties
+                    const imageUrl = item.image || item.image_url || '';
+                    return {
+                        url: imageUrl,
+                        title: item.title || 'GSTU Robotics & Research Club',
+                        description: item.description || item.category || 'A Hub of Robothinkers',
+                        isValid: imageUrl && imageUrl.trim() !== '' && !imageUrl.includes('undefined')
+                    };
                 })
-                .map(item => ({
-                    url: item.image || item.image_url,
-                    title: item.title || 'Untitled',
-                    description: item.description || item.category || ''
-                }))
-                .slice(0, 10);
+                .filter(item => item.isValid) // Only keep valid images
+                .slice(0, 10); // Limit to 10 images
             
             console.log('✅ Valid slideshow images:', slideshowImages.length);
-            console.log('🖼️ Image data:', slideshowImages);
             
             if (slideshowImages.length > 0) {
                 console.log('🎬 Initializing slideshow with', slideshowImages.length, 'images');
+                console.log('🖼️ First image URL:', slideshowImages[0].url.substring(0, 100) + '...');
                 initializeSlideshow();
             } else {
-                console.warn('⚠️ No valid images found in gallery');
+                console.warn('⚠️ No valid images found - showing gradient background');
+                showGradientBackground();
             }
         } else {
-            console.warn('⚠️ No gallery items found');
+            console.warn('⚠️ No gallery items found - showing gradient background');
+            showGradientBackground();
         }
     } catch (error) {
         console.error('❌ Error loading gallery for slideshow:', error);
+        showGradientBackground();
+    }
+}
+
+function showGradientBackground() {
+    const slideshowContainer = document.getElementById('heroSlideshow');
+    const indicatorsContainer = document.getElementById('slideshowIndicators');
+    if (slideshowContainer) {
+        slideshowContainer.classList.remove('active');
+    }
+    if (indicatorsContainer) {
+        indicatorsContainer.classList.remove('active');
     }
 }
         
         function initializeSlideshow() {
             const slideshowContainer = document.getElementById('heroSlideshow');
             const indicatorsContainer = document.getElementById('slideshowIndicators');
+            
+            // Clear existing content
+            slideshowContainer.innerHTML = '';
+            indicatorsContainer.innerHTML = '';
             
             slideshowImages.forEach((imageData, index) => {
                 const slide = document.createElement('div');
@@ -1422,17 +1420,22 @@
                 img.alt = imageData.title;
                 img.loading = index === 0 ? 'eager' : 'lazy';
                 img.decoding = 'async';
-                if (index > 2) {
+                
+                // Force first 3 images to load with high priority
+                if (index < 3) {
+                    img.fetchpriority = 'high';
+                } else {
                     img.fetchpriority = 'low';
                 }
                 
                 img.onerror = function() {
-                    console.error('❌ Failed to load image:', imageData.url);
-                    this.style.display = 'none';
+                    console.error('❌ Failed to load image:', imageData.url.substring(0, 100));
+                    slide.style.display = 'none';
                 };
                 
                 img.onload = function() {
-                    console.log('✅ Image loaded successfully:', imageData.url.substring(0, 50) + '...');
+                    console.log('✅ Image', index + 1, 'loaded successfully');
+                    slide.style.opacity = '1';
                 };
                 
                 slide.appendChild(img);
