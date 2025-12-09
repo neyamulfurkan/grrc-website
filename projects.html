@@ -1664,6 +1664,12 @@
         function initializeSlideshow() {
             const slideshowContainer = document.getElementById('heroSlideshow');
             const indicatorsContainer = document.getElementById('slideshowIndicators');
+            const titleElement = document.getElementById('heroTitle');
+            const subtitleElement = document.getElementById('heroSubtitle');
+            
+            // Clear existing content
+            slideshowContainer.innerHTML = '';
+            indicatorsContainer.innerHTML = '';
             
             slideshowImages.forEach((imageData, index) => {
                 const slide = document.createElement('div');
@@ -1674,14 +1680,23 @@
                 img.src = imageData.url;
                 img.alt = imageData.title;
                 img.loading = index === 0 ? 'eager' : 'lazy';
+                img.decoding = 'async';
+                
+                // Force first 3 images to load with high priority
+                if (index < 3) {
+                    img.fetchpriority = 'high';
+                } else {
+                    img.fetchpriority = 'low';
+                }
                 
                 img.onerror = function() {
-                    console.error('❌ Failed to load image:', imageData.url);
-                    this.style.display = 'none';
+                    console.error('❌ Failed to load image:', imageData.url.substring(0, 100));
+                    slide.style.display = 'none';
                 };
                 
                 img.onload = function() {
-                    console.log('✅ Image loaded successfully:', imageData.url.substring(0, 50) + '...');
+                    console.log('✅ Image', index + 1, 'loaded successfully');
+                    slide.style.opacity = '1';
                 };
                 
                 slide.appendChild(img);
@@ -1697,18 +1712,21 @@
             slideshowContainer.classList.add('active');
             indicatorsContainer.classList.add('active');
             
-            // Initialize text immediately for first image
-            const titleElement = document.getElementById('heroTitle');
-            const subtitleElement = document.getElementById('heroSubtitle');
+            // Initialize text IMMEDIATELY for first image with NO animation
             if (titleElement && subtitleElement && slideshowImages[0]) {
                 titleElement.textContent = slideshowImages[0].title || 'GSTU Robotics & Research Club';
                 subtitleElement.textContent = slideshowImages[0].description || 'A Hub of Robothinkers';
                 titleElement.style.opacity = '1';
                 subtitleElement.style.opacity = '1';
+                console.log('✅ Initial text set:', slideshowImages[0].title);
             }
             
+            // Start slideshow only if there are multiple images
             if (slideshowImages.length > 1) {
-                startSlideshow();
+                // Wait a bit before starting auto-play to let user see first image
+                setTimeout(() => {
+                    startSlideshow();
+                }, 3000); // 3 second delay before starting
             }
         }
         

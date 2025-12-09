@@ -1394,11 +1394,24 @@
 function showGradientBackground() {
     const slideshowContainer = document.getElementById('heroSlideshow');
     const indicatorsContainer = document.getElementById('slideshowIndicators');
+    const titleElement = document.getElementById('heroTitle');
+    const subtitleElement = document.getElementById('heroSubtitle');
+    
     if (slideshowContainer) {
         slideshowContainer.classList.remove('active');
     }
     if (indicatorsContainer) {
         indicatorsContainer.classList.remove('active');
+    }
+    
+    // Set default text immediately
+    if (titleElement) {
+        titleElement.textContent = 'GSTU Robotics & Research Club';
+        titleElement.style.opacity = '1';
+    }
+    if (subtitleElement) {
+        subtitleElement.textContent = 'A Hub of Robothinkers';
+        subtitleElement.style.opacity = '1';
     }
 }
         
@@ -1526,30 +1539,48 @@ function showGradientBackground() {
         }
         
         function startSlideshow() {
+            // Clear any existing interval
+            if (slideshowInterval) {
+                clearInterval(slideshowInterval);
+            }
+            // Set new interval - 5 seconds per slide
             slideshowInterval = setInterval(() => {
                 nextSlide();
             }, 5000);
+            console.log('▶️ Slideshow started with 5s interval');
         }
         
         function nextSlide() {
             const slides = document.querySelectorAll('.hero-slide');
             const indicators = document.querySelectorAll('.slideshow-indicator');
             
-            if (slides.length === 0) return;
+            if (slides.length === 0) {
+                console.warn('⚠️ No slides found');
+                return;
+            }
             
-            slides[currentSlideIndex].classList.remove('active');
+            // Remove active class from current slide
+            if (slides[currentSlideIndex]) {
+                slides[currentSlideIndex].classList.remove('active');
+            }
             if (indicators[currentSlideIndex]) {
                 indicators[currentSlideIndex].classList.remove('active');
             }
             
+            // Move to next slide
             currentSlideIndex = (currentSlideIndex + 1) % slides.length;
             
-            slides[currentSlideIndex].classList.add('active');
+            // Add active class to new slide
+            if (slides[currentSlideIndex]) {
+                slides[currentSlideIndex].classList.add('active');
+            }
             if (indicators[currentSlideIndex]) {
                 indicators[currentSlideIndex].classList.add('active');
             }
             
-            // Update text with new image data
+            console.log('🔄 Slide changed to:', currentSlideIndex + 1, '/', slides.length);
+            
+            // Update text AFTER slide change
             updateHeroText(currentSlideIndex);
         }
         
