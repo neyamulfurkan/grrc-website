@@ -1671,10 +1671,25 @@
             slideshowContainer.innerHTML = '';
             indicatorsContainer.innerHTML = '';
             
+            // Reset current index
+            currentSlideIndex = 0;
+            
+            // Clear any existing slideshow interval
+            if (slideshowInterval) {
+                clearInterval(slideshowInterval);
+                slideshowInterval = null;
+            }
+            
+            let loadedCount = 0;
+            const totalImages = slideshowImages.length;
+            
             slideshowImages.forEach((imageData, index) => {
                 const slide = document.createElement('div');
                 slide.className = 'hero-slide';
-                if (index === 0) slide.classList.add('active');
+                // ONLY first slide is active initially
+                if (index === 0) {
+                    slide.classList.add('active');
+                }
                 
                 const img = document.createElement('img');
                 img.src = imageData.url;
@@ -1682,7 +1697,6 @@
                 img.loading = index === 0 ? 'eager' : 'lazy';
                 img.decoding = 'async';
                 
-                // Force first 3 images to load with high priority
                 if (index < 3) {
                     img.fetchpriority = 'high';
                 } else {
@@ -1692,11 +1706,14 @@
                 img.onerror = function() {
                     console.error('❌ Failed to load image:', imageData.url.substring(0, 100));
                     slide.style.display = 'none';
+                    loadedCount++;
+                    checkAllLoaded();
                 };
                 
                 img.onload = function() {
                     console.log('✅ Image', index + 1, 'loaded successfully');
-                    slide.style.opacity = '1';
+                    loadedCount++;
+                    checkAllLoaded();
                 };
                 
                 slide.appendChild(img);
@@ -1709,24 +1726,41 @@
                 indicatorsContainer.appendChild(indicator);
             });
             
+            function checkAllLoaded() {
+                if (loadedCount === totalImages) {
+                    console.log('✅ All images loaded, ready to start slideshow');
+                    if (slideshowImages.length > 1) {
+                        setTimeout(() => {
+                            startSlideshow();
+                        }, 4000); // 4 second delay
+                    }
+                }
+            }
+            
             slideshowContainer.classList.add('active');
             indicatorsContainer.classList.add('active');
             
-            // Initialize text IMMEDIATELY for first image with NO animation
+            // Set initial text IMMEDIATELY and DIRECTLY (no animation)
             if (titleElement && subtitleElement && slideshowImages[0]) {
-                titleElement.textContent = slideshowImages[0].title || 'GSTU Robotics & Research Club';
-                subtitleElement.textContent = slideshowImages[0].description || 'A Hub of Robothinkers';
+                const firstImage = slideshowImages[0];
+                titleElement.textContent = firstImage.title || 'GSTU Robotics & Research Club';
+                subtitleElement.textContent = firstImage.description || 'A Hub of Robothinkers';
                 titleElement.style.opacity = '1';
                 subtitleElement.style.opacity = '1';
-                console.log('✅ Initial text set:', slideshowImages[0].title);
-            }
-            
-            // Start slideshow only if there are multiple images
-            if (slideshowImages.length > 1) {
-                // Wait a bit before starting auto-play to let user see first image
+                titleElement.style.transition = 'none';
+                subtitleElement.style.transition = 'none';
+                
+                // Force reflow to ensure styles are applied
+                void titleElement.offsetWidth;
+                void subtitleElement.offsetWidth;
+                
+                // Re-enable transitions after a brief delay
                 setTimeout(() => {
-                    startSlideshow();
-                }, 3000); // 3 second delay before starting
+                    titleElement.style.transition = '';
+                    subtitleElement.style.transition = '';
+                }, 100);
+                
+                console.log('✅ Initial text set:', firstImage.title);
             }
         }
         
