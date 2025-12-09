@@ -975,13 +975,11 @@
         
         @media (max-width: 768px) {
             .nav-menu {
-                display: none !important;
+                display: none;
             }
             
             .mobile-menu-toggle {
-                display: flex !important;
-                visibility: visible !important;
-                opacity: 1 !important;
+                display: flex;
             }
 
             .header {
@@ -1022,16 +1020,13 @@
                 bottom: 1rem;
             }
         }
-        /* Force hamburger menu to show on mobile */
         @media (max-width: 767px) {
             .mobile-menu-toggle {
-                display: flex !important;
-                visibility: visible !important;
-                opacity: 1 !important;
+                display: flex;
             }
             
             .nav-menu {
-                display: none !important;
+                display: none;
             }
         }
     </style>
@@ -1323,70 +1318,70 @@
         console.log('🎬 Starting slideshow load...');
         
         let galleryItems = [];
-        let shouldInitialize = false;
         
-        // ✅ TRY API FIRST (most reliable)
+        // ✅ TRY API FIRST
         if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady) {
             try {
                 const response = await window.apiClient.getGallery();
                 if (response.success && Array.isArray(response.data) && response.data.length > 0) {
                     galleryItems = response.data;
                     localStorage.setItem('gallery', JSON.stringify(response.data));
-                    localStorage.setItem('gallery_cache_time', Date.now().toString());
-                    console.log('✅ Loaded', galleryItems.length, 'images from API');
-                    shouldInitialize = true;
+                    console.log('✅ API: Loaded', galleryItems.length, 'images');
                 }
             } catch (apiError) {
-                console.warn('⚠️ API fetch failed:', apiError);
+                console.warn('⚠️ API failed:', apiError);
             }
         }
         
-        // ✅ FALLBACK TO CACHE if API fails
+        // ✅ FALLBACK TO CACHE
         if (galleryItems.length === 0) {
             const cached = localStorage.getItem('gallery');
             if (cached) {
                 try {
                     galleryItems = JSON.parse(cached);
-                    console.log('✅ Loaded', galleryItems.length, 'images from cache');
-                    shouldInitialize = true;
+                    if (galleryItems.length > 0) {
+                        console.log('✅ Cache: Loaded', galleryItems.length, 'images');
+                    }
                 } catch (e) {
                     console.warn('Cache parse failed:', e);
+                    galleryItems = [];
                 }
             }
         }
         
-        // ✅ PROCESS AND VALIDATE IMAGES
-        if (galleryItems.length > 0 && shouldInitialize) {
+        // ✅ VALIDATE AND PROCESS IMAGES
+        if (galleryItems.length > 0) {
             slideshowImages = galleryItems
                 .map(item => {
-                    // Support both 'image' and 'image_url' properties
                     const imageUrl = item.image || item.image_url || '';
+                    const cleanUrl = imageUrl.trim();
+                    
                     return {
-                        url: imageUrl,
+                        url: cleanUrl,
                         title: item.title || 'GSTU Robotics & Research Club',
                         description: item.description || item.category || 'A Hub of Robothinkers',
-                        isValid: imageUrl && imageUrl.trim() !== '' && !imageUrl.includes('undefined')
+                        isValid: cleanUrl.length > 0 && 
+                                !cleanUrl.includes('undefined') && 
+                                !cleanUrl.includes('null') &&
+                                (cleanUrl.startsWith('http') || cleanUrl.startsWith('data:'))
                     };
                 })
-                .filter(item => item.isValid) // Only keep valid images
-                .slice(0, 10); // Limit to 10 images
-            
-            console.log('✅ Valid slideshow images:', slideshowImages.length);
+                .filter(item => item.isValid)
+                .slice(0, 10);
             
             if (slideshowImages.length > 0) {
-                console.log('🎬 Initializing slideshow with', slideshowImages.length, 'images');
-                console.log('🖼️ First image URL:', slideshowImages[0].url.substring(0, 100) + '...');
+                console.log('✅ Initializing slideshow:', slideshowImages.length, 'valid images');
                 initializeSlideshow();
-            } else {
-                console.warn('⚠️ No valid images found - showing gradient background');
-                showGradientBackground();
+                return;
             }
-        } else {
-            console.warn('⚠️ No gallery items found - showing gradient background');
-            showGradientBackground();
         }
+        
+        // ✅ FALLBACK TO GRADIENT
+        console.warn('⚠️ No valid images - using gradient background');
+        showGradientBackground();
+        
     } catch (error) {
-        console.error('❌ Error loading gallery for slideshow:', error);
+        console.error('❌ Slideshow load error:', error);
         showGradientBackground();
     }
 }
@@ -1399,19 +1394,22 @@ function showGradientBackground() {
     
     if (slideshowContainer) {
         slideshowContainer.classList.remove('active');
+        slideshowContainer.style.opacity = '0';
     }
     if (indicatorsContainer) {
         indicatorsContainer.classList.remove('active');
     }
     
-    // Set default text immediately
+    // Set default text with no animation
     if (titleElement) {
         titleElement.textContent = 'GSTU Robotics & Research Club';
         titleElement.style.opacity = '1';
+        titleElement.style.transition = 'none';
     }
     if (subtitleElement) {
         subtitleElement.textContent = 'A Hub of Robothinkers';
         subtitleElement.style.opacity = '1';
+        subtitleElement.style.transition = 'none';
     }
 }
         
@@ -1419,9 +1417,16 @@ function showGradientBackground() {
             const slideshowContainer = document.getElementById('heroSlideshow');
             const indicatorsContainer = document.getElementById('slideshowIndicators');
             
-            // Clear existing content
+            if (!slideshowContainer || !indicatorsContainer) {
+                console.error('❌ Slideshow containers not found');
+                return;
+            }
+            
             slideshowContainer.innerHTML = '';
             indicatorsContainer.innerHTML = '';
+            
+            let loadedCount = 0;
+            const totalImages = slideshowImages.length;
             
             slideshowImages.forEach((imageData, index) => {
                 const slide = document.createElement('div');
@@ -1434,21 +1439,24 @@ function showGradientBackground() {
                 img.loading = index === 0 ? 'eager' : 'lazy';
                 img.decoding = 'async';
                 
-                // Force first 3 images to load with high priority
                 if (index < 3) {
                     img.fetchpriority = 'high';
-                } else {
-                    img.fetchpriority = 'low';
                 }
                 
                 img.onerror = function() {
-                    console.error('❌ Failed to load image:', imageData.url.substring(0, 100));
+                    console.error('❌ Image', index + 1, 'failed:', imageData.url.substring(0, 80));
                     slide.style.display = 'none';
                 };
                 
                 img.onload = function() {
-                    console.log('✅ Image', index + 1, 'loaded successfully');
-                    slide.style.opacity = '1';
+                    loadedCount++;
+                    console.log('✅ Image', index + 1, 'loaded (', loadedCount, '/', totalImages, ')');
+                    
+                    if (index === 0) {
+                        setTimeout(() => {
+                            slideshowContainer.style.opacity = '1';
+                        }, 100);
+                    }
                 };
                 
                 slide.appendChild(img);
@@ -1464,14 +1472,22 @@ function showGradientBackground() {
             slideshowContainer.classList.add('active');
             indicatorsContainer.classList.add('active');
             
-            // Initialize text immediately for first image
+            // Set initial text WITHOUT animation
             const titleElement = document.getElementById('heroTitle');
             const subtitleElement = document.getElementById('heroSubtitle');
             if (titleElement && subtitleElement && slideshowImages[0]) {
-                titleElement.textContent = slideshowImages[0].title || 'GSTU Robotics & Research Club';
-                subtitleElement.textContent = slideshowImages[0].description || 'A Hub of Robothinkers';
+                titleElement.textContent = slideshowImages[0].title;
+                subtitleElement.textContent = slideshowImages[0].description;
+                titleElement.style.transition = 'none';
+                subtitleElement.style.transition = 'none';
                 titleElement.style.opacity = '1';
                 subtitleElement.style.opacity = '1';
+                
+                // Re-enable transitions after initial render
+                setTimeout(() => {
+                    titleElement.style.transition = '';
+                    subtitleElement.style.transition = '';
+                }, 100);
             }
             
             if (slideshowImages.length > 1) {
@@ -1485,11 +1501,8 @@ function showGradientBackground() {
             const subtitleElement = document.getElementById('heroSubtitle');
             
             if (!titleElement || !subtitleElement || !imageData) {
-                console.warn('⚠️ Missing elements for text update');
                 return;
             }
-            
-            console.log('📝 Updating text for image', index + 1, ':', imageData.title);
             
             const animations = [
                 'animate-fadeInUp',
@@ -1504,46 +1517,38 @@ function showGradientBackground() {
             
             const randomAnimation = animations[Math.floor(Math.random() * animations.length)];
             
-            // Remove all animations
+            // Clear all animation classes
             animations.forEach(anim => {
                 titleElement.classList.remove(anim);
                 subtitleElement.classList.remove(anim);
             });
             
-            // Fade out
-            titleElement.style.transition = 'opacity 0.3s ease';
-            subtitleElement.style.transition = 'opacity 0.3s ease';
+            // Fade out quickly
             titleElement.style.opacity = '0';
             subtitleElement.style.opacity = '0';
             
-            // Update content and fade in
+            // Update content after fade out
             setTimeout(() => {
-                titleElement.textContent = imageData.title || 'GSTU Robotics & Research Club';
-                subtitleElement.textContent = imageData.description || 'A Hub of Robothinkers';
+                titleElement.textContent = imageData.title;
+                subtitleElement.textContent = imageData.description;
                 
-                console.log('✅ Text updated to:', imageData.title);
-                
-                // Add animation class
-                titleElement.classList.add(randomAnimation);
-                subtitleElement.classList.add(randomAnimation);
-                
-                // Force reflow
-                void titleElement.offsetWidth;
-                void subtitleElement.offsetWidth;
-                
-                // Fade in
-                titleElement.style.opacity = '1';
-                subtitleElement.style.opacity = '1';
-                
-                // Remove animation class after it completes
-                setTimeout(() => {
-                    titleElement.classList.remove(randomAnimation);
-                    subtitleElement.classList.remove(randomAnimation);
-                    // Ensure text stays visible
+                // Add animation and show
+                requestAnimationFrame(() => {
+                    titleElement.classList.add(randomAnimation);
+                    subtitleElement.classList.add(randomAnimation);
+                    
                     titleElement.style.opacity = '1';
                     subtitleElement.style.opacity = '1';
+                });
+                
+                // Clean up animation classes
+                setTimeout(() => {
+                    animations.forEach(anim => {
+                        titleElement.classList.remove(anim);
+                        subtitleElement.classList.remove(anim);
+                    });
                 }, 1000);
-            }, 350);
+            }, 300);
         }
         
         function startSlideshow() {
