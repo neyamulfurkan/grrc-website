@@ -102,9 +102,9 @@ router.post('/admins', async (req, res) => {
     // Insert new admin
     const result = await pool.query(
       `INSERT INTO admins (username, email, password, password_hash, permissions, created_by, is_active, is_super_admin)
-       VALUES ($1, $2, $3, $3, $4::jsonb, $5, true, false)
+       VALUES ($1, $2, $3::varchar, $4::text, $5::jsonb, $6, true, false)
        RETURNING id, username, email, permissions, created_at`,
-      [username, email, hashedPassword, permissionsJson, req.user.id]
+      [username, email, hashedPassword, hashedPassword, permissionsJson, req.user.id]
     );
     
     console.log('✅ Admin created with permissions:', result.rows[0].permissions);
