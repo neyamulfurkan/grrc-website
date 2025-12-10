@@ -1,0 +1,3 @@
+[33m008185f[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m)[m Fix: Capture item ID from req.params for DELETE/EDIT approvals
+[33mc0988a8[m Fix: DELETE approval workflow with item ID from URL params
+[33m323f6ac[m Fix: Include item IDs in all approval requests

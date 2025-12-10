@@ -1734,60 +1734,45 @@ function showGradientBackground() {
         
         async function loadUpcomingEvents() {
             try {
-                if (typeof getEvents === 'function') {
-                    const result = await getEvents({ status: 'upcoming' });
-                    if (result.success && result.data) {
-                        const events = result.data;
-                        const container = document.getElementById('eventsContainer');
-                        
-                        const now = new Date();
-                        const upcomingEvents = events
-                            .filter(event => new Date(event.date) >= now)
-                            .sort((a, b) => new Date(a.date) - new Date(b.date))
-                            .slice(0, 3);
-                        
-                        if (upcomingEvents.length === 0) {
-                            container.innerHTML = `
-                                <div class="empty-state">
-                                    <div class="empty-state-icon">📅</div>
-                                    <h3>No Upcoming Events</h3>
-                                    <p>Check back soon for exciting workshops and competitions!</p>
-                                </div>
-                            `;
-                            return;
+                console.log('🔄 Loading upcoming events for home page...');
+                const container = document.getElementById('eventsContainer');
+                
+                let events = [];
+                
+                // ✅ Try API first
+                if (window.apiClient && window.apiClient.isReady) {
+                    try {
+                        const result = await window.apiClient.getEvents();
+                        if (result.success && Array.isArray(result.data)) {
+                            events = result.data;
+                            localStorage.setItem('events', JSON.stringify(result.data));
+                            console.log('✅ Events loaded from API:', events.length);
                         }
-                        
-                        container.innerHTML = upcomingEvents.map(event => `
-                            <div class="event-card">
-                                ${event.image ? 
-                                    `<img src="${event.image}" alt="${event.title}" class="event-image">` : 
-                                    `<div class="event-image"></div>`
-                                }
-                                <div class="event-content">
-                                    <h3 class="event-title">${event.title}</h3>
-                                    <div class="event-meta">
-                                        <span>📅 ${formatDate(event.date)}</span>
-                                        <span>⏰ ${event.time || 'TBA'}</span>
-                                        <span>📍 ${event.venue || 'TBA'}</span>
-                                    </div>
-                                    <p class="event-description">${truncateText(event.description, 120)}</p>
-                                    ${event.registrationLink ? 
-                                        `<a href="${event.registrationLink}" target="_blank" class="btn btn-primary btn-sm">Register Now</a>` : 
-                                        ''
-                                    }
-                                </div>
-                            </div>
-                        `).join('');
-                        return;
+                    } catch (apiError) {
+                        console.warn('⚠️ API failed, trying cache:', apiError.message);
                     }
                 }
                 
-                const events = JSON.parse(localStorage.getItem('events') || '[]');
-                const container = document.getElementById('eventsContainer');
+                // ✅ Fallback to cache if API failed
+                if (events.length === 0) {
+                    const cached = localStorage.getItem('events');
+                    if (cached) {
+                        try {
+                            events = JSON.parse(cached);
+                            console.log('✅ Events loaded from cache:', events.length);
+                        } catch (e) {
+                            console.warn('Cache parse failed:', e);
+                        }
+                    }
+                }
                 
+                // ✅ Filter and display
                 const now = new Date();
                 const upcomingEvents = events
-                    .filter(event => event.status === 'upcoming' && new Date(event.date) >= now)
+                    .filter(event => {
+                        const eventDate = new Date(event.date);
+                        return eventDate >= now && (event.status === 'upcoming' || event.status === 'Upcoming');
+                    })
                     .sort((a, b) => new Date(a.date) - new Date(b.date))
                     .slice(0, 3);
                 
@@ -1841,45 +1826,39 @@ function showGradientBackground() {
         
         async function loadExecutiveMembers() {
             try {
-                if (typeof getMembers === 'function') {
-                    const result = await getMembers({ role: 'Executive Member' });
-                    if (result.success && result.data) {
-                        const members = result.data;
-                        const container = document.getElementById('executiveContainer');
-                        
-                        const executives = members.slice(0, 4);
-                        
-                        if (executives.length === 0) {
-                            container.innerHTML = `
-                                <div class="empty-state">
-                                    <div class="empty-state-icon">👥</div>
-                                    <h3>No Executive Members Yet</h3>
-                                    <p>Our leadership team will be announced soon!</p>
-                                </div>
-                            `;
-                            return;
+                console.log('🔄 Loading executive members for home page...');
+                const container = document.getElementById('executiveContainer');
+                
+                let members = [];
+                
+                // ✅ Try API first
+                if (window.apiClient && window.apiClient.isReady) {
+                    try {
+                        const result = await window.apiClient.getMembers();
+                        if (result.success && Array.isArray(result.data)) {
+                            members = result.data;
+                            localStorage.setItem('members', JSON.stringify(result.data));
+                            console.log('✅ Members loaded from API:', members.length);
                         }
-                        
-                        container.innerHTML = executives.map(member => `
-                            <div class="member-card" onclick="window.location.href='members.html'">
-                                ${member.photo ? 
-                                    `<img src="${member.photo}" alt="${member.name}" class="member-photo">` : 
-                                    `<div class="member-photo"></div>`
-                                }
-                                <div class="member-info">
-                                    <h3 class="member-name">${member.name}</h3>
-                                    <p class="member-role">${member.role}</p>
-                                    <p class="member-department">${member.department} - Year ${member.year}</p>
-                                </div>
-                            </div>
-                        `).join('');
-                        return;
+                    } catch (apiError) {
+                        console.warn('⚠️ API failed, trying cache:', apiError.message);
                     }
                 }
                 
-                const members = JSON.parse(localStorage.getItem('members') || '[]');
-                const container = document.getElementById('executiveContainer');
+                // ✅ Fallback to cache
+                if (members.length === 0) {
+                    const cached = localStorage.getItem('members');
+                    if (cached) {
+                        try {
+                            members = JSON.parse(cached);
+                            console.log('✅ Members loaded from cache:', members.length);
+                        } catch (e) {
+                            console.warn('Cache parse failed:', e);
+                        }
+                    }
+                }
                 
+                // ✅ Filter and display executives
                 const executives = members
                     .filter(member => member.role && member.role.toLowerCase().includes('executive'))
                     .slice(0, 4);
@@ -1919,18 +1898,37 @@ function showGradientBackground() {
         }
         async function loadLatestAnnouncements() {
             try {
+                console.log('🔄 Loading announcements for home page...');
                 const container = document.getElementById('announcementsContainer');
                 if (!container) return;
                 
                 let announcements = [];
                 
-                if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady) {
-                    const result = await window.apiClient.getAnnouncements();
-                    if (result.success && result.data) {
-                        announcements = result.data;
+                // ✅ Try API first
+                if (window.apiClient && window.apiClient.isReady) {
+                    try {
+                        const result = await window.apiClient.getAnnouncements();
+                        if (result.success && Array.isArray(result.data)) {
+                            announcements = result.data;
+                            localStorage.setItem('announcements', JSON.stringify(result.data));
+                            console.log('✅ Announcements loaded from API:', announcements.length);
+                        }
+                    } catch (apiError) {
+                        console.warn('⚠️ API failed, trying cache:', apiError.message);
                     }
-                } else {
-                    announcements = JSON.parse(localStorage.getItem('announcements') || '[]');
+                }
+                
+                // ✅ Fallback to cache
+                if (announcements.length === 0) {
+                    const cached = localStorage.getItem('announcements');
+                    if (cached) {
+                        try {
+                            announcements = JSON.parse(cached);
+                            console.log('✅ Announcements loaded from cache:', announcements.length);
+                        } catch (e) {
+                            console.warn('Cache parse failed:', e);
+                        }
+                    }
                 }
                 
                 if (announcements.length === 0) {
