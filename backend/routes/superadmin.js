@@ -423,7 +423,7 @@ router.post('/approvals/:id/approve', async (req, res) => {
     
     // Execute the original action based on module and action_type
     let executionResult;
-    const itemId = item_data.id; // ID for edit/delete operations
+    const itemId = item_data.id || item_data.item_id; // ID for edit/delete operations (support both formats)
     
     switch (module) {
       case 'members':
