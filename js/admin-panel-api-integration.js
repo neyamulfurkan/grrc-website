@@ -55,6 +55,11 @@ async function saveMember() {
             joined_date: document.getElementById('memberJoinedDate').value
         };
 
+        // Include ID if editing (for approval workflow)
+        if (window.currentEditMemberId) {
+            memberData.id = window.currentEditMemberId;
+        }
+
         let result;
         
         // Check if editing or creating
@@ -228,6 +233,11 @@ async function saveEvent() {
             registration_link: document.getElementById('eventRegistrationLink').value
         };
 
+        // Include ID if editing (for approval workflow)
+        if (window.currentEditEventId) {
+            eventData.id = window.currentEditEventId;
+        }
+
         let result;
         
         if (currentEditEventId) {
@@ -382,6 +392,11 @@ async function saveProject() {
             live_link: document.getElementById('projectLiveLink').value,
             completion_date: document.getElementById('projectCompletionDate').value
         };
+
+        // Include ID if editing (for approval workflow)
+        if (window.currentEditProjectId) {
+            projectData.id = window.currentEditProjectId;
+        }
 
         let result;
         
@@ -660,6 +675,11 @@ async function saveAnnouncement() {
             priority: document.getElementById('announcementPriority').value,
             date: new Date().toISOString()
         };
+
+        // Include ID if editing (for approval workflow)
+        if (window.currentEditAnnouncementId) {
+            announcementData.id = window.currentEditAnnouncementId;
+        }
 
         let result;
         
