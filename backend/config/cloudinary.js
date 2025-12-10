@@ -10,7 +10,19 @@ cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
+  secure: true
 });
+
+// Test connection on startup
+(async () => {
+  try {
+    const result = await cloudinary.api.ping();
+    console.log('✅ Cloudinary connected:', result.status);
+  } catch (error) {
+    console.error('❌ Cloudinary connection failed:', error.message);
+    console.warn('⚠️  Upload features will not work without valid Cloudinary credentials');
+  }
+})();
 
 /**
  * Upload image to Cloudinary
@@ -50,7 +62,7 @@ async function deleteImage(imageUrl) {
   }
 }
 
-module.exports = {
-  uploadImage,
-  deleteImage,
-};
+// Export both the instance and helper functions
+module.exports = cloudinary;
+module.exports.uploadImage = uploadImage;
+module.exports.deleteImage = deleteImage;

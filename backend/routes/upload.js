@@ -1,115 +1,127 @@
+/**
+ * Upload Routes - Image Upload to Cloudinary
+ */
+
 const express = require('express');
 const router = express.Router();
-const cloudinary = require('cloudinary').v2;
 const { authenticateToken } = require('../middleware/auth');
+const cloudinary = require('../config/cloudinary');
 
-// Configure Cloudinary
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET
-});
+// Apply authentication to all routes
+router.use(authenticateToken);
 
-console.log('☁️ Cloudinary configured:', {
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY ? '✅ Set' : '❌ Missing',
-  api_secret: process.env.CLOUDINARY_API_SECRET ? `✅ Set (${process.env.CLOUDINARY_API_SECRET.substring(0, 5)}...${process.env.CLOUDINARY_API_SECRET.slice(-3)})` : '❌ Missing',
-  all_env_keys: Object.keys(process.env).filter(k => k.includes('CLOUDINARY'))
-});
-
-// Upload image to Cloudinary
-router.post('/image', authenticateToken, async (req, res) => {
+/**
+ * POST /api/upload/image
+ * Upload image to Cloudinary
+ */
+router.post('/image', async (req, res) => {
   try {
     const { image } = req.body;
     
     if (!image) {
-      return res.status(400).json({ 
-        success: false, 
-        error: 'No image provided' 
+      return res.status(400).json({
+        success: false,
+        error: 'No image data provided'
       });
     }
-
-    console.log('📤 Uploading image to Cloudinary...');
-
-    // Upload to Cloudinary
-    const result = await cloudinary.uploader.upload(image, {
-      folder: 'grrc-gallery',
-      resource_type: 'auto',
-      transformation: [
-        { width: 1920, crop: 'limit' },
-        { quality: 'auto:good' },
-        { fetch_format: 'auto' }
-      ]
-    });
-
-    console.log('✅ Cloudinary upload successful:', result.secure_url);
-
-    res.json({
-      success: true,
-      url: result.secure_url,
-      publicId: result.public_id,
-      width: result.width,
-      height: result.height,
-      size: result.bytes,
-      format: result.format
-    });
-
-  } catch (error) {
-    console.error('❌ Cloudinary upload error:', error);
-    res.status(500).json({
-      success: false,
-      error: error.message
-    });
-  }
-});
-// ✅ Public upload for membership/alumni forms (no auth required)
-router.post('/public-image', async (req, res) => {
-  try {
-    const { image } = req.body;
     
-    if (!image) {
-      return res.status(400).json({ 
-        success: false, 
-        error: 'No image provided' 
-      });
-    }
-
+    // Check if image is base64
     if (!image.startsWith('data:image/')) {
       return res.status(400).json({
         success: false,
-        error: 'Invalid image format'
+        error: 'Invalid image format. Must be base64 data URL'
       });
     }
-
-    console.log('📤 Uploading public image to Cloudinary...');
-
-    const result = await cloudinary.uploader.upload(image, {
-      folder: 'grrc-applications',
-      resource_type: 'auto',
+    
+    console.log('📤 Uploading image to Cloudinary...');
+    console.log('📦 Image size:', Math.round(image.length / 1024), 'KB');
+    
+    // Upload to Cloudinary with optimization
+    const uploadResult = await cloudinary.uploader.upload(image, {
+      folder: 'grrc-gallery',
       transformation: [
-        { width: 1920, crop: 'limit' },
+        { width: 1920, height: 1080, crop: 'limit' },
         { quality: 'auto:good' },
         { fetch_format: 'auto' }
-      ]
+      ],
+      resource_type: 'image'
     });
-
-    console.log('✅ Public upload successful:', result.secure_url);
-
+    
+    console.log('✅ Image uploaded successfully');
+    console.log('📍 Cloudinary URL:', uploadResult.secure_url);
+    
     res.json({
       success: true,
-      url: result.secure_url,
-      publicId: result.public_id,
-      width: result.width,
-      height: result.height,
-      size: result.bytes,
-      format: result.format
+      url: uploadResult.secure_url,
+      publicId: uploadResult.public_id,
+      format: uploadResult.format,
+      width: uploadResult.width,
+      height: uploadResult.height,
+      bytes: uploadResult.bytes
     });
-
+    
   } catch (error) {
-    console.error('❌ Public upload error:', error);
+    console.error('❌ Upload error:', error);
+    
+    if (error.message.includes('Invalid image file')) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid image file format'
+      });
+    }
+    
+    if (error.message.includes('File size too large')) {
+      return res.status(413).json({
+        success: false,
+        error: 'Image file is too large. Maximum size is 10MB'
+      });
+    }
+    
     res.status(500).json({
       success: false,
-      error: error.message
+      error: 'Failed to upload image: ' + error.message
+    });
+  }
+});
+
+/**
+ * DELETE /api/upload/image/:publicId
+ * Delete image from Cloudinary
+ */
+router.delete('/image/:publicId', async (req, res) => {
+  try {
+    const { publicId } = req.params;
+    
+    if (!publicId) {
+      return res.status(400).json({
+        success: false,
+        error: 'No public ID provided'
+      });
+    }
+    
+    console.log('🗑️ Deleting image from Cloudinary:', publicId);
+    
+    const result = await cloudinary.uploader.destroy(`grrc-gallery/${publicId}`);
+    
+    if (result.result === 'ok') {
+      console.log('✅ Image deleted successfully');
+      res.json({
+        success: true,
+        message: 'Image deleted successfully'
+      });
+    } else {
+      console.warn('⚠️ Image not found or already deleted');
+      res.json({
+        success: true,
+        message: 'Image not found or already deleted'
+      });
+    }
+    
+  } catch (error) {
+    console.error('❌ Delete error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to delete image: ' + error.message
     });
   }
 });
