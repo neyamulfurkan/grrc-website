@@ -1812,8 +1812,9 @@ function showGradientBackground() {
                                 ''
                             }
                         </div>
-                    </div>
-                `).join('');
+                    `;
+                    container.appendChild(eventCard);
+                });
             } catch (error) {
                 console.error('Error loading events:', error);
                 document.getElementById('eventsContainer').innerHTML = `
