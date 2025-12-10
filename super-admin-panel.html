@@ -1417,20 +1417,27 @@
         }
 
         async function rejectRequest(approvalId) {
-            const notes = prompt('Rejection reason:');
-            if (!notes) return;
+            const notes = prompt('Rejection reason (optional):');
+            // Allow rejection even if user cancels or enters empty string
+            if (notes === null) return; // Only return if user clicked "Cancel"
             
             try {
+                console.log(`🚫 Rejecting approval ${approvalId}...`);
+                
                 const response = await fetch(`${API_BASE_URL}/api/superadmin/approvals/${approvalId}/reject`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${localStorage.getItem('superAdminToken')}`
                     },
-                    body: JSON.stringify({ notes })
+                    body: JSON.stringify({ notes: notes || '' })
                 });
                 
+                console.log(`📥 Reject response status: ${response.status}`);
+                
                 const data = await response.json();
+                console.log(`📥 Reject response data:`, data);
+                
                 if (data.success) {
                     showToast('Request rejected', 'success');
                     await loadPendingApprovals();
@@ -1439,7 +1446,7 @@
                     showToast(data.error || 'Failed to reject request', 'error');
                 }
             } catch (error) {
-                console.error('Error rejecting request:', error);
+                console.error('❌ Error rejecting request:', error);
                 showToast('Error rejecting request', 'error');
             }
         }

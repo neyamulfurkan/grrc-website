@@ -633,33 +633,42 @@ router.post('/approvals/:id/reject', async (req, res) => {
     const { notes } = req.body;
     const approvalId = req.params.id;
     
+    // CRITICAL FIX: Handle missing or empty notes
+    const reviewNotes = notes || 'No reason provided';
+    
+    console.log(`🚫 Rejecting approval ${approvalId} by ${req.user.username}`);
+    
     const result = await pool.query(
       `UPDATE pending_approvals 
        SET status = 'rejected', reviewed_by = $1, reviewed_at = NOW(), review_notes = $2
        WHERE id = $3 AND status = 'pending'
        RETURNING *`,
-      [req.user.id, notes, approvalId]
+      [req.user.id, reviewNotes, approvalId]
     );
     
     if (result.rows.length === 0) {
+      console.error(`❌ Approval ${approvalId} not found or already processed`);
       return res.status(404).json({ 
         success: false, 
         error: 'Approval not found or already processed' 
       });
     }
     
+    console.log(`✅ Approval ${approvalId} rejected successfully`);
+    
     await logAuditAction(
       req.user.id,
       'reject_request',
       result.rows[0].module,
       approvalId,
-      { action_type: result.rows[0].action_type, notes },
+      { action_type: result.rows[0].action_type, notes: reviewNotes },
       req
     );
     
     res.json({ success: true, message: 'Request rejected' });
   } catch (error) {
-    console.error('Reject request error:', error);
+    console.error('❌ Reject request error:', error);
+    console.error('   Stack:', error.stack);
     res.status(500).json({ success: false, error: 'Failed to reject request' });
   }
 });
