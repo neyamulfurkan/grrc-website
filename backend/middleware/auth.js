@@ -213,8 +213,10 @@ function checkPermission(module, action) {
       });
     }
     
-    // ✅ FIXED: Check if approval is required for CREATE actions
-    if (action === 'create') {
+    // ✅ FIXED: Check if approval is required for CREATE, EDIT, DELETE, and UPLOAD actions
+    const actionsRequiringApproval = ['create', 'edit', 'delete', 'upload'];
+    
+    if (actionsRequiringApproval.includes(action)) {
       const approvalRequired = await checkApprovalRequired(module);
       if (approvalRequired) {
         console.log(`⏳ Approval required for ${req.user.username}: ${module}.${action} - BLOCKING AND CREATING PENDING APPROVAL`);
@@ -233,7 +235,7 @@ function checkPermission(module, action) {
           
           return res.status(202).json({
             success: true,
-            message: `Your ${module} creation request has been submitted for Super Admin approval.`,
+            message: `Your ${module} ${action} request has been submitted for Super Admin approval.`,
             requiresApproval: true,
             pending: true,
             approvalId: result.rows[0].id

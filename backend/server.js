@@ -177,7 +177,8 @@ let routesLoaded = {
     membership: false,
     alumniApplication: false,
     superadmin: false,
-    upload: false
+    upload: false,
+    adminGallery: false
 };
 
 /**
@@ -247,7 +248,7 @@ loadRoute('alumniApplication', './routes/alumniApplication', '/api/alumni-applic
 loadRoute('superadmin', './routes/superadmin', '/api/superadmin');
 
 // ============ UPLOAD ROUTES ============
-loadRoute('upload', './routes/upload', '/api/upload');
+loadRoute('adminGallery', './routes/admin-gallery', '/api/admin/gallery');
 
 /**
  * API Documentation
@@ -476,6 +477,7 @@ try {
             console.log(`   Auth:                ${routesLoaded.auth ? '✅' : '❌'}`);
             console.log(`   Content:             ${routesLoaded.content ? '✅' : '❌'}`);
             console.log(`   Admin:               ${routesLoaded.admin ? '✅' : '❌'}`);
+            console.log(`   Admin Gallery:       ${routesLoaded.adminGallery ? '✅' : '❌'}`);
             console.log(`   Membership:          ${routesLoaded.membership ? '✅' : '❌'}`);
             console.log(`   Alumni Application:  ${routesLoaded.alumniApplication ? '✅' : '❌'}`);
             console.log(`   Super Admin:         ${routesLoaded.superadmin ? '✅' : '❌'}`);

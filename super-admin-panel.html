@@ -1334,9 +1334,61 @@
             if (!itemData) return 'No details available';
             try {
                 const data = typeof itemData === 'string' ? JSON.parse(itemData) : itemData;
-                return `<pre style="white-space: pre-wrap; word-wrap: break-word;">${JSON.stringify(data, null, 2)}</pre>`;
-            } catch {
-                return String(itemData);
+                
+                // Format based on data type
+                let html = '<div style="max-width: 600px;">';
+                
+                // Show image if exists (for gallery, members, events, projects)
+                if (data.image) {
+                    const imgSrc = data.image.startsWith('data:') 
+                        ? data.image 
+                        : data.image;
+                    html += `<img src="${imgSrc}" alt="Preview" style="max-width: 100%; max-height: 200px; object-fit: cover; border-radius: 8px; margin-bottom: 1rem; display: block;">`;
+                }
+                
+                if (data.photo) {
+                    const imgSrc = data.photo.startsWith('data:') 
+                        ? data.photo 
+                        : data.photo;
+                    html += `<img src="${imgSrc}" alt="Preview" style="max-width: 100%; max-height: 200px; object-fit: cover; border-radius: 8px; margin-bottom: 1rem; display: block;">`;
+                }
+                
+                // Show key fields in a readable format
+                const fieldsToShow = [
+                    { key: 'title', label: 'Title' },
+                    { key: 'name', label: 'Name' },
+                    { key: 'description', label: 'Description' },
+                    { key: 'category', label: 'Category' },
+                    { key: 'date', label: 'Date' },
+                    { key: 'email', label: 'Email' },
+                    { key: 'department', label: 'Department' },
+                    { key: 'role', label: 'Role' },
+                    { key: 'venue', label: 'Venue' },
+                    { key: 'time', label: 'Time' },
+                    { key: 'status', label: 'Status' }
+                ];
+                
+                fieldsToShow.forEach(field => {
+                    if (data[field.key]) {
+                        const value = String(data[field.key]).substring(0, 200); // Limit length
+                        html += `<p style="margin: 0.5rem 0;"><strong>${field.label}:</strong> ${value}</p>`;
+                    }
+                });
+                
+                // Show array fields
+                if (data.skills && Array.isArray(data.skills)) {
+                    html += `<p style="margin: 0.5rem 0;"><strong>Skills:</strong> ${data.skills.join(', ')}</p>`;
+                }
+                
+                if (data.technologies && Array.isArray(data.technologies)) {
+                    html += `<p style="margin: 0.5rem 0;"><strong>Technologies:</strong> ${data.technologies.join(', ')}</p>`;
+                }
+                
+                html += '</div>';
+                return html;
+            } catch (error) {
+                console.error('Error formatting approval details:', error);
+                return 'Error displaying details';
             }
         }
 

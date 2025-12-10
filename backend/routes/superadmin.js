@@ -423,6 +423,7 @@ router.post('/approvals/:id/approve', async (req, res) => {
     
     // Execute the original action based on module and action_type
     let executionResult;
+    const itemId = item_data.id; // ID for edit/delete operations
     
     switch (module) {
       case 'members':
@@ -438,6 +439,19 @@ router.post('/approvals/:id/approve', async (req, res) => {
               item_data.joined_date
             ]
           );
+        } else if (action_type === 'edit' && itemId) {
+          executionResult = await client.query(
+            `UPDATE members SET name = $1, photo = $2, department = $3, year = $4, role = $5, email = $6, phone = $7, bio = $8, skills = $9, joined_date = $10, updated_at = NOW()
+             WHERE id = $11 RETURNING id`,
+            [
+              item_data.name, item_data.photo, item_data.department, 
+              item_data.year, item_data.role, item_data.email, 
+              item_data.phone, item_data.bio, JSON.stringify(item_data.skills), 
+              item_data.joined_date, itemId
+            ]
+          );
+        } else if (action_type === 'delete' && itemId) {
+          executionResult = await client.query('DELETE FROM members WHERE id = $1 RETURNING id', [itemId]);
         }
         break;
         
@@ -453,6 +467,18 @@ router.post('/approvals/:id/approve', async (req, res) => {
               item_data.image, item_data.status, item_data.registration_link
             ]
           );
+        } else if (action_type === 'edit' && itemId) {
+          executionResult = await client.query(
+            `UPDATE events SET title = $1, description = $2, category = $3, date = $4, time = $5, venue = $6, image = $7, status = $8, registration_link = $9, updated_at = NOW()
+             WHERE id = $10 RETURNING id`,
+            [
+              item_data.title, item_data.description, item_data.category,
+              item_data.date, item_data.time, item_data.venue,
+              item_data.image, item_data.status, item_data.registration_link, itemId
+            ]
+          );
+        } else if (action_type === 'delete' && itemId) {
+          executionResult = await client.query('DELETE FROM events WHERE id = $1 RETURNING id', [itemId]);
         }
         break;
         
@@ -469,11 +495,24 @@ router.post('/approvals/:id/approve', async (req, res) => {
               item_data.live_link, item_data.completion_date
             ]
           );
+        } else if (action_type === 'edit' && itemId) {
+          executionResult = await client.query(
+            `UPDATE projects SET title = $1, description = $2, category = $3, status = $4, image = $5, technologies = $6, team_members = $7, github_link = $8, live_link = $9, completion_date = $10, updated_at = NOW()
+             WHERE id = $11 RETURNING id`,
+            [
+              item_data.title, item_data.description, item_data.category,
+              item_data.status, item_data.image, JSON.stringify(item_data.technologies),
+              JSON.stringify(item_data.team_members), item_data.github_link,
+              item_data.live_link, item_data.completion_date, itemId
+            ]
+          );
+        } else if (action_type === 'delete' && itemId) {
+          executionResult = await client.query('DELETE FROM projects WHERE id = $1 RETURNING id', [itemId]);
         }
         break;
         
       case 'gallery':
-        if (action_type === 'create') {
+        if (action_type === 'create' || action_type === 'upload') {
           executionResult = await client.query(
             `INSERT INTO gallery (image, title, description, category, date, photographer)
              VALUES ($1, $2, $3, $4, $5, $6)
@@ -483,6 +522,17 @@ router.post('/approvals/:id/approve', async (req, res) => {
               item_data.category, item_data.date, item_data.photographer
             ]
           );
+        } else if (action_type === 'edit' && itemId) {
+          executionResult = await client.query(
+            `UPDATE gallery SET image = $1, title = $2, description = $3, category = $4, date = $5, photographer = $6, updated_at = NOW()
+             WHERE id = $7 RETURNING id`,
+            [
+              item_data.image, item_data.title, item_data.description,
+              item_data.category, item_data.date, item_data.photographer, itemId
+            ]
+          );
+        } else if (action_type === 'delete' && itemId) {
+          executionResult = await client.query('DELETE FROM gallery WHERE id = $1 RETURNING id', [itemId]);
         }
         break;
         
@@ -494,6 +544,14 @@ router.post('/approvals/:id/approve', async (req, res) => {
              RETURNING id`,
             [item_data.title, item_data.content, item_data.priority, item_data.date]
           );
+        } else if (action_type === 'edit' && itemId) {
+          executionResult = await client.query(
+            `UPDATE announcements SET title = $1, content = $2, priority = $3, updated_at = NOW()
+             WHERE id = $4 RETURNING id`,
+            [item_data.title, item_data.content, item_data.priority, itemId]
+          );
+        } else if (action_type === 'delete' && itemId) {
+          executionResult = await client.query('DELETE FROM announcements WHERE id = $1 RETURNING id', [itemId]);
         }
         break;
     }
