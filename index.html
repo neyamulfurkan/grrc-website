@@ -1802,8 +1802,14 @@ function showGradientBackground() {
                     return;
                 }
                 
-                container.innerHTML = upcomingEvents.map(event => `
-                    <div class="event-card">
+                container.innerHTML = '';
+                upcomingEvents.forEach((event, index) => {
+                    const eventCard = document.createElement('div');
+                    eventCard.className = 'event-card';
+                    eventCard.style.opacity = '0';
+                    eventCard.style.transform = 'translateY(20px)';
+                    eventCard.style.animation = `fadeInUp 0.5s ease-out ${index * 0.1}s forwards`;
+                    eventCard.innerHTML = `
                         ${event.image ? 
                             `<img src="${event.image}" alt="${event.title}" class="event-image">` : 
                             `<div class="event-image"></div>`

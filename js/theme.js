@@ -567,17 +567,29 @@ function addThemeStyles() {
 }
 
 // ==================== AUTO-INITIALIZE ====================
-// Initialize theme immediately (before DOM loads to prevent flash)
+// ✅ INSTANT THEME - Prevent flash
+(function() {
+  const savedTheme = localStorage.getItem('theme') || 'dark';
+  document.documentElement.setAttribute('data-theme', savedTheme);
+  document.documentElement.classList.add('no-transition');
+  
+  // Remove no-transition class after first render
+  setTimeout(() => {
+    document.documentElement.classList.remove('no-transition');
+  }, 100);
+})();
+
+// Initialize theme system
 if (typeof window !== 'undefined') {
-  // Add styles first
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', addThemeStyles);
+    document.addEventListener('DOMContentLoaded', () => {
+      addThemeStyles();
+      initTheme();
+    });
   } else {
     addThemeStyles();
+    initTheme();
   }
-  
-  // Initialize theme
-  initTheme();
 }
 
 // ==================== EXPORT FOR USE IN OTHER FILES ====================

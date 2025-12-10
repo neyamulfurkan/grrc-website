@@ -9,26 +9,32 @@ let isPageLoading = false;
 let initializationPromise = null;
 
 // =============================================================================
-// CACHE MANAGEMENT WITH PROPER INVALIDATION
+// OPTIMIZED CACHE MANAGEMENT - INSTANT LOAD
 // =============================================================================
 
 /**
- * Load data from cache
+ * Load data from cache SYNCHRONOUSLY for instant render
+ * @param {string} key - Cache key
+ * @returns {any|null} Cached data or null
+ */
+function loadFromCacheSync(key) {
+  try {
+    const cached = localStorage.getItem(`cache_${key}`);
+    if (!cached) return null;
+    return JSON.parse(cached);
+  } catch (error) {
+    console.warn(`⚠️ Cache error for ${key}:`, error);
+    return null;
+  }
+}
+
+/**
+ * Load data from cache asynchronously
  * @param {string} key - Cache key
  * @returns {Promise<any|null>} Cached data or null
  */
 async function loadFromCache(key) {
-  try {
-    const cached = localStorage.getItem(`cache_${key}`);
-    if (!cached) return null;
-    
-    const data = JSON.parse(cached);
-    console.log(`📦 Loaded ${key} from cache (${data.length || 0} items)`);
-    return data;
-  } catch (error) {
-    console.warn(`⚠️ Error loading ${key} from cache:`, error);
-    return null;
-  }
+  return loadFromCacheSync(key);
 }
 
 /**
@@ -79,37 +85,37 @@ window.clearCache = clearCache;
 
 async function loadClubConfiguration() {
   try {
-    console.log('🔄 Loading club configuration...');
-    
-    // Try API first if available
-    if (window.apiClient && window.apiClient.isReady) {
+    // ✅ INSTANT: Load from cache FIRST (sync)
+    const cached = loadFromCacheSync('clubConfig');
+    if (cached) {
+      updateClubConfigDOM(cached);
+      console.log('⚡ Config loaded instantly from cache');
+    } else {
+      // Load default config if no cache
       try {
-        const result = await window.apiClient.getConfig();
-        
-        if (result.success && result.data) {
-          await saveToCache('clubConfig', result.data);
-          updateClubConfigDOM(result.data);
-          console.log('✅ Club configuration loaded from API');
-          return true;
-        }
-      } catch (apiError) {
-        console.warn('⚠️ API failed, trying cache:', apiError.message);
+        const response = await fetch('config/defaultConfig.json');
+        const defaultConfig = await response.json();
+        updateClubConfigDOM(defaultConfig);
+        console.log('⚡ Default config loaded');
+      } catch (err) {
+        console.warn('⚠️ Default config failed:', err);
       }
     }
     
-    // Fallback to cache
-    const cached = await loadFromCache('clubConfig');
-    if (cached) {
-      updateClubConfigDOM(cached);
-      console.log('✅ Club configuration loaded from cache');
-      return true;
+    // 🔄 BACKGROUND: Update from API without blocking
+    if (window.apiClient && window.apiClient.isReady) {
+      window.apiClient.getConfig().then(result => {
+        if (result.success && result.data) {
+          saveToCache('clubConfig', result.data);
+          updateClubConfigDOM(result.data);
+          console.log('✅ Config refreshed from API');
+        }
+      }).catch(err => console.warn('⚠️ API refresh failed:', err));
     }
     
-    console.warn('⚠️ No club configuration available');
-    return false;
-    
+    return true;
   } catch (error) {
-    console.error('❌ Error loading club configuration:', error);
+    console.error('❌ Config error:', error);
     return false;
   }
 }

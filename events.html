@@ -497,13 +497,72 @@
         }
 
         /* Animations */
-        @keyframes fadeIn {
+        /* ===== PROFESSIONAL ANIMATIONS ===== */
+        @keyframes fadeInUp {
             from {
                 opacity: 0;
+                transform: translateY(30px);
             }
             to {
                 opacity: 1;
+                transform: translateY(0);
             }
+        }
+        
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0px);
+            }
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+        
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.5;
+            }
+        }
+        
+        .skeleton {
+            background: linear-gradient(
+                90deg,
+                var(--background-secondary) 0%,
+                var(--border-color) 50%,
+                var(--background-secondary) 100%
+            );
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: 8px;
+        }
+        
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+        
+        .skeleton-pulse {
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+        
+        /* Floating elements */
+        .stat-card {
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        .stat-card:nth-child(2) {
+            animation-delay: 0.5s;
+        }
+        
+        .stat-card:nth-child(3) {
+            animation-delay: 1s;
+        }
+        
+        .stat-card:nth-child(4) {
+            animation-delay: 1.5s;
         }
 
         @keyframes fadeInUp {

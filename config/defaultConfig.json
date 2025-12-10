@@ -1,0 +1,21 @@
+{
+  "name": "GSTU Robotics & Research Club",
+  "shortName": "GRRC",
+  "motto": "A Hub of Robothinkers",
+  "description": "Join us in exploring the fascinating world of robotics, automation, and innovation at Gopalganj Science and Technology University.",
+  "logo": "assets/default-logo.jpg",
+  "bkash_number": "",
+  "membership_fee": "",
+  "socialLinks": [
+    {
+      "platform": "Facebook",
+      "url": "#",
+      "icon": "📘"
+    },
+    {
+      "platform": "Email",
+      "url": "mailto:contact@grrc.edu.bd",
+      "icon": "📧"
+    }
+  ]
+}
