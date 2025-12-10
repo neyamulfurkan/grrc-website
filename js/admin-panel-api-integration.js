@@ -535,6 +535,11 @@ async function saveGalleryItem() {
             photographer: document.getElementById('galleryPhotographer').value
         };
 
+        // Include ID if editing (for approval workflow)
+        if (window.currentEditGalleryId) {
+            galleryData.id = window.currentEditGalleryId;
+        }
+
         const result = await window.apiClient.createGalleryItem(galleryData);
 
         if (!result.success) {

@@ -425,6 +425,15 @@ router.post('/approvals/:id/approve', async (req, res) => {
     let executionResult;
     const itemId = item_data.id || item_data.item_id; // ID for edit/delete operations (support both formats)
     
+    // Validate: CREATE doesn't need ID, but EDIT/DELETE do
+    if ((action_type === 'edit' || action_type === 'delete') && !itemId) {
+      await client.query('ROLLBACK');
+      return res.status(400).json({
+        success: false,
+        error: `Cannot process ${action_type} request: Missing item ID. This approval may be from an older format. Please reject it and recreate the request.`
+      });
+    }
+    
     switch (module) {
       case 'members':
         if (action_type === 'create') {
