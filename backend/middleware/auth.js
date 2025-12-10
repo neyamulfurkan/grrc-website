@@ -224,11 +224,16 @@ function checkPermission(module, action) {
         // Create pending approval request
         const pool = require('../db/pool');
         try {
+          // CRITICAL FIX: For DELETE, include the item ID from URL params
+          const itemData = action === 'delete' 
+            ? { id: req.params.id, ...req.body }
+            : req.body;
+          
           const result = await pool.query(
             `INSERT INTO pending_approvals (admin_id, action_type, module, item_data, status)
              VALUES ($1, $2, $3, $4, 'pending')
              RETURNING id`,
-            [req.user.id, action, module, JSON.stringify(req.body)]
+            [req.user.id, action, module, JSON.stringify(itemData)]
           );
           
           console.log(`✅ Pending approval created: ID ${result.rows[0].id}`);

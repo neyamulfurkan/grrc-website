@@ -434,6 +434,32 @@ router.post('/approvals/:id/approve', async (req, res) => {
       });
     }
     
+    // For DELETE operations, fetch the item details for logging
+    let itemDetails = {};
+    if (action_type === 'delete' && itemId) {
+      try {
+        const detailsQuery = await client.query(
+          `SELECT * FROM ${module} WHERE id = $1`,
+          [itemId]
+        );
+        if (detailsQuery.rows.length > 0) {
+          itemDetails = detailsQuery.rows[0];
+          console.log(`📋 Item to delete:`, itemDetails.title || itemDetails.name || `ID ${itemId}`);
+        }
+      } catch (e) {
+        console.warn('⚠️ Could not fetch item details for delete:', e.message);
+      }
+    }
+    
+    // Validate: CREATE doesn't need ID, but EDIT/DELETE do
+    if ((action_type === 'edit' || action_type === 'delete') && !itemId) {
+      await client.query('ROLLBACK');
+      return res.status(400).json({
+        success: false,
+        error: `Cannot process ${action_type} request: Missing item ID. This approval may be from an older format. Please reject it and recreate the request.`
+      });
+    }
+    
     switch (module) {
       case 'members':
         if (action_type === 'create') {
@@ -472,7 +498,7 @@ router.post('/approvals/:id/approve', async (req, res) => {
              RETURNING id`,
             [
               item_data.title, item_data.description, item_data.category,
-              item_data.date, item_data.time, item_data.venue,
+              item_data.date, item_data.time, item_data.venue || item_data.location,
               item_data.image, item_data.status, item_data.registration_link
             ]
           );
@@ -482,7 +508,7 @@ router.post('/approvals/:id/approve', async (req, res) => {
              WHERE id = $10 RETURNING id`,
             [
               item_data.title, item_data.description, item_data.category,
-              item_data.date, item_data.time, item_data.venue,
+              item_data.date, item_data.time, item_data.venue || item_data.location,
               item_data.image, item_data.status, item_data.registration_link, itemId
             ]
           );
