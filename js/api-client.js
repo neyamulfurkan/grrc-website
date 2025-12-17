@@ -1,6 +1,6 @@
 const API_BASE_URL = 'https://grrc-website-10.onrender.com';
 const AUTH_TOKEN_KEY = 'grrc_auth_token';
-const REQUEST_TIMEOUT = 30000;
+const REQUEST_TIMEOUT = 90000;
 
 const activeRequests = new Map();
 
@@ -109,7 +109,10 @@ async function request(endpoint, options = {}) {
     const requestPromise = (async () => {
         try {
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT);
+            const timeoutId = setTimeout(() => {
+                controller.abort();
+                console.error('⏱️ Request timeout after', REQUEST_TIMEOUT/1000, 'seconds');
+            }, REQUEST_TIMEOUT);
             
             const fetchPromise = fetch(url, {
                 ...config,
@@ -180,7 +183,7 @@ async function request(endpoint, options = {}) {
             let errorMessage = error.message || 'Network error. Please check your connection.';
             
             if (error.name === 'AbortError') {
-                errorMessage = `Request timeout (${REQUEST_TIMEOUT/1000}s). Server may be slow or starting up.`;
+                errorMessage = `Request timeout (${REQUEST_TIMEOUT/1000}s). Server is starting up, please wait and try again.`;
             }
             
             return {
