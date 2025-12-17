@@ -1100,7 +1100,7 @@
 
     <section class="upcoming-events">
         <div class="container">
-            <div class="section-header">
+            <div class="section-header scroll-reveal fade-up">
                 <h2 class="section-title">Upcoming Events</h2>
                 <p class="section-subtitle">Don't miss out on our exciting workshops and competitions</p>
             </div>
@@ -1114,7 +1114,7 @@
         <!-- Announcements Section -->
     <section class="announcements-section" style="padding: 3rem 0; background: var(--surface-color);">
         <div class="container">
-            <div class="section-header">
+            <div class="section-header scroll-reveal fade-up">
                 <h2 class="section-title">📢 Latest Announcements</h2>
                 <p class="section-subtitle">Stay updated with our latest news and updates</p>
             </div>
@@ -1126,13 +1126,13 @@
 
     <section class="why-join">
         <div class="container">
-            <div class="section-header">
+            <div class="section-header scroll-reveal fade-up">
                 <h2 class="section-title">Why Join Us?</h2>
                 <p class="section-subtitle">Discover the benefits of being part of GRRC</p>
             </div>
             
             <div class="features-grid">
-                <div class="feature-card">
+                <div class="feature-card scroll-reveal zoom-in delay-1">
                     <div class="feature-icon">💡</div>
                     <h3 class="feature-title">Innovation</h3>
                     <p class="feature-description">
@@ -1140,7 +1140,7 @@
                     </p>
                 </div>
                 
-                <div class="feature-card">
+                <div class="feature-card scroll-reveal zoom-in delay-2">
                     <div class="feature-icon">🎓</div>
                     <h3 class="feature-title">Workshops</h3>
                     <p class="feature-description">
@@ -1148,7 +1148,7 @@
                     </p>
                 </div>
                 
-                <div class="feature-card">
+                <div class="feature-card scroll-reveal zoom-in delay-3">
                     <div class="feature-icon">🤖</div>
                     <h3 class="feature-title">Projects</h3>
                     <p class="feature-description">
@@ -1156,7 +1156,7 @@
                     </p>
                 </div>
                 
-                <div class="feature-card">
+                <div class="feature-card scroll-reveal zoom-in delay-4">
                     <div class="feature-icon">🤝</div>
                     <h3 class="feature-title">Community</h3>
                     <p class="feature-description">
@@ -1169,7 +1169,7 @@
 
     <section class="executive-committee">
         <div class="container">
-            <div class="section-header">
+            <div class="section-header scroll-reveal fade-up">
                 <h2 class="section-title">Executive Committee</h2>
                 <p class="section-subtitle">Meet the leaders driving our vision forward</p>
             </div>
@@ -1259,16 +1259,36 @@
             if (typeof initTheme === 'function') initTheme();
             if (typeof initNavigation === 'function') initNavigation();
             
-            // ✅ PARALLEL LOADING - Everything loads at once (FAST!)
-            const startTime = performance.now();
-            
-            Promise.all([
-                loadClubConfig().catch(e => console.warn('Config load failed:', e)),
-                loadGalleryForSlideshow().catch(e => console.warn('Slideshow load failed:', e)),
-                loadUpcomingEvents().catch(e => console.warn('Events load failed:', e)),
-                loadExecutiveMembers().catch(e => console.warn('Members load failed:', e)),
-                loadLatestAnnouncements().catch(e => console.warn('Announcements load failed:', e))
-            ]).finally(() => {
+            // ✅ PARALLEL LOADING with Progress Indicator
+        const startTime = performance.now();
+        const loadingProgress = new LoadingProgress();
+        const loadingTasks = [
+            'Club Configuration',
+            'Gallery Slideshow',
+            'Upcoming Events',
+            'Executive Members',
+            'Latest Announcements'
+        ];
+        
+        loadingProgress.start(loadingTasks);
+        
+        const loadWithProgress = async (task, taskName) => {
+            try {
+                await task;
+                loadingProgress.increment();
+            } catch (e) {
+                console.warn(`${taskName} load failed:`, e);
+                loadingProgress.increment();
+            }
+        };
+        
+        Promise.all([
+            loadWithProgress(loadClubConfig(), 'Config'),
+            loadWithProgress(loadGalleryForSlideshow(), 'Slideshow'),
+            loadWithProgress(loadUpcomingEvents(), 'Events'),
+            loadWithProgress(loadExecutiveMembers(), 'Members'),
+            loadWithProgress(loadLatestAnnouncements(), 'Announcements')
+        ]).finally(() => {
                 const loadTime = ((performance.now() - startTime) / 1000).toFixed(2);
                 console.log(`✅ All content loaded in ${loadTime}s`);
                 
@@ -1276,6 +1296,11 @@
                 const overlay = document.getElementById('loadingOverlay');
                 if (overlay) {
                     overlay.classList.add('hidden');
+                }
+                
+                // Initialize scroll animations after content loads
+                if (typeof window.initScrollAnimations === 'function') {
+                    setTimeout(() => window.initScrollAnimations(), 100);
                 }
             });
         });
@@ -1789,7 +1814,7 @@ function showGradientBackground() {
                 container.innerHTML = '';
                 upcomingEvents.forEach((event, index) => {
                     const eventCard = document.createElement('div');
-                    eventCard.className = 'event-card';
+                    eventCard.className = 'event-card scroll-reveal fade-up delay-' + Math.min(index + 1, 5);
                     eventCard.style.opacity = '0';
                     eventCard.style.transform = 'translateY(20px)';
                     eventCard.style.animation = `fadeInUp 0.5s ease-out ${index * 0.1}s forwards`;
@@ -1874,8 +1899,8 @@ function showGradientBackground() {
                     return;
                 }
                 
-                container.innerHTML = executives.map(member => `
-                    <div class="member-card" onclick="window.location.href='members.html'">
+                container.innerHTML = executives.map((member, index) => `
+                    <div class="member-card scroll-reveal zoom-in delay-${Math.min(index + 1, 5)}" onclick="window.location.href='members.html'">
                         ${member.photo ? 
                             `<img src="${member.photo}" alt="${member.name}" class="member-photo">` : 
                             `<div class="member-photo"></div>`

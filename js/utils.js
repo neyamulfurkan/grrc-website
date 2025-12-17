@@ -840,3 +840,115 @@ window.hideLoading = hideLoading;
 window.copyToClipboard = copyToClipboard;
 
 console.log('✅ Utility functions loaded');
+
+// ============================================================================
+// SCROLL ANIMATION SYSTEM
+// ============================================================================
+
+/**
+ * Initializes scroll animations for elements with .scroll-reveal class
+ */
+function initScrollAnimations() {
+  const observerOptions = {
+    threshold: 0.1,
+    rootMargin: '0px 0px -50px 0px'
+  };
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('revealed');
+      }
+    });
+  }, observerOptions);
+
+  // Observe all elements with scroll-reveal class
+  document.querySelectorAll('.scroll-reveal').forEach(el => {
+    observer.observe(el);
+  });
+}
+
+// Auto-initialize when DOM is ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initScrollAnimations);
+} else {
+  initScrollAnimations();
+}
+
+// Re-initialize when new content is added
+window.reinitScrollAnimations = initScrollAnimations;
+
+window.initScrollAnimations = initScrollAnimations;
+
+// ============================================================================
+// LOADING PROGRESS SYSTEM
+// ============================================================================
+
+/**
+ * Shows a modern loading progress bar
+ */
+class LoadingProgress {
+  constructor() {
+    this.createProgressBar();
+    this.items = [];
+    this.completed = 0;
+  }
+
+  createProgressBar() {
+    if (document.getElementById('loadingProgressBar')) return;
+    
+    const progressHTML = `
+      <div id="loadingProgressBar" style="position: fixed; top: 0; left: 0; width: 100%; z-index: 10000; display: none;">
+        <div style="height: 3px; background: linear-gradient(90deg, var(--primary-color), var(--secondary-color)); width: 0%; transition: width 0.3s ease; box-shadow: 0 0 10px var(--primary-color);"></div>
+        <div style="background: var(--surface-color); padding: 0.75rem 1rem; text-align: center; font-size: 0.875rem; color: var(--text-primary); box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+          <span id="loadingProgressText">Loading...</span>
+        </div>
+      </div>
+    `;
+    document.body.insertAdjacentHTML('afterbegin', progressHTML);
+  }
+
+  start(items) {
+    this.items = items;
+    this.completed = 0;
+    const bar = document.getElementById('loadingProgressBar');
+    if (bar) {
+      bar.style.display = 'block';
+      this.update();
+    }
+  }
+
+  update() {
+    const bar = document.getElementById('loadingProgressBar');
+    const progressBar = bar?.querySelector('div');
+    const text = document.getElementById('loadingProgressText');
+    
+    if (!bar || !progressBar || !text) return;
+
+    const percentage = Math.round((this.completed / this.items.length) * 100);
+    progressBar.style.width = `${percentage}%`;
+    text.textContent = `Loading ${this.completed}/${this.items.length} items... ${percentage}%`;
+  }
+
+  increment() {
+    this.completed++;
+    this.update();
+    
+    if (this.completed >= this.items.length) {
+      setTimeout(() => this.complete(), 300);
+    }
+  }
+
+  complete() {
+    const bar = document.getElementById('loadingProgressBar');
+    if (bar) {
+      setTimeout(() => {
+        bar.style.display = 'none';
+      }, 500);
+    }
+  }
+}
+
+window.LoadingProgress = LoadingProgress;
+
+console.log('✅ Scroll animations and loading progress loaded');

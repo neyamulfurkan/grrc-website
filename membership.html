@@ -787,11 +787,52 @@
         <div class="hero-content">
             <h1>Join Our Club</h1>
             <p>Become a part of GSTU Robotics & Research Club</p>
-            <p>Fill out the form below to apply for membership. We welcome passionate students interested in robotics, AI, and technology innovation.</p>
+            <p>We welcome passionate students interested in robotics, AI, and technology innovation.</p>
         </div>
     </section>
 
-    <section class="application-section">
+    <section class="why-join scroll-reveal fade-up" style="padding: 5rem 0; background: var(--surface-color);">
+        <div class="container">
+            <div class="section-header" style="text-align: center; margin-bottom: 3rem;">
+                <h2 class="section-title">Why Join Us?</h2>
+                <p class="section-subtitle">Discover the benefits of being part of GRRC</p>
+            </div>
+            
+            <div class="features-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 2rem;">
+                <div class="feature-card scroll-reveal zoom-in delay-1" style="background: var(--background-color); padding: 2rem; border-radius: var(--radius-lg); text-align: center; transition: transform 0.3s ease;">
+                    <div class="feature-icon" style="font-size: 3rem; margin-bottom: 1rem;">💡</div>
+                    <h3 class="feature-title" style="font-size: 1.3rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.5rem;">Innovation</h3>
+                    <p class="feature-description" style="color: var(--text-secondary); line-height: 1.6;">Work on cutting-edge robotics projects and bring your innovative ideas to life.</p>
+                </div>
+                
+                <div class="feature-card scroll-reveal zoom-in delay-2" style="background: var(--background-color); padding: 2rem; border-radius: var(--radius-lg); text-align: center; transition: transform 0.3s ease;">
+                    <div class="feature-icon" style="font-size: 3rem; margin-bottom: 1rem;">🎓</div>
+                    <h3 class="feature-title" style="font-size: 1.3rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.5rem;">Workshops</h3>
+                    <p class="feature-description" style="color: var(--text-secondary); line-height: 1.6;">Attend regular workshops and training sessions on robotics, AI, and IoT.</p>
+                </div>
+                
+                <div class="feature-card scroll-reveal zoom-in delay-3" style="background: var(--background-color); padding: 2rem; border-radius: var(--radius-lg); text-align: center; transition: transform 0.3s ease;">
+                    <div class="feature-icon" style="font-size: 3rem; margin-bottom: 1rem;">🤖</div>
+                    <h3 class="feature-title" style="font-size: 1.3rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.5rem;">Projects</h3>
+                    <p class="feature-description" style="color: var(--text-secondary); line-height: 1.6;">Collaborate on real-world projects and build your technical portfolio.</p>
+                </div>
+                
+                <div class="feature-card scroll-reveal zoom-in delay-4" style="background: var(--background-color); padding: 2rem; border-radius: var(--radius-lg); text-align: center; transition: transform 0.3s ease;">
+                    <div class="feature-icon" style="font-size: 3rem; margin-bottom: 1rem;">🤝</div>
+                    <h3 class="feature-title" style="font-size: 1.3rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.5rem;">Community</h3>
+                    <p class="feature-description" style="color: var(--text-secondary); line-height: 1.6;">Join a vibrant community of robotics enthusiasts and grow together.</p>
+                </div>
+            </div>
+            
+            <div style="text-align: center; margin-top: 3rem;">
+                <button id="showApplicationFormBtn" class="btn btn-primary btn-lg" style="padding: 1rem 3rem; font-size: 1.2rem;">
+                    📝 Apply for Membership
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <section class="application-section" id="applicationFormSection" style="display: none;">
         <div class="container">
             <div class="form-container">
                 <div class="form-header">
@@ -1024,8 +1065,35 @@
     <script src="js/navigation.js"></script>
     <script src="js/utils.js"></script>
     <script src="js/load-config.js"></script>
-
+    
     <script>
+        // Show application form when button clicked
+        document.addEventListener('DOMContentLoaded', function() {
+            const showFormBtn = document.getElementById('showApplicationFormBtn');
+            const formSection = document.getElementById('applicationFormSection');
+            
+            if (showFormBtn && formSection) {
+                showFormBtn.addEventListener('click', function() {
+                    formSection.style.display = 'block';
+                    formSection.classList.add('scroll-reveal', 'fade-up', 'revealed');
+                    formSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    showFormBtn.style.display = 'none';
+                    
+                    // Reinitialize scroll animations for form
+                    setTimeout(() => {
+                        if (typeof window.initScrollAnimations === 'function') {
+                            window.initScrollAnimations();
+                        }
+                    }, 100);
+                });
+            }
+            
+            // Initialize scroll animations
+            if (typeof window.initScrollAnimations === 'function') {
+                window.initScrollAnimations();
+            }
+        });
+        
         let skills = [];
 
         document.addEventListener('DOMContentLoaded', async function() {
