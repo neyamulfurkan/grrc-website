@@ -1032,6 +1032,24 @@
     </style>
 </head>
 <body>
+    <!-- Modern Loading System -->
+    <div class="page-loading-bar" id="pageLoadingBar"></div>
+    
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-content">
+            <div class="loading-spinner"></div>
+            <div class="loading-status" id="loadingStatus">Initializing...</div>
+            <div class="loading-progress" id="loadingProgress">Please wait</div>
+            <div class="loading-steps">
+                <div class="loading-step" id="step1"></div>
+                <div class="loading-step" id="step2"></div>
+                <div class="loading-step" id="step3"></div>
+                <div class="loading-step" id="step4"></div>
+                <div class="loading-step" id="step5"></div>
+            </div>
+        </div>
+    </div>
+    
    <header class="header" id="mainHeader">
         <div class="header-content container">
             <div class="logo-container">
@@ -1244,7 +1262,116 @@
             }
         }
 
+        // ============================================
+        // MODERN PROGRESSIVE LOADING SYSTEM
+        // ============================================
+        
+        let loadingSteps = [
+            { name: 'Configuration', status: 'pending', step: 1 },
+            { name: 'Gallery Images', status: 'pending', step: 2 },
+            { name: 'Events', status: 'pending', step: 3 },
+            { name: 'Members', status: 'pending', step: 4 },
+            { name: 'Announcements', status: 'pending', step: 5 }
+        ];
+        
+        function updateLoadingUI(stepIndex, status, progress = '') {
+            const statusEl = document.getElementById('loadingStatus');
+            const progressEl = document.getElementById('loadingProgress');
+            const stepEl = document.getElementById(`step${stepIndex}`);
+            const progressBar = document.getElementById('pageLoadingBar');
+            
+            if (loadingSteps[stepIndex - 1]) {
+                loadingSteps[stepIndex - 1].status = status;
+            }
+            
+            if (statusEl) {
+                statusEl.textContent = `Loading ${loadingSteps[stepIndex - 1]?.name || ''}...`;
+            }
+            
+            if (progressEl && progress) {
+                progressEl.textContent = progress;
+            }
+            
+            if (stepEl) {
+                if (status === 'loading') {
+                    stepEl.classList.add('active');
+                    stepEl.classList.remove('completed');
+                } else if (status === 'completed') {
+                    stepEl.classList.remove('active');
+                    stepEl.classList.add('completed');
+                }
+            }
+            
+            // Update progress bar
+            if (progressBar) {
+                const completedSteps = loadingSteps.filter(s => s.status === 'completed').length;
+                const progress = (completedSteps / loadingSteps.length) * 100;
+                progressBar.style.width = `${progress}%`;
+                progressBar.classList.add('active');
+            }
+        }
+        
+        function hideLoadingOverlay() {
+            const overlay = document.getElementById('loadingOverlay');
+            const progressBar = document.getElementById('pageLoadingBar');
+            
+            if (overlay) {
+                setTimeout(() => {
+                    overlay.classList.add('hidden');
+                    if (progressBar) {
+                        progressBar.style.width = '100%';
+                        setTimeout(() => {
+                            progressBar.classList.remove('active');
+                        }, 500);
+                    }
+                }, 500);
+            }
+        }
+        
+        function showSkeletonScreens() {
+            // Show skeleton for events
+            const eventsContainer = document.getElementById('eventsContainer');
+            if (eventsContainer) {
+                eventsContainer.innerHTML = `
+                    <div class="skeleton-grid">
+                        ${Array(3).fill().map(() => `
+                            <div class="skeleton-card">
+                                <div class="skeleton-image"></div>
+                                <div class="skeleton-content">
+                                    <div class="skeleton-text title"></div>
+                                    <div class="skeleton-text short"></div>
+                                    <div class="skeleton-text long"></div>
+                                    <div class="skeleton-text"></div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }
+            
+            // Show skeleton for members
+            const membersContainer = document.getElementById('executiveContainer');
+            if (membersContainer) {
+                membersContainer.innerHTML = `
+                    <div class="skeleton-grid">
+                        ${Array(4).fill().map(() => `
+                            <div class="skeleton-card">
+                                <div class="skeleton-image"></div>
+                                <div class="skeleton-content">
+                                    <div class="skeleton-avatar"></div>
+                                    <div class="skeleton-text title"></div>
+                                    <div class="skeleton-text short"></div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }
+        }
+        
         document.addEventListener('DOMContentLoaded', async function() {
+            console.log('🚀 Starting modern loading system...');
+            
             // ✅ Apply theme IMMEDIATELY before any rendering
             const savedTheme = localStorage.getItem('theme') || 'dark';
             document.documentElement.setAttribute('data-theme', savedTheme);
@@ -1255,6 +1382,9 @@
             handleScroll();
             initializeMobileMenu();
             
+            // Show skeleton screens immediately
+            showSkeletonScreens();
+            
             // ✅ Initialize theme and navigation FIRST (no API needed)
             if (typeof initTheme === 'function') {
                 initTheme();
@@ -1264,21 +1394,72 @@
                 initNavigation();
             }
             
-            // ✅ PROGRESSIVE LOADING - Load critical content first, then others
-            // Load config first (needed for logo/name)
-            loadClubConfig().catch(e => console.warn('Config load failed:', e));
+            // ✅ STEP 1: Load Configuration
+            updateLoadingUI(1, 'loading', 'Loading club information...');
+            try {
+                await loadClubConfig();
+                updateLoadingUI(1, 'completed');
+                console.log('✅ Step 1: Configuration loaded');
+            } catch (e) {
+                console.warn('⚠️ Step 1 failed:', e);
+                updateLoadingUI(1, 'completed'); // Mark as done anyway
+            }
             
-            // Load slideshow in background (non-blocking)
-            setTimeout(() => {
-                loadGalleryForSlideshow().catch(e => console.warn('Slideshow load failed:', e));
-            }, 100);
+            await new Promise(resolve => setTimeout(resolve, 300));
             
-            // Load content progressively
-            setTimeout(() => {
-                loadUpcomingEvents().catch(e => console.warn('Events load failed:', e));
-                loadExecutiveMembers().catch(e => console.warn('Members load failed:', e));
-                loadLatestAnnouncements().catch(e => console.warn('Announcements load failed:', e));
-            }, 200);
+            // ✅ STEP 2: Load Gallery for Slideshow
+            updateLoadingUI(2, 'loading', 'Loading gallery images...');
+            try {
+                await loadGalleryForSlideshow();
+                updateLoadingUI(2, 'completed');
+                console.log('✅ Step 2: Gallery loaded');
+            } catch (e) {
+                console.warn('⚠️ Step 2 failed:', e);
+                updateLoadingUI(2, 'completed');
+            }
+            
+            await new Promise(resolve => setTimeout(resolve, 200));
+            
+            // ✅ STEP 3: Load Events
+            updateLoadingUI(3, 'loading', 'Loading upcoming events...');
+            try {
+                await loadUpcomingEvents();
+                updateLoadingUI(3, 'completed');
+                console.log('✅ Step 3: Events loaded');
+            } catch (e) {
+                console.warn('⚠️ Step 3 failed:', e);
+                updateLoadingUI(3, 'completed');
+            }
+            
+            await new Promise(resolve => setTimeout(resolve, 200));
+            
+            // ✅ STEP 4: Load Members
+            updateLoadingUI(4, 'loading', 'Loading team members...');
+            try {
+                await loadExecutiveMembers();
+                updateLoadingUI(4, 'completed');
+                console.log('✅ Step 4: Members loaded');
+            } catch (e) {
+                console.warn('⚠️ Step 4 failed:', e);
+                updateLoadingUI(4, 'completed');
+            }
+            
+            await new Promise(resolve => setTimeout(resolve, 200));
+            
+            // ✅ STEP 5: Load Announcements
+            updateLoadingUI(5, 'loading', 'Loading announcements...');
+            try {
+                await loadLatestAnnouncements();
+                updateLoadingUI(5, 'completed');
+                console.log('✅ Step 5: Announcements loaded');
+            } catch (e) {
+                console.warn('⚠️ Step 5 failed:', e);
+                updateLoadingUI(5, 'completed');
+            }
+            
+            // ✅ ALL DONE - Hide loading overlay
+            console.log('✅ All content loaded successfully!');
+            hideLoadingOverlay();
         });
         
         function initializeMobileMenu() {
