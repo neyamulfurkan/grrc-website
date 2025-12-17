@@ -1122,11 +1122,21 @@
 
             const membersHTML = `
                 <div class="members-grid">
-                    ${filteredMembers.map(member => createMemberCard(member)).join('')}
+                    ${filteredMembers.map((member, index) => {
+                        const card = createMemberCard(member);
+                        return card.replace('class="member-card"', `class="member-card scroll-reveal zoom-in delay-${(index % 5) + 1}"`);
+                    }).join('')}
                 </div>
             `;
 
             container.innerHTML = membersHTML;
+            
+            // Re-initialize scroll animations
+            setTimeout(() => {
+                if (typeof window.initScrollAnimations === 'function') {
+                    window.initScrollAnimations();
+                }
+            }, 100);
 
             // Add click handlers to cards
             document.querySelectorAll('.member-card').forEach(card => {

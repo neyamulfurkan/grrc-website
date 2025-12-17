@@ -1311,7 +1311,17 @@
             noResultsState.style.display = 'none';
             alumniGrid.style.display = 'grid';
             
-            alumniGrid.innerHTML = filteredAlumni.map(alumni => createAlumniCard(alumni)).join('');
+            alumniGrid.innerHTML = filteredAlumni.map((alumni, index) => {
+                const card = createAlumniCard(alumni);
+                return card.replace('class="alumni-card"', `class="alumni-card scroll-reveal fade-up delay-${(index % 5) + 1}"`);
+            }).join('');
+            
+            // Re-initialize scroll animations
+            setTimeout(() => {
+                if (typeof window.initScrollAnimations === 'function') {
+                    window.initScrollAnimations();
+                }
+            }, 100);
         }
 
         function createAlumniCard(alumni) {

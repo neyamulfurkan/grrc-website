@@ -857,7 +857,11 @@ function initScrollAnimations() {
   const observer = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
       if (entry.isIntersecting) {
+        // Add revealed class when entering viewport
         entry.target.classList.add('revealed');
+      } else {
+        // Remove revealed class when leaving viewport (for re-animation)
+        entry.target.classList.remove('revealed');
       }
     });
   }, observerOptions);
@@ -866,6 +870,8 @@ function initScrollAnimations() {
   document.querySelectorAll('.scroll-reveal').forEach(el => {
     observer.observe(el);
   });
+  
+  console.log('✅ Scroll animations initialized for', document.querySelectorAll('.scroll-reveal').length, 'elements');
 }
 
 // Auto-initialize when DOM is ready

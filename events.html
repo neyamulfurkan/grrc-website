@@ -1313,7 +1313,17 @@ if (headerClubName && (config.name || config.club_name)) {
             }
             
             emptyState.style.display = 'none';
-            eventsGrid.innerHTML = filteredEvents.map(event => createEventCard(event)).join('');
+            eventsGrid.innerHTML = filteredEvents.map((event, index) => {
+                const card = createEventCard(event);
+                return card.replace('class="event-card"', `class="event-card scroll-reveal fade-up delay-${(index % 5) + 1}"`);
+            }).join('');
+            
+            // Re-initialize scroll animations
+            setTimeout(() => {
+                if (typeof window.initScrollAnimations === 'function') {
+                    window.initScrollAnimations();
+                }
+            }, 100);
             
             // Add click handlers to cards
             document.querySelectorAll('.event-card').forEach((card, index) => {
