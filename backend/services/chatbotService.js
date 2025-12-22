@@ -1,6 +1,6 @@
 /**
  * Chatbot Service - Groq Llama API Integration Layer
- * Provides reusable functions for AI chat functionality
+ * Balanced: Complete information with smart token optimization
  */
 
 const Groq = require('groq-sdk');
@@ -18,7 +18,7 @@ class ChatbotService {
     this.defaultConfig = {
       temperature: 0.7,
       top_p: 0.9,
-      max_tokens: 1024,
+      max_tokens: 800,  // Increased for detailed responses
     };
   }
 
@@ -38,7 +38,7 @@ class ChatbotService {
     }
 
     try {
-      // Build system prompt
+      // Build informative system prompt
       const systemPrompt = this.buildSystemPrompt(clubContext);
 
       // Format conversation
@@ -74,86 +74,69 @@ class ChatbotService {
   }
 
   /**
-   * Build context-aware system prompt
+   * Build informative system prompt with all necessary details
    */
   buildSystemPrompt(clubContext) {
     const {
       name = 'GSTU Robotics & Research Club',
       motto = 'A Hub of Robothinkers',
-      description = 'A community of robotics and technology enthusiasts',
       university = 'Gopalganj Science and Technology University',
       upcomingEvents = [],
       recentProjects = [],
-      executiveCount = 0,
-      totalMembers = 0
+      totalMembers = 0,
+      membershipFee = 'Contact us for details',
+      contactEmail = 'Check footer for contact',
+      socialLinks = {}
     } = clubContext;
 
-    let prompt = `You are an AI assistant for ${name} (${motto}) at ${university}.
+    // Build comprehensive but concise prompt
+    let prompt = `You are the AI assistant for ${name} (${motto}) at ${university}.
 
-**Your Role:**
-- Help visitors learn about the club, events, projects, and membership
-- Be friendly, enthusiastic, and encouraging about robotics and technology
-- Provide accurate information based on the context provided
-- Guide users to relevant pages when needed
-- Keep responses concise (2-4 sentences typically, unless more detail is requested)
+**Role:** Help visitors with club information. Be friendly, helpful, and provide complete answers.
 
-**Club Information:**
-- Name: ${name}
-- Motto: ${motto}
-- Description: ${description}
-- University: ${university}`;
+**Club Info:**
+- University: ${university}
+- Members: ${totalMembers > 0 ? totalMembers : 'Growing community'}
+- Membership: ${membershipFee}
+- Contact: ${contactEmail}`;
 
-    if (totalMembers > 0) {
-      prompt += `\n- Total Members: ${totalMembers}`;
-    }
-
-    if (executiveCount > 0) {
-      prompt += `\n- Executive Committee: ${executiveCount} members`;
-    }
-
+    // Add events with full details
     if (upcomingEvents.length > 0) {
       prompt += `\n\n**Upcoming Events:**`;
-      upcomingEvents.forEach(event => {
+      upcomingEvents.slice(0, 3).forEach(event => {
         prompt += `\n- ${event.title}`;
-        if (event.date) prompt += ` on ${event.date}`;
+        if (event.date) prompt += ` (${event.date})`;
         if (event.venue) prompt += ` at ${event.venue}`;
+        if (event.description) prompt += ` - ${event.description}`;
       });
     }
 
+    // Add projects with details
     if (recentProjects.length > 0) {
       prompt += `\n\n**Recent Projects:**`;
-      recentProjects.forEach(project => {
+      recentProjects.slice(0, 3).forEach(project => {
         prompt += `\n- ${project.title}`;
         if (project.category) prompt += ` (${project.category})`;
+        if (project.description) prompt += ` - ${project.description}`;
       });
     }
 
-    prompt += `\n\n**Response Guidelines:**
-1. **Membership**: Direct to Membership page for application process
-2. **Events**: Reference Events page for full schedules and registration
-3. **Projects**: Mention Projects page for portfolio and technical details
-4. **Contact**: Suggest footer links or Contact section
-5. **Technical Help**: Encourage workshop participation and hands-on learning
-6. **Unknown Info**: Admit uncertainty and suggest where to find answers
-
-**Tone:**
-- Friendly and conversational 😊
-- Enthusiastic about robotics 🤖
-- Supportive and encouraging 💪
-- Professional yet approachable
-- Use emojis sparingly (🤖🔧💡🚀📚)
-
-**Formatting:**
-- Use **bold** for emphasis
-- Use *italic* for technical terms
-- Keep paragraphs short
-- Use bullet points when listing items`;
+    prompt += `\n\n**Guidelines:**
+- Provide complete, helpful answers
+- If asked about pricing/fees: Give specific details if available, or direct to Membership page
+- If asked about events: Mention dates, venues, registration details
+- If asked about joining: Explain process and requirements
+- If asked about projects: Describe what we've built
+- If asked about contact: Provide all available contact methods
+- Use 2-5 sentences depending on question complexity
+- Be enthusiastic about robotics! 🤖
+- Direct users to relevant pages for full details`;
 
     return prompt;
   }
 
   /**
-   * Format conversation history for Groq (OpenAI-compatible)
+   * Format messages with reasonable history (6 messages)
    */
   formatMessages(history, systemPrompt, currentMessage) {
     const messages = [];
@@ -164,8 +147,8 @@ class ChatbotService {
       content: systemPrompt
     });
 
-    // Add conversation history (last 10 to avoid token limits)
-    const recent = history.slice(-10);
+    // Keep last 6 messages (3 exchanges)
+    const recent = history.slice(-6);
     
     recent.forEach(msg => {
       messages.push({

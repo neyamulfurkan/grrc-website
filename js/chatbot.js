@@ -1,7 +1,7 @@
 /**
  * GRRC AI Chatbot - Frontend Logic
- * Powered by Google Gemini API
- * Version: 1.0.0
+ * Provides complete, helpful information
+ * Version: 2.1.0
  */
 
 class GRRCChatbot {
@@ -11,16 +11,12 @@ class GRRCChatbot {
     this.isTyping = false;
     this.clubContext = null;
     
-    // Welcome messages pool
-    this.welcomeQuestions = [
-      "Hi! 👋 I'm the GRRC AI Assistant. What brings you here today?",
-      "Hello! 🤖 Curious about robotics? Ask me anything!",
-      "Welcome! 🎓 Want to know about our club activities?",
-      "Hey there! 💡 Looking for project ideas or event info?",
-      "Greetings! 🚀 How can I help you explore robotics today?",
-      "Hi! 🔧 Interested in joining our workshops or competitions?",
-      "Hello! 🌟 Got questions about our executive team or projects?",
-      "Welcome! 📚 Need guidance on getting started with robotics?"
+    this.welcomeMessages = [
+      "Hi! 👋 I'm the GRRC AI Assistant. How can I help you today?",
+      "Hello! 🤖 Ask me anything about our robotics club!",
+      "Welcome! 🎓 What would you like to know about GRRC?",
+      "Hey there! 💡 I'm here to help with any questions!",
+      "Greetings! 🚀 How can I assist you with GRRC info?"
     ];
     
     this.init();
@@ -39,7 +35,7 @@ class GRRCChatbot {
         <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
         </svg>
-        <span class="chatbot-badge">Moon AI</span>
+        <span class="chatbot-badge">GRRC AI</span>
       </button>
 
       <!-- Chatbot Window -->
@@ -55,7 +51,7 @@ class GRRCChatbot {
               <div class="chatbot-title">GRRC AI Assistant</div>
               <div class="chatbot-status">
                 <span class="status-dot"></span>
-                <span>Online - Powered by Moon</span>
+                <span>Online - Powered by Groq Llama 3.3</span>
               </div>
             </div>
           </div>
@@ -75,8 +71,8 @@ class GRRCChatbot {
           <div class="chatbot-suggestions" id="chatbot-suggestions">
             <button class="suggestion-chip" data-text="Tell me about GRRC">About GRRC</button>
             <button class="suggestion-chip" data-text="What events are upcoming?">Events</button>
-            <button class="suggestion-chip" data-text="How can I join?">Join Us</button>
-            <button class="suggestion-chip" data-text="Show me projects">Projects</button>
+            <button class="suggestion-chip" data-text="How much does it cost to join?">Membership Fee</button>
+            <button class="suggestion-chip" data-text="Show me your projects">Projects</button>
           </div>
           <div class="chatbot-input-wrapper">
             <textarea 
@@ -123,8 +119,7 @@ class GRRCChatbot {
 
     suggestions.addEventListener('click', (e) => {
       if (e.target.classList.contains('suggestion-chip')) {
-        const text = e.target.dataset.text;
-        input.value = text;
+        input.value = e.target.dataset.text;
         this.sendMessage();
       }
     });
@@ -132,104 +127,61 @@ class GRRCChatbot {
 
   async loadClubContext() {
     try {
-      // Load club configuration and events from cache or API
+      // Load complete context with all details
       const clubConfig = JSON.parse(localStorage.getItem('cache_clubConfig') || '{}');
       const events = JSON.parse(localStorage.getItem('cache_events') || '[]');
       const members = JSON.parse(localStorage.getItem('cache_members') || '[]');
       const projects = JSON.parse(localStorage.getItem('cache_projects') || '[]');
 
+      // Send ALL available information
       this.clubContext = {
         name: clubConfig.name || 'GSTU Robotics & Research Club',
         motto: clubConfig.motto || 'A Hub of Robothinkers',
-        description: clubConfig.description || 'Innovation and technology community',
         university: clubConfig.university || 'Gopalganj Science and Technology University',
-        upcomingEvents: events.filter(e => e.status === 'upcoming').slice(0, 3),
-        recentProjects: projects.slice(0, 3),
+        
+        // Full event details
+        upcomingEvents: events
+          .filter(e => e.status === 'upcoming')
+          .slice(0, 3)
+          .map(e => ({
+            title: e.title,
+            date: e.date,
+            venue: e.venue,
+            description: e.description || '',
+            registrationLink: e.registrationLink || ''
+          })),
+        
+        // Full project details  
+        recentProjects: projects
+          .slice(0, 3)
+          .map(p => ({
+            title: p.title,
+            category: p.category,
+            description: p.description || ''
+          })),
+        
+        // Member info
+        totalMembers: members.length,
         executiveCount: members.filter(m => m.role?.includes('Executive')).length,
-        totalMembers: members.length
+        
+        // Membership details (add these to your database/config)
+        membershipFee: clubConfig.membershipFee || 'Visit Membership page for details',
+        membershipBenefits: clubConfig.membershipBenefits || [],
+        
+        // Contact info
+        contactEmail: clubConfig.contactEmail || 'Check footer for contact',
+        socialLinks: clubConfig.socialLinks || {}
       };
 
-      console.log('✅ Chatbot context loaded');
+      console.log('✅ Complete chatbot context loaded');
     } catch (error) {
-      console.warn('⚠️ Could not load full context:', error);
+      console.warn('⚠️ Could not load context:', error);
       this.clubContext = {
         name: 'GSTU Robotics & Research Club',
         motto: 'A Hub of Robothinkers',
-        description: 'Innovation and technology community'
+        university: 'Gopalganj Science and Technology University'
       };
     }
-  }
-
-  buildSystemPrompt() {
-    const {
-      name = 'GSTU Robotics & Research Club',
-      motto = 'A Hub of Robothinkers',
-      description = 'A community of robotics and technology enthusiasts',
-      university = 'Gopalganj Science and Technology University',
-      upcomingEvents = [],
-      recentProjects = [],
-      executiveCount = 0,
-      totalMembers = 0
-    } = this.clubContext || {};
-
-    let prompt = `You are an AI assistant for ${name} (${motto}) at ${university}. 
-
-**Your Role:**
-- Help visitors learn about the club, events, projects, and membership
-- Be friendly, enthusiastic, and encouraging
-- Provide accurate information based on the context provided
-- Guide users to relevant pages when needed
-- Keep responses concise (2-4 sentences typically)
-
-**Club Information:**
-- Name: ${name}
-- Motto: ${motto}
-- Description: ${description}
-- University: ${university}`;
-
-    if (totalMembers > 0) {
-      prompt += `\n- Total Members: ${totalMembers}`;
-    }
-
-    if (executiveCount > 0) {
-      prompt += `\n- Executive Members: ${executiveCount}`;
-    }
-
-    if (upcomingEvents.length > 0) {
-      prompt += `\n\n**Upcoming Events:**\n`;
-      upcomingEvents.forEach(event => {
-        prompt += `- ${event.title} (${event.date})`;
-        if (event.venue) prompt += ` at ${event.venue}`;
-        prompt += `\n`;
-      });
-    }
-
-    if (recentProjects.length > 0) {
-      prompt += `\n**Recent Projects:**\n`;
-      recentProjects.forEach(project => {
-        prompt += `- ${project.title}`;
-        if (project.category) prompt += ` (${project.category})`;
-        prompt += `\n`;
-      });
-    }
-
-    prompt += `\n\n**Guidelines:**
-1. If asked about joining: Mention visiting the Membership page
-2. If asked about events: Reference the Events page for full details
-3. If asked about projects: Mention the Projects page
-4. If asked about contact: Suggest checking the footer or Contact section
-5. For technical questions: Encourage participation in workshops
-6. Be encouraging about robotics and technology
-7. Use emojis occasionally to be friendly (🤖🔧💡🚀)
-8. If you don't know something specific, admit it and suggest where to find the info
-
-**Response Style:**
-- Friendly and conversational
-- Enthusiastic about robotics
-- Concise but informative
-- Use markdown formatting when helpful (**bold**, *italic*)`;
-
-    return prompt;
   }
 
   toggleChat() {
@@ -241,12 +193,10 @@ class GRRCChatbot {
       window.classList.add('active');
       toggle.classList.add('hidden');
       
-      // Show welcome message if first time
       if (this.conversationHistory.length === 0) {
         this.showWelcomeMessage();
       }
       
-      // Focus input
       setTimeout(() => {
         document.getElementById('chatbot-input').focus();
       }, 300);
@@ -263,11 +213,8 @@ class GRRCChatbot {
   }
 
   showWelcomeMessage() {
-    const randomWelcome = this.welcomeQuestions[
-      Math.floor(Math.random() * this.welcomeQuestions.length)
-    ];
-    
-    this.addMessage(randomWelcome, 'bot');
+    const msg = this.welcomeMessages[Math.floor(Math.random() * this.welcomeMessages.length)];
+    this.addMessage(msg, 'bot');
   }
 
   async sendMessage() {
@@ -276,28 +223,23 @@ class GRRCChatbot {
 
     if (!message || this.isTyping) return;
 
-    // Add user message
     this.addMessage(message, 'user');
     this.conversationHistory.push({ role: 'user', content: message });
     
-    // Clear input
     input.value = '';
     input.style.height = 'auto';
-
-    // Hide suggestions after first message
     document.getElementById('chatbot-suggestions').style.display = 'none';
 
-    // Get AI response
     await this.getAIResponse(message);
   }
 
   addMessage(text, sender) {
-    const messagesContainer = document.getElementById('chatbot-messages');
-    const messageDiv = document.createElement('div');
-    messageDiv.className = `chatbot-message ${sender}-message`;
+    const container = document.getElementById('chatbot-messages');
+    const div = document.createElement('div');
+    div.className = `chatbot-message ${sender}-message`;
 
     if (sender === 'bot') {
-      messageDiv.innerHTML = `
+      div.innerHTML = `
         <div class="message-avatar">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
             <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/>
@@ -306,7 +248,7 @@ class GRRCChatbot {
         <div class="message-content">${this.formatMessage(text)}</div>
       `;
     } else {
-      messageDiv.innerHTML = `
+      div.innerHTML = `
         <div class="message-content">${this.escapeHtml(text)}</div>
         <div class="message-avatar user-avatar">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
@@ -316,17 +258,17 @@ class GRRCChatbot {
       `;
     }
 
-    messagesContainer.appendChild(messageDiv);
-    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    container.appendChild(div);
+    container.scrollTop = container.scrollHeight;
   }
 
   showTypingIndicator() {
     this.isTyping = true;
-    const messagesContainer = document.getElementById('chatbot-messages');
-    const typingDiv = document.createElement('div');
-    typingDiv.className = 'chatbot-message bot-message typing-indicator';
-    typingDiv.id = 'typing-indicator';
-    typingDiv.innerHTML = `
+    const container = document.getElementById('chatbot-messages');
+    const div = document.createElement('div');
+    div.className = 'chatbot-message bot-message typing-indicator';
+    div.id = 'typing-indicator';
+    div.innerHTML = `
       <div class="message-avatar">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
           <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/>
@@ -334,14 +276,12 @@ class GRRCChatbot {
       </div>
       <div class="message-content">
         <div class="typing-dots">
-          <span></span>
-          <span></span>
-          <span></span>
+          <span></span><span></span><span></span>
         </div>
       </div>
     `;
-    messagesContainer.appendChild(typingDiv);
-    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    container.appendChild(div);
+    container.scrollTop = container.scrollHeight;
   }
 
   removeTypingIndicator() {
@@ -350,87 +290,66 @@ class GRRCChatbot {
     if (indicator) indicator.remove();
   }
 
-async getAIResponse(userMessage) {
+  async getAIResponse(userMessage) {
     this.showTypingIndicator();
 
     try {
       const API_ENDPOINT = window.CHATBOT_CONFIG?.API_ENDPOINT;
       
       if (!API_ENDPOINT) {
-        throw new Error('Backend API endpoint not configured. Please check chatbot-config.js');
+        throw new Error('Backend API endpoint not configured');
       }
 
-      // Call backend API (secure - no exposed API keys)
+      // Send complete context
       const response = await fetch(API_ENDPOINT, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           message: userMessage,
-          conversationHistory: this.conversationHistory,
-          clubContext: this.clubContext
+          conversationHistory: this.conversationHistory.slice(-6),  // Last 3 exchanges
+          clubContext: this.clubContext  // All details included
         })
       });
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        console.error('Backend API Error:', errorData);
-        throw new Error(errorData.error || `API Error: ${response.status}`);
+        throw new Error(errorData.error || `Error ${response.status}`);
       }
 
       const data = await response.json();
-
       this.removeTypingIndicator();
 
-      // Extract AI response from backend
       if (data.success && data.response) {
-        const aiResponse = data.response;
-        this.addMessage(aiResponse, 'bot');
-        this.conversationHistory.push({ role: 'assistant', content: aiResponse });
+        this.addMessage(data.response, 'bot');
+        this.conversationHistory.push({ role: 'assistant', content: data.response });
       } else {
-        throw new Error(data.error || 'Invalid response format from backend');
+        throw new Error('Invalid response from backend');
       }
 
     } catch (error) {
       console.error('❌ Chatbot error:', error);
       this.removeTypingIndicator();
       
-      let errorMessage = "I'm having trouble connecting right now. Please try again in a moment! 🔄";
+      let msg = "I'm having trouble right now. Please try again in a moment! 🔄";
       
-      // Provide helpful error messages
       if (error.message.includes('endpoint') || error.message.includes('configured')) {
-        errorMessage = "⚙️ Chatbot service is not configured. Please contact support.";
-      } else if (error.message.includes('503') || error.message.includes('not configured')) {
-        errorMessage = "⚙️ Backend service is starting up. Please wait a moment and try again.";
-      } else if (error.message.includes('quota') || error.message.includes('429')) {
-        errorMessage = "⏰ Too many requests. Please try again in a moment.";
-      } else if (error.message.includes('400')) {
-        errorMessage = "❌ Invalid request. Please try rephrasing your question.";
-      } else if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
-        errorMessage = "🌐 Network connection error. Please check your internet connection.";
+        msg = "⚙️ Chatbot service not configured. Contact support.";
+      } else if (error.message.includes('429')) {
+        msg = "⏰ Too many requests. Please wait a moment and try again.";
+      } else if (error.message.includes('fetch') || error.message.includes('Network')) {
+        msg = "🌐 Connection error. Check your internet connection.";
       }
       
-      this.addMessage(errorMessage, 'bot');
+      this.addMessage(msg, 'bot');
     }
   }
 
   formatMessage(text) {
-    // Convert markdown-style formatting to HTML
     let formatted = this.escapeHtml(text);
-    
-    // Bold: **text** -> <strong>text</strong>
     formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-    
-    // Italic: *text* -> <em>text</em>
     formatted = formatted.replace(/\*(.*?)\*/g, '<em>$1</em>');
-    
-    // Links: [text](url) -> <a>text</a>
     formatted = formatted.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>');
-    
-    // Line breaks
     formatted = formatted.replace(/\n/g, '<br>');
-    
     return formatted;
   }
 
@@ -441,7 +360,7 @@ async getAIResponse(userMessage) {
   }
 }
 
-// Initialize chatbot when DOM is ready
+// Initialize
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', () => {
     window.grrcChatbot = new GRRCChatbot();
@@ -450,4 +369,4 @@ if (document.readyState === 'loading') {
   window.grrcChatbot = new GRRCChatbot();
 }
 
-console.log('✅ GRRC Chatbot initialized');
+console.log('✅ GRRC Chatbot v2.1 initialized (complete info)');
