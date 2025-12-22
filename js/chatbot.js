@@ -354,37 +354,39 @@ class GRRCChatbot {
     this.showTypingIndicator();
 
     try {
-      // Get API key from config (you'll need to add this)
-      const GEMINI_API_KEY = window.CHATBOT_CONFIG?.GEMINI_API_KEY || 'YOUR_API_KEY_HERE';
+      // Get API key from config
+      const GEMINI_API_KEY = window.CHATBOT_CONFIG?.GEMINI_API_KEY;
       
       if (!GEMINI_API_KEY || GEMINI_API_KEY === 'YOUR_API_KEY_HERE') {
-        throw new Error('Gemini API key not configured');
+        throw new Error('Gemini API key not configured. Please add your API key to js/chatbot-config.js');
       }
 
-      // Build system prompt
+      // Build system prompt with club context
       const systemPrompt = this.buildSystemPrompt();
 
-      // Format messages for Gemini
-      const contents = [
-        {
-          role: 'user',
-          parts: [{ text: systemPrompt }]
-        },
-        {
-          role: 'model',
-          parts: [{ text: "Understood! I'm ready to help visitors learn about GRRC. How can I assist?" }]
-        }
-      ];
+      // Format conversation history for Gemini
+      const contents = [];
 
-      // Add conversation history (last 10 messages)
-      this.conversationHistory.slice(-10).forEach(msg => {
+      // Add system context as first interaction
+      contents.push({
+        role: 'user',
+        parts: [{ text: systemPrompt }]
+      });
+      contents.push({
+        role: 'model',
+        parts: [{ text: "Understood! I'm ready to help visitors learn about GRRC. How can I assist?" }]
+      });
+
+      // Add recent conversation history (last 10 messages to avoid token limits)
+      const recentHistory = this.conversationHistory.slice(-10);
+      recentHistory.forEach(msg => {
         contents.push({
           role: msg.role === 'user' ? 'user' : 'model',
           parts: [{ text: msg.content }]
         });
       });
 
-      // Add current message
+      // Add current user message
       contents.push({
         role: 'user',
         parts: [{ text: userMessage }]
@@ -409,6 +411,7 @@ class GRRCChatbot {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
+        console.error('Gemini API Error:', errorData);
         throw new Error(errorData.error?.message || `API Error: ${response.status}`);
       }
 
@@ -416,6 +419,7 @@ class GRRCChatbot {
 
       this.removeTypingIndicator();
 
+      // Extract AI response
       if (data.candidates && data.candidates[0]?.content?.parts?.[0]?.text) {
         const aiResponse = data.candidates[0].content.parts[0].text;
         this.addMessage(aiResponse, 'bot');
@@ -423,11 +427,22 @@ class GRRCChatbot {
       } else {
         throw new Error('Invalid response format from Gemini');
       }
+
     } catch (error) {
       console.error('❌ Chatbot error:', error);
       this.removeTypingIndicator();
       
-      const errorMessage = "I'm having trouble connecting right now. Please try again in a moment! 🔄";
+      let errorMessage = "I'm having trouble connecting right now. Please try again in a moment! 🔄";
+      
+      // Provide helpful error messages
+      if (error.message.includes('API key')) {
+        errorMessage = "⚙️ API key is not configured. Please check the console for instructions.";
+      } else if (error.message.includes('quota') || error.message.includes('429')) {
+        errorMessage = "⏰ API quota exceeded. Please try again later.";
+      } else if (error.message.includes('400')) {
+        errorMessage = "❌ Invalid request. Please try rephrasing your question.";
+      }
+      
       this.addMessage(errorMessage, 'bot');
     }
   }
