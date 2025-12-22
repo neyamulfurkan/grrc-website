@@ -55,7 +55,7 @@ class GRRCChatbot {
               <div class="chatbot-title">GRRC AI Assistant</div>
               <div class="chatbot-status">
                 <span class="status-dot"></span>
-                <span>Online - Powered by Gemini</span>
+                <span>Online - Powered by Moon</span>
               </div>
             </div>
           </div>

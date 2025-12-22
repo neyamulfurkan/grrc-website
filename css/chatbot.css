@@ -153,8 +153,8 @@
 .chatbot-close {
   background: rgba(255, 255, 255, 0.2);
   border: none;
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -162,11 +162,17 @@
   cursor: pointer;
   transition: all 0.3s ease;
   color: white;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .chatbot-close:hover {
   background: rgba(255, 255, 255, 0.3);
   transform: rotate(90deg);
+}
+
+.chatbot-close:active {
+  background: rgba(255, 255, 255, 0.4);
+  transform: scale(0.9);
 }
 
 /* ============================================
@@ -461,6 +467,28 @@
 
   .chatbot-window.active {
     transform: translateY(0);
+  }
+
+  /* Make header more prominent on mobile */
+  .chatbot-header {
+    padding: 16px 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  }
+
+  /* Larger close button for easier tapping */
+  .chatbot-close {
+    width: 40px;
+    height: 40px;
+    background: rgba(255, 255, 255, 0.25);
+  }
+
+  .chatbot-close:active {
+    background: rgba(255, 255, 255, 0.5);
+  }
+
+  .chatbot-close svg {
+    width: 22px;
+    height: 22px;
   }
 
   .message-content {
