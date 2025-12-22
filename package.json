@@ -33,6 +33,7 @@
   },
   "homepage": "https://github.com/gstu-robotics/grrc-website#readme",
   "dependencies": {
+    "@google/generative-ai": "^0.21.0",
     "bcrypt": "^5.1.1",
     "cloudinary": "^2.8.0",
     "cors": "^2.8.5",

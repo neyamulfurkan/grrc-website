@@ -173,6 +173,7 @@ app.get('/health', async (req, res) => {
 let routesLoaded = {
     auth: false,
     content: false,
+    chatbot: false,
     admin: false,
     membership: false,
     alumniApplication: false,
@@ -240,6 +241,7 @@ function createPlaceholderRoute(mountPath, routeName) {
 // ✅ Load ALL routes using the dynamic loader
 loadRoute('auth', './routes/auth', '/api/auth');
 loadRoute('content', './routes/content', '/api/content');
+loadRoute('chatbot', './routes/chatbot', '/api/chatbot');
 loadRoute('admin', './routes/admin', '/api/admin');
 loadRoute('membership', './routes/membership', '/api/membership');
 loadRoute('alumniApplication', './routes/alumniApplication', '/api/alumni-application');
@@ -275,6 +277,10 @@ app.get('/api', (req, res) => {
             } : 'Routes not loaded',
             content: routesLoaded.content ? {
                 'GET /api/content/*': 'Public content endpoints'
+            } : 'Routes not loaded',
+            chatbot: routesLoaded.chatbot ? {
+                'POST /api/chatbot/chat': 'Send chat message',
+                'GET /api/chatbot/health': 'Check chatbot status'
             } : 'Routes not loaded',
             admin: routesLoaded.admin ? {
                 'ALL /api/admin/*': 'Protected admin endpoints'
@@ -474,9 +480,10 @@ try {
             console.log(`🚀 Server running on port ${PORT}`);
             console.log(`📝 Environment: ${NODE_ENV}`);
             console.log(`🔒 CORS: ${NODE_ENV === 'development' ? 'Permissive (dev)' : 'Configured'}`);
-             console.log(`\n📊 Routes Status:`);
+            console.log(`📊 Routes Status:`);
             console.log(`   Auth:                ${routesLoaded.auth ? '✅' : '❌'}`);
             console.log(`   Content:             ${routesLoaded.content ? '✅' : '❌'}`);
+            console.log(`   Chatbot:             ${routesLoaded.chatbot ? '✅' : '❌'}`);
             console.log(`   Admin:               ${routesLoaded.admin ? '✅' : '❌'}`);
             console.log(`   Admin Gallery:       ${routesLoaded.adminGallery ? '✅' : '❌'}`);
             console.log(`   Membership:          ${routesLoaded.membership ? '✅' : '❌'}`);
