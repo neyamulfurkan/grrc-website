@@ -401,10 +401,10 @@ async getAIResponse(userMessage) {
         body: JSON.stringify({
           contents: contents,
           generationConfig: {
-            temperature: 0.7,
-            topP: 0.8,
-            topK: 40,
-            maxOutputTokens: 500
+            temperature: 1.0,
+            topP: 0.95,
+            topK: 64,
+            maxOutputTokens: 2048
           }
         })
       });
