@@ -139,7 +139,9 @@ If asked who built this chatbot or about the developer:
 - Department: Electrical & Electronic Engineering (EEE)
 - Session: 2021-22
 - Home District: Noakhali
-- Role: Developed the AI chatbot system for GRRC website`;
+- Role: Developed the AI chatbot system for GRRC website
+- Facebook: https://www.facebook.com/neyamul.furkan
+When mentioning the developer, always include his Facebook link for contact`;
 
     return prompt;
   }
