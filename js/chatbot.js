@@ -160,6 +160,78 @@ class GRRCChatbot {
     }
   }
 
+  buildSystemPrompt() {
+    const {
+      name = 'GSTU Robotics & Research Club',
+      motto = 'A Hub of Robothinkers',
+      description = 'A community of robotics and technology enthusiasts',
+      university = 'Gopalganj Science and Technology University',
+      upcomingEvents = [],
+      recentProjects = [],
+      executiveCount = 0,
+      totalMembers = 0
+    } = this.clubContext || {};
+
+    let prompt = `You are an AI assistant for ${name} (${motto}) at ${university}. 
+
+**Your Role:**
+- Help visitors learn about the club, events, projects, and membership
+- Be friendly, enthusiastic, and encouraging
+- Provide accurate information based on the context provided
+- Guide users to relevant pages when needed
+- Keep responses concise (2-4 sentences typically)
+
+**Club Information:**
+- Name: ${name}
+- Motto: ${motto}
+- Description: ${description}
+- University: ${university}`;
+
+    if (totalMembers > 0) {
+      prompt += `\n- Total Members: ${totalMembers}`;
+    }
+
+    if (executiveCount > 0) {
+      prompt += `\n- Executive Members: ${executiveCount}`;
+    }
+
+    if (upcomingEvents.length > 0) {
+      prompt += `\n\n**Upcoming Events:**\n`;
+      upcomingEvents.forEach(event => {
+        prompt += `- ${event.title} (${event.date})`;
+        if (event.venue) prompt += ` at ${event.venue}`;
+        prompt += `\n`;
+      });
+    }
+
+    if (recentProjects.length > 0) {
+      prompt += `\n**Recent Projects:**\n`;
+      recentProjects.forEach(project => {
+        prompt += `- ${project.title}`;
+        if (project.category) prompt += ` (${project.category})`;
+        prompt += `\n`;
+      });
+    }
+
+    prompt += `\n\n**Guidelines:**
+1. If asked about joining: Mention visiting the Membership page
+2. If asked about events: Reference the Events page for full details
+3. If asked about projects: Mention the Projects page
+4. If asked about contact: Suggest checking the footer or Contact section
+5. For technical questions: Encourage participation in workshops
+6. Be encouraging about robotics and technology
+7. Use emojis occasionally to be friendly (🤖🔧💡🚀)
+8. If you don't know something specific, admit it and suggest where to find the info
+
+**Response Style:**
+- Friendly and conversational
+- Enthusiastic about robotics
+- Concise but informative
+- Use markdown formatting when helpful (**bold**, *italic*)`;
+
+    return prompt;
+  }
+
   toggleChat() {
     this.isOpen = !this.isOpen;
     const window = document.getElementById('chatbot-window');
@@ -282,31 +354,74 @@ class GRRCChatbot {
     this.showTypingIndicator();
 
     try {
-      const response = await fetch('/api/chatbot/chat', {
+      // Get API key from config (you'll need to add this)
+      const GEMINI_API_KEY = window.CHATBOT_CONFIG?.GEMINI_API_KEY || 'YOUR_API_KEY_HERE';
+      
+      if (!GEMINI_API_KEY || GEMINI_API_KEY === 'YOUR_API_KEY_HERE') {
+        throw new Error('Gemini API key not configured');
+      }
+
+      // Build system prompt
+      const systemPrompt = this.buildSystemPrompt();
+
+      // Format messages for Gemini
+      const contents = [
+        {
+          role: 'user',
+          parts: [{ text: systemPrompt }]
+        },
+        {
+          role: 'model',
+          parts: [{ text: "Understood! I'm ready to help visitors learn about GRRC. How can I assist?" }]
+        }
+      ];
+
+      // Add conversation history (last 10 messages)
+      this.conversationHistory.slice(-10).forEach(msg => {
+        contents.push({
+          role: msg.role === 'user' ? 'user' : 'model',
+          parts: [{ text: msg.content }]
+        });
+      });
+
+      // Add current message
+      contents.push({
+        role: 'user',
+        parts: [{ text: userMessage }]
+      });
+
+      // Call Gemini API directly
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          message: userMessage,
-          conversationHistory: this.conversationHistory.slice(-10), // Last 10 messages
-          clubContext: this.clubContext
+          contents: contents,
+          generationConfig: {
+            temperature: 0.7,
+            topP: 0.8,
+            topK: 40,
+            maxOutputTokens: 500
+          }
         })
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error?.message || `API Error: ${response.status}`);
       }
 
       const data = await response.json();
 
       this.removeTypingIndicator();
 
-      if (data.success && data.response) {
-        this.addMessage(data.response, 'bot');
-        this.conversationHistory.push({ role: 'assistant', content: data.response });
+      if (data.candidates && data.candidates[0]?.content?.parts?.[0]?.text) {
+        const aiResponse = data.candidates[0].content.parts[0].text;
+        this.addMessage(aiResponse, 'bot');
+        this.conversationHistory.push({ role: 'assistant', content: aiResponse });
       } else {
-        throw new Error(data.error || 'Failed to get response');
+        throw new Error('Invalid response format from Gemini');
       }
     } catch (error) {
       console.error('❌ Chatbot error:', error);
