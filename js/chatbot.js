@@ -354,78 +354,42 @@ async getAIResponse(userMessage) {
     this.showTypingIndicator();
 
     try {
-      // Get API key from config
-      const GEMINI_API_KEY = window.CHATBOT_CONFIG?.GEMINI_API_KEY;
+      const API_ENDPOINT = window.CHATBOT_CONFIG?.API_ENDPOINT;
       
-      if (!GEMINI_API_KEY || GEMINI_API_KEY === 'YOUR_API_KEY_HERE') {
-        throw new Error('Gemini API key not configured. Please add your API key to js/chatbot-config.js');
+      if (!API_ENDPOINT) {
+        throw new Error('Backend API endpoint not configured. Please check chatbot-config.js');
       }
 
-      // Build system prompt with club context
-      const systemPrompt = this.buildSystemPrompt();
-
-      // Format conversation history for Gemini
-      const contents = [];
-
-      // Add system context as first interaction
-      contents.push({
-        role: 'user',
-        parts: [{ text: systemPrompt }]
-      });
-      contents.push({
-        role: 'model',
-        parts: [{ text: "Understood! I'm ready to help visitors learn about GRRC. How can I assist?" }]
-      });
-
-      // Add recent conversation history (last 10 messages to avoid token limits)
-      const recentHistory = this.conversationHistory.slice(-10);
-      recentHistory.forEach(msg => {
-        contents.push({
-          role: msg.role === 'user' ? 'user' : 'model',
-          parts: [{ text: msg.content }]
-        });
-      });
-
-      // Add current user message
-      contents.push({
-        role: 'user',
-        parts: [{ text: userMessage }]
-      });
-
-      // Call Gemini API directly
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
+      // Call backend API (secure - no exposed API keys)
+      const response = await fetch(API_ENDPOINT, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          contents: contents,
-          generationConfig: {
-            temperature: 1.0,
-            topP: 0.95,
-            topK: 64,
-            maxOutputTokens: 2048
-          }
+          message: userMessage,
+          conversationHistory: this.conversationHistory,
+          clubContext: this.clubContext
         })
       });
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        console.error('Gemini API Error:', errorData);
-        throw new Error(errorData.error?.message || `API Error: ${response.status}`);
+        console.error('Backend API Error:', errorData);
+        throw new Error(errorData.error || `API Error: ${response.status}`);
       }
 
       const data = await response.json();
 
       this.removeTypingIndicator();
 
-      // Extract AI response
-      if (data.candidates && data.candidates[0]?.content?.parts?.[0]?.text) {
-        const aiResponse = data.candidates[0].content.parts[0].text;
+      // Extract AI response from backend
+      if (data.success && data.response) {
+        const aiResponse = data.response;
         this.addMessage(aiResponse, 'bot');
         this.conversationHistory.push({ role: 'assistant', content: aiResponse });
       } else {
-        throw new Error('Invalid response format from Gemini');
+        throw new Error(data.error || 'Invalid response format from backend');
       }
 
     } catch (error) {
@@ -435,12 +399,16 @@ async getAIResponse(userMessage) {
       let errorMessage = "I'm having trouble connecting right now. Please try again in a moment! 🔄";
       
       // Provide helpful error messages
-      if (error.message.includes('API key')) {
-        errorMessage = "⚙️ API key is not configured. Please check the console for instructions.";
+      if (error.message.includes('endpoint') || error.message.includes('configured')) {
+        errorMessage = "⚙️ Chatbot service is not configured. Please contact support.";
+      } else if (error.message.includes('503') || error.message.includes('not configured')) {
+        errorMessage = "⚙️ Backend service is starting up. Please wait a moment and try again.";
       } else if (error.message.includes('quota') || error.message.includes('429')) {
-        errorMessage = "⏰ API quota exceeded. Please try again later.";
+        errorMessage = "⏰ Too many requests. Please try again in a moment.";
       } else if (error.message.includes('400')) {
         errorMessage = "❌ Invalid request. Please try rephrasing your question.";
+      } else if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+        errorMessage = "🌐 Network connection error. Please check your internet connection.";
       }
       
       this.addMessage(errorMessage, 'bot');
