@@ -35,7 +35,7 @@ class GRRCChatbot {
         <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
         </svg>
-        <span class="chatbot-badge">GRRC AI</span>
+        <span class="chatbot-badge">Moon AI</span>
       </button>
 
       <!-- Chatbot Window -->
@@ -51,7 +51,7 @@ class GRRCChatbot {
               <div class="chatbot-title">GRRC AI Assistant</div>
               <div class="chatbot-status">
                 <span class="status-dot"></span>
-                <span>Online - Powered by Groq Llama 3.3</span>
+                <span>Online - Powered by Moon</span>
               </div>
             </div>
           </div>
@@ -346,10 +346,19 @@ class GRRCChatbot {
 
   formatMessage(text) {
     let formatted = this.escapeHtml(text);
+    
+    // Bold: **text** -> <strong>text</strong>
     formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    
+    // Italic: *text* -> <em>text</em>
     formatted = formatted.replace(/\*(.*?)\*/g, '<em>$1</em>');
-    formatted = formatted.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>');
+    
+    // Links: [text](url) -> <a>text</a> - CLICKABLE!
+    formatted = formatted.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
+    
+    // Line breaks
     formatted = formatted.replace(/\n/g, '<br>');
+    
     return formatted;
   }
 
@@ -369,4 +378,4 @@ if (document.readyState === 'loading') {
   window.grrcChatbot = new GRRCChatbot();
 }
 
-console.log('✅ GRRC Chatbot v2.1 initialized (complete info)');
+console.log('✅ GRRC Chatbot v2.1 initialized - Powered by Moon');
