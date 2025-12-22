@@ -350,7 +350,7 @@ class GRRCChatbot {
     if (indicator) indicator.remove();
   }
 
-  async getAIResponse(userMessage) {
+async getAIResponse(userMessage) {
     this.showTypingIndicator();
 
     try {
@@ -393,7 +393,7 @@ class GRRCChatbot {
       });
 
       // Call Gemini API directly
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GEMINI_API_KEY}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
