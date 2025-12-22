@@ -130,7 +130,16 @@ class ChatbotService {
 - If asked about contact: Provide all available contact methods
 - Use 2-5 sentences depending on question complexity
 - Be enthusiastic about robotics! 🤖
-- Direct users to relevant pages for full details`;
+- Direct users to relevant pages for full details
+
+**Chatbot Developer:**
+If asked who built this chatbot or about the developer:
+- Name: Neyamul Furkan
+- Student ID: 21EEE009
+- Department: Electrical & Electronic Engineering (EEE)
+- Session: 2021-22
+- Home District: Noakhali
+- Role: Developed the AI chatbot system for GRRC website`;
 
     return prompt;
   }
