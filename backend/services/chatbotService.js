@@ -1,25 +1,24 @@
 /**
- * Chatbot Service - Gemini API Integration Layer
+ * Chatbot Service - Groq Llama API Integration Layer
  * Provides reusable functions for AI chat functionality
  */
 
-const { GoogleGenerativeAI } = require('@google/generative-ai');
+const Groq = require('groq-sdk');
 
 class ChatbotService {
   constructor() {
-    if (!process.env.GEMINI_API_KEY) {
-      console.warn('⚠️ GEMINI_API_KEY not set - chatbot will not work');
-      this.genAI = null;
+    if (!process.env.GROQ_API_KEY) {
+      console.warn('⚠️ GROQ_API_KEY not set - chatbot will not work');
+      this.groq = null;
     } else {
-      this.genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+      this.groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
     }
     
-    this.model = 'gemini-1.5-flash';
+    this.model = 'llama-3.3-70b-versatile';
     this.defaultConfig = {
       temperature: 0.7,
-      topP: 0.8,
-      topK: 40,
-      maxOutputTokens: 500,
+      top_p: 0.9,
+      max_tokens: 1024,
     };
   }
 
@@ -27,7 +26,7 @@ class ChatbotService {
    * Check if service is ready
    */
   isReady() {
-    return this.genAI !== null;
+    return this.groq !== null;
   }
 
   /**
@@ -42,29 +41,26 @@ class ChatbotService {
       // Build system prompt
       const systemPrompt = this.buildSystemPrompt(clubContext);
 
-      // Get model
-      const model = this.genAI.getGenerativeModel({ 
-        model: this.model,
-        generationConfig: this.defaultConfig
-      });
-
       // Format conversation
-      const history = this.formatHistory(conversationHistory, systemPrompt);
+      const messages = this.formatMessages(conversationHistory, systemPrompt, message);
 
-      // Start chat
-      const chat = model.startChat({
-        history: history,
-        generationConfig: this.defaultConfig
+      // Call Groq API
+      const completion = await this.groq.chat.completions.create({
+        model: this.model,
+        messages: messages,
+        ...this.defaultConfig
       });
 
-      // Send message
-      const result = await chat.sendMessage(message);
-      const response = result.response;
+      const response = completion.choices[0]?.message?.content;
+      
+      if (!response) {
+        throw new Error('No response from Groq API');
+      }
       
       return {
         success: true,
-        response: response.text(),
-        tokensUsed: response.usageMetadata || null
+        response: response,
+        tokensUsed: completion.usage || null
       };
 
     } catch (error) {
@@ -157,54 +153,47 @@ class ChatbotService {
   }
 
   /**
-   * Format conversation history for Gemini
+   * Format conversation history for Groq (OpenAI-compatible)
    */
-  formatHistory(history, systemPrompt) {
-    const formatted = [];
+  formatMessages(history, systemPrompt, currentMessage) {
+    const messages = [];
 
-    // Add system context if no history
-    if (history.length === 0) {
-      formatted.push({
-        role: 'user',
-        parts: [{ text: systemPrompt }]
-      });
-      formatted.push({
-        role: 'model',
-        parts: [{ text: 'Ready to assist! How can I help you learn about GRRC?' }]
-      });
-    }
+    // Add system prompt
+    messages.push({
+      role: 'system',
+      content: systemPrompt
+    });
 
     // Add conversation history (last 10 to avoid token limits)
     const recent = history.slice(-10);
     
     recent.forEach(msg => {
-      if (msg.role === 'user') {
-        formatted.push({
-          role: 'user',
-          parts: [{ text: msg.content }]
-        });
-      } else if (msg.role === 'assistant') {
-        formatted.push({
-          role: 'model',
-          parts: [{ text: msg.content }]
-        });
-      }
+      messages.push({
+        role: msg.role === 'assistant' ? 'assistant' : 'user',
+        content: msg.content
+      });
     });
 
-    return formatted;
+    // Add current message
+    messages.push({
+      role: 'user',
+      content: currentMessage
+    });
+
+    return messages;
   }
 
   /**
-   * Handle Gemini API errors
+   * Handle Groq API errors
    */
   handleError(error) {
     const message = error.message || 'Unknown error';
 
-    if (message.includes('API key')) {
+    if (message.includes('API key') || message.includes('401')) {
       return 'API configuration error';
     }
     
-    if (message.includes('quota') || message.includes('limit')) {
+    if (message.includes('quota') || message.includes('limit') || message.includes('429')) {
       return 'Service temporarily unavailable due to high demand';
     }
     
@@ -226,7 +215,7 @@ class ChatbotService {
     return {
       ready: this.isReady(),
       model: this.model,
-      configured: !!process.env.GEMINI_API_KEY
+      configured: !!process.env.GROQ_API_KEY
     };
   }
 }
