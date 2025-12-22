@@ -62,7 +62,7 @@ function getDatabaseConfig() {
   if (process.env.DB_HOST && process.env.DB_USER && process.env.DB_PASSWORD) {
     console.log('📡 Using individual DB credentials for connection');
     
-    return {
+        return {
       host: process.env.DB_HOST,
       port: parseInt(process.env.DB_PORT) || 5432,
       database: process.env.DB_NAME || 'grrc_db',
@@ -73,7 +73,9 @@ function getDatabaseConfig() {
       } : false,
       max: 20,
       idleTimeoutMillis: 30000,
-      connectionTimeoutMillis: 10000,
+      connectionTimeoutMillis: 30000,
+      query_timeout: 30000,
+      statement_timeout: 30000,
       allowExitOnIdle: false
     };
   }
