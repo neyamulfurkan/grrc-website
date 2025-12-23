@@ -132,6 +132,8 @@ document.getElementById('signupForm').addEventListener('submit', async (e) => {
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
     
+    console.log('✅ Firebase user created:', user.uid);
+    
     // Generate avatar (first letter or member photo)
     let avatarData = {
       type: 'letter',
@@ -146,7 +148,7 @@ document.getElementById('signupForm').addEventListener('submit', async (e) => {
     }
     
     // Create user document in Firestore
-    await setDoc(doc(db, 'users', user.uid), {
+    const userData = {
       name: name,
       email: email,
       avatar: avatarData,
@@ -158,7 +160,17 @@ document.getElementById('signupForm').addEventListener('submit', async (e) => {
       } : null,
       createdAt: new Date().toISOString(),
       lastSeen: new Date().toISOString()
-    });
+    };
+    
+    console.log('📝 Creating Firestore document for user:', user.uid);
+    
+    try {
+      await setDoc(doc(db, 'users', user.uid), userData);
+      console.log('✅ Firestore document created successfully');
+    } catch (firestoreError) {
+      console.error('❌ Firestore document creation failed:', firestoreError);
+      throw new Error('Failed to create user profile: ' + firestoreError.message);
+    }
     
     showSuccess('signupSuccess', 'Account created! Redirecting...');
     

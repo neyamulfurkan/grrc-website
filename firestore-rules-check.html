@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Firestore Rules Check</title>
+</head>
+<body>
+    <h1>Firestore Rules Check</h1>
+    <div id="status">Checking...</div>
+    <pre id="output"></pre>
+
+    <script type="module">
+        import { auth, db } from './js/firebase-config.js';
+        import { signInWithEmailAndPassword } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+        import { doc, setDoc, getDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+        const output = document.getElementById('output');
+        const status = document.getElementById('status');
+
+        function log(msg) {
+            output.textContent += msg + '\n';
+            console.log(msg);
+        }
+
+        async function testFirestore() {
+            try {
+                // Try to login
+                log('🔐 Logging in...');
+                const userCred = await signInWithEmailAndPassword(auth, 'admin1@gmail.com', 'admin123');
+                log('✅ Logged in as: ' + userCred.user.email);
+                
+                // Try to write
+                log('📝 Testing Firestore WRITE...');
+                const testDoc = doc(db, 'users', userCred.user.uid);
+                await setDoc(testDoc, {
+                    test: 'write test',
+                    timestamp: new Date().toISOString()
+                });
+                log('✅ Write successful!');
+                
+                // Try to read
+                log('📖 Testing Firestore READ...');
+                const docSnap = await getDoc(testDoc);
+                if (docSnap.exists()) {
+                    log('✅ Read successful! Data: ' + JSON.stringify(docSnap.data()));
+                } else {
+                    log('❌ Document does not exist after write!');
+                }
+                
+                status.textContent = '✅ All tests passed! Firestore is working.';
+                status.style.color = 'green';
+                
+            } catch (error) {
+                log('❌ ERROR: ' + error.code);
+                log('Message: ' + error.message);
+                status.textContent = '❌ Firestore test failed!';
+                status.style.color = 'red';
+            }
+        }
+
+        testFirestore();
+    </script>
+</body>
+</html>

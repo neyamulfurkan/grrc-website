@@ -28,24 +28,59 @@ let messagesUnsubscribe = null;
 
 // Check authentication
 onAuthStateChanged(auth, async (user) => {
+  console.log('🔐 Auth state changed. User:', user ? user.uid : 'None');
+  
   if (!user) {
+    console.log('❌ No user authenticated, redirecting to login');
     window.location.href = 'community-auth.html';
     return;
   }
   
+  console.log('✅ User authenticated:', user.email);
+  
   try {
+    console.log('📝 Fetching user document from Firestore...');
     const userDoc = await getDoc(doc(db, 'users', user.uid));
+    
     if (userDoc.exists()) {
+      console.log('✅ User document found in Firestore');
       currentUser = { uid: user.uid, ...userDoc.data() };
+      console.log('✅ Current user loaded:', currentUser.name);
       initializeChat();
     } else {
-      // User document doesn't exist, redirect to signup
-      await signOut(auth);
-      window.location.href = 'community-auth.html';
+      console.error('❌ User document does NOT exist in Firestore');
+      console.log('User ID:', user.uid);
+      console.log('This should have been created during signup!');
+      
+      // Create the document now as a fallback
+      console.log('📝 Creating missing user document...');
+      const fallbackUserData = {
+        name: user.email.split('@')[0],
+        email: user.email,
+        avatar: {
+          type: 'letter',
+          value: user.email.charAt(0).toUpperCase()
+        },
+        memberMatch: null,
+        createdAt: new Date().toISOString(),
+        lastSeen: new Date().toISOString()
+      };
+      
+      await setDoc(doc(db, 'users', user.uid), fallbackUserData);
+      console.log('✅ Fallback user document created');
+      
+      currentUser = { uid: user.uid, ...fallbackUserData };
+      initializeChat();
     }
   } catch (error) {
-    console.error('Error loading user:', error);
-    alert('Failed to load user data. Please try again.');
+    console.error('❌ Error loading user:', error);
+    console.error('Error details:', {
+      code: error.code,
+      message: error.message,
+      stack: error.stack
+    });
+    
+    alert('Failed to load user data. Error: ' + error.message);
     await signOut(auth);
     window.location.href = 'community-auth.html';
   }
