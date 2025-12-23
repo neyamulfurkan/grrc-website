@@ -371,8 +371,14 @@ function selectUser(userId) {
   });
   
   // Show chat area
-  document.getElementById('emptyChat').style.display = 'none';
-  document.getElementById('chatContent').style.display = 'flex';
+  const emptyChat = document.getElementById('emptyChat');
+  const chatContent = document.getElementById('chatContent');
+  
+  if (emptyChat) emptyChat.style.display = 'none';
+  if (chatContent) {
+    chatContent.style.display = 'flex';
+    chatContent.style.flexDirection = 'column';
+  }
   
   // Load selected user info
   loadChatUser(userId);
