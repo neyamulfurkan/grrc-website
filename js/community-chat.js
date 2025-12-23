@@ -109,11 +109,142 @@ onAuthStateChanged(auth, async (user) => {
 function initializeChat() {
   console.log('✅ Chat initialized for:', currentUser.name);
   
+  // Add "Global Chat" as first item in users list
+  addGlobalChatOption();
+  
   // Load users list
   loadUsers();
   
   // Setup event listeners
   setupEventListeners();
+}
+
+// Add Global Chat option at top of users list
+function addGlobalChatOption() {
+  const container = document.getElementById('usersList');
+  
+  const globalChatHTML = `
+    <div class="user-item global-chat-item" data-user-id="__GLOBAL__" style="background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); color: white; border-radius: 8px; margin-bottom: 0.5rem;">
+      <div class="user-avatar" style="background: rgba(255,255,255,0.3);">
+        🌍
+      </div>
+      <div class="user-info">
+        <div class="user-name" style="color: white; font-weight: 600;">Global Chat</div>
+        <div class="user-status" style="color: rgba(255,255,255,0.8);">Community Discussion</div>
+      </div>
+    </div>
+  `;
+  
+  container.insertAdjacentHTML('afterbegin', globalChatHTML);
+  
+  // Add click handler for global chat
+  container.querySelector('.global-chat-item').addEventListener('click', () => {
+    selectGlobalChat();
+  });
+}
+
+// Select global chat
+function selectGlobalChat() {
+  selectedUserId = '__GLOBAL__';
+  
+  // Update UI
+  document.querySelectorAll('.user-item').forEach(item => {
+    item.classList.toggle('active', item.dataset.userId === '__GLOBAL__');
+  });
+  
+  // Show chat area
+  document.getElementById('emptyChat').style.display = 'none';
+  document.getElementById('chatContent').style.display = 'flex';
+  
+  // Update chat header
+  document.getElementById('chatUserAvatar').innerHTML = '🌍';
+  document.getElementById('chatUserAvatar').style.fontSize = '1.5rem';
+  document.getElementById('chatUserName').textContent = 'Global Chat';
+  document.getElementById('chatUserStatus').textContent = 'Everyone can see these messages';
+  
+  // Load global messages
+  loadGlobalMessages();
+  
+  // Mobile: Show chat
+  if (window.innerWidth <= 768) {
+    document.getElementById('usersSidebar').classList.remove('mobile-show');
+    document.getElementById('chatArea').classList.add('mobile-show');
+  }
+}
+
+// Load global messages
+function loadGlobalMessages() {
+  if (messagesUnsubscribe) {
+    messagesUnsubscribe();
+  }
+  
+  const messagesQuery = query(
+    collection(db, 'global_chat'),
+    orderBy('timestamp', 'asc'),
+    limit(100)
+  );
+  
+  messagesUnsubscribe = onSnapshot(messagesQuery, (snapshot) => {
+    const messages = [];
+    snapshot.forEach((doc) => {
+      messages.push({ id: doc.id, ...doc.data() });
+    });
+    
+    renderGlobalMessages(messages);
+  });
+}
+
+// Render global messages
+function renderGlobalMessages(messages) {
+  const container = document.getElementById('chatMessages');
+  
+  if (messages.length === 0) {
+    container.innerHTML = `
+      <div style="margin: auto; text-align: center; color: var(--text-secondary);">
+        <p>No messages yet. Start the conversation! 🌍</p>
+      </div>
+    `;
+    return;
+  }
+  
+  container.innerHTML = messages.map(msg => {
+    const isOwn = msg.senderId === currentUser.uid;
+    const senderName = msg.senderName || 'Unknown';
+    
+    const time = msg.timestamp ? 
+      formatTime(msg.timestamp.toDate()) : 
+      'Sending...';
+    
+    return `
+      <div class="message ${isOwn ? 'own' : ''}">
+        <div class="message-content">
+          ${!isOwn ? `<div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.25rem; font-weight: 600;">${escapeHtml(senderName)}</div>` : ''}
+          <p class="message-text">${escapeHtml(msg.text)}</p>
+          <div class="message-time">${time}</div>
+          ${isOwn ? `<button class="message-actions" data-msg-id="${msg.id}">Delete</button>` : ''}
+        </div>
+      </div>
+    `;
+  }).join('');
+  
+  container.scrollTop = container.scrollHeight;
+  
+  // Add delete handlers
+  container.querySelectorAll('.message-actions').forEach(btn => {
+    btn.addEventListener('click', () => deleteGlobalMessage(btn.dataset.msgId));
+  });
+}
+
+// Delete global message
+async function deleteGlobalMessage(messageId) {
+  if (!confirm('Delete this message?')) return;
+  
+  try {
+    await deleteDoc(doc(db, 'global_chat', messageId));
+  } catch (error) {
+    console.error('Error deleting message:', error);
+    alert('Failed to delete message.');
+  }
 }
 
 // Load all users (except current user)
@@ -132,7 +263,7 @@ function loadUsers() {
   });
 }
 
-// Render users list
+// Render users list with online indicators
 function renderUsersList(users) {
   const container = document.getElementById('usersList');
   const searchTerm = document.getElementById('usersSearch').value.toLowerCase();
@@ -155,15 +286,18 @@ function renderUsersList(users) {
   container.innerHTML = filtered.map(user => {
     const isActive = selectedUserId === user.uid;
     const avatar = renderAvatar(user.avatar, user.name);
+    const onlineStatus = calculateOnlineStatus(user.lastSeen);
+    const isOnline = onlineStatus === 'Online';
     
     return `
       <div class="user-item ${isActive ? 'active' : ''}" data-user-id="${user.uid}">
-        <div class="user-avatar">
+        <div class="user-avatar" style="position: relative;">
           ${avatar}
+          ${isOnline ? '<span class="online-indicator"></span>' : ''}
         </div>
         <div class="user-info">
           <div class="user-name">${escapeHtml(user.name)}</div>
-          <div class="user-status">${user.memberMatch ? `${user.memberMatch.department}` : 'Community Member'}</div>
+          <div class="user-status" style="color: ${isOnline ? '#10b981' : 'var(--text-secondary)'}">${onlineStatus}</div>
         </div>
       </div>
     `;
@@ -203,7 +337,7 @@ function selectUser(userId) {
   }
 }
 
-// Load chat user info
+// Load chat user info with real-time status
 async function loadChatUser(userId) {
   try {
     const userDoc = await getDoc(doc(db, 'users', userId));
@@ -213,11 +347,29 @@ async function loadChatUser(userId) {
       
       document.getElementById('chatUserAvatar').innerHTML = avatar;
       document.getElementById('chatUserName').textContent = user.name;
-      document.getElementById('chatUserStatus').textContent = 'Online';
+      
+      // Calculate real online status
+      const status = calculateOnlineStatus(user.lastSeen);
+      document.getElementById('chatUserStatus').textContent = status;
+      document.getElementById('chatUserStatus').style.color = status === 'Online' ? '#10b981' : 'var(--text-secondary)';
     }
   } catch (error) {
     console.error('Error loading chat user:', error);
   }
+}
+
+// Helper: Calculate online status
+function calculateOnlineStatus(lastSeen) {
+  if (!lastSeen) return 'Offline';
+  
+  const lastSeenDate = new Date(lastSeen);
+  const now = new Date();
+  const diffMinutes = (now - lastSeenDate) / 1000 / 60;
+  
+  if (diffMinutes < 5) return 'Online';
+  if (diffMinutes < 60) return `Active ${Math.floor(diffMinutes)}m ago`;
+  if (diffMinutes < 1440) return `Active ${Math.floor(diffMinutes / 60)}h ago`;
+  return 'Offline';
 }
 
 // Load messages
@@ -290,7 +442,7 @@ function renderMessages(messages) {
   });
 }
 
-// Send message
+// Send message (supports both 1-on-1 and global chat)
 async function sendMessage() {
   if (!selectedUserId) return;
   
@@ -300,14 +452,25 @@ async function sendMessage() {
   if (!text) return;
   
   try {
-    const chatId = [currentUser.uid, selectedUserId].sort().join('_');
-    
-    await addDoc(collection(db, 'chats', chatId, 'messages'), {
-      text: text,
-      senderId: currentUser.uid,
-      receiverId: selectedUserId,
-      timestamp: serverTimestamp()
-    });
+    if (selectedUserId === '__GLOBAL__') {
+      // Send to global chat
+      await addDoc(collection(db, 'global_chat'), {
+        text: text,
+        senderId: currentUser.uid,
+        senderName: currentUser.name,
+        timestamp: serverTimestamp()
+      });
+    } else {
+      // Send to 1-on-1 chat
+      const chatId = [currentUser.uid, selectedUserId].sort().join('_');
+      
+      await addDoc(collection(db, 'chats', chatId, 'messages'), {
+        text: text,
+        senderId: currentUser.uid,
+        receiverId: selectedUserId,
+        timestamp: serverTimestamp()
+      });
+    }
     
     input.value = '';
     input.style.height = 'auto';
@@ -377,6 +540,7 @@ function setupEventListeners() {
   document.getElementById('mobileChatBackBtn').addEventListener('click', () => {
     document.getElementById('chatArea').classList.remove('mobile-show');
     document.getElementById('usersSidebar').classList.add('mobile-show');
+    selectedUserId = null;
   });
 }
 
@@ -421,6 +585,24 @@ function formatTime(date) {
 window.addEventListener('beforeunload', () => {
   if (usersUnsubscribe) usersUnsubscribe();
   if (messagesUnsubscribe) messagesUnsubscribe();
+});
+
+// Initialize mobile view state
+function initializeMobileView() {
+  if (window.innerWidth <= 768) {
+    document.getElementById('usersSidebar').classList.add('mobile-show');
+    document.getElementById('chatArea').classList.remove('mobile-show');
+  }
+}
+
+// Call on load
+window.addEventListener('load', initializeMobileView);
+window.addEventListener('resize', () => {
+  if (window.innerWidth > 768) {
+    // Reset mobile classes on desktop
+    document.getElementById('usersSidebar').classList.remove('mobile-show');
+    document.getElementById('chatArea').classList.remove('mobile-show');
+  }
 });
 
 console.log('✅ Community chat initialized');
