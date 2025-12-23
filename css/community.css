@@ -202,27 +202,35 @@
 }
 
 .user-name {
-  font-weight: 500;
+  font-weight: 600;
   color: var(--text-primary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  font-size: 0.9375rem;
 }
 
 .user-item.active .user-name {
   color: white;
+  font-weight: 700;
 }
 
 .user-status {
   font-size: 0.75rem;
-  color: var(--text-secondary);
+  color: var(--text-tertiary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  font-weight: 500;
 }
 
 .user-item.active .user-status {
-  color: rgba(255, 255, 255, 0.8);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.user-status::before {
+  content: '• ';
+  margin-right: 0.25rem;
 }
 
 .unread-badge {
@@ -245,6 +253,19 @@
   display: flex;
   flex-direction: column;
   background: var(--background-color);
+  position: relative;
+}
+
+.chat-area::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 200px;
+  background: linear-gradient(180deg, rgba(29, 78, 216, 0.05) 0%, transparent 100%);
+  pointer-events: none;
+  z-index: 0;
 }
 
 .chat-header {
@@ -308,6 +329,9 @@
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  background: linear-gradient(to bottom, var(--background-secondary) 0%, var(--background-color) 10%);
+  position: relative;
+  z-index: 1;
 }
 
 .message {
@@ -405,8 +429,10 @@
 
 .chat-input-area {
   background: var(--surface-color);
-  border-top: 1px solid var(--border-color);
+  border-top: 2px solid var(--border-color);
   padding: 1rem 1.5rem;
+  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.05);
+  backdrop-filter: blur(10px);
 }
 
 .chat-input-container {
@@ -479,13 +505,32 @@
   align-items: center;
   justify-content: center;
   text-align: center;
-  padding: 2rem;
+  padding: 3rem 2rem;
+  background: radial-gradient(circle at center, var(--background-secondary) 0%, var(--background-color) 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+.empty-chat::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, rgba(29, 78, 216, 0.1) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
 }
 
 .empty-icon {
-  font-size: 4rem;
-  margin-bottom: 1rem;
-  opacity: 0.5;
+  font-size: 5rem;
+  margin-bottom: 1.5rem;
+  opacity: 0.3;
+  filter: drop-shadow(0 4px 12px rgba(29, 78, 216, 0.2));
+  position: relative;
+  z-index: 1;
 }
 
 .empty-chat h2 {
@@ -626,4 +671,290 @@
 .users-list::-webkit-scrollbar-thumb:hover,
 .chat-messages::-webkit-scrollbar-thumb:hover {
   background: var(--text-tertiary);
+}
+
+/* ============================================
+   MODERN ENHANCEMENTS - MATCH MAIN WEBSITE
+   ============================================ */
+
+/* Gradient overlays for depth */
+.community-main::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--primary-color), transparent);
+  opacity: 0.5;
+}
+
+/* Enhanced logout button hover */
+#logoutBtn:hover {
+  background: rgba(255, 255, 255, 0.3) !important;
+  border-color: rgba(255, 255, 255, 0.5) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* User list scrollbar styling */
+.users-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.users-list::-webkit-scrollbar-track {
+  background: var(--background-secondary);
+  border-radius: 3px;
+}
+
+.users-list::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+  border-radius: 3px;
+}
+
+.users-list::-webkit-scrollbar-thumb:hover {
+  background: var(--primary-color);
+}
+
+/* Chat messages scrollbar */
+.chat-messages::-webkit-scrollbar {
+  width: 8px;
+}
+
+.chat-messages::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.chat-messages::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+  border-radius: 4px;
+}
+
+.chat-messages::-webkit-scrollbar-thumb:hover {
+  background: var(--primary-color);
+}
+
+/* Typing indicator animation */
+.typing-indicator {
+  display: flex;
+  gap: 0.75rem;
+  padding: 1rem 1.5rem;
+  align-items: center;
+  background: linear-gradient(90deg, var(--background-secondary) 0%, var(--background-color) 100%);
+  border-top: 1px solid var(--border-color);
+}
+
+.typing-indicator-text {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  font-style: italic;
+  font-weight: 500;
+}
+
+.typing-dots {
+  display: flex;
+  gap: 4px;
+}
+
+.typing-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+  animation: typingBounce 1.4s infinite;
+}
+
+.typing-dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.typing-dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes typingBounce {
+  0%, 60%, 100% { 
+    transform: translateY(0); 
+    opacity: 0.7;
+  }
+  30% { 
+    transform: translateY(-10px); 
+    opacity: 1;
+  }
+}
+
+/* Message timestamp styling */
+.message-time {
+  font-size: 0.7rem;
+  color: var(--text-tertiary);
+  margin-top: 0.25rem;
+  font-weight: 500;
+  opacity: 0.8;
+}
+
+.message.own .message-time {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+/* Online indicator pulse */
+.online-indicator {
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  width: 12px;
+  height: 12px;
+  background: #10b981;
+  border: 2px solid var(--surface-color);
+  border-radius: 50%;
+  animation: onlinePulse 2s infinite;
+}
+
+@keyframes onlinePulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+  }
+  50% {
+    box-shadow: 0 0 0 4px rgba(16, 185, 129, 0);
+  }
+}
+
+/* Tab buttons with better styling */
+.chat-tab-btn {
+  position: relative;
+  overflow: hidden;
+}
+
+.chat-tab-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s ease;
+}
+
+.chat-tab-btn:hover::before {
+  left: 100%;
+}
+
+/* Message hover effects */
+.message {
+  transition: all 0.3s ease;
+}
+
+.message:hover {
+  transform: translateX(2px);
+}
+
+.message.own:hover {
+  transform: translateX(-2px);
+}
+
+/* Search input with icon */
+.users-search::placeholder {
+  color: var(--text-tertiary);
+  font-weight: 500;
+}
+
+/* Empty state improvements */
+.empty-chat p strong {
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Chat header shadow on scroll */
+.chat-header.scrolled {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Message action button */
+.message-actions {
+  display: none;
+  position: absolute;
+  top: -8px;
+  right: 8px;
+  background: var(--error-color);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 0.7rem;
+  cursor: pointer;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.3);
+  transition: all 0.3s ease;
+}
+
+.message-actions:hover {
+  background: #b91c1c;
+  transform: scale(1.05);
+}
+
+.message.own:hover .message-actions {
+  display: block;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Unread badge */
+.unread-badge {
+  background: linear-gradient(135deg, var(--error-color) 0%, #dc2626 100%);
+  color: white;
+  border-radius: 10px;
+  padding: 2px 6px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  min-width: 20px;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4);
+  animation: badgePulse 2s infinite;
+}
+
+@keyframes badgePulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+/* Modern card-like message groups */
+.message + .message {
+  margin-top: 0.5rem;
+}
+
+.message + .message.same-sender {
+  margin-top: 0.25rem;
+}
+
+/* Better focus states */
+.chat-input:focus,
+.users-search:focus {
+  transform: translateY(-1px);
+}
+
+/* Loading skeleton for users */
+.user-item.loading {
+  pointer-events: none;
+  opacity: 0.6;
+  animation: skeletonPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes skeletonPulse {
+  0%, 100% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 0.3;
+  }
 }
