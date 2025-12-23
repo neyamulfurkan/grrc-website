@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Community Chat - GRRC</title>
+    
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/common.css">
+    <link rel="stylesheet" href="css/community.css">
+</head>
+<body>
+    <div class="community-container">
+        <!-- Header -->
+        <div class="community-header">
+            <div class="header-left">
+                <button class="back-btn" id="backBtn" aria-label="Back to website">←</button>
+                <h1 class="community-title">GRRC Community</h1>
+            </div>
+            <div>
+                <button class="btn btn-sm" id="logoutBtn" style="padding: 0.5rem 1rem; font-size: 0.875rem;">Logout</button>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="community-main">
+            <!-- Users Sidebar -->
+            <div class="users-sidebar" id="usersSidebar">
+                <div class="users-header">
+                    <input type="text" class="users-search" id="usersSearch" placeholder="🔍 Search users...">
+                </div>
+                <div class="users-list" id="usersList">
+                    <!-- Users will be loaded here -->
+                </div>
+            </div>
+
+            <!-- Chat Area -->
+            <div class="chat-area" id="chatArea">
+                <!-- Empty State (shown when no chat selected) -->
+                <div class="empty-chat" id="emptyChat">
+                    <div class="empty-icon">💬</div>
+                    <h2>Select a conversation</h2>
+                    <p>Choose a user from the list to start chatting</p>
+                </div>
+
+                <!-- Chat Content (hidden by default) -->
+                <div id="chatContent" style="display: none; flex: 1; display: flex; flex-direction: column;">
+                    <!-- Chat Header -->
+                    <div class="chat-header">
+                        <div class="chat-user-info">
+                            <button class="back-btn mobile-only" id="mobileChatBackBtn" style="margin-right: 0.5rem;">←</button>
+                            <div class="chat-user-avatar" id="chatUserAvatar"></div>
+                            <div class="chat-user-details">
+                                <h3 id="chatUserName">User</h3>
+                                <p id="chatUserStatus">Online</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Messages -->
+                    <div class="chat-messages" id="chatMessages">
+                        <!-- Messages will be loaded here -->
+                    </div>
+
+                    <!-- Input Area -->
+                    <div class="chat-input-area">
+                        <div class="chat-input-container">
+                            <textarea 
+                                class="chat-input" 
+                                id="messageInput" 
+                                placeholder="Type a message..."
+                                rows="1"
+                            ></textarea>
+                            <button class="send-btn" id="sendBtn" aria-label="Send message">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .mobile-only {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .mobile-only {
+                display: block;
+            }
+        }
+    </style>
+
+    <script type="module" src="js/firebase-config.js"></script>
+    <script type="module" src="js/community-chat.js"></script>
+</body>
+</html>
