@@ -50,16 +50,18 @@ function getDatabaseConfig() {
       // Add query timeout and other pool settings
       return {
         ...config,
-        max: 10, // Reduced pool size for better connection management
-        min: 2, // Keep minimum connections alive
-        idleTimeoutMillis: 30000,
-        connectionTimeoutMillis: 120000, // Increased to 120 seconds
-        acquireTimeoutMillis: 120000,
-        createTimeoutMillis: 120000,
+        max: 5, // Reduced for Render free tier
+        min: 1, // Keep minimum connections alive
+        idleTimeoutMillis: 20000,
+        connectionTimeoutMillis: 10000, // 10 seconds max
+        acquireTimeoutMillis: 10000,
+        createTimeoutMillis: 10000,
         destroyTimeoutMillis: 5000,
         reapIntervalMillis: 1000,
         createRetryIntervalMillis: 200,
-        allowExitOnIdle: false
+        allowExitOnIdle: false,
+        query_timeout: 15000,
+        statement_timeout: 15000
       };
     }
     
@@ -81,14 +83,16 @@ function getDatabaseConfig() {
       } : false,
       keepAlive: true,
       keepAliveInitialDelayMillis: 10000,
-      max: 10, // Reduced pool size
-      min: 2,
-      idleTimeoutMillis: 30000,
-      connectionTimeoutMillis: 120000, // Increased to 120 seconds
-      acquireTimeoutMillis: 120000,
-      createTimeoutMillis: 120000,
-      query_timeout: 60000,
-      statement_timeout: 60000,
+      max: 5, // Reduced for Render free tier
+      min: 1,
+      idleTimeoutMillis: 20000,
+      connectionTimeoutMillis: 10000, // 10 seconds max
+      acquireTimeoutMillis: 10000,
+      createTimeoutMillis: 10000,
+      query_timeout: 15000,
+      statement_timeout: 15000,
+      destroyTimeoutMillis: 5000,
+      reapIntervalMillis: 1000,
       allowExitOnIdle: false
     };
   }
@@ -129,19 +133,35 @@ if (poolConfig) {
     console.log('🔌 Database client disconnected');
   });
 
+  // Handle pool acquire (for debugging)
+  pool.on('acquire', (client) => {
+    console.log('📥 Database client acquired from pool');
+  });
+
+  // Periodic connection health check
+  setInterval(async () => {
+    try {
+      const client = await pool.connect();
+      await client.query('SELECT 1');
+      client.release();
+    } catch (err) {
+      console.error('❌ Pool health check failed:', err.message);
+    }
+  }, 30000); // Every 30 seconds
+
   // Test connection on startup
   (async () => {
         try {
       const client = await Promise.race([
         pool.connect(),
         new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Connection timeout')), 60000) // Increased to 60 seconds
+          setTimeout(() => reject(new Error('Connection timeout')), 8000) // 8 seconds
         )
       ]);
       const result = await Promise.race([
         client.query('SELECT NOW() as time, current_database() as db'),
         new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Query timeout')), 10000) // Increased to 10 seconds
+          setTimeout(() => reject(new Error('Query timeout')), 5000) // 5 seconds
         )
       ]);
       console.log('✅ Database connection test successful');
