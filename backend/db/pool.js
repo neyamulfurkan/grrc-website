@@ -50,7 +50,7 @@ function getDatabaseConfig() {
         ...config,
         max: 20, // Maximum pool size
         idleTimeoutMillis: 30000,
-        connectionTimeoutMillis: 10000,
+        connectionTimeoutMillis: 60000, // Increased to 60 seconds for Render cold starts
         allowExitOnIdle: false
       };
     }
@@ -73,9 +73,9 @@ function getDatabaseConfig() {
       } : false,
       max: 20,
       idleTimeoutMillis: 30000,
-      connectionTimeoutMillis: 30000,
-      query_timeout: 30000,
-      statement_timeout: 30000,
+      connectionTimeoutMillis: 60000, // Increased timeout
+      query_timeout: 60000,
+      statement_timeout: 60000,
       allowExitOnIdle: false
     };
   }
@@ -118,17 +118,17 @@ if (poolConfig) {
 
   // Test connection on startup
   (async () => {
-    try {
+        try {
       const client = await Promise.race([
         pool.connect(),
         new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Connection timeout')), 5000)
+          setTimeout(() => reject(new Error('Connection timeout')), 30000) // Increased to 30 seconds
         )
       ]);
       const result = await Promise.race([
         client.query('SELECT NOW() as time, current_database() as db'),
         new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Query timeout')), 3000)
+          setTimeout(() => reject(new Error('Query timeout')), 10000) // Increased to 10 seconds
         )
       ]);
       console.log('✅ Database connection test successful');
