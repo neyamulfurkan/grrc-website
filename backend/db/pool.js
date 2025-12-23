@@ -28,7 +28,9 @@ function parseConnectionString(connectionString) {
         rejectUnauthorized: false // Required for most cloud databases
       },
       keepAlive: true,
-      keepAliveInitialDelayMillis: 10000
+      keepAliveInitialDelayMillis: 10000,
+      // Force IPv4
+      family: 4
     };
   } catch (error) {
     console.error('❌ Failed to parse DATABASE_URL:', error.message);
@@ -83,6 +85,7 @@ function getDatabaseConfig() {
       } : false,
       keepAlive: true,
       keepAliveInitialDelayMillis: 10000,
+      family: 4, // Force IPv4
       max: 5, // Reduced for Render free tier
       min: 1,
       idleTimeoutMillis: 20000,
