@@ -27,6 +27,14 @@
             <!-- Users Sidebar -->
             <div class="users-sidebar" id="usersSidebar">
                 <div class="users-header">
+                    <div style="display: flex; gap: 0.5rem; margin-bottom: 0.75rem;">
+                        <button class="chat-tab-btn active" data-tab="users" style="flex: 1; padding: 0.5rem; border: none; background: var(--primary-color); color: white; border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.2s;">
+                            👥 Users
+                        </button>
+                        <button class="chat-tab-btn" data-tab="global" style="flex: 1; padding: 0.5rem; border: none; background: var(--background-secondary); color: var(--text-primary); border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.2s;">
+                            🌍 Global
+                        </button>
+                    </div>
                     <input type="text" class="users-search" id="usersSearch" placeholder="🔍 Search users...">
                 </div>
                 <div class="users-list" id="usersList">

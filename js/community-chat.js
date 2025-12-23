@@ -109,14 +109,54 @@ onAuthStateChanged(auth, async (user) => {
 function initializeChat() {
   console.log('✅ Chat initialized for:', currentUser.name);
   
-  // Add "Global Chat" as first item in users list
-  addGlobalChatOption();
-  
   // Load users list
   loadUsers();
   
   // Setup event listeners
   setupEventListeners();
+  
+  // Setup tab switching
+  setupChatTabs();
+}
+
+// Setup chat tabs (Users vs Global)
+function setupChatTabs() {
+  const tabButtons = document.querySelectorAll('.chat-tab-btn');
+  
+  tabButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const tab = btn.dataset.tab;
+      
+      // Update active tab
+      tabButtons.forEach(b => {
+        b.classList.remove('active');
+        if (b === btn) {
+          b.classList.add('active');
+          b.style.background = 'var(--primary-color)';
+          b.style.color = 'white';
+        } else {
+          b.style.background = 'var(--background-secondary)';
+          b.style.color = 'var(--text-primary)';
+        }
+      });
+      
+      if (tab === 'global') {
+        // Show global chat
+        selectGlobalChat();
+      } else {
+        // Show users list
+        document.getElementById('usersList').style.display = 'block';
+        document.getElementById('usersSearch').style.display = 'block';
+        
+        // Hide chat if global was selected
+        if (selectedUserId === '__GLOBAL__') {
+          document.getElementById('emptyChat').style.display = 'flex';
+          document.getElementById('chatContent').style.display = 'none';
+          selectedUserId = null;
+        }
+      }
+    });
+  });
 }
 
 // Add Global Chat option at top of users list
@@ -147,9 +187,13 @@ function addGlobalChatOption() {
 function selectGlobalChat() {
   selectedUserId = '__GLOBAL__';
   
+  // Hide users list
+  document.getElementById('usersList').style.display = 'none';
+  document.getElementById('usersSearch').style.display = 'none';
+  
   // Update UI
   document.querySelectorAll('.user-item').forEach(item => {
-    item.classList.toggle('active', item.dataset.userId === '__GLOBAL__');
+    item.classList.remove('active');
   });
   
   // Show chat area
@@ -157,10 +201,16 @@ function selectGlobalChat() {
   document.getElementById('chatContent').style.display = 'flex';
   
   // Update chat header
-  document.getElementById('chatUserAvatar').innerHTML = '🌍';
-  document.getElementById('chatUserAvatar').style.fontSize = '1.5rem';
+  const avatarEl = document.getElementById('chatUserAvatar');
+  avatarEl.innerHTML = '🌍';
+  avatarEl.style.fontSize = '1.5rem';
+  avatarEl.style.display = 'flex';
+  avatarEl.style.alignItems = 'center';
+  avatarEl.style.justifyContent = 'center';
+  
   document.getElementById('chatUserName').textContent = 'Global Chat';
   document.getElementById('chatUserStatus').textContent = 'Everyone can see these messages';
+  document.getElementById('chatUserStatus').style.color = 'var(--text-secondary)';
   
   // Load global messages
   loadGlobalMessages();

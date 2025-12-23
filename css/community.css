@@ -87,6 +87,19 @@
   font-size: 0.875rem;
 }
 
+.chat-tab-btn {
+  transition: all 0.2s ease;
+}
+
+.chat-tab-btn:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.chat-tab-btn.active {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
 .users-list {
   flex: 1;
   overflow-y: auto;
