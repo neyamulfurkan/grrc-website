@@ -1414,15 +1414,47 @@
             <!-- Community Management Section -->
             <div class="section-content" id="communitySection">
                 <div class="admin-form">
-                    <h2 style="margin-bottom: var(--space-lg);">Community Management</h2>
-                    <p style="color: var(--text-secondary); margin-bottom: var(--space-xl);">
-                        View all community users and manage accounts.
+                    <h2 style="margin-bottom: var(--space-lg);">💬 Community Management</h2>
+                    <p style="color: var(--text-secondary); margin-bottom: var(--space-md);">
+                        Manage community chat users, view activity, and moderate conversations.
                     </p>
+                    
+                    <!-- Stats Cards -->
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+                        <div class="stat-card">
+                            <div class="stat-number" id="communityTotalUsers">0</div>
+                            <div class="stat-label">Total Users</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="communityOnlineUsers">0</div>
+                            <div class="stat-label">Online Now</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="communityBannedUsers">0</div>
+                            <div class="stat-label">Banned Users</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Action Buttons -->
+                    <div style="display: flex; gap: 1rem; margin-bottom: 2rem; flex-wrap: wrap;">
+                        <button class="btn btn-primary" onclick="sendGlobalAnnouncement()">📢 Send Global Announcement</button>
+                        <button class="btn btn-secondary" onclick="viewBannedUsers()">🚫 View Banned Users</button>
+                        <button class="btn btn-outline" onclick="exportCommunityData()">📊 Export User Data</button>
+                    </div>
                     
                     <div class="data-table-wrapper">
                         <div class="table-header">
                             <h3>All Community Users</h3>
-                            <input type="text" class="form-input" id="communityUserSearch" placeholder="🔍 Search users..." style="max-width: 300px;">
+                            <div style="display: flex; gap: 1rem; align-items: center;">
+                                <input type="text" class="form-input" id="communityUserSearch" placeholder="🔍 Search users..." style="max-width: 300px;">
+                                <select class="form-select" id="communityUserFilter" style="max-width: 150px;">
+                                    <option value="all">All Users</option>
+                                    <option value="online">Online</option>
+                                    <option value="matched">Member Matched</option>
+                                    <option value="new">New Users</option>
+                                    <option value="banned">Banned</option>
+                                </select>
+                            </div>
                         </div>
                         <div style="overflow-x: auto;">
                             <table class="data-table">
@@ -1430,14 +1462,16 @@
                                     <tr>
                                         <th>User</th>
                                         <th>Email</th>
+                                        <th>Status</th>
                                         <th>Member Match</th>
                                         <th>Joined</th>
+                                        <th>Last Seen</th>
                                         <th>Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody id="communityUsersTableBody">
                                     <tr>
-                                        <td colspan="5" style="text-align: center; padding: var(--space-xl);">Loading users...</td>
+                                        <td colspan="7" style="text-align: center; padding: var(--space-xl);">Loading users...</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -3982,27 +4016,57 @@ if (section === 'membership-applications') {
 
         // ========== COMMUNITY MANAGEMENT FUNCTIONS ==========
 
-        async function loadCommunityUsers() {
+        let allCommunityUsers = [];
+        let bannedUserIds = new Set();
+
+        async function loadCommunityUsers(filterType = 'all') {
             try {
                 const tbody = document.getElementById('communityUsersTableBody');
-                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 2rem;">Loading users...</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 2rem;">Loading users...</td></tr>';
                 
                 const { db } = await import('./js/firebase-config.js');
-                const { collection, getDocs } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+                const { collection, getDocs, doc, getDoc } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
                 
                 const usersSnapshot = await getDocs(collection(db, 'users'));
-                const users = [];
+                allCommunityUsers = [];
+                bannedUserIds.clear();
                 
-                usersSnapshot.forEach((doc) => {
-                    users.push({ id: doc.id, ...doc.data() });
+                usersSnapshot.forEach((docSnap) => {
+                    const userData = { id: docSnap.id, ...docSnap.data() };
+                    allCommunityUsers.push(userData);
+                    if (userData.banned) bannedUserIds.add(docSnap.id);
                 });
                 
-                if (users.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 2rem;">No community users yet</td></tr>';
+                // Update stats
+                const onlineUsers = allCommunityUsers.filter(u => isUserOnline(u.lastSeen)).length;
+                document.getElementById('communityTotalUsers').textContent = allCommunityUsers.length;
+                document.getElementById('communityOnlineUsers').textContent = onlineUsers;
+                document.getElementById('communityBannedUsers').textContent = bannedUserIds.size;
+                
+                // Apply filter
+                let filteredUsers = allCommunityUsers;
+                if (filterType === 'online') {
+                    filteredUsers = allCommunityUsers.filter(u => isUserOnline(u.lastSeen));
+                } else if (filterType === 'matched') {
+                    filteredUsers = allCommunityUsers.filter(u => u.memberMatch);
+                } else if (filterType === 'new') {
+                    const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+                    filteredUsers = allCommunityUsers.filter(u => new Date(u.createdAt).getTime() > weekAgo);
+                } else if (filterType === 'banned') {
+                    filteredUsers = allCommunityUsers.filter(u => u.banned);
+                }
+                
+                if (filteredUsers.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 2rem;">No users found</td></tr>';
                     return;
                 }
                 
-                tbody.innerHTML = users.map(user => {
+                tbody.innerHTML = filteredUsers.map(user => {
+                    const isOnline = isUserOnline(user.lastSeen);
+                    const statusBadge = user.banned ? 
+                        '<span class="badge badge-error">🚫 Banned</span>' :
+                        (isOnline ? '<span class="badge badge-success">🟢 Online</span>' : '<span class="badge" style="background: #9ca3af; color: white;">Offline</span>');
+                    
                     const memberMatch = user.memberMatch ? 
                         `<span class="badge badge-success">${user.memberMatch.name}</span>` :
                         '<span class="badge badge-info">New User</span>';
@@ -4011,24 +4075,36 @@ if (section === 'membership-applications') {
                         new Date(user.createdAt).toLocaleDateString() :
                         'Unknown';
                     
+                    const lastSeen = user.lastSeen ?
+                        (isOnline ? 'Now' : formatRelativeTime(user.lastSeen)) :
+                        'Never';
+                    
                     return `
                         <tr>
                             <td>
                                 <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                    <div style="width: 32px; height: 32px; border-radius: 50%; background: var(--primary-color); color: white; display: flex; align-items: center; justify-content: center; font-weight: 600;">
+                                    <div style="width: 32px; height: 32px; border-radius: 50%; background: var(--primary-color); color: white; display: flex; align-items: center; justify-content: center; font-weight: 600; position: relative;">
                                         ${user.avatar && user.avatar.type === 'image' ? 
                                             `<img src="${user.avatar.value}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">` :
                                             (user.avatar ? user.avatar.value : user.name.charAt(0).toUpperCase())
                                         }
+                                        ${isOnline ? '<span style="position: absolute; bottom: 0; right: 0; width: 10px; height: 10px; background: #10b981; border: 2px solid white; border-radius: 50%;"></span>' : ''}
                                     </div>
                                     <strong>${user.name}</strong>
                                 </div>
                             </td>
                             <td>${user.email}</td>
+                            <td>${statusBadge}</td>
                             <td>${memberMatch}</td>
                             <td>${joined}</td>
+                            <td>${lastSeen}</td>
                             <td class="action-buttons">
-                                <button class="btn btn-icon btn-delete" onclick="deleteCommunityUser('${user.id}', '${user.name}')">🗑️</button>
+                                ${user.banned ? 
+                                    `<button class="btn btn-icon" style="background: #10b981; color: white;" onclick="unbanCommunityUser('${user.id}', '${user.name}')" title="Unban">✓</button>` :
+                                    `<button class="btn btn-icon" style="background: #f59e0b; color: white;" onclick="banCommunityUser('${user.id}', '${user.name}')" title="Ban">🚫</button>`
+                                }
+                                <button class="btn btn-icon" style="background: #6366f1; color: white;" onclick="viewUserActivity('${user.id}', '${user.name}')" title="View Activity">👁️</button>
+                                <button class="btn btn-icon btn-delete" onclick="deleteCommunityUser('${user.id}', '${user.name}')" title="Delete">🗑️</button>
                             </td>
                         </tr>
                     `;
@@ -4037,23 +4113,139 @@ if (section === 'membership-applications') {
             } catch (error) {
                 console.error('Error loading community users:', error);
                 document.getElementById('communityUsersTableBody').innerHTML = 
-                    '<tr><td colspan="5" style="text-align: center; color: var(--error-color); padding: 2rem;">Error loading users. Make sure Firebase is configured.</td></tr>';
+                    '<tr><td colspan="7" style="text-align: center; color: var(--error-color); padding: 2rem;">Error loading users. Make sure Firebase is configured.</td></tr>';
+            }
+        }
+
+        function isUserOnline(lastSeen) {
+            if (!lastSeen) return false;
+            const lastSeenDate = typeof lastSeen === 'string' ? new Date(lastSeen) : lastSeen.toDate();
+            const fiveMinutesAgo = Date.now() - 5 * 60 * 1000;
+            return lastSeenDate.getTime() > fiveMinutesAgo;
+        }
+
+        function formatRelativeTime(timestamp) {
+            const date = typeof timestamp === 'string' ? new Date(timestamp) : timestamp.toDate();
+            const now = Date.now();
+            const diff = now - date.getTime();
+            
+            const minutes = Math.floor(diff / 60000);
+            const hours = Math.floor(diff / 3600000);
+            const days = Math.floor(diff / 86400000);
+            
+            if (minutes < 1) return 'Just now';
+            if (minutes < 60) return `${minutes}m ago`;
+            if (hours < 24) return `${hours}h ago`;
+            if (days < 7) return `${days}d ago`;
+            return date.toLocaleDateString();
+        }
+
+        async function banCommunityUser(userId, userName) {
+            const reason = prompt(`Ban "${userName}"?\n\nOptional: Enter reason for ban:`);
+            if (reason === null) return; // User cancelled
+            
+            try {
+                const { db } = await import('./js/firebase-config.js');
+                const { doc, updateDoc } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+                
+                await updateDoc(doc(db, 'users', userId), {
+                    banned: true,
+                    banReason: reason || 'No reason provided',
+                    bannedAt: new Date().toISOString(),
+                    bannedBy: getCurrentAdmin()?.username || 'Admin'
+                });
+                
+                showToast(`User "${userName}" has been banned`, 'success');
+                loadCommunityUsers(document.getElementById('communityUserFilter').value);
+                
+            } catch (error) {
+                console.error('Error banning user:', error);
+                showToast('Failed to ban user', 'error');
+            }
+        }
+
+        async function unbanCommunityUser(userId, userName) {
+            if (!confirm(`Unban "${userName}"?`)) return;
+            
+            try {
+                const { db } = await import('./js/firebase-config.js');
+                const { doc, updateDoc } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+                
+                await updateDoc(doc(db, 'users', userId), {
+                    banned: false,
+                    banReason: null,
+                    bannedAt: null,
+                    bannedBy: null
+                });
+                
+                showToast(`User "${userName}" has been unbanned`, 'success');
+                loadCommunityUsers(document.getElementById('communityUserFilter').value);
+                
+            } catch (error) {
+                console.error('Error unbanning user:', error);
+                showToast('Failed to unban user', 'error');
+            }
+        }
+
+        async function viewUserActivity(userId, userName) {
+            try {
+                const { db } = await import('./js/firebase-config.js');
+                const { collection, query, where, getDocs, orderBy, limit } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+                
+                // Get recent messages count
+                let messageCount = 0;
+                const chatsSnapshot = await getDocs(collection(db, 'chats'));
+                
+                for (const chatDoc of chatsSnapshot.docs) {
+                    const messagesSnapshot = await getDocs(
+                        query(
+                            collection(db, 'chats', chatDoc.id, 'messages'),
+                            where('senderId', '==', userId)
+                        )
+                    );
+                    messageCount += messagesSnapshot.size;
+                }
+                
+                alert(`Activity for "${userName}":\n\n` +
+                      `Total messages sent: ${messageCount}\n` +
+                      `User ID: ${userId}\n\n` +
+                      `Note: Detailed activity logs coming soon!`);
+                
+            } catch (error) {
+                console.error('Error loading user activity:', error);
+                showToast('Failed to load activity', 'error');
             }
         }
 
         async function deleteCommunityUser(userId, userName) {
-            if (!confirm(`Delete user "${userName}"? This will remove their account and all messages.`)) {
+            if (!confirm(`⚠️ Delete user "${userName}"?\n\nThis will:\n- Remove their account\n- Delete all their messages\n- Cannot be undone`)) {
                 return;
             }
             
             try {
                 const { db } = await import('./js/firebase-config.js');
-                const { doc, deleteDoc } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+                const { doc, deleteDoc, collection, getDocs } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
                 
+                // Delete user document
                 await deleteDoc(doc(db, 'users', userId));
                 
+                // Delete all their messages (optional, can be heavy operation)
+                const chatsSnapshot = await getDocs(collection(db, 'chats'));
+                for (const chatDoc of chatsSnapshot.docs) {
+                    const messagesSnapshot = await getDocs(
+                        query(
+                            collection(db, 'chats', chatDoc.id, 'messages'),
+                            where('senderId', '==', userId)
+                        )
+                    );
+                    
+                    for (const msgDoc of messagesSnapshot.docs) {
+                        await deleteDoc(msgDoc.ref);
+                    }
+                }
+                
                 showToast(`User "${userName}" deleted successfully`, 'success');
-                loadCommunityUsers();
+                loadCommunityUsers(document.getElementById('communityUserFilter').value);
                 
             } catch (error) {
                 console.error('Error deleting user:', error);
@@ -4061,6 +4253,71 @@ if (section === 'membership-applications') {
             }
         }
 
+        async function sendGlobalAnnouncement() {
+            const message = prompt('📢 Send Global Announcement\n\nEnter your message to all community users:');
+            if (!message || !message.trim()) return;
+            
+            try {
+                const { db } = await import('./js/firebase-config.js');
+                const { collection, addDoc, serverTimestamp } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+                
+                // Create a global announcements collection
+                await addDoc(collection(db, 'announcements'), {
+                    message: message.trim(),
+                    type: 'global',
+                    sentBy: getCurrentAdmin()?.username || 'Admin',
+                    timestamp: serverTimestamp(),
+                    read: {}
+                });
+                
+                showToast('Global announcement sent!', 'success');
+                
+            } catch (error) {
+                console.error('Error sending announcement:', error);
+                showToast('Failed to send announcement', 'error');
+            }
+        }
+
+        async function viewBannedUsers() {
+            document.getElementById('communityUserFilter').value = 'banned';
+            await loadCommunityUsers('banned');
+        }
+
+        async function exportCommunityData() {
+            try {
+                if (allCommunityUsers.length === 0) {
+                    await loadCommunityUsers();
+                }
+                
+                const csv = [
+                    ['Name', 'Email', 'Status', 'Member Match', 'Joined', 'Last Seen'],
+                    ...allCommunityUsers.map(user => [
+                        user.name,
+                        user.email,
+                        user.banned ? 'Banned' : (isUserOnline(user.lastSeen) ? 'Online' : 'Offline'),
+                        user.memberMatch ? user.memberMatch.name : 'None',
+                        user.createdAt || 'Unknown',
+                        user.lastSeen || 'Never'
+                    ])
+                ].map(row => row.join(',')).join('\n');
+                
+                const blob = new Blob([csv], { type: 'text/csv' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `community-users-${new Date().toISOString().split('T')[0]}.csv`;
+                a.click();
+                URL.revokeObjectURL(url);
+                
+                showToast('User data exported!', 'success');
+                
+            } catch (error) {
+                console.error('Error exporting data:', error);
+                showToast('Failed to export data', 'error');
+            }
+        }
+
+        // Event listeners
         document.getElementById('communityUserSearch')?.addEventListener('input', (e) => {
             const searchTerm = e.target.value.toLowerCase();
             const rows = document.querySelectorAll('#communityUsersTableBody tr');
@@ -4069,6 +4326,10 @@ if (section === 'membership-applications') {
                 const text = row.textContent.toLowerCase();
                 row.style.display = text.includes(searchTerm) ? '' : 'none';
             });
+        });
+
+        document.getElementById('communityUserFilter')?.addEventListener('change', (e) => {
+            loadCommunityUsers(e.target.value);
         });
 
         // ========== SUPER ADMIN ACCESS FUNCTIONS ==========

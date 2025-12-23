@@ -45,8 +45,25 @@ onAuthStateChanged(auth, async (user) => {
     
     if (userDoc.exists()) {
       console.log('✅ User document found in Firestore');
-      currentUser = { uid: user.uid, ...userDoc.data() };
+      const userData = userDoc.data();
+      
+      // ✅ CRITICAL FIX: Check if user is banned
+      if (userData.banned) {
+        console.warn('🚫 User is banned');
+        alert(`Your account has been banned.\n\nReason: ${userData.banReason || 'No reason provided'}\n\nContact administrators for more information.`);
+        await signOut(auth);
+        window.location.href = 'community-auth.html';
+        return;
+      }
+      
+      currentUser = { uid: user.uid, ...userData };
       console.log('✅ Current user loaded:', currentUser.name);
+      
+      // Update last seen timestamp
+      await updateDoc(doc(db, 'users', user.uid), {
+        lastSeen: new Date().toISOString()
+      });
+      
       initializeChat();
     } else {
       console.error('❌ User document does NOT exist in Firestore');
@@ -63,6 +80,7 @@ onAuthStateChanged(auth, async (user) => {
           value: user.email.charAt(0).toUpperCase()
         },
         memberMatch: null,
+        banned: false,
         createdAt: new Date().toISOString(),
         lastSeen: new Date().toISOString()
       };
