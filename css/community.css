@@ -1088,3 +1088,157 @@
     opacity: 0.3;
   }
 }
+
+/* ============================================
+   ENHANCED THEME SUPPORT - COMPLETE FIX
+   ============================================ */
+
+/* Force proper theme colors on all elements */
+.community-container {
+    background: var(--background-color);
+    color: var(--text-primary);
+}
+
+.community-header {
+    background: var(--surface-color) !important;
+    border-bottom: 2px solid var(--border-color) !important;
+}
+
+.community-title {
+    color: var(--text-primary) !important;
+}
+
+.back-btn {
+    background: var(--background-secondary) !important;
+    border: 1px solid var(--border-color) !important;
+    color: var(--text-primary) !important;
+}
+
+.back-btn:hover {
+    background: var(--primary-color) !important;
+    color: white !important;
+}
+
+.users-sidebar {
+    background: var(--surface-color) !important;
+    border-right: 1px solid var(--border-color) !important;
+}
+
+.users-header {
+    background: var(--background-secondary) !important;
+}
+
+.users-search {
+    background: var(--background-color) !important;
+    color: var(--text-primary) !important;
+    border: 2px solid var(--border-medium) !important;
+}
+
+.user-item {
+    color: var(--text-primary) !important;
+}
+
+.user-name {
+    color: var(--text-primary) !important;
+}
+
+.user-status {
+    color: var(--text-secondary) !important;
+}
+
+.chat-area {
+    background: var(--background-color) !important;
+}
+
+.chat-header {
+    background: var(--surface-color) !important;
+    border-bottom: 2px solid var(--border-color) !important;
+}
+
+.chat-user-details h3 {
+    color: var(--text-primary) !important;
+}
+
+.chat-user-details p {
+    color: var(--text-secondary) !important;
+}
+
+.chat-messages {
+    background: var(--background-color) !important;
+}
+
+.message-content {
+    background: var(--surface-color) !important;
+    color: var(--text-primary) !important;
+    border: 1px solid var(--border-color) !important;
+}
+
+.message.own .message-content {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%) !important;
+    color: white !important;
+    border: none !important;
+}
+
+.chat-input-area {
+    background: var(--surface-color) !important;
+    border-top: 2px solid var(--border-color) !important;
+}
+
+.chat-input {
+    background: var(--background-color) !important;
+    color: var(--text-primary) !important;
+    border: 2px solid var(--border-medium) !important;
+}
+
+.chat-input::placeholder {
+    color: var(--text-tertiary) !important;
+}
+
+.empty-chat {
+    background: var(--background-color) !important;
+    color: var(--text-primary) !important;
+}
+
+.empty-chat h2 {
+    color: var(--text-primary) !important;
+}
+
+.empty-chat p {
+    color: var(--text-secondary) !important;
+}
+
+/* Dark theme specific overrides */
+[data-theme="dark"] .community-header {
+    background: #1e293b !important;
+}
+
+[data-theme="dark"] .users-sidebar {
+    background: #1e293b !important;
+}
+
+[data-theme="dark"] .chat-header {
+    background: #1e293b !important;
+}
+
+[data-theme="dark"] .message-content {
+    background: #1e293b !important;
+    color: #f8fafc !important;
+}
+
+/* Light theme specific overrides */
+[data-theme="light"] .community-header {
+    background: white !important;
+}
+
+[data-theme="light"] .users-sidebar {
+    background: white !important;
+}
+
+[data-theme="light"] .chat-header {
+    background: white !important;
+}
+
+[data-theme="light"] .message-content {
+    background: white !important;
+    color: #1a202c !important;
+}
