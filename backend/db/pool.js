@@ -26,7 +26,9 @@ function parseConnectionString(connectionString) {
       password: decodeURIComponent(url.password), // Decode URL-encoded password
       ssl: {
         rejectUnauthorized: false // Required for most cloud databases
-      }
+      },
+      keepAlive: true,
+      keepAliveInitialDelayMillis: 10000
     };
   } catch (error) {
     console.error('❌ Failed to parse DATABASE_URL:', error.message);
@@ -48,9 +50,15 @@ function getDatabaseConfig() {
       // Add query timeout and other pool settings
       return {
         ...config,
-        max: 20, // Maximum pool size
+        max: 10, // Reduced pool size for better connection management
+        min: 2, // Keep minimum connections alive
         idleTimeoutMillis: 30000,
-        connectionTimeoutMillis: 60000, // Increased to 60 seconds for Render cold starts
+        connectionTimeoutMillis: 120000, // Increased to 120 seconds
+        acquireTimeoutMillis: 120000,
+        createTimeoutMillis: 120000,
+        destroyTimeoutMillis: 5000,
+        reapIntervalMillis: 1000,
+        createRetryIntervalMillis: 200,
         allowExitOnIdle: false
       };
     }
@@ -71,9 +79,14 @@ function getDatabaseConfig() {
       ssl: process.env.DB_SSL === 'true' ? {
         rejectUnauthorized: false
       } : false,
-      max: 20,
+      keepAlive: true,
+      keepAliveInitialDelayMillis: 10000,
+      max: 10, // Reduced pool size
+      min: 2,
       idleTimeoutMillis: 30000,
-      connectionTimeoutMillis: 60000, // Increased timeout
+      connectionTimeoutMillis: 120000, // Increased to 120 seconds
+      acquireTimeoutMillis: 120000,
+      createTimeoutMillis: 120000,
       query_timeout: 60000,
       statement_timeout: 60000,
       allowExitOnIdle: false
@@ -122,7 +135,7 @@ if (poolConfig) {
       const client = await Promise.race([
         pool.connect(),
         new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Connection timeout')), 30000) // Increased to 30 seconds
+          setTimeout(() => reject(new Error('Connection timeout')), 60000) // Increased to 60 seconds
         )
       ]);
       const result = await Promise.race([

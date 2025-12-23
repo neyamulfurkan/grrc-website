@@ -8,6 +8,23 @@ const { authenticateToken, isSuperAdmin } = require('../middleware/auth');
 router.use(authenticateToken);
 router.use(isSuperAdmin);
 
+
+// ========== COMMUNITY USERS ==========
+router.get('/community/users', async (req, res) => {
+  try {
+    // Since you're using Firebase for community, return empty array
+    // The frontend will load directly from Firebase
+    res.json({
+      success: true,
+      data: [],
+      message: 'Community data loaded from Firebase'
+    });
+  } catch (error) {
+    console.error('Community users error:', error);
+    res.status(500).json({ success: false, error: 'Failed to load community users' });
+  }
+});
+
 // ========== DASHBOARD ==========
 router.get('/dashboard', async (req, res) => {
   try {
