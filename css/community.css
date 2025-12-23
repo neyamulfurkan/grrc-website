@@ -2,6 +2,7 @@
  * community.css
  * Styles for GRRC Community Chat
  * Imports existing theme variables
+ * FIXED VERSION - Full Theme Support
  */
 
 @import url('variables.css');
@@ -19,13 +20,13 @@
 }
 
 .community-header {
-  background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
-  border-bottom: none;
+  background: var(--header-background);
+  border-bottom: 1px solid var(--border-color);
   padding: 1rem 1.5rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--shadow-md);
 }
 
 .header-left {
@@ -35,27 +36,26 @@
 }
 
 .back-btn {
-  background: rgba(255, 255, 255, 0.2);
-  border: none;
-  color: white;
+  background: var(--background-secondary);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
   cursor: pointer;
   font-size: 1.5rem;
   transition: all 0.3s ease;
   padding: 0.5rem;
   border-radius: var(--radius-md);
-  backdrop-filter: blur(10px);
 }
 
 .back-btn:hover {
-  background: rgba(255, 255, 255, 0.3);
+  background: var(--primary-color);
+  color: white;
   transform: translateX(-4px);
 }
 
 .community-title {
   font-size: 1.25rem;
   font-weight: 600;
-  color: white;
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  color: var(--header-text);
 }
 
 .community-main {
@@ -285,13 +285,13 @@
 }
 
 .chat-header {
-  background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
-  border-bottom: none;
+  background: var(--surface-color);
+  border-bottom: 2px solid var(--border-color);
   padding: 1rem 1.5rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-sm);
 }
 
 .chat-user-info {
@@ -304,16 +304,15 @@
   width: 48px;
   height: 48px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.2);
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
   color: white;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 600;
   font-size: 1.125rem;
-  backdrop-filter: blur(10px);
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  border: 2px solid var(--border-color);
+  box-shadow: var(--shadow-sm);
 }
 
 .chat-user-avatar img {
@@ -327,15 +326,13 @@
   margin: 0;
   font-size: 1.125rem;
   font-weight: 600;
-  color: white;
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  color: var(--text-primary);
 }
 
 .chat-user-details p {
   margin: 0;
   font-size: 0.875rem;
-  color: rgba(255, 255, 255, 0.9);
-  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+  color: var(--text-secondary);
 }
 
 .chat-messages {
@@ -711,11 +708,21 @@
 }
 
 /* Enhanced logout button hover */
+#logoutBtn {
+  background: var(--error-color);
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 500;
+}
+
 #logoutBtn:hover {
-  background: rgba(255, 255, 255, 0.3) !important;
-  border-color: rgba(255, 255, 255, 0.5) !important;
+  background: var(--error-dark);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  box-shadow: var(--shadow-md);
 }
 
 /* User list scrollbar styling */
@@ -948,7 +955,109 @@
     transform: scale(1.1);
   }
 }
+/* ============================================
+   THEME-SPECIFIC OVERRIDES FOR FULL VISIBILITY
+   ============================================ */
 
+/* Light Theme - Ensure proper contrast */
+[data-theme="light"] .community-header {
+  background: white;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+[data-theme="light"] .community-title,
+[data-theme="light"] .back-btn {
+  color: #1a202c;
+}
+
+[data-theme="light"] .chat-header {
+  background: white;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+[data-theme="light"] .chat-user-details h3,
+[data-theme="light"] .chat-user-details p {
+  color: #1a202c;
+}
+
+[data-theme="light"] .user-name {
+  color: #1a202c;
+}
+
+[data-theme="light"] .user-status {
+  color: #64748b;
+}
+
+/* Dark Theme - Maximum visibility */
+[data-theme="dark"] .community-header {
+  background: #1e293b;
+  border-bottom: 1px solid #334155;
+}
+
+[data-theme="dark"] .community-title,
+[data-theme="dark"] .back-btn {
+  color: #f8fafc;
+}
+
+[data-theme="dark"] .chat-header {
+  background: #1e293b;
+  border-bottom: 2px solid #334155;
+}
+
+[data-theme="dark"] .chat-user-details h3 {
+  color: #f8fafc;
+}
+
+[data-theme="dark"] .chat-user-details p {
+  color: #e2e8f0;
+}
+
+[data-theme="dark"] .user-name {
+  color: #f8fafc;
+}
+
+[data-theme="dark"] .user-status {
+  color: #cbd5e1;
+}
+
+[data-theme="dark"] .message-content {
+  background: #1e293b;
+  color: #f8fafc;
+  border-color: #334155;
+}
+
+[data-theme="dark"] .message.own .message-content {
+  background: linear-gradient(135deg, #60a5fa 0%, #c084fc 100%);
+  color: #0f172a;
+}
+
+[data-theme="dark"] .chat-input {
+  background: #0f172a;
+  color: #f8fafc;
+  border-color: #475569;
+}
+
+[data-theme="dark"] .users-search {
+  background: #0f172a;
+  color: #f8fafc;
+  border-color: #475569;
+}
+
+/* Global Chat Header Fix */
+.global-chat-item {
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)) !important;
+  color: white !important;
+}
+
+.global-chat-item .user-name,
+.global-chat-item .user-status {
+  color: white !important;
+}
+
+/* Ensure white text on gradient backgrounds */
+[style*="background: linear-gradient"] * {
+  color: white !important;
+}
 /* Modern card-like message groups */
 .message + .message {
   margin-top: 0.5rem;

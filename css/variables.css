@@ -206,6 +206,14 @@
   --glass-blur: blur(12px);
   --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
 
+  /* ===== CHAT COMMUNITY COLORS - LIGHT MODE ===== */
+  --chat-header-bg: var(--surface-color);
+  --chat-header-text: var(--text-primary);
+  --chat-message-bg: var(--surface-color);
+  --chat-message-own-bg: var(--primary-color);
+  --chat-input-bg: var(--background-color);
+  --chat-input-border: var(--border-medium);
+
   /* ===== COMPONENT COLORS - LIGHT MODE ===== */
   
   /* Badges - High contrast */
@@ -387,6 +395,14 @@
   --glass-border: rgba(148, 163, 184, 0.3);
   --glass-blur: blur(12px);
   --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+
+  /* ===== CHAT COMMUNITY COLORS - DARK MODE ===== */
+  --chat-header-bg: var(--surface-color);
+  --chat-header-text: var(--text-primary);
+  --chat-message-bg: var(--surface-color);
+  --chat-message-own-bg: var(--primary-color);
+  --chat-input-bg: var(--background-secondary);
+  --chat-input-border: var(--border-medium);
 
   /* ===== COMPONENT COLORS - DARK MODE ===== */
   
