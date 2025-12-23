@@ -3,7 +3,7 @@
  * PostgreSQL Connection Pool
  * ====================================
  * Purpose: Create and manage database connection pool
- * Supports both DATABASE_URL and individual credentials
+ * Optimized for Supabase Pooler (Transaction Mode)
  * ====================================
  */
 
@@ -21,16 +21,12 @@ function parseConnectionString(connectionString) {
     return {
       host: url.hostname,
       port: parseInt(url.port) || 5432,
-      database: url.pathname.slice(1), // Remove leading '/'
+      database: url.pathname.slice(1),
       user: url.username,
-      password: decodeURIComponent(url.password), // Decode URL-encoded password
+      password: decodeURIComponent(url.password),
       ssl: {
-        rejectUnauthorized: false // Required for most cloud databases
-      },
-      keepAlive: true,
-      keepAliveInitialDelayMillis: 10000,
-      // Force IPv4
-      family: 4
+        rejectUnauthorized: false
+      }
     };
   } catch (error) {
     console.error('❌ Failed to parse DATABASE_URL:', error.message);
@@ -49,21 +45,23 @@ function getDatabaseConfig() {
     const config = parseConnectionString(process.env.DATABASE_URL);
     
     if (config) {
-      // Add query timeout and other pool settings
+      // Optimized for Supabase Pooler (Transaction Mode)
       return {
         ...config,
-        max: 5, // Reduced for Render free tier
-        min: 1, // Keep minimum connections alive
-        idleTimeoutMillis: 20000,
-        connectionTimeoutMillis: 10000, // 10 seconds max
-        acquireTimeoutMillis: 10000,
-        createTimeoutMillis: 10000,
-        destroyTimeoutMillis: 5000,
+        // Conservative pool settings for pooler
+        max: 3,
+        min: 0,
+        idleTimeoutMillis: 5000,
+        connectionTimeoutMillis: 20000,
+        acquireTimeoutMillis: 20000,
+        createTimeoutMillis: 20000,
+        destroyTimeoutMillis: 1000,
         reapIntervalMillis: 1000,
-        createRetryIntervalMillis: 200,
-        allowExitOnIdle: false,
-        query_timeout: 15000,
-        statement_timeout: 15000
+        createRetryIntervalMillis: 500,
+        allowExitOnIdle: true,
+        // Query timeouts
+        query_timeout: 30000,
+        statement_timeout: 30000
       };
     }
     
@@ -74,7 +72,7 @@ function getDatabaseConfig() {
   if (process.env.DB_HOST && process.env.DB_USER && process.env.DB_PASSWORD) {
     console.log('📡 Using individual DB credentials for connection');
     
-        return {
+    return {
       host: process.env.DB_HOST,
       port: parseInt(process.env.DB_PORT) || 5432,
       database: process.env.DB_NAME || 'grrc_db',
@@ -83,24 +81,20 @@ function getDatabaseConfig() {
       ssl: process.env.DB_SSL === 'true' ? {
         rejectUnauthorized: false
       } : false,
-      keepAlive: true,
-      keepAliveInitialDelayMillis: 10000,
-      family: 4, // Force IPv4
-      max: 5, // Reduced for Render free tier
-      min: 1,
-      idleTimeoutMillis: 20000,
-      connectionTimeoutMillis: 10000, // 10 seconds max
-      acquireTimeoutMillis: 10000,
-      createTimeoutMillis: 10000,
-      query_timeout: 15000,
-      statement_timeout: 15000,
-      destroyTimeoutMillis: 5000,
+      max: 3,
+      min: 0,
+      idleTimeoutMillis: 5000,
+      connectionTimeoutMillis: 20000,
+      acquireTimeoutMillis: 20000,
+      createTimeoutMillis: 20000,
+      query_timeout: 30000,
+      statement_timeout: 30000,
+      destroyTimeoutMillis: 1000,
       reapIntervalMillis: 1000,
-      allowExitOnIdle: false
+      allowExitOnIdle: true
     };
   }
 
-  // No valid configuration found
   console.warn('⚠️  No database configuration found');
   return null;
 }
@@ -123,60 +117,42 @@ if (poolConfig) {
   // Handle pool errors
   pool.on('error', (err, client) => {
     console.error('❌ Unexpected database pool error:', err.message);
-    console.error('   This error occurred on an idle client');
   });
 
   // Handle pool connection
   pool.on('connect', (client) => {
-    console.log('✅ New database client connected');
+    console.log('✅ Database client connected');
   });
 
   // Handle pool removal
   pool.on('remove', (client) => {
-    console.log('🔌 Database client disconnected');
+    console.log('🔌 Database client removed from pool');
   });
-
-  // Handle pool acquire (for debugging)
-  pool.on('acquire', (client) => {
-    console.log('📥 Database client acquired from pool');
-  });
-
-  // Periodic connection health check
-  setInterval(async () => {
-    try {
-      const client = await pool.connect();
-      await client.query('SELECT 1');
-      client.release();
-    } catch (err) {
-      console.error('❌ Pool health check failed:', err.message);
-    }
-  }, 30000); // Every 30 seconds
 
   // Test connection on startup
   (async () => {
-        try {
+    try {
       const client = await Promise.race([
         pool.connect(),
         new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Connection timeout')), 8000) // 8 seconds
+          setTimeout(() => reject(new Error('Connection timeout')), 15000)
         )
       ]);
+      
       const result = await Promise.race([
         client.query('SELECT NOW() as time, current_database() as db'),
         new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Query timeout')), 5000) // 5 seconds
+          setTimeout(() => reject(new Error('Query timeout')), 10000)
         )
       ]);
+      
       console.log('✅ Database connection test successful');
       console.log(`   Connected to: ${result.rows[0].db}`);
       console.log(`   Server time: ${result.rows[0].time}`);
       client.release();
     } catch (error) {
       console.error('❌ Failed to connect to PostgreSQL database:', error.message);
-      console.error('Please check your database configuration in .env file');
-      
-      // Don't exit - let server run in degraded mode
-      // process.exit(1);
+      console.error('   Server will continue in degraded mode');
     }
   })();
 
