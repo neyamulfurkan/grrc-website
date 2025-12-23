@@ -78,7 +78,7 @@
   background: var(--surface-color);
   border-radius: var(--radius-2xl);
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-  display: flex;
+  display: none;
   flex-direction: column;
   z-index: 1000;
   transform: scale(0.8) translateY(20px);
@@ -90,6 +90,7 @@
 }
 
 .chatbot-window.active {
+  display: flex;
   transform: scale(1) translateY(0);
   opacity: 1;
   pointer-events: all;
@@ -454,6 +455,8 @@
   }
 
   .chatbot-window {
+    position: fixed;
+    top: 0;
     bottom: 0;
     right: 0;
     left: 0;
@@ -466,6 +469,7 @@
   }
 
   .chatbot-window.active {
+    display: flex;
     transform: translateY(0);
   }
 
@@ -473,6 +477,7 @@
   .chatbot-header {
     padding: 16px 20px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    flex-shrink: 0;
   }
 
   /* Larger close button for easier tapping */
