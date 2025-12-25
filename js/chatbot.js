@@ -427,20 +427,61 @@ if (document.readyState === 'loading') {
   initProactiveChatbot();
 }
 
-// ✅ PROACTIVE AI MESSAGES (every 10 minutes)
+// ✅ PROACTIVE AI MESSAGES (rapid-fire sequence every 10 minutes)
 function initProactiveChatbot() {
-  const messages = [
-    "👋 Hey! I'm Moon AI from GRRC. We're a robotics club at GSTU. Want to know about our upcoming events?",
-    "🤖 Hi there! GRRC here - we build robots and innovate! Ask me about membership or our latest projects!",
-    "💡 Hello! Did you know GRRC hosts workshops every month? Click me to learn more about joining!",
-    "🚀 Greetings from Moon AI! GRRC is your gateway to robotics at GSTU. Curious about what we do?",
-    "🎓 Hey! GRRC welcomes all tech enthusiasts. Want to know about our next workshop or event?"
+  const messageSequences = [
+    // Sequence 1: Introduction
+    [
+      "👋 Hey! I'm Moon AI from GRRC. We're a robotics club at GSTU.",
+      "🤖 We build robots, host workshops, and create innovative projects!",
+      "💡 Want to know about our upcoming events? Just click me!"
+    ],
+    // Sequence 2: Membership
+    [
+      "🎓 Hi there! GRRC welcomes all tech enthusiasts at GSTU.",
+      "💳 Join us! Membership is easy - just check the Membership page.",
+      "🚀 Ask me anything about joining or our activities!"
+    ],
+    // Sequence 3: Events
+    [
+      "📅 Hello! We host workshops and competitions every month.",
+      "🔥 Want to see what events are coming up?",
+      "✨ Click me to learn about registration and dates!"
+    ],
+    // Sequence 4: Projects
+    [
+      "🤖 Greetings! GRRC has built amazing robotics projects.",
+      "🛠️ From line followers to AI systems - we do it all!",
+      "💬 Curious about our projects? Ask me!"
+    ],
+    // Sequence 5: Community
+    [
+      "👋 Hey! GRRC is more than a club - it's a family of robothinkers.",
+      "🌟 Join our community chat, attend workshops, and innovate!",
+      "🚀 Ready to explore robotics? Click me to start!"
+    ]
   ];
   
-  let messageIndex = 0;
-  let hasShownInitial = false;
+  let sequenceIndex = 0;
   
-  function showProactiveMessage() {
+  function showMessageSequence() {
+    // Don't show if chat is already open
+    if (window.grrcChatbot && window.grrcChatbot.isOpen) return;
+    
+    const currentSequence = messageSequences[sequenceIndex];
+    
+    // Show each message in sequence with 4-5 second delays
+    currentSequence.forEach((message, index) => {
+      setTimeout(() => {
+        showProactiveMessage(message);
+      }, index * 5000); // 5 seconds between each message
+    });
+    
+    // Move to next sequence (loop back to start after last one)
+    sequenceIndex = (sequenceIndex + 1) % messageSequences.length;
+  }
+  
+  function showProactiveMessage(messageText) {
     // Don't show if chat is already open
     if (window.grrcChatbot && window.grrcChatbot.isOpen) return;
     
@@ -465,7 +506,7 @@ function initProactiveChatbot() {
     `;
     
     bubble.innerHTML = `
-      <div style="font-size: 0.875rem; line-height: 1.4;">${messages[messageIndex]}</div>
+      <div style="font-size: 0.875rem; line-height: 1.4;">${messageText}</div>
       <div style="position: absolute; bottom: -8px; right: 20px; width: 0; height: 0; border-left: 8px solid transparent; border-right: 8px solid transparent; border-top: 8px solid white;"></div>
     `;
     
@@ -479,23 +520,18 @@ function initProactiveChatbot() {
       bubble.remove();
     });
     
-    // Auto remove after 8 seconds
+    // Auto remove after 7 seconds
     setTimeout(() => {
       bubble.style.animation = 'fadeOut 0.3s ease';
       setTimeout(() => bubble.remove(), 300);
-    }, 8000);
-    
-    // Cycle to next message
-    messageIndex = (messageIndex + 1) % messages.length;
+    }, 7000);
   }
   
-  // Show first message after 3 seconds
+  // Show first sequence after 3 seconds
   setTimeout(() => {
-    showProactiveMessage();
-    hasShownInitial = true;
+    showMessageSequence();
     
-    // Then repeat every 10 minutes
-    setInterval(showProactiveMessage, 10 * 60 * 1000);
+        setInterval(showMessageSequence, 1 * 60 * 1000);
   }, 3000);
 }
 
