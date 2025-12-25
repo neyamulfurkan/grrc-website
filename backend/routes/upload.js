@@ -33,13 +33,14 @@ router.post('/public-image', async (req, res) => {
     console.log('📤 Uploading PUBLIC image to Cloudinary...');
     console.log('📦 Image size:', Math.round(image.length / 1024), 'KB');
     
-    // Upload to Cloudinary with optimization
+    // Upload to Cloudinary with optimization (profile photos)
     const uploadResult = await cloudinary.uploader.upload(image, {
       folder: 'grrc-membership',
       transformation: [
-        { width: 1920, height: 1080, crop: 'limit' },
-        { quality: 'auto:good' },
-        { fetch_format: 'auto' }
+        { width: 800, height: 800, crop: 'limit' },    // Profile photos don't need 1920px
+        { quality: 'auto:eco' },                        // Eco quality sufficient for profiles
+        { fetch_format: 'auto' },                       // WebP conversion
+        { gravity: 'face', crop: 'thumb' }              // Auto-crop to face if detected
       ],
       resource_type: 'image'
     });
