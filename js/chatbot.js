@@ -10,6 +10,7 @@ class GRRCChatbot {
     this.conversationHistory = [];
     this.isTyping = false;
     this.clubContext = null;
+    this.lastMessageTime = 0; // Rate limiting
     
     this.welcomeMessages = [
       "Hi! 👋 I'm the GRRC AI Assistant. How can I help you today?",
@@ -222,6 +223,19 @@ class GRRCChatbot {
     const message = input.value.trim();
 
     if (!message || this.isTyping) return;
+
+    // Client-side rate limiting - prevent spam
+    const now = Date.now();
+    const timeSinceLastMessage = now - (this.lastMessageTime || 0);
+    const minInterval = 2000; // 2 seconds between messages
+    
+    if (timeSinceLastMessage < minInterval) {
+      const waitTime = Math.ceil((minInterval - timeSinceLastMessage) / 1000);
+      this.addMessage(`⏰ Please wait ${waitTime} second${waitTime > 1 ? 's' : ''} before sending another message.`, 'bot');
+      return;
+    }
+    
+    this.lastMessageTime = now;
 
     this.addMessage(message, 'user');
     this.conversationHistory.push({ role: 'user', content: message });

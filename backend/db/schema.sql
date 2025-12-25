@@ -66,6 +66,8 @@ CREATE TABLE admins (
 
 -- Index for faster username lookups during authentication
 CREATE INDEX idx_admins_username ON admins(username);
+CREATE INDEX idx_admins_email ON admins(email);
+CREATE INDEX idx_admins_is_active ON admins(is_active) WHERE is_active = true;
 
 -- ====================================
 -- Table: members

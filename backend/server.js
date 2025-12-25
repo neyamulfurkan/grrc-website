@@ -14,6 +14,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
 const path = require('path');
+const rateLimit = require('express-rate-limit');
 require('dotenv').config();
 
 // ============ INITIALIZE EXPRESS ============
@@ -90,6 +91,48 @@ if (NODE_ENV === 'development') {
 } else {
     app.use(morgan('combined'));
 }
+
+// ============ RATE LIMITING ============
+
+// Global API rate limiter - prevents DDoS attacks
+const globalLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 200, // Max 200 requests per 15 minutes per IP
+    message: {
+        success: false,
+        error: 'Too many requests from this IP. Please try again in 15 minutes.'
+    },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
+// Stricter limit for authentication endpoints
+const authLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 10, // Max 10 login attempts per 15 minutes
+    message: {
+        success: false,
+        error: 'Too many login attempts. Please try again in 15 minutes.'
+    },
+    skipSuccessfulRequests: true,
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
+// Moderate limit for chatbot to prevent API abuse
+const chatbotLimiter = rateLimit({
+    windowMs: 1 * 60 * 1000, // 1 minute
+    max: 15, // Max 15 chatbot messages per minute
+    message: {
+        success: false,
+        error: 'Too many chatbot requests. Please wait a moment.'
+    },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
+// Apply rate limiters
+app.use('/api/', globalLimiter);
 
 // Request tracking middleware
 app.use((req, res, next) => {
@@ -239,9 +282,30 @@ function createPlaceholderRoute(mountPath, routeName) {
 }
 
 // ✅ Load ALL routes using the dynamic loader
-loadRoute('auth', './routes/auth', '/api/auth');
+// Load auth routes with stricter rate limiting
+try {
+    console.log(`📂 Loading auth routes...`);
+    const authRoutes = require('./routes/auth');
+    app.use('/api/auth/login', authLimiter); // Apply strict limit to login
+    app.use('/api/auth', authRoutes);
+    console.log(`✅ auth routes loaded successfully with rate limiting`);
+    routesLoaded.auth = true;
+} catch (error) {
+    console.error(`❌ Failed to load auth routes:`, error.message);
+    createPlaceholderRoute('/api/auth', 'auth');
+}
 loadRoute('content', './routes/content', '/api/content');
-loadRoute('chatbot', './routes/chatbot', '/api/chatbot');
+// Load chatbot routes with rate limiting
+try {
+    console.log(`📂 Loading chatbot routes...`);
+    const chatbotRoutes = require('./routes/chatbot');
+    app.use('/api/chatbot', chatbotLimiter, chatbotRoutes); // Apply moderate limit
+    console.log(`✅ chatbot routes loaded successfully with rate limiting`);
+    routesLoaded.chatbot = true;
+} catch (error) {
+    console.error(`❌ Failed to load chatbot routes:`, error.message);
+    createPlaceholderRoute('/api/chatbot', 'chatbot');
+}
 loadRoute('admin', './routes/admin', '/api/admin');
 loadRoute('membership', './routes/membership', '/api/membership');
 loadRoute('alumniApplication', './routes/alumniApplication', '/api/alumni-application');

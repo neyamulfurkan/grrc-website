@@ -222,7 +222,7 @@ function selectGlobalChat() {
   }
 }
 
-// Load global messages
+// Load global messages with pagination
 function loadGlobalMessages() {
   if (messagesUnsubscribe) {
     messagesUnsubscribe();
@@ -231,7 +231,7 @@ function loadGlobalMessages() {
   const messagesQuery = query(
     collection(db, 'global_chat'),
     orderBy('timestamp', 'asc'),
-    limit(100)
+    limit(50) // Reduced from 100 to 50 for better performance
   );
   
   messagesUnsubscribe = onSnapshot(messagesQuery, (snapshot) => {
