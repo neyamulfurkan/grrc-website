@@ -455,6 +455,8 @@ function loadMessages(otherUserId) {
 }
 
 // Render messages
+let lastMessageCount = 0;
+
 function renderMessages(messages) {
   const container = document.getElementById('chatMessages');
   
@@ -464,8 +466,18 @@ function renderMessages(messages) {
         <p>No messages yet. Start the conversation! 👋</p>
       </div>
     `;
+    lastMessageCount = 0;
     return;
   }
+  
+  // ✅ Show notification for NEW messages
+  if (messages.length > lastMessageCount && lastMessageCount > 0) {
+    const newMsg = messages[messages.length - 1];
+    if (newMsg.senderId !== currentUser.uid) {
+      showMessageNotification(newMsg);
+    }
+  }
+  lastMessageCount = messages.length;
   
   container.innerHTML = messages.map(msg => {
     const isOwn = msg.senderId === currentUser.uid;
@@ -495,6 +507,47 @@ function renderMessages(messages) {
   // Add delete handlers
   container.querySelectorAll('.message-actions').forEach(btn => {
     btn.addEventListener('click', () => deleteMessage(btn.dataset.msgId));
+  });
+}
+
+// ✅ NEW: Show popup notification for new messages
+function showMessageNotification(message) {
+  // Don't show if already on chat page and focused
+  if (document.hasFocus()) return;
+  
+  const notification = document.createElement('div');
+  notification.style.cssText = `
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    color: white;
+    padding: 1rem 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+    z-index: 10000;
+    max-width: 300px;
+    animation: slideInRight 0.3s ease;
+    cursor: pointer;
+  `;
+  
+  notification.innerHTML = `
+    <div style="font-weight: 600; margin-bottom: 0.25rem;">💬 New Message</div>
+    <div style="font-size: 0.875rem; opacity: 0.9;">${escapeHtml(message.text.substring(0, 50))}${message.text.length > 50 ? '...' : ''}</div>
+  `;
+  
+  document.body.appendChild(notification);
+  
+  // Auto remove after 4 seconds
+  setTimeout(() => {
+    notification.style.animation = 'slideOutRight 0.3s ease';
+    setTimeout(() => notification.remove(), 300);
+  }, 4000);
+  
+  // Click to focus chat
+  notification.addEventListener('click', () => {
+    window.focus();
+    notification.remove();
   });
 }
 

@@ -134,47 +134,80 @@ class GRRCChatbot {
       const members = JSON.parse(localStorage.getItem('cache_members') || '[]');
       const projects = JSON.parse(localStorage.getItem('cache_projects') || '[]');
 
+      // ✅ Categorize events by date
+      const now = new Date();
+      now.setHours(0, 0, 0, 0);
+      
+      const upcomingEvents = events
+        .filter(e => {
+          const eventDate = new Date(e.date);
+          return eventDate >= now;
+        })
+        .sort((a, b) => new Date(a.date) - new Date(b.date))
+        .slice(0, 5);
+      
+      const pastWorkshops = events
+        .filter(e => {
+          const eventDate = new Date(e.date);
+          return eventDate < now && (e.category?.toLowerCase().includes('workshop') || e.title?.toLowerCase().includes('workshop'));
+        })
+        .sort((a, b) => new Date(b.date) - new Date(a.date))
+        .slice(0, 5);
+
       // Send ALL available information
       this.clubContext = {
         name: clubConfig.name || 'GSTU Robotics & Research Club',
         motto: clubConfig.motto || 'A Hub of Robothinkers',
         university: clubConfig.university || 'Gopalganj Science and Technology University',
         
-        // Full event details
-        upcomingEvents: events
-          .filter(e => e.status === 'upcoming')
-          .slice(0, 3)
-          .map(e => ({
-            title: e.title,
-            date: e.date,
-            venue: e.venue,
-            description: e.description || '',
-            registrationLink: e.registrationLink || ''
-          })),
+        // ✅ Full event details (upcoming)
+        upcomingEvents: upcomingEvents.map(e => ({
+          title: e.title,
+          date: e.date,
+          venue: e.venue,
+          description: e.description || '',
+          registrationLink: e.registrationLink || ''
+        })),
+        
+        // ✅ Past workshops
+        pastWorkshops: pastWorkshops.map(e => ({
+          title: e.title,
+          date: e.date,
+          venue: e.venue,
+          description: e.description || ''
+        })),
         
         // Full project details  
         recentProjects: projects
-          .slice(0, 3)
+          .slice(0, 5)
           .map(p => ({
             title: p.title,
             category: p.category,
-            description: p.description || ''
+            description: p.description || '',
+            status: p.status || 'completed'
           })),
         
         // Member info
         totalMembers: members.length,
         executiveCount: members.filter(m => m.role?.includes('Executive')).length,
         
-        // Membership details (add these to your database/config)
-        membershipFee: clubConfig.membershipFee || 'Visit Membership page for details',
-        membershipBenefits: clubConfig.membershipBenefits || [],
+        // Membership details
+        membershipFee: clubConfig.membershipFee || clubConfig.membership_fee || 'Visit Membership page for details',
+        bkashNumber: clubConfig.bkash_number || 'Check Membership page',
         
         // Contact info
         contactEmail: clubConfig.contactEmail || 'Check footer for contact',
-        socialLinks: clubConfig.socialLinks || {}
+        socialLinks: clubConfig.socialLinks || {},
+        
+        // ✅ Introduction
+        introduction: `I'm Moon AI, the smart assistant for GSTU Robotics & Research Club (GRRC). We're a community of robotics enthusiasts at Gopalganj Science and Technology University. This website and chatbot system were developed by Neyamul Furkan (ID: 21EEE009, EEE Department, Session 2021-22) from Noakhali.`
       };
 
-      console.log('✅ Complete chatbot context loaded');
+      console.log('✅ Complete chatbot context loaded:', {
+        upcoming: this.clubContext.upcomingEvents.length,
+        pastWorkshops: this.clubContext.pastWorkshops.length,
+        projects: this.clubContext.recentProjects.length
+      });
     } catch (error) {
       console.warn('⚠️ Could not load context:', error);
       this.clubContext = {
@@ -387,9 +420,83 @@ class GRRCChatbot {
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', () => {
     window.grrcChatbot = new GRRCChatbot();
+    initProactiveChatbot();
   });
 } else {
   window.grrcChatbot = new GRRCChatbot();
+  initProactiveChatbot();
+}
+
+// ✅ PROACTIVE AI MESSAGES (every 10 minutes)
+function initProactiveChatbot() {
+  const messages = [
+    "👋 Hey! I'm Moon AI from GRRC. We're a robotics club at GSTU. Want to know about our upcoming events?",
+    "🤖 Hi there! GRRC here - we build robots and innovate! Ask me about membership or our latest projects!",
+    "💡 Hello! Did you know GRRC hosts workshops every month? Click me to learn more about joining!",
+    "🚀 Greetings from Moon AI! GRRC is your gateway to robotics at GSTU. Curious about what we do?",
+    "🎓 Hey! GRRC welcomes all tech enthusiasts. Want to know about our next workshop or event?"
+  ];
+  
+  let messageIndex = 0;
+  let hasShownInitial = false;
+  
+  function showProactiveMessage() {
+    // Don't show if chat is already open
+    if (window.grrcChatbot && window.grrcChatbot.isOpen) return;
+    
+    const toggle = document.getElementById('chatbot-toggle');
+    if (!toggle) return;
+    
+    const bubble = document.createElement('div');
+    bubble.style.cssText = `
+      position: fixed;
+      bottom: 95px;
+      right: 24px;
+      background: white;
+      color: #1a202c;
+      padding: 1rem 1.25rem;
+      border-radius: 16px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+      max-width: 280px;
+      z-index: 998;
+      animation: bounceIn 0.5s ease;
+      cursor: pointer;
+      border: 2px solid var(--primary-color);
+    `;
+    
+    bubble.innerHTML = `
+      <div style="font-size: 0.875rem; line-height: 1.4;">${messages[messageIndex]}</div>
+      <div style="position: absolute; bottom: -8px; right: 20px; width: 0; height: 0; border-left: 8px solid transparent; border-right: 8px solid transparent; border-top: 8px solid white;"></div>
+    `;
+    
+    document.body.appendChild(bubble);
+    
+    // Open chatbot on click
+    bubble.addEventListener('click', () => {
+      if (window.grrcChatbot) {
+        window.grrcChatbot.toggleChat();
+      }
+      bubble.remove();
+    });
+    
+    // Auto remove after 8 seconds
+    setTimeout(() => {
+      bubble.style.animation = 'fadeOut 0.3s ease';
+      setTimeout(() => bubble.remove(), 300);
+    }, 8000);
+    
+    // Cycle to next message
+    messageIndex = (messageIndex + 1) % messages.length;
+  }
+  
+  // Show first message after 3 seconds
+  setTimeout(() => {
+    showProactiveMessage();
+    hasShownInitial = true;
+    
+    // Then repeat every 10 minutes
+    setInterval(showProactiveMessage, 10 * 60 * 1000);
+  }, 3000);
 }
 
 console.log('✅ GRRC Chatbot v2.1 initialized - Powered by Moon');

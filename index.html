@@ -1762,7 +1762,7 @@ function showGradientBackground() {
         
         async function loadUpcomingEvents() {
             try {
-                console.log('🔄 Loading upcoming events for home page...');
+                console.log('🔄 Loading events for home page...');
                 const container = document.getElementById('eventsContainer');
                 
                 let events = [];
@@ -1794,17 +1794,40 @@ function showGradientBackground() {
                     }
                 }
                 
-                // ✅ Filter and display
+                // ✅ Smart Event Status Detection
                 const now = new Date();
-                const upcomingEvents = events
-                    .filter(event => {
-                        const eventDate = new Date(event.date);
-                        return eventDate >= now && (event.status === 'upcoming' || event.status === 'Upcoming');
-                    })
+                now.setHours(0, 0, 0, 0); // Start of today
+                
+                const todayEnd = new Date(now);
+                todayEnd.setHours(23, 59, 59, 999); // End of today
+                
+                const categorizedEvents = events.map(event => {
+                    const eventDate = new Date(event.date);
+                    eventDate.setHours(0, 0, 0, 0);
+                    
+                    let autoStatus = 'upcoming';
+                    if (eventDate.getTime() === now.getTime()) {
+                        autoStatus = 'ongoing'; // Event is TODAY
+                    } else if (eventDate < now) {
+                        autoStatus = 'completed'; // Event was in the past
+                    }
+                    
+                    return { ...event, autoStatus };
+                });
+                
+                // ✅ Filter: ONLY ongoing and upcoming events
+                const ongoingEvents = categorizedEvents
+                    .filter(e => e.autoStatus === 'ongoing')
+                    .sort((a, b) => new Date(a.date) - new Date(b.date));
+                
+                const upcomingEvents = categorizedEvents
+                    .filter(e => e.autoStatus === 'upcoming')
                     .sort((a, b) => new Date(a.date) - new Date(b.date))
                     .slice(0, 3);
                 
-                if (upcomingEvents.length === 0) {
+                const allDisplayEvents = [...ongoingEvents, ...upcomingEvents].slice(0, 4);
+                
+                if (allDisplayEvents.length === 0) {
                     container.innerHTML = `
                         <div class="empty-state">
                             <div class="empty-state-icon">📅</div>
@@ -1816,7 +1839,11 @@ function showGradientBackground() {
                 }
                 
                 container.innerHTML = '';
-                upcomingEvents.forEach((event, index) => {
+                allDisplayEvents.forEach((event, index) => {
+                    const statusBadge = event.autoStatus === 'ongoing' 
+                        ? '<span class="badge badge-success" style="margin-bottom: 0.5rem;">🔴 Happening Now</span>'
+                        : '<span class="badge badge-primary" style="margin-bottom: 0.5rem;">📅 Upcoming</span>';
+                    
                     const eventCard = document.createElement('div');
                     eventCard.className = 'event-card scroll-reveal fade-up delay-' + (index % 5 + 1);
                     eventCard.style.opacity = '0';
@@ -1828,6 +1855,7 @@ function showGradientBackground() {
                             `<div class="event-image"></div>`
                         }
                         <div class="event-content">
+                            ${statusBadge}
                             <h3 class="event-title">${event.title}</h3>
                             <div class="event-meta">
                                 <span>📅 ${formatDate(event.date)}</span>
