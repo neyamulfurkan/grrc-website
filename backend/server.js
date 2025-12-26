@@ -23,6 +23,9 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 const NODE_ENV = process.env.NODE_ENV || 'development';
 
+// Trust proxy for Render.com deployment
+app.set('trust proxy', 1);
+
 // ============ CORS CONFIGURATION ============
 
 const corsOptions = {
@@ -467,6 +470,16 @@ async function startServer() {
             console.log('✅ Database connected successfully');
             console.log(`   Database: ${result.rows[0].db}`);
             console.log(`   Server time: ${result.rows[0].time}`);
+
+            // Keep database connection alive
+            setInterval(async () => {
+                try {
+                    await pool.query('SELECT 1');
+                    console.log('💓 Database keepalive ping');
+                } catch (error) {
+                    console.error('❌ Keepalive failed:', error.message);
+                }
+            }, 4 * 60 * 1000); // Ping every 4 minutes
             // Auto-create missing tables
 try {
   await pool.query(`
