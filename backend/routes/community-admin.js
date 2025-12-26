@@ -16,21 +16,37 @@ if (!admin.apps.length) {
         })
       });
       console.log('✅ Firebase Admin initialized with environment variables');
-    } else {
+    } else if (require('fs').existsSync('../config/firebase-service-account.json')) {
       // Fallback to service account file (for local development)
       const serviceAccount = require('../config/firebase-service-account.json');
       admin.initializeApp({
         credential: admin.credential.cert(serviceAccount)
       });
       console.log('✅ Firebase Admin initialized with service account file');
+    } else {
+      console.warn('⚠️  Firebase Admin not initialized - missing credentials');
+      console.warn('   Community admin features will be unavailable');
     }
   } catch (error) {
     console.error('❌ Failed to initialize Firebase Admin:', error.message);
+    console.error('   Community admin features will be unavailable');
   }
 }
 
+// Middleware to check if Firebase is initialized
+function checkFirebaseInit(req, res, next) {
+  if (!admin.apps.length) {
+    return res.status(503).json({
+      success: false,
+      error: 'Firebase not configured',
+      message: 'Community admin features require Firebase configuration'
+    });
+  }
+  next();
+}
+
 // Get all community users
-router.get('/users', authenticateToken, isSuperAdmin, async (req, res) => {
+router.get('/users', authenticateToken, isSuperAdmin, checkFirebaseInit, async (req, res) => {
   try {
     const usersSnapshot = await admin.firestore().collection('users').get();
     const users = [];
@@ -72,7 +88,7 @@ router.get('/users', authenticateToken, isSuperAdmin, async (req, res) => {
 });
 
 // Delete community user COMPLETELY (Auth + Firestore + Chats)
-router.delete('/users/:userId', authenticateToken, isSuperAdmin, async (req, res) => {
+router.delete('/users/:userId', authenticateToken, isSuperAdmin, checkFirebaseInit, async (req, res) => {
   try {
     const { userId } = req.params;
     
@@ -156,7 +172,7 @@ router.delete('/users/:userId', authenticateToken, isSuperAdmin, async (req, res
 });
 
 // Ban user (disable account without deleting)
-router.post('/users/:userId/ban', authenticateToken, isSuperAdmin, async (req, res) => {
+router.post('/users/:userId/ban', authenticateToken, isSuperAdmin, checkFirebaseInit, async (req, res) => {
   try {
     const { userId } = req.params;
     const { reason } = req.body;
@@ -194,7 +210,7 @@ router.post('/users/:userId/ban', authenticateToken, isSuperAdmin, async (req, r
 });
 
 // Unban user
-router.post('/users/:userId/unban', authenticateToken, isSuperAdmin, async (req, res) => {
+router.post('/users/:userId/unban', authenticateToken, isSuperAdmin, checkFirebaseInit, async (req, res) => {
   try {
     const { userId } = req.params;
     

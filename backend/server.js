@@ -460,18 +460,17 @@ async function startServer() {
         console.log('🔍 Testing database connection...');
         try {
             const pool = require('./db/pool');
-            const result = await Promise.race([
-                pool.query('SELECT NOW() as time, current_database() as db'),
-                new Promise((_, reject) => 
-                    setTimeout(() => reject(new Error('Connection timeout')), 5000)
-                )
-            ]);
+            
+            // Wait for pool initialization (pool.js has its own retry logic)
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            
+            const result = await pool.query('SELECT NOW() as time, current_database() as db');
             
             console.log('✅ Database connected successfully');
             console.log(`   Database: ${result.rows[0].db}`);
             console.log(`   Server time: ${result.rows[0].time}`);
 
-            // Keep database connection alive
+            // Keep database connection alive (every 5 minutes)
             setInterval(async () => {
                 try {
                     await pool.query('SELECT 1');
@@ -479,7 +478,7 @@ async function startServer() {
                 } catch (error) {
                     console.error('❌ Keepalive failed:', error.message);
                 }
-            }, 4 * 60 * 1000); // Ping every 4 minutes
+            }, 5 * 60 * 1000); // Ping every 5 minutes
             // Auto-create missing tables
 try {
   await pool.query(`

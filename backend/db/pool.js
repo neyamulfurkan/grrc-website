@@ -45,23 +45,21 @@ function getDatabaseConfig() {
     const config = parseConnectionString(process.env.DATABASE_URL);
     
     if (config) {
-      // Optimized for Supabase Pooler (Transaction Mode)
+      // Optimized pool settings for Supabase Pooler
       return {
         ...config,
-        // Conservative pool settings for pooler
-        max: 3,
-        min: 0,
-        idleTimeoutMillis: 5000,
-        connectionTimeoutMillis: 20000,
-        acquireTimeoutMillis: 20000,
-        createTimeoutMillis: 20000,
-        destroyTimeoutMillis: 1000,
-        reapIntervalMillis: 1000,
-        createRetryIntervalMillis: 500,
+        max: 5,
+        min: 1,
+        idleTimeoutMillis: 30000,
+        connectionTimeoutMillis: 60000,
+        acquireTimeoutMillis: 60000,
+        createTimeoutMillis: 60000,
+        destroyTimeoutMillis: 5000,
+        reapIntervalMillis: 10000,
+        createRetryIntervalMillis: 2000,
         allowExitOnIdle: true,
-        // Query timeouts
-        query_timeout: 30000,
-        statement_timeout: 30000
+        query_timeout: 60000,
+        statement_timeout: 60000
       };
     }
     
@@ -81,16 +79,16 @@ function getDatabaseConfig() {
       ssl: process.env.DB_SSL === 'true' ? {
         rejectUnauthorized: false
       } : false,
-      max: 3,
-      min: 0,
-      idleTimeoutMillis: 5000,
-      connectionTimeoutMillis: 20000,
-      acquireTimeoutMillis: 20000,
-      createTimeoutMillis: 20000,
-      query_timeout: 30000,
-      statement_timeout: 30000,
-      destroyTimeoutMillis: 1000,
-      reapIntervalMillis: 1000,
+      max: 5,
+      min: 1,
+      idleTimeoutMillis: 30000,
+      connectionTimeoutMillis: 60000,
+      acquireTimeoutMillis: 60000,
+      createTimeoutMillis: 60000,
+      query_timeout: 60000,
+      statement_timeout: 60000,
+      destroyTimeoutMillis: 5000,
+      reapIntervalMillis: 10000,
       allowExitOnIdle: true
     };
   }
@@ -129,30 +127,35 @@ if (poolConfig) {
     console.log('🔌 Database client removed from pool');
   });
 
-  // Test connection on startup
+  // Test connection on startup with retry logic
   (async () => {
-    try {
-      const client = await Promise.race([
-        pool.connect(),
-        new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Connection timeout')), 15000)
-        )
-      ]);
-      
-      const result = await Promise.race([
-        client.query('SELECT NOW() as time, current_database() as db'),
-        new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Query timeout')), 10000)
-        )
-      ]);
-      
-      console.log('✅ Database connection test successful');
+    let retries = 3;
+    let connected = false;
+    
+    while (retries > 0 && !connected) {
+      try {
+        console.log(`🔄 Attempting database connection (${4 - retries}/3)...`);
+        
+        const client = await pool.connect();
+        const result = await client.query('SELECT NOW() as time, current_database() as db');
+        
+        console.log('✅ Database connection test successful');
       console.log(`   Connected to: ${result.rows[0].db}`);
-      console.log(`   Server time: ${result.rows[0].time}`);
-      client.release();
-    } catch (error) {
-      console.error('❌ Failed to connect to PostgreSQL database:', error.message);
-      console.error('   Server will continue in degraded mode');
+        console.log(`   Server time: ${result.rows[0].time}`);
+        client.release();
+        connected = true;
+      } catch (error) {
+        retries--;
+        console.error(`❌ Connection attempt failed: ${error.message}`);
+        
+        if (retries > 0) {
+          console.log(`⏳ Retrying in 3 seconds... (${retries} attempts left)`);
+          await new Promise(resolve => setTimeout(resolve, 3000));
+        } else {
+          console.error('❌ All connection attempts failed');
+          console.error('   Server will continue in degraded mode');
+        }
+      }
     }
   })();
 
