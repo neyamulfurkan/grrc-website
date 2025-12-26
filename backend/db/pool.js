@@ -116,9 +116,28 @@ if (poolConfig) {
   console.log(`   Port: ${poolConfig.port}`);
   console.log(`   SSL: ${poolConfig.ssl ? 'Enabled' : 'Disabled'}`);
 
-  // Handle pool errors
-  pool.on('error', (err, client) => {
+  // 🔥 CRITICAL FIX: Enhanced error handling with recovery
+  pool.on('error', async (err, client) => {
     console.error('❌ Unexpected database pool error:', err.message);
+    console.error('   Error code:', err.code);
+    console.error('   Pool status:', {
+      total: pool.totalCount,
+      idle: pool.idleCount,
+      waiting: pool.waitingCount
+    });
+    
+    // 🔥 Attempt automatic recovery
+    if (err.code === 'ETIMEDOUT' || err.code === 'ECONNRESET') {
+      console.log('🔄 Attempting to recover connection...');
+      try {
+        const testClient = await pool.connect();
+        await testClient.query('SELECT 1');
+        testClient.release();
+        console.log('✅ Connection recovered');
+      } catch (recoverError) {
+        console.error('❌ Recovery failed:', recoverError.message);
+      }
+    }
   });
 
   // Handle pool connection
@@ -174,19 +193,51 @@ if (poolConfig) {
     }
   })();
   
-  // Add connection error recovery
-  pool.on('error', async (err) => {
-    console.error('❌ Database pool error:', err.message);
-    console.log('🔄 Attempting to recover connection...');
-    
+  // 🔥 CRITICAL FIX: Add connection health monitoring every 30 seconds
+  setInterval(async () => {
     try {
-      const client = await pool.connect();
-      client.release();
-      console.log('✅ Connection recovered');
-    } catch (recoverError) {
-      console.error('❌ Recovery failed:', recoverError.message);
+      const poolStatus = {
+        total: pool.totalCount,
+        idle: pool.idleCount,
+        waiting: pool.waitingCount
+      };
+      
+      // Only log if there are issues
+      if (poolStatus.waiting > 0 || poolStatus.idle === 0) {
+        console.warn('⚠️ Pool health check - Status:', poolStatus);
+      }
+      
+      // Test connection with timeout
+      const testResult = await Promise.race([
+        pool.query('SELECT 1 as health'),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Health check timeout')), 5000)
+        )
+      ]);
+      
+      // Log recovery if there were previous issues
+      if (poolStatus.waiting > 0) {
+        console.log('✅ Pool health check passed');
+      }
+    } catch (healthError) {
+      console.error('❌ Pool health check failed:', healthError.message);
+      console.error('   Pool status:', {
+        total: pool.totalCount,
+        idle: pool.idleCount,
+        waiting: pool.waitingCount
+      });
+      
+      // Try to force a new connection
+      try {
+        const client = await pool.connect();
+        await client.query('SELECT NOW()');
+        client.release();
+        console.log('✅ Forced connection successful');
+      } catch (forceError) {
+        console.error('❌ Forced connection failed:', forceError.message);
+      }
     }
-  });
+  }, 30000); // Every 30 seconds
 
 } else {
   // Create a mock pool for development without database

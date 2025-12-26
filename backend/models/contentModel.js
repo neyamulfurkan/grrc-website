@@ -1,8 +1,9 @@
 const pool = require('../db/pool');
 
 async function getClubConfig() {
-  const client = await pool.connect();
+  let client;
   try {
+    client = await pool.connect();
     console.log('🔍 Fetching club_config from database...');
     const result = await Promise.race([
       client.query('SELECT * FROM club_config LIMIT 1'),
@@ -14,7 +15,13 @@ async function getClubConfig() {
     console.error('❌ Error in getClubConfig:', error.message);
     return { success: false, data: null, error: error.message };
   } finally {
-    client.release();
+    if (client) {
+      try {
+        client.release();
+      } catch (releaseError) {
+        console.error('❌ Error releasing client in getClubConfig:', releaseError.message);
+      }
+    }
   }
 }
 
@@ -125,8 +132,9 @@ async function updateClubConfig(data) {
 }
 
 async function getAllMembers(filters = {}) {
-  const client = await pool.connect();
+  let client;
   try {
+    client = await pool.connect();
     let query = 'SELECT * FROM members WHERE 1=1';
     const params = [];
     let paramIndex = 1;
@@ -157,7 +165,13 @@ async function getAllMembers(filters = {}) {
     console.error('❌ Error in getAllMembers:', error.message);
     return { success: false, data: null, error: error.message };
   } finally {
-    client.release();
+    if (client) {
+      try {
+        client.release();
+      } catch (releaseError) {
+        console.error('❌ Error releasing client in getAllMembers:', releaseError.message);
+      }
+    }
   }
 }
 
@@ -264,8 +278,9 @@ async function searchMembers(searchQuery) {
 }
 
 async function getAllEvents(filters = {}) {
-  const client = await pool.connect();
+  let client;
   try {
+    client = await pool.connect();
     let query = 'SELECT * FROM events WHERE 1=1';
     const params = [];
     let paramIndex = 1;
@@ -290,7 +305,13 @@ async function getAllEvents(filters = {}) {
     console.error('❌ Error in getAllEvents:', error.message);
     return { success: false, data: null, error: error.message };
   } finally {
-    client.release();
+    if (client) {
+      try {
+        client.release();
+      } catch (releaseError) {
+        console.error('❌ Error releasing client in getAllEvents:', releaseError.message);
+      }
+    }
   }
 }
 
@@ -406,8 +427,9 @@ async function searchEvents(searchQuery) {
 }
 
 async function getAllProjects(filters = {}) {
-  const client = await pool.connect();
+  let client;
   try {
+    client = await pool.connect();
     let query = 'SELECT * FROM projects WHERE 1=1';
     const params = [];
     let paramIndex = 1;
@@ -432,7 +454,13 @@ async function getAllProjects(filters = {}) {
     console.error('❌ Error in getAllProjects:', error.message);
     return { success: false, data: null, error: error.message };
   } finally {
-    client.release();
+    if (client) {
+      try {
+        client.release();
+      } catch (releaseError) {
+        console.error('❌ Error releasing client in getAllProjects:', releaseError.message);
+      }
+    }
   }
 }
 
@@ -572,8 +600,9 @@ async function searchProjects(searchQuery) {
 }
 
 async function getAllGalleryItems(filters = {}) {
-  const client = await pool.connect();
+  let client;
   try {
+    client = await pool.connect();
     let query = 'SELECT * FROM gallery WHERE 1=1';
     const params = [];
     let paramIndex = 1;
@@ -592,7 +621,13 @@ async function getAllGalleryItems(filters = {}) {
     console.error('❌ Error in getAllGalleryItems:', error.message);
     return { success: false, data: null, error: error.message };
   } finally {
-    client.release();
+    if (client) {
+      try {
+        client.release();
+      } catch (releaseError) {
+        console.error('❌ Error releasing client in getAllGalleryItems:', releaseError.message);
+      }
+    }
   }
 }
 
@@ -663,8 +698,9 @@ async function deleteGalleryItem(id) {
 }
 
 async function getAllAnnouncements(filters = {}) {
-  const client = await pool.connect();
+  let client;
   try {
+    client = await pool.connect();
     let query = 'SELECT * FROM announcements WHERE 1=1';
     const params = [];
     let paramIndex = 1;
@@ -683,7 +719,13 @@ async function getAllAnnouncements(filters = {}) {
     console.error('❌ Error in getAllAnnouncements:', error.message);
     return { success: false, data: null, error: error.message };
   } finally {
-    client.release();
+    if (client) {
+      try {
+        client.release();
+      } catch (releaseError) {
+        console.error('❌ Error releasing client in getAllAnnouncements:', releaseError.message);
+      }
+    }
   }
 }
 
