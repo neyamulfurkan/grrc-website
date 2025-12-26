@@ -1090,9 +1090,9 @@
                 let photo = photoUrl || null;
                 
                 if (photoFile) {
-                    // Check file size (max 2MB) - REDUCED SIZE
-                    if (photoFile.size > 2 * 1024 * 1024) {
-                        showError('Photo size must be less than 2MB. Please choose a smaller image.');
+                    // Check file size (max 500KB) - FURTHER REDUCED
+                    if (photoFile.size > 500 * 1024) {
+                        showError('Photo size must be less than 500KB. Please compress your image first.');
                         return;
                     }
 

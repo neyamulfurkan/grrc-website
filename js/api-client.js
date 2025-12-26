@@ -154,7 +154,10 @@ async function request(endpoint, options = {}) {
             const fetchPromise = fetch(url, {
                 ...config,
                 signal: controller.signal,
-                keepalive: true  // Keep connection alive
+                keepalive: true,  // Keep connection alive
+                mode: 'cors',
+                credentials: 'omit',
+                cache: 'no-store'
             });
             
             const response = await Promise.race([

@@ -315,7 +315,9 @@ loadRoute('membership', './routes/membership', '/api/membership');
 try {
     console.log(`📂 Loading alumni application routes...`);
     const alumniApplicationRoutes = require('./routes/alumniApplication');
-    app.use('/api/alumni-application', alumniApplicationRoutes);
+    // 🔧 FIX: Add explicit CORS preflight handling for alumni routes
+    app.options('/api/alumni-application/*', cors(corsOptions));
+    app.use('/api/alumni-application', cors(corsOptions), alumniApplicationRoutes);
     console.log(`✅ alumni application routes loaded successfully`);
     routesLoaded.alumniApplication = true;
 } catch (error) {

@@ -54,6 +54,14 @@ router.get('/health', (req, res) => {
  * @desc    Submit a new alumni application
  * @access  Public
  */
+// 🔧 FIX: Add CORS preflight handler
+router.options('/apply', (req, res) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.sendStatus(204);
+});
+
 router.post(
   '/apply',
   [
