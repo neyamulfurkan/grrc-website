@@ -49,7 +49,8 @@ function isAuthenticated() {
     return !!getAuthToken();
 }
 
-(function initializeAuth() {
+// ✅ FIX: Remove IIFE and use simpler initialization
+function initializeAuth() {
     try {
         const savedToken = localStorage.getItem(AUTH_TOKEN_KEY);
         if (savedToken) {
@@ -62,7 +63,14 @@ function isAuthenticated() {
     } catch (error) {
         console.error('❌ Failed to initialize auth:', error);
     }
-})();
+}
+
+// ✅ FIX: Call initializeAuth after all functions are defined
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeAuth);
+} else {
+    initializeAuth();
+}
 
 // CRITICAL FIX: Ensure token is always available before API calls
 window.addEventListener('load', function() {
