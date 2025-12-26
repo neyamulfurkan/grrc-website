@@ -45,21 +45,23 @@ function getDatabaseConfig() {
     const config = parseConnectionString(process.env.DATABASE_URL);
     
     if (config) {
-      // Optimized pool settings for Supabase Pooler
+      // Optimized pool settings for Supabase Pooler with extended timeouts
       return {
         ...config,
-        max: 10,                          // Increased from 5
-        min: 2,                           // Increased from 1
-        idleTimeoutMillis: 60000,         // Increased from 30s
-        connectionTimeoutMillis: 10000,   // Reduced from 60s
-        acquireTimeoutMillis: 10000,      // Reduced from 60s
-        createTimeoutMillis: 10000,       // Reduced from 60s
+        max: 10,
+        min: 2,
+        idleTimeoutMillis: 60000,
+        connectionTimeoutMillis: 30000,   // ✅ INCREASED from 10s to 30s
+        acquireTimeoutMillis: 30000,      // ✅ INCREASED from 10s to 30s
+        createTimeoutMillis: 30000,       // ✅ INCREASED from 10s to 30s
         destroyTimeoutMillis: 5000,
-        reapIntervalMillis: 1000,         // More frequent cleanup
-        createRetryIntervalMillis: 200,   // Faster retries
-        allowExitOnIdle: false,           // Keep pool alive
-        query_timeout: 30000,             // Reduced from 60s
-        statement_timeout: 30000          // Reduced from 60s
+        reapIntervalMillis: 1000,
+        createRetryIntervalMillis: 200,
+        allowExitOnIdle: false,
+        query_timeout: 60000,             // ✅ INCREASED from 30s to 60s
+        statement_timeout: 60000,         // ✅ INCREASED from 30s to 60s
+        keepAlive: true,                  // ✅ ADDED
+        keepAliveInitialDelayMillis: 10000 // ✅ ADDED
       };
     }
     
@@ -127,18 +129,19 @@ if (poolConfig) {
     console.log('🔌 Database client removed from pool');
   });
 
-  // Test connection on startup with aggressive retry logic
+  // Test connection on startup with extended timeout
   (async () => {
-    let retries = 5;                      // Increased from 3
+    let retries = 5;
     let connected = false;
     
     while (retries > 0 && !connected) {
       try {
         console.log(`🔄 Attempting database connection (${6 - retries}/5)...`);
         
+        // ✅ INCREASED timeout from 5s to 15s
         const client = await Promise.race([
           pool.connect(),
-          new Promise((_, reject) => setTimeout(() => reject(new Error('Connection timeout')), 5000))
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Connection timeout')), 15000))
         ]);
         
         const result = await client.query('SELECT NOW() as time, current_database() as db');
@@ -153,11 +156,16 @@ if (poolConfig) {
         console.error(`❌ Connection attempt failed: ${error.message}`);
         
         if (retries > 0) {
-          const delay = Math.min(1000 * (6 - retries), 3000); // Exponential backoff
+          // ✅ INCREASED max delay from 3s to 5s
+          const delay = Math.min(2000 * (6 - retries), 5000);
           console.log(`⏳ Retrying in ${delay}ms... (${retries} attempts left)`);
           await new Promise(resolve => setTimeout(resolve, delay));
         } else {
           console.error('❌ All connection attempts failed');
+          console.error('   Please check:');
+          console.error('   1. DATABASE_URL is correct in Render');
+          console.error('   2. Use direct connection (port 5432) not pooler (port 6543)');
+          console.error('   3. Supabase project is active and accessible');
           console.error('   Server will continue in degraded mode');
         }
       }
