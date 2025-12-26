@@ -48,16 +48,16 @@ function getDatabaseConfig() {
       // Optimized pool settings for Supabase Pooler with proper free tier limits
       return {
         ...config,
-        max: 1,                           // ✅ CRITICAL: Pooler free tier needs max 1 connection
-        min: 0,                           // ✅ REDUCED: Let connections close when idle
-        idleTimeoutMillis: 10000,         // ✅ Close idle connections after 10s
-        connectionTimeoutMillis: 30000,   // ✅ 30s timeout
-        acquireTimeoutMillis: 30000,      // ✅ 30s acquire timeout
+        max: 5,                           // ✅ Allow 5 connections for concurrent requests
+        min: 1,                           // ✅ Keep 1 connection warm
+        idleTimeoutMillis: 20000,         // ✅ Close idle connections after 20s
+        connectionTimeoutMillis: 20000,   // ✅ 20s timeout
+        acquireTimeoutMillis: 20000,      // ✅ 20s acquire timeout
         createTimeoutMillis: 30000,       // ✅ 30s create timeout
         destroyTimeoutMillis: 5000,       // ✅ Quick cleanup
         reapIntervalMillis: 1000,         // ✅ Check for idle connections frequently
         createRetryIntervalMillis: 200,   // ✅ Quick retries
-        allowExitOnIdle: true,            // ✅ Allow pool to exit when idle
+        allowExitOnIdle: false,           // ✅ Keep pool alive
         query_timeout: 30000,             // ✅ 30s query timeout
         statement_timeout: 120000,        // ✅ INCREASED to 120s
         keepAlive: true,
