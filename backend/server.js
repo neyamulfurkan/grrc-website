@@ -316,6 +316,9 @@ loadRoute('superadmin', './routes/superadmin', '/api/superadmin');
 // ============ COMMUNITY ADMIN ROUTES ============
 loadRoute('communityAdmin', './routes/community-admin', '/api/community-admin');
 
+// ============ COMMUNITY ADMIN ROUTES ============
+loadRoute('communityAdmin', './routes/community-admin', '/api/community-admin');
+
 // ============ UPLOAD ROUTES ============
 loadRoute('upload', './routes/upload', '/api/upload');
 loadRoute('adminGallery', './routes/admin-gallery', '/api/admin/gallery');
