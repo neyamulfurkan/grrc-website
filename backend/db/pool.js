@@ -48,17 +48,17 @@ function getDatabaseConfig() {
       // Optimized pool settings for Supabase Pooler with proper free tier limits
       return {
         ...config,
-        max: 3,                           // ✅ REDUCED: Supabase pooler has ~5 connection limit
+        max: 1,                           // ✅ CRITICAL: Pooler free tier needs max 1 connection
         min: 0,                           // ✅ REDUCED: Let connections close when idle
-        idleTimeoutMillis: 30000,         // ✅ Close idle connections after 30s
-        connectionTimeoutMillis: 60000,   // ✅ INCREASED to 60s for cold starts
-        acquireTimeoutMillis: 60000,      // ✅ INCREASED to 60s
-        createTimeoutMillis: 60000,       // ✅ INCREASED to 60s
-        destroyTimeoutMillis: 10000,      // ✅ Give more time to clean up
-        reapIntervalMillis: 5000,         // ✅ Check for idle connections less frequently
-        createRetryIntervalMillis: 500,   // ✅ Wait longer between retries
-        allowExitOnIdle: false,           // ✅ Keep pool alive
-        query_timeout: 120000,            // ✅ INCREASED to 120s (2 minutes)
+        idleTimeoutMillis: 10000,         // ✅ Close idle connections after 10s
+        connectionTimeoutMillis: 30000,   // ✅ 30s timeout
+        acquireTimeoutMillis: 30000,      // ✅ 30s acquire timeout
+        createTimeoutMillis: 30000,       // ✅ 30s create timeout
+        destroyTimeoutMillis: 5000,       // ✅ Quick cleanup
+        reapIntervalMillis: 1000,         // ✅ Check for idle connections frequently
+        createRetryIntervalMillis: 200,   // ✅ Quick retries
+        allowExitOnIdle: true,            // ✅ Allow pool to exit when idle
+        query_timeout: 30000,             // ✅ 30s query timeout
         statement_timeout: 120000,        // ✅ INCREASED to 120s
         keepAlive: true,
         keepAliveInitialDelayMillis: 10000
@@ -138,10 +138,10 @@ if (poolConfig) {
       try {
         console.log(`🔄 Attempting database connection (${6 - retries}/5)...`);
         
-        // ✅ INCREASED timeout from 5s to 15s
+        // ✅ 30s timeout for pooler
         const client = await Promise.race([
           pool.connect(),
-          new Promise((_, reject) => setTimeout(() => reject(new Error('Connection timeout')), 15000))
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Connection timeout')), 30000))
         ]);
         
         const result = await client.query('SELECT NOW() as time, current_database() as db');
@@ -156,16 +156,16 @@ if (poolConfig) {
         console.error(`❌ Connection attempt failed: ${error.message}`);
         
         if (retries > 0) {
-          // ✅ INCREASED max delay from 3s to 5s
-          const delay = Math.min(2000 * (6 - retries), 5000);
+          // ✅ Progressive delay
+          const delay = Math.min(1000 * (6 - retries), 3000);
           console.log(`⏳ Retrying in ${delay}ms... (${retries} attempts left)`);
           await new Promise(resolve => setTimeout(resolve, delay));
         } else {
           console.error('❌ All connection attempts failed');
           console.error('   Please check:');
-          console.error('   1. DATABASE_URL is correct in Render');
-          console.error('   2. Use direct connection (port 5432) not pooler (port 6543)');
-          console.error('   3. Supabase project is active and accessible');
+                    console.error('   1. DATABASE_URL is correct in Render');
+          console.error('   2. Using pooler (port 6543) - correct for Render');
+          console.error('   3. Check Supabase project status and connection limits');
           console.error('   Server will continue in degraded mode');
         }
       }
