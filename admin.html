@@ -555,7 +555,50 @@
     </div>
 
     <!-- JavaScript -->
-    <script src="js/api-client.js"></script>
+        <script src="js/api-client.js"></script>
+    
+    <!-- ✅ Community Chat Toggle Button -->
+    <a href="community.html" 
+       class="community-chat-toggle" 
+       id="communityChatToggle" 
+       aria-label="Community Chat"
+       title="Join Community Chat"
+       style="position: fixed; bottom: 90px; right: 100px; width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, #10b981 0%, #059669 100%); box-shadow: 0 8px 24px rgba(16, 185, 129, 0.4); display: flex; align-items: center; justify-content: center; color: white; z-index: 999; text-decoration: none; transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z"/>
+            <circle cx="12" cy="10" r="1.5"/>
+            <circle cx="8" cy="10" r="1.5"/>
+            <circle cx="16" cy="10" r="1.5"/>
+        </svg>
+        <span style="position: absolute; top: -4px; left: -4px; background: #ef4444; color: white; font-size: 10px; font-weight: 600; padding: 2px 6px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);">Chat</span>
+    </a>
+    
+    <style>
+    .community-chat-toggle:hover {
+        transform: scale(1.1) rotate(-5deg);
+        box-shadow: 0 12px 32px rgba(16, 185, 129, 0.5);
+    }
+    .community-chat-toggle:active {
+        transform: scale(0.95);
+    }
+    @media (max-width: 768px) {
+        .community-chat-toggle {
+            bottom: 80px !important;
+            right: 90px !important;
+            width: 56px !important;
+            height: 56px !important;
+        }
+    }
+    @media (max-width: 480px) {
+        .community-chat-toggle {
+            bottom: 80px !important;
+            right: 85px !important;
+            width: 52px !important;
+            height: 52px !important;
+        }
+    }
+    </style>
+    
     <script>
         'use strict';
 

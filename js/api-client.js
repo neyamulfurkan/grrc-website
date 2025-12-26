@@ -94,6 +94,9 @@ async function request(endpoint, options = {}) {
         defaultHeaders['Authorization'] = `Bearer ${token}`;
     }
     
+    // ✅ FIX: Define method FIRST before using it
+    const method = options.method || 'GET';
+    
     const config = {
         ...options,
         headers: {
@@ -105,7 +108,6 @@ async function request(endpoint, options = {}) {
     };
     
     // ✅ FIX: Cache GET requests for config/members/events (static data)
-    const method = config.method || 'GET';
     const isStaticEndpoint = endpoint.includes('/config') || endpoint.includes('/members') || endpoint.includes('/events') || endpoint.includes('/projects');
     const shouldDeduplicate = method !== 'GET' && !endpoint.includes('?_t=');
     
