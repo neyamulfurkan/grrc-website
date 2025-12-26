@@ -23,8 +23,8 @@
     <style>
       .community-toggle {
         position: fixed;
-        bottom: 100px;
-        right: 24px;
+        bottom: 24px;
+        right: 180px;
         width: 140px;
         height: 56px;
         background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
@@ -37,7 +37,7 @@
         justify-content: center;
         gap: 8px;
         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-        z-index: 998;
+        z-index: 999;
         transition: all 0.3s ease;
         font-weight: 600;
         font-size: 14px;
@@ -75,8 +75,8 @@
         .community-toggle {
           width: 56px;
           height: 56px;
-          bottom: 90px;
-          right: 16px;
+          bottom: 24px;
+          right: 90px;
         }
         
         .community-label {

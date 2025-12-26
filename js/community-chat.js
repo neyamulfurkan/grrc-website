@@ -127,7 +127,7 @@ function initializeChat() {
   setupChatTabs();
 }
 
-// Setup chat tabs (Users vs Global)
+// Setup chat tabs (Chats vs All Members vs Global)
 function setupChatTabs() {
   const tabButtons = document.querySelectorAll('.chat-tab-btn');
   
@@ -151,8 +151,11 @@ function setupChatTabs() {
       if (tab === 'global') {
         // Show global chat
         selectGlobalChat();
+      } else if (tab === 'all-members') {
+        // Show all members
+        showAllMembers();
       } else {
-        // Show users list
+        // Show users with chat history
         document.getElementById('usersList').style.display = 'block';
         document.getElementById('usersSearch').style.display = 'block';
         
@@ -162,8 +165,37 @@ function setupChatTabs() {
           document.getElementById('chatContent').style.display = 'none';
           selectedUserId = null;
         }
+        
+        // Reload filtered users
+        loadUsers();
       }
     });
+  });
+}
+
+// ✅ NEW: Show all members (not just chat history)
+async function showAllMembers() {
+  selectedUserId = null;
+  
+  // Hide chat area
+  document.getElementById('emptyChat').style.display = 'flex';
+  document.getElementById('chatContent').style.display = 'none';
+  
+  // Show users sidebar
+  document.getElementById('usersList').style.display = 'block';
+  document.getElementById('usersSearch').style.display = 'block';
+  
+  const usersQuery = query(collection(db, 'users'));
+  
+  onSnapshot(usersQuery, (snapshot) => {
+    const allUsers = [];
+    snapshot.forEach((doc) => {
+      if (doc.id !== currentUser.uid) {
+        allUsers.push({ uid: doc.id, ...doc.data() });
+      }
+    });
+    
+    renderUsersList(allUsers);
   });
 }
 
@@ -276,7 +308,16 @@ function renderGlobalMessages(messages) {
     return `
       <div class="message ${isOwn ? 'own' : ''}">
         <div class="message-content">
-          ${!isOwn ? `<div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.25rem; font-weight: 600;">${escapeHtml(senderName)}</div>` : ''}
+          ${!isOwn ? `
+            <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.25rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 0.25rem;" 
+                 class="global-user-name" 
+                 data-user-id="${msg.senderId}"
+                 title="Click to message privately">
+              ${escapeHtml(senderName)}
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+              </svg>
+            </div>` : ''}
           <p class="message-text">${escapeHtml(msg.text)}</p>
           <div class="message-time">${time}</div>
           ${isOwn ? `<button class="message-actions" data-msg-id="${msg.id}">Delete</button>` : ''}
@@ -284,6 +325,26 @@ function renderGlobalMessages(messages) {
       </div>
     `;
   }).join('');
+  
+  container.scrollTop = container.scrollHeight;
+  
+  // Add delete handlers
+  container.querySelectorAll('.message-actions').forEach(btn => {
+    btn.addEventListener('click', () => deleteGlobalMessage(btn.dataset.msgId));
+  });
+  
+  // ✅ NEW: Add click handlers for user names to message privately
+  container.querySelectorAll('.global-user-name').forEach(nameEl => {
+    nameEl.addEventListener('click', () => {
+      const userId = nameEl.dataset.userId;
+      if (userId && userId !== currentUser.uid) {
+        // Switch to users tab
+        document.querySelector('[data-tab="users"]').click();
+        // Select the user
+        setTimeout(() => selectUser(userId), 300);
+      }
+    });
+  });
   
   container.scrollTop = container.scrollHeight;
   
@@ -811,6 +872,53 @@ function setupEventListeners() {
     document.getElementById('usersSidebar').classList.add('mobile-show');
     selectedUserId = null;
   });
+  
+  // ✅ NEW: Delete conversation button
+  const deleteChatBtn = document.getElementById('deleteChatBtn');
+  if (deleteChatBtn) {
+    deleteChatBtn.addEventListener('click', deleteConversation);
+  }
+}
+
+// ✅ NEW: Delete entire conversation
+async function deleteConversation() {
+  if (!selectedUserId || selectedUserId === '__GLOBAL__') {
+    alert('Cannot delete global chat.');
+    return;
+  }
+  
+  if (!confirm('⚠️ Delete entire conversation?\n\nThis will permanently delete all messages between you and this user.')) {
+    return;
+  }
+  
+  try {
+    const chatId = [currentUser.uid, selectedUserId].sort().join('_');
+    
+    // Delete all messages in this chat
+    const messagesQuery = query(collection(db, 'chats', chatId, 'messages'));
+    const messagesSnapshot = await getDocs(messagesQuery);
+    
+    const deletePromises = [];
+    messagesSnapshot.forEach((doc) => {
+      deletePromises.push(deleteDoc(doc.ref));
+    });
+    
+    await Promise.all(deletePromises);
+    
+    alert('✅ Conversation deleted successfully!');
+    
+    // Go back to users list
+    selectedUserId = null;
+    document.getElementById('emptyChat').style.display = 'flex';
+    document.getElementById('chatContent').style.display = 'none';
+    
+    // Reload users
+    loadUsers();
+    
+  } catch (error) {
+    console.error('Error deleting conversation:', error);
+    alert('Failed to delete conversation: ' + error.message);
+  }
 }
 
 // Helper: Render avatar
