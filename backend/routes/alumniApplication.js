@@ -39,7 +39,16 @@ const bangladeshPhoneRegex = /^(\+8801|01)[3-9]\d{8}$/;
 const batchYearRegex = /^\d{4}-\d{4}$/;
 
 // ============ PUBLIC ROUTES ============
-
+/**
+ * Health check endpoint for alumni application routes
+ */
+router.get('/health', (req, res) => {
+  res.json({
+    success: true,
+    message: 'Alumni application routes are operational',
+    timestamp: new Date().toISOString()
+  });
+});
 /**
  * @route   POST /api/alumni-application/apply
  * @desc    Submit a new alumni application

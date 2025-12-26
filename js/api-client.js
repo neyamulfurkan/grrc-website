@@ -788,7 +788,7 @@ window.apiClient = {
     request
 };
 
-console.log('✅ API Client v1.5.0 - Added Alumni Application APIs');
+console.log('✅ API Client v1.6.0 - Alumni Application APIs Fixed');
 console.log('📡 API Base URL:', API_BASE_URL);
 console.log('🔐 Authentication:', isAuthenticated() ? 'Active (token loaded)' : 'Not authenticated');
 

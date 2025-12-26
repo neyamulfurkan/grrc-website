@@ -311,7 +311,17 @@ try {
 }
 loadRoute('admin', './routes/admin', '/api/admin');
 loadRoute('membership', './routes/membership', '/api/membership');
-loadRoute('alumniApplication', './routes/alumniApplication', '/api/alumni-application');
+// ============ ALUMNI APPLICATION ROUTES ============
+try {
+    console.log(`📂 Loading alumni application routes...`);
+    const alumniApplicationRoutes = require('./routes/alumniApplication');
+    app.use('/api/alumni-application', alumniApplicationRoutes);
+    console.log(`✅ alumni application routes loaded successfully`);
+    routesLoaded.alumniApplication = true;
+} catch (error) {
+    console.error(`❌ Failed to load alumni application routes:`, error.message);
+    createPlaceholderRoute('/api/alumni-application', 'alumni application');
+}
 
 // ============ SUPER ADMIN ROUTES ============
 loadRoute('superadmin', './routes/superadmin', '/api/superadmin');
