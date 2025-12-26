@@ -27,82 +27,90 @@ let selectedUserId = null;
 let usersUnsubscribe = null;
 let messagesUnsubscribe = null;
 
-// Check authentication
+// ✅ FIX: Debounce auth state changes to prevent multiple rapid loads
+let authCheckTimeout = null;
 onAuthStateChanged(auth, async (user) => {
-  console.log('🔐 Auth state changed. User:', user ? user.uid : 'None');
-  
-  if (!user) {
-    console.log('❌ No user authenticated, redirecting to login');
-    window.location.href = 'community-auth.html';
-    return;
+  // Clear previous timeout to prevent multiple simultaneous checks
+  if (authCheckTimeout) {
+    clearTimeout(authCheckTimeout);
   }
   
-  console.log('✅ User authenticated:', user.email);
-  
-  try {
-    console.log('📝 Fetching user document from Firestore...');
-    const userDoc = await getDoc(doc(db, 'users', user.uid));
+  authCheckTimeout = setTimeout(async () => {
+    console.log('🔐 Auth state changed. User:', user ? user.uid : 'None');
     
-    if (userDoc.exists()) {
-      console.log('✅ User document found in Firestore');
-      const userData = userDoc.data();
+    if (!user) {
+      console.log('❌ No user authenticated, redirecting to login');
+      window.location.href = 'community-auth.html';
+      return;
+    }
+    
+    console.log('✅ User authenticated:', user.email);
+    
+    try {
+      console.log('📝 Fetching user document from Firestore...');
+      const userDoc = await getDoc(doc(db, 'users', user.uid));
       
-      // ✅ CRITICAL FIX: Check if user is banned
-      if (userData.banned) {
-        console.warn('🚫 User is banned');
-        alert(`Your account has been banned.\n\nReason: ${userData.banReason || 'No reason provided'}\n\nContact administrators for more information.`);
-        await signOut(auth);
-        window.location.href = 'community-auth.html';
-        return;
+      if (userDoc.exists()) {
+        console.log('✅ User document found in Firestore');
+        const userData = userDoc.data();
+        
+        // ✅ CRITICAL FIX: Check if user is banned
+        if (userData.banned) {
+          console.warn('🚫 User is banned');
+          alert(`Your account has been banned.\n\nReason: ${userData.banReason || 'No reason provided'}\n\nContact administrators for more information.`);
+          await signOut(auth);
+          window.location.href = 'community-auth.html';
+          return;
+        }
+        
+        currentUser = { uid: user.uid, ...userData };
+        console.log('✅ Current user loaded:', currentUser.name);
+        
+        // Update last seen timestamp
+        await updateDoc(doc(db, 'users', user.uid), {
+          lastSeen: new Date().toISOString()
+        });
+        
+        initializeChat();
+      } else {
+        console.error('❌ User document does NOT exist in Firestore');
+        console.log('User ID:', user.uid);
+        console.log('This should have been created during signup!');
+        
+        // Create the document now as a fallback
+        console.log('📝 Creating missing user document...');
+        const fallbackUserData = {
+          name: user.email.split('@')[0],
+          email: user.email,
+          avatar: {
+            type: 'letter',
+            value: user.email.charAt(0).toUpperCase()
+          },
+          memberMatch: null,
+          banned: false,
+          createdAt: new Date().toISOString(),
+          lastSeen: new Date().toISOString()
+        };
+        
+        await setDoc(doc(db, 'users', user.uid), fallbackUserData);
+        console.log('✅ Fallback user document created');
+        
+        currentUser = { uid: user.uid, ...fallbackUserData };
+        initializeChat();
       }
-      
-      currentUser = { uid: user.uid, ...userData };
-      console.log('✅ Current user loaded:', currentUser.name);
-      
-      // Update last seen timestamp
-      await updateDoc(doc(db, 'users', user.uid), {
-        lastSeen: new Date().toISOString()
+    } catch (error) {
+      console.error('❌ Error loading user:', error);
+      console.error('Error details:', {
+        code: error.code,
+        message: error.message,
+        stack: error.stack
       });
       
-      initializeChat();
-    } else {
-      console.error('❌ User document does NOT exist in Firestore');
-      console.log('User ID:', user.uid);
-      console.log('This should have been created during signup!');
-      
-      // Create the document now as a fallback
-      console.log('📝 Creating missing user document...');
-      const fallbackUserData = {
-        name: user.email.split('@')[0],
-        email: user.email,
-        avatar: {
-          type: 'letter',
-          value: user.email.charAt(0).toUpperCase()
-        },
-        memberMatch: null,
-        banned: false,
-        createdAt: new Date().toISOString(),
-        lastSeen: new Date().toISOString()
-      };
-      
-      await setDoc(doc(db, 'users', user.uid), fallbackUserData);
-      console.log('✅ Fallback user document created');
-      
-      currentUser = { uid: user.uid, ...fallbackUserData };
-      initializeChat();
+      alert('Failed to load user data. Error: ' + error.message);
+      await signOut(auth);
+      window.location.href = 'community-auth.html';
     }
-  } catch (error) {
-    console.error('❌ Error loading user:', error);
-    console.error('Error details:', {
-      code: error.code,
-      message: error.message,
-      stack: error.stack
-    });
-    
-    alert('Failed to load user data. Error: ' + error.message);
-    await signOut(auth);
-    window.location.href = 'community-auth.html';
-  }
+  }, 300); // 300ms debounce delay
 });
 
 // Initialize chat interface

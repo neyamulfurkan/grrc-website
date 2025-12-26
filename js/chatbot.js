@@ -127,12 +127,18 @@ class GRRCChatbot {
   }
 
   async loadClubContext() {
+    // ✅ FIX: Load context ONCE and cache in memory
+    if (this.clubContext && Object.keys(this.clubContext).length > 5) {
+      console.log('✅ Using cached chatbot context (no localStorage access)');
+      return;
+    }
+    
     try {
-      // Load complete context with all details
-      const clubConfig = JSON.parse(localStorage.getItem('cache_clubConfig') || '{}');
-      const events = JSON.parse(localStorage.getItem('cache_events') || '[]');
-      const members = JSON.parse(localStorage.getItem('cache_members') || '[]');
-      const projects = JSON.parse(localStorage.getItem('cache_projects') || '[]');
+      // Load complete context with all details (async non-blocking)
+      const clubConfig = await this.getFromCache('cache_clubConfig', {});
+      const events = await this.getFromCache('cache_events', []);
+      const members = await this.getFromCache('cache_members', []);
+      const projects = await this.getFromCache('cache_projects', []);
 
       // ✅ Categorize events by date
       const now = new Date();
@@ -414,6 +420,21 @@ class GRRCChatbot {
     div.textContent = text;
     return div.innerHTML;
   }
+  
+  // ✅ NEW: Async localStorage getter (non-blocking)
+  async getFromCache(key, defaultValue) {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        try {
+          const data = localStorage.getItem(key);
+          resolve(data ? JSON.parse(data) : defaultValue);
+        } catch (error) {
+          console.warn(`Failed to load ${key}:`, error);
+          resolve(defaultValue);
+        }
+      }, 0);
+    });
+  }
 }
 
 // Initialize
@@ -470,11 +491,11 @@ function initProactiveChatbot() {
     
     const currentSequence = messageSequences[sequenceIndex];
     
-    // Show each message in sequence with 4-5 second delays
+    // ✅ FIX: Increased delay to 8 seconds between messages to reduce blocking
     currentSequence.forEach((message, index) => {
       setTimeout(() => {
         showProactiveMessage(message);
-      }, index * 5000); // 5 seconds between each message
+      }, index * 8000); // 8 seconds between each message (was 5)
     });
     
     // Move to next sequence (loop back to start after last one)
@@ -527,12 +548,13 @@ function initProactiveChatbot() {
     }, 7000);
   }
   
-  // Show first sequence after 3 seconds
+  // ✅ FIX: Show first sequence after 5 seconds, then every 15 minutes (not 1 minute)
   setTimeout(() => {
     showMessageSequence();
     
-        setInterval(showMessageSequence, 1 * 60 * 1000);
-  }, 3000);
+    // Reduced frequency from 1 minute to 15 minutes to prevent blocking
+    setInterval(showMessageSequence, 15 * 60 * 1000);
+  }, 5000);
 }
 
 console.log('✅ GRRC Chatbot v2.1 initialized - Powered by Moon');

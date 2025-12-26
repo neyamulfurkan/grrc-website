@@ -92,13 +92,23 @@ async function request(endpoint, options = {}) {
             ...defaultHeaders,
             ...options.headers,
         },
-        // CRITICAL FIX: Disable browser cache for GET requests
-        cache: options.cache || 'no-store'
+        // ✅ FIX: Allow caching for GET requests to static data
+        cache: options.cache || (method === 'GET' && !endpoint.includes('?_t=') ? 'force-cache' : 'no-store')
     };
     
-    // CRITICAL FIX: Only deduplicate POST/PUT/DELETE, NOT GET requests
+    // ✅ FIX: Cache GET requests for config/members/events (static data)
     const method = config.method || 'GET';
+    const isStaticEndpoint = endpoint.includes('/config') || endpoint.includes('/members') || endpoint.includes('/events') || endpoint.includes('/projects');
     const shouldDeduplicate = method !== 'GET' && !endpoint.includes('?_t=');
+    
+    // Check memory cache for static GET requests
+    if (method === 'GET' && isStaticEndpoint && window.__apiCache) {
+        const cached = window.__apiCache.get(endpoint);
+        if (cached && (Date.now() - cached.timestamp < 60000)) { // 60 second cache
+            console.log(`💾 Using cached response: ${endpoint}`);
+            return cached.data;
+        }
+    }
     
     const requestKey = getRequestKey(url, config);
     if (shouldDeduplicate && activeRequests.has(requestKey)) {
@@ -169,11 +179,20 @@ async function request(endpoint, options = {}) {
             }
             
             console.log(`✅ API Success [${endpoint}]: ${duration}ms`);
-            return {
+            const result = {
                 success: true,
                 data: data.data || data,
                 error: null
             };
+            
+            // ✅ FIX: Cache successful GET responses for static endpoints
+            if (method === 'GET' && isStaticEndpoint) {
+                if (!window.__apiCache) window.__apiCache = new Map();
+                window.__apiCache.set(endpoint, { data: result, timestamp: Date.now() });
+                console.log(`💾 Cached response: ${endpoint}`);
+            }
+            
+            return result;
             
         } catch (error) {
             const duration = Date.now() - startTime;
