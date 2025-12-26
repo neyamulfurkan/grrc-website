@@ -23,7 +23,7 @@
     <style>
       .community-toggle {
         position: fixed;
-        bottom: 90px;
+        bottom: 100px;
         right: 24px;
         width: 140px;
         height: 56px;
@@ -75,7 +75,7 @@
         .community-toggle {
           width: 56px;
           height: 56px;
-          bottom: 80px;
+          bottom: 90px;
           right: 16px;
         }
         

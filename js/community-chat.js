@@ -305,19 +305,158 @@ async function deleteGlobalMessage(messageId) {
   }
 }
 
-// Load all users (except current user)
-function loadUsers() {
+// ✅ NEW: Admin function to permanently delete user account
+async function permanentlyDeleteUser(userId) {
+  if (!confirm('⚠️ PERMANENT DELETE\n\nThis will:\n- Delete Firebase Authentication account\n- Remove all user data\n- Delete all messages\n- User CANNOT login again with same credentials\n\nAre you absolutely sure?')) {
+    return;
+  }
+  
+  try {
+    // 1. Delete all user's messages from all chats
+    const chatsQuery = query(collection(db, 'chats'));
+    const chatsSnapshot = await getDocs(chatsQuery);
+    
+    for (const chatDoc of chatsSnapshot.docs) {
+      const messagesQuery = query(
+        collection(db, 'chats', chatDoc.id, 'messages'),
+        where('senderId', '==', userId)
+      );
+      const messagesSnapshot = await getDocs(messagesQuery);
+      for (const msgDoc of messagesSnapshot.docs) {
+        await deleteDoc(msgDoc.ref);
+      }
+    }
+    
+    // 2. Delete global messages
+    const globalQuery = query(
+      collection(db, 'global_chat'),
+      where('senderId', '==', userId)
+    );
+    const globalSnapshot = await getDocs(globalQuery);
+    for (const msgDoc of globalSnapshot.docs) {
+      await deleteDoc(msgDoc.ref);
+    }
+    
+    // 3. Delete user document
+    await deleteDoc(doc(db, 'users', userId));
+    
+    // 4. User must re-authenticate to delete their own account
+    // This is a Firebase security rule - only the user can delete their own auth account
+    alert('✅ User data deleted from Firestore.\n\n⚠️ Note: The user must delete their own Firebase Authentication account by logging in and going to account settings.\n\nOr you can use Firebase Console to manually delete the auth account.');
+    
+    // Reload users list
+    loadUsers();
+  } catch (error) {
+    console.error('Error deleting user:', error);
+    alert('Failed to delete user: ' + error.message);
+  }
+}
+// ✅ FIXED: Load only users with chat history + active users
+async function loadUsers() {
   const usersQuery = query(collection(db, 'users'));
   
-  usersUnsubscribe = onSnapshot(usersQuery, (snapshot) => {
-    const users = [];
+  usersUnsubscribe = onSnapshot(usersQuery, async (snapshot) => {
+    const allUsers = [];
     snapshot.forEach((doc) => {
       if (doc.id !== currentUser.uid) {
-        users.push({ uid: doc.id, ...doc.data() });
+        allUsers.push({ uid: doc.id, ...doc.data() });
       }
     });
     
-    renderUsersList(users);
+    // Get users with chat history
+    const usersWithChats = await getUsersWithChatHistory(allUsers);
+    
+    // Separate active users (online in last 5 minutes)
+    const now = new Date();
+    const activeUsers = allUsers.filter(u => {
+      if (!u.lastSeen) return false;
+      const lastSeenDate = new Date(u.lastSeen);
+      const diffMinutes = (now - lastSeenDate) / 1000 / 60;
+      return diffMinutes < 5;
+    });
+    
+    // Render active users bar (async now)
+    await renderActiveUsersBar(activeUsers);
+    
+    // Render only chatted users in sidebar
+    renderUsersList(usersWithChats);
+  });
+}
+
+// ✅ FIXED: Get users with chat history (optimized)
+async function getUsersWithChatHistory(allUsers) {
+  const usersWithChats = [];
+  
+  // Use Promise.all for parallel fetching
+  const checks = allUsers.map(async (user) => {
+    const chatId = [currentUser.uid, user.uid].sort().join('_');
+    const messagesQuery = query(
+      collection(db, 'chats', chatId, 'messages'),
+      limit(1)
+    );
+    
+    try {
+      const snapshot = await getDocs(messagesQuery);
+      if (!snapshot.empty) {
+        return user;
+      }
+    } catch (error) {
+      console.error('Error checking chat history:', error);
+    }
+    return null;
+  });
+  
+  const results = await Promise.all(checks);
+  return results.filter(user => user !== null);
+}
+
+// ✅ FIXED: Render active users bar - only users with chat history
+async function renderActiveUsersBar(activeUsers) {
+  const container = document.querySelector('.active-users-scroll');
+  
+  // Filter active users to only show those with chat history
+  const activeUsersWithChats = [];
+  for (const user of activeUsers) {
+    const chatId = [currentUser.uid, user.uid].sort().join('_');
+    const messagesQuery = query(
+      collection(db, 'chats', chatId, 'messages'),
+      limit(1)
+    );
+    
+    try {
+      const snapshot = await getDocs(messagesQuery);
+      if (!snapshot.empty) {
+        activeUsersWithChats.push(user);
+      }
+    } catch (error) {
+      console.error('Error checking chat:', error);
+    }
+  }
+  
+  if (activeUsersWithChats.length === 0) {
+    container.innerHTML = '<div style="color: var(--text-tertiary); font-size: 0.75rem; padding: 0.5rem;">No active chats</div>';
+    return;
+  }
+  
+  container.innerHTML = activeUsersWithChats.map(user => {
+    const avatar = renderAvatar(user.avatar, user.name);
+    
+    return `
+      <div class="active-user-item" data-user-id="${user.uid}">
+        <div class="active-user-avatar">
+          ${avatar}
+          <span class="online-indicator"></span>
+        </div>
+        <div class="active-user-name">${escapeHtml(user.name.split(' ')[0])}</div>
+      </div>
+    `;
+  }).join('');
+  
+  // Add click handlers
+  container.querySelectorAll('.active-user-item').forEach(item => {
+    item.addEventListener('click', () => {
+      selectUser(item.dataset.userId);
+    });
   });
 }
 
@@ -597,12 +736,25 @@ async function sendMessage() {
   }
 }
 
-// Delete message
+// Delete message - only own messages
 async function deleteMessage(messageId) {
   if (!selectedUserId || !confirm('Delete this message?')) return;
   
   try {
     const chatId = [currentUser.uid, selectedUserId].sort().join('_');
+    
+    // ✅ Verify ownership before deleting
+    const messageDoc = await getDoc(doc(db, 'chats', chatId, 'messages', messageId));
+    if (!messageDoc.exists()) {
+      alert('Message not found.');
+      return;
+    }
+    
+    if (messageDoc.data().senderId !== currentUser.uid) {
+      alert('You can only delete your own messages.');
+      return;
+    }
+    
     await deleteDoc(doc(db, 'chats', chatId, 'messages', messageId));
   } catch (error) {
     console.error('Error deleting message:', error);

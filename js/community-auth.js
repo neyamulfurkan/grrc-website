@@ -123,6 +123,24 @@ document.getElementById('signupForm').addEventListener('submit', async (e) => {
     return;
   }
   
+  // ✅ FIXED: Strict membership verification
+  if (matchedMember) {
+    const memberEmail = matchedMember.email?.toLowerCase().trim();
+    
+    // Must match exact email
+    if (!memberEmail || email.toLowerCase().trim() !== memberEmail) {
+      showError('signupError', `❌ Email verification failed.\n\nYour email (${email}) doesn't match our records for ${matchedMember.name}.\n\nPlease contact admin if this is incorrect.`);
+      return;
+    }
+    
+    console.log('✅ Member verified:', matchedMember.name);
+  } else {
+    // No member match - should we allow non-members?
+    if (!confirm('⚠️ No membership record found.\n\nDo you want to create a community account anyway?')) {
+      return;
+    }
+  }
+  
   try {
     btn.disabled = true;
     btn.innerHTML = '<span class="loading"></span> Creating account...';
