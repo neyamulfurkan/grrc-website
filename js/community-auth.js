@@ -152,18 +152,39 @@ document.getElementById('signupForm').addEventListener('submit', async (e) => {
     
     console.log('✅ Firebase user created:', user.uid);
     
-    // Generate avatar (first letter or member photo)
+    // ✅ FIXED: Generate avatar (first letter or member photo)
     let avatarData = {
       type: 'letter',
       value: name.charAt(0).toUpperCase()
     };
     
-    if (matchedMember && matchedMember.photo) {
-      avatarData = {
-        type: 'image',
-        value: matchedMember.photo
-      };
+    console.log('🔍 Checking for matched member...');
+    console.log('📋 Matched member:', matchedMember);
+    
+    if (matchedMember) {
+      console.log('📸 Member photo value:', matchedMember.photo);
+      console.log('📸 Photo type:', typeof matchedMember.photo);
+      console.log('📸 Photo length:', matchedMember.photo ? matchedMember.photo.length : 0);
+      
+      // Check if photo exists and is valid URL
+      if (matchedMember.photo && 
+          matchedMember.photo.trim() !== '' && 
+          (matchedMember.photo.startsWith('http') || matchedMember.photo.startsWith('data:'))) {
+        
+        avatarData = {
+          type: 'image',
+          value: matchedMember.photo
+        };
+        console.log('✅ Using member photo for avatar:', matchedMember.photo.substring(0, 50) + '...');
+      } else {
+        console.log('⚠️ No valid photo found, using letter avatar');
+        console.log('   Photo value was:', matchedMember.photo);
+      }
+    } else {
+      console.log('⚠️ No matched member found');
     }
+    
+    console.log('🎨 Final avatar data:', avatarData);
     
     // Create user document in Firestore
     const userData = {
@@ -207,19 +228,39 @@ document.getElementById('signupForm').addEventListener('submit', async (e) => {
 // Helper functions
 async function getMembers() {
   try {
+    console.log('🔍 Fetching members for matching...');
+    
     // Try API first
     if (window.apiClient && window.apiClient.isReady) {
+      console.log('📡 Using API client');
       const result = await window.apiClient.getMembers();
       if (result.success && result.data) {
+        console.log(`✅ Loaded ${result.data.length} members from API`);
+        if (result.data.length > 0) {
+          console.log('📋 Sample member structure:', {
+            name: result.data[0].name,
+            hasPhoto: !!result.data[0].photo,
+            photoUrl: result.data[0].photo ? result.data[0].photo.substring(0, 50) + '...' : 'none'
+          });
+        }
         return result.data;
       }
     }
     
     // Fallback to localStorage
+    console.log('📦 Falling back to localStorage');
     const cached = localStorage.getItem('members');
-    return cached ? JSON.parse(cached) : [];
+    const members = cached ? JSON.parse(cached) : [];
+    console.log(`✅ Loaded ${members.length} members from cache`);
+    if (members.length > 0) {
+      console.log('📋 Sample cached member:', {
+        name: members[0].name,
+        hasPhoto: !!members[0].photo
+      });
+    }
+    return members;
   } catch (error) {
-    console.error('Error getting members:', error);
+    console.error('❌ Error getting members:', error);
     return [];
   }
 }
@@ -230,10 +271,17 @@ function showMemberMatch(member) {
   const name = document.getElementById('matchName');
   const details = document.getElementById('matchDetails');
   
-  // Set avatar
-  if (member.photo) {
-    avatar.innerHTML = `<img src="${member.photo}" alt="${member.name}">`;
+  console.log('🎭 Showing member match popup for:', member.name);
+  console.log('📸 Member photo:', member.photo);
+  
+  // Set avatar with better validation
+  if (member.photo && member.photo.trim() !== '' && 
+      (member.photo.startsWith('http') || member.photo.startsWith('data:'))) {
+    console.log('✅ Displaying member photo in popup');
+    avatar.innerHTML = `<img src="${member.photo}" alt="${member.name}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`;
   } else {
+    console.log('⚠️ No photo, showing letter avatar in popup');
+    avatar.innerHTML = '';
     avatar.textContent = member.name.charAt(0).toUpperCase();
   }
   
