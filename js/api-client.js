@@ -629,6 +629,31 @@ async function checkAPIHealth() {
     }
 }
 
+// ============ COMMUNITY ADMIN API METHODS ============
+
+async function getCommunityUsers() {
+    const timestamp = Date.now();
+    return request(`/api/community-admin/users?_t=${timestamp}`);
+}
+
+async function deleteCommunityUser(userId) {
+    return request(`/api/community-admin/users/${userId}`, {
+        method: 'DELETE'
+    });
+}
+
+async function banCommunityUser(userId, reason) {
+    return request(`/api/community-admin/users/${userId}/ban`, {
+        method: 'POST',
+        body: JSON.stringify({ reason })
+    });
+}
+
+async function unbanCommunityUser(userId) {
+    return request(`/api/community-admin/users/${userId}/unban`, {
+        method: 'POST'
+    });
+}
 function formatErrorMessage(error) {
     if (!error) return 'An unknown error occurred';
     
@@ -654,6 +679,10 @@ function formatErrorMessage(error) {
 window.apiClient = {
     baseURL: API_BASE_URL,
     setAuthToken,
+    getCommunityUsers,
+    deleteCommunityUser,
+    banCommunityUser,
+    unbanCommunityUser,
     getAuthToken,
     clearAuthToken,
     isAuthenticated,

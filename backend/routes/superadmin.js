@@ -25,6 +25,76 @@ router.get('/community/users', async (req, res) => {
   }
 });
 
+// DELETE community user (removes from Firebase Auth + Firestore)
+router.delete('/community/users/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    
+    console.log(`🗑️ Super admin ${req.user.username} deleting community user: ${userId}`);
+    
+    // Initialize Firebase Admin SDK
+    const admin = require('firebase-admin');
+    
+    // Check if Firebase Admin is already initialized
+    if (!admin.apps.length) {
+      // Initialize with service account
+      // IMPORTANT: You need to download your Firebase service account key
+      // Go to: Firebase Console > Project Settings > Service Accounts > Generate New Private Key
+      // Save it as backend/config/firebase-admin-key.json
+      try {
+        const serviceAccount = require('../config/firebase-service-account.json');
+        admin.initializeApp({
+          credential: admin.credential.cert(serviceAccount)
+        });
+        console.log('✅ Firebase Admin SDK initialized');
+      } catch (initError) {
+        console.error('❌ Firebase Admin initialization failed:', initError);
+        return res.status(500).json({
+          success: false,
+          error: 'Firebase Admin SDK not configured. Please add firebase-admin-key.json to backend/config/'
+        });
+      }
+    }
+    
+    // Delete user from Firebase Authentication
+    try {
+      await admin.auth().deleteUser(userId);
+      console.log(`✅ Deleted user ${userId} from Firebase Authentication`);
+    } catch (authError) {
+      console.error('❌ Firebase Auth deletion error:', authError);
+      
+      // If user doesn't exist in Auth, that's actually okay
+      if (authError.code === 'auth/user-not-found') {
+        console.log('ℹ️ User not found in Firebase Auth (may have been deleted already)');
+      } else {
+        throw new Error(`Failed to delete from Firebase Auth: ${authError.message}`);
+      }
+    }
+    
+    // Log the action
+    await logAuditAction(
+      req.user.id,
+      'delete_community_user',
+      'community',
+      userId,
+      { userId },
+      req
+    );
+    
+    res.json({
+      success: true,
+      message: 'User deleted from Firebase Authentication. Firestore data should be deleted by frontend.'
+    });
+    
+  } catch (error) {
+    console.error('❌ Delete community user error:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to delete community user'
+    });
+  }
+});
+
 // ========== DASHBOARD ==========
 router.get('/dashboard', async (req, res) => {
   try {

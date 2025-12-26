@@ -19,7 +19,8 @@ import {
   setDoc,
   getDocs,
   updateDoc,
-  serverTimestamp
+  serverTimestamp,
+  collectionGroup
 } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
 let currentUser = null;
@@ -828,6 +829,73 @@ function setupEventListeners() {
   // Back button
   document.getElementById('backBtn').addEventListener('click', () => {
     window.location.href = 'index.html';
+  });
+  
+  // Delete Account button
+  document.getElementById('deleteAccountBtn').addEventListener('click', async () => {
+    const confirmation = confirm('⚠️ DELETE ACCOUNT?\n\nThis will permanently delete:\n• Your account\n• All your messages\n• Your profile data\n\nThis action CANNOT be undone!\n\nType "DELETE" to confirm:');
+    
+    if (!confirmation) return;
+    
+    const finalConfirm = prompt('Type "DELETE" (in capital letters) to permanently delete your account:');
+    
+    if (finalConfirm !== 'DELETE') {
+      alert('Account deletion cancelled.');
+      return;
+    }
+    
+    try {
+      const user = auth.currentUser;
+      
+      if (!user) {
+        alert('No user logged in.');
+        return;
+      }
+      
+      console.log('🗑️ Deleting account:', user.uid);
+      
+      // Delete from Firestore
+      await deleteDoc(doc(db, 'users', user.uid));
+      console.log('✅ Firestore document deleted');
+      
+      // Delete all user's messages
+      const chatsSnapshot = await getDocs(
+        query(collectionGroup(db, 'messages'), where('senderId', '==', user.uid))
+      );
+      
+      for (const msgDoc of chatsSnapshot.docs) {
+        await deleteDoc(msgDoc.ref);
+      }
+      console.log('✅ Private messages deleted');
+      
+      // Delete global messages
+      const globalSnapshot = await getDocs(
+        query(collection(db, 'global_chat'), where('senderId', '==', user.uid))
+      );
+      
+      for (const msgDoc of globalSnapshot.docs) {
+        await deleteDoc(msgDoc.ref);
+      }
+      console.log('✅ Global messages deleted');
+      
+      // Delete Firebase Auth account
+      await user.delete();
+      console.log('✅ Firebase Auth account deleted');
+      
+      alert('✅ Account deleted successfully. You will be redirected to the homepage.');
+      window.location.href = 'index.html';
+      
+    } catch (error) {
+      console.error('❌ Error deleting account:', error);
+      
+      if (error.code === 'auth/requires-recent-login') {
+        alert('For security, please logout and login again before deleting your account.');
+        await signOut(auth);
+        window.location.href = 'community-auth.html';
+      } else {
+        alert('Failed to delete account: ' + error.message);
+      }
+    }
   });
   
   // Logout button

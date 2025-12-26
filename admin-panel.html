@@ -4218,19 +4218,47 @@ if (section === 'membership-applications') {
         }
 
         async function deleteCommunityUser(userId, userName) {
-            if (!confirm(`⚠️ Delete user "${userName}"?\n\nThis will:\n- Remove their account\n- Delete all their messages\n- Cannot be undone`)) {
+            if (!confirm(`⚠️ Delete user "${userName}"?\n\nThis will:\n- Remove their Firebase Authentication account\n- Remove their Firestore profile\n- Delete all their messages\n- They will need to signup again to access community\n- Cannot be undone`)) {
                 return;
             }
             
             try {
+                showToast('Deleting user account...', 'info');
+                
+                // CRITICAL FIX: Call backend to delete Firebase Auth user
+                const token = localStorage.getItem('grrc_auth_token') || sessionStorage.getItem('grrc_auth_token');
+                if (!token) {
+                    throw new Error('Not authenticated');
+                }
+                
+                const response = await fetch(`${window.apiClient.baseURL}/api/superadmin/community/users/${userId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const result = await response.json();
+                
+                if (!result.success) {
+                    throw new Error(result.error || 'Failed to delete user from authentication');
+                }
+                
+                console.log('✅ User deleted from Firebase Auth');
+                
+                // Now delete Firestore data
                 const { db } = await import('./js/firebase-config.js');
-                const { doc, deleteDoc, collection, getDocs } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+                const { doc, deleteDoc, collection, getDocs, query, where } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
                 
                 // Delete user document
                 await deleteDoc(doc(db, 'users', userId));
+                console.log('✅ User document deleted from Firestore');
                 
-                // Delete all their messages (optional, can be heavy operation)
+                // Delete all their messages
                 const chatsSnapshot = await getDocs(collection(db, 'chats'));
+                let messagesDeleted = 0;
+                
                 for (const chatDoc of chatsSnapshot.docs) {
                     const messagesSnapshot = await getDocs(
                         query(
@@ -4241,15 +4269,22 @@ if (section === 'membership-applications') {
                     
                     for (const msgDoc of messagesSnapshot.docs) {
                         await deleteDoc(msgDoc.ref);
+                        messagesDeleted++;
                     }
                 }
                 
-                showToast(`User "${userName}" deleted successfully`, 'success');
+                console.log(`✅ Deleted ${messagesDeleted} messages`);
+                
+                showToast(`User "${userName}" completely removed from system (${messagesDeleted} messages deleted)`, 'success');
                 loadCommunityUsers(document.getElementById('communityUserFilter').value);
                 
             } catch (error) {
                 console.error('Error deleting user:', error);
-                showToast('Failed to delete user', 'error');
+                if (error.message.includes('not authenticated') || error.message.includes('token')) {
+                    showToast('Session expired. Please refresh and try again.', 'error');
+                } else {
+                    showToast(`Failed to delete user: ${error.message}`, 'error');
+                }
             }
         }
 

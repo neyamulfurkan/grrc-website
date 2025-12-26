@@ -109,4 +109,9 @@ yarn.lock
 pnpm-lock.yaml
 
 # Keep package-lock.json for npm (comment out if using yarn/pnpm)
-# package-lock.json
+# package-lock.json 
+# -------------------- Firebase Admin SDK -------------------- 
+# NEVER commit Firebase service account credentials! 
+backend/config/firebase-service-account.json 
+backend/config/firebase-admin-key.json 
+backend/config/*-firebase-adminsdk-*.json 
