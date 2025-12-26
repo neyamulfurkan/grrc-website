@@ -1,6 +1,6 @@
 const API_BASE_URL = 'https://grrc-website-10.onrender.com';
 const AUTH_TOKEN_KEY = 'grrc_auth_token';
-const REQUEST_TIMEOUT = 90000;
+const REQUEST_TIMEOUT = 30000; // Reduced from 90s to 30s
 
 const activeRequests = new Map();
 
@@ -97,6 +97,17 @@ async function request(endpoint, options = {}) {
     // ✅ FIX: Define method FIRST before using it
     const method = options.method || 'GET';
     
+    // Add in-memory cache for GET requests
+    if (method === 'GET' && !url.includes('?_t=')) {
+        if (!window.__apiRequestCache) window.__apiRequestCache = new Map();
+        
+        const cached = window.__apiRequestCache.get(url);
+        if (cached && (Date.now() - cached.timestamp < 30000)) { // 30 second cache
+            console.log(`💾 Using cached response: ${endpoint}`);
+            return cached.data;
+        }
+    }
+    
     const config = {
         ...options,
         headers: {
@@ -136,10 +147,17 @@ async function request(endpoint, options = {}) {
             
             const fetchPromise = fetch(url, {
                 ...config,
-                signal: controller.signal
+                signal: controller.signal,
+                keepalive: true  // Keep connection alive
             });
             
-            const response = await fetchPromise.finally(() => clearTimeout(timeoutId));
+            const response = await Promise.race([
+              fetchPromise,
+              new Promise((_, reject) => 
+                setTimeout(() => reject(new Error('Request timeout')), REQUEST_TIMEOUT)
+              )
+            ]).finally(() => clearTimeout(timeoutId));
+            
             const duration = Date.now() - startTime;
             
             const contentType = response.headers.get('content-type');
@@ -194,6 +212,27 @@ async function request(endpoint, options = {}) {
                 data: data.data || data,
                 error: null
             };
+            
+            // Cache successful GET responses
+            if (method === 'GET' && !url.includes('?_t=')) {
+                if (!window.__apiRequestCache) window.__apiRequestCache = new Map();
+                window.__apiRequestCache.set(url, {
+                    data: result,
+                    timestamp: Date.now()
+                });
+                
+                // Clear cache every 5 minutes
+                if (!window.__cacheCleanupInterval) {
+                    window.__cacheCleanupInterval = setInterval(() => {
+                        const now = Date.now();
+                        for (const [key, value] of window.__apiRequestCache.entries()) {
+                            if (now - value.timestamp > 300000) { // 5 minutes
+                                window.__apiRequestCache.delete(key);
+                            }
+                        }
+                    }, 60000); // Check every minute
+                }
+            }
             
             // ✅ FIX: Cache successful GET responses for static endpoints
             if (method === 'GET' && isStaticEndpoint) {

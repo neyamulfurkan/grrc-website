@@ -470,15 +470,8 @@ async function startServer() {
             console.log(`   Database: ${result.rows[0].db}`);
             console.log(`   Server time: ${result.rows[0].time}`);
 
-            // Keep database connection alive (every 5 minutes)
-            setInterval(async () => {
-                try {
-                    await pool.query('SELECT 1');
-                    console.log('💓 Database keepalive ping');
-                } catch (error) {
-                    console.error('❌ Keepalive failed:', error.message);
-                }
-            }, 5 * 60 * 1000); // Ping every 5 minutes
+            // Connection pool handles keepalive automatically
+            console.log('✅ Database connection pool active');
             // Auto-create missing tables
 try {
   await pool.query(`
@@ -577,8 +570,9 @@ try {
             console.log(`\n📖 Server ready!\n`);
         });
 
-        server.keepAliveTimeout = 65000;
-        server.headersTimeout = 66000;
+        server.keepAliveTimeout = 120000; // Increased from 65s to 120s
+        server.headersTimeout = 125000;   // Increased from 66s to 125s
+        server.timeout = 120000;          // Overall timeout
 
         // Graceful shutdown
         const gracefulShutdown = async (signal) => {

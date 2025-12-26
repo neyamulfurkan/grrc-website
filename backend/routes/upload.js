@@ -36,10 +36,10 @@ router.post('/public-image', async (req, res) => {
     // Upload to Cloudinary with optimization (profile photos)
     const uploadResult = await cloudinary.uploader.upload(image, {
       folder: 'grrc-membership',
-      transformation: [
-        { width: 800, height: 800, crop: 'limit' },    // Profile photos don't need 1920px
-        { quality: 'auto:eco' },                        // Eco quality sufficient for profiles
-        { fetch_format: 'auto' },                       // WebP conversion
+     transformation: [
+          { width: 400, height: 400, crop: 'limit' }, // Reduced from 800
+          { quality: 'auto:low' },                     // Reduced from eco
+          { fetch_format: 'auto' },                      // WebP conversion
         { gravity: 'face', crop: 'thumb' }              // Auto-crop to face if detected
       ],
       resource_type: 'image'
@@ -114,11 +114,11 @@ router.post('/image', async (req, res) => {
     // Upload to Cloudinary with optimization
     const uploadResult = await cloudinary.uploader.upload(image, {
       folder: 'grrc-gallery',
-      transformation: [
-        { width: 1920, height: 1080, crop: 'limit' },
-        { quality: 'auto:good' },
-        { fetch_format: 'auto' }
-      ],
+    transformation: [
+          { width: 1200, height: 800, crop: 'limit' },  // Reduced from 1920x1080
+          { quality: 'auto:eco' },                       // Reduced from good
+          { fetch_format: 'auto' }
+        ],
       resource_type: 'image'
     });
     

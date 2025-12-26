@@ -48,18 +48,18 @@ function getDatabaseConfig() {
       // Optimized pool settings for Supabase Pooler
       return {
         ...config,
-        max: 5,
-        min: 1,
-        idleTimeoutMillis: 30000,
-        connectionTimeoutMillis: 60000,
-        acquireTimeoutMillis: 60000,
-        createTimeoutMillis: 60000,
+        max: 10,                          // Increased from 5
+        min: 2,                           // Increased from 1
+        idleTimeoutMillis: 60000,         // Increased from 30s
+        connectionTimeoutMillis: 10000,   // Reduced from 60s
+        acquireTimeoutMillis: 10000,      // Reduced from 60s
+        createTimeoutMillis: 10000,       // Reduced from 60s
         destroyTimeoutMillis: 5000,
-        reapIntervalMillis: 10000,
-        createRetryIntervalMillis: 2000,
-        allowExitOnIdle: true,
-        query_timeout: 60000,
-        statement_timeout: 60000
+        reapIntervalMillis: 1000,         // More frequent cleanup
+        createRetryIntervalMillis: 200,   // Faster retries
+        allowExitOnIdle: false,           // Keep pool alive
+        query_timeout: 30000,             // Reduced from 60s
+        statement_timeout: 30000          // Reduced from 60s
       };
     }
     
@@ -127,20 +127,24 @@ if (poolConfig) {
     console.log('🔌 Database client removed from pool');
   });
 
-  // Test connection on startup with retry logic
+  // Test connection on startup with aggressive retry logic
   (async () => {
-    let retries = 3;
+    let retries = 5;                      // Increased from 3
     let connected = false;
     
     while (retries > 0 && !connected) {
       try {
-        console.log(`🔄 Attempting database connection (${4 - retries}/3)...`);
+        console.log(`🔄 Attempting database connection (${6 - retries}/5)...`);
         
-        const client = await pool.connect();
+        const client = await Promise.race([
+          pool.connect(),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Connection timeout')), 5000))
+        ]);
+        
         const result = await client.query('SELECT NOW() as time, current_database() as db');
         
         console.log('✅ Database connection test successful');
-      console.log(`   Connected to: ${result.rows[0].db}`);
+        console.log(`   Connected to: ${result.rows[0].db}`);
         console.log(`   Server time: ${result.rows[0].time}`);
         client.release();
         connected = true;
@@ -149,8 +153,9 @@ if (poolConfig) {
         console.error(`❌ Connection attempt failed: ${error.message}`);
         
         if (retries > 0) {
-          console.log(`⏳ Retrying in 3 seconds... (${retries} attempts left)`);
-          await new Promise(resolve => setTimeout(resolve, 3000));
+          const delay = Math.min(1000 * (6 - retries), 3000); // Exponential backoff
+          console.log(`⏳ Retrying in ${delay}ms... (${retries} attempts left)`);
+          await new Promise(resolve => setTimeout(resolve, delay));
         } else {
           console.error('❌ All connection attempts failed');
           console.error('   Server will continue in degraded mode');
@@ -158,6 +163,20 @@ if (poolConfig) {
       }
     }
   })();
+  
+  // Add connection error recovery
+  pool.on('error', async (err) => {
+    console.error('❌ Database pool error:', err.message);
+    console.log('🔄 Attempting to recover connection...');
+    
+    try {
+      const client = await pool.connect();
+      client.release();
+      console.log('✅ Connection recovered');
+    } catch (recoverError) {
+      console.error('❌ Recovery failed:', recoverError.message);
+    }
+  });
 
 } else {
   // Create a mock pool for development without database

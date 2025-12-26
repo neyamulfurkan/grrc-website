@@ -3,7 +3,10 @@ const pool = require('../db/pool');
 async function getClubConfig() {
   try {
     console.log('🔍 Fetching club_config from database...');
-    const result = await pool.query('SELECT * FROM club_config LIMIT 1');
+    const result = await Promise.race([
+      pool.query('SELECT * FROM club_config LIMIT 1'),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('Query timeout')), 5000))
+    ]);
     console.log('✅ Database returned:', result.rows[0] ? 'CONFIG FOUND' : 'NO CONFIG');
     return { success: true, data: result.rows[0] || null, error: null };
   } catch (error) {
