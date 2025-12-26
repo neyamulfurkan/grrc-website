@@ -1195,12 +1195,51 @@ if (headerClubName && (config.name || config.club_name)) {
 
         // Get event status
         function getEventStatus(event) {
-            if (event.status) {
+            // If event has explicit status set by admin, use it
+            if (event.status && event.status.toLowerCase() !== 'upcoming') {
                 return event.status.toLowerCase();
             }
             
             const now = new Date();
             const eventDate = new Date(event.date);
+            
+            // Parse event time if available
+            let eventStartTime = null;
+            let eventEndTime = null;
+            
+            if (event.time) {
+                // Handle time ranges like "10:00 AM - 12:00 PM"
+                const timeMatch = event.time.match(/(\d{1,2}:\d{2}\s*(?:AM|PM)?)(?:\s*-\s*(\d{1,2}:\d{2}\s*(?:AM|PM)?))?/i);
+                
+                if (timeMatch) {
+                    const startTimeStr = timeMatch[1];
+                    const endTimeStr = timeMatch[2];
+                    
+                    // Parse start time
+                    eventStartTime = parseEventDateTime(event.date, startTimeStr);
+                    
+                    // Parse end time if available
+                    if (endTimeStr) {
+                        eventEndTime = parseEventDateTime(event.date, endTimeStr);
+                    } else {
+                        // If no end time, assume event lasts 2 hours
+                        eventEndTime = new Date(eventStartTime.getTime() + 2 * 60 * 60 * 1000);
+                    }
+                }
+            }
+            
+            // If time is available and parsed successfully
+            if (eventStartTime && eventEndTime) {
+                if (now < eventStartTime) {
+                    return 'upcoming';
+                } else if (now >= eventStartTime && now <= eventEndTime) {
+                    return 'ongoing';
+                } else {
+                    return 'completed';
+                }
+            }
+            
+            // Fallback: If no time or parsing failed, use date-only logic
             const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
             const eventDay = new Date(eventDate.getFullYear(), eventDate.getMonth(), eventDate.getDate());
             
@@ -1212,6 +1251,30 @@ if (headerClubName && (config.name || config.club_name)) {
                 return 'completed';
             }
         }
+        
+        // Helper function to parse event date + time
+        function parseEventDateTime(dateStr, timeStr) {
+            const date = new Date(dateStr);
+            
+            // Parse time string (e.g., "10:00 AM" or "2:30 PM")
+            const timeMatch = timeStr.match(/(\d{1,2}):(\d{2})\s*(AM|PM)?/i);
+            if (!timeMatch) return null;
+            
+            let hours = parseInt(timeMatch[1]);
+            const minutes = parseInt(timeMatch[2]);
+            const period = timeMatch[3] ? timeMatch[3].toUpperCase() : null;
+            
+            // Convert to 24-hour format
+            if (period === 'PM' && hours !== 12) {
+                hours += 12;
+            } else if (period === 'AM' && hours === 12) {
+                hours = 0;
+            }
+            
+            date.setHours(hours, minutes, 0, 0);
+            return date;
+        }
+
 
         // Populate category filters dynamically
         function populateCategoryFilters() {
