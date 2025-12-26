@@ -303,7 +303,7 @@ CREATE INDEX idx_admin_audit_log_module ON admin_audit_log(module, created_at DE
 -- ====================================
 CREATE TABLE alumni_applications (
     id SERIAL PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
+    full_name VARCHAR(255) NOT NULL,
     photo TEXT,
     batch_year VARCHAR(10) NOT NULL,
     department VARCHAR(255) NOT NULL,

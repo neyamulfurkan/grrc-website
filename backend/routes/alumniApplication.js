@@ -408,7 +408,7 @@ router.post(
 
       // Prepare alumni data
       const alumniData = {
-        name: application.full_name,
+        name: application.name || application.full_name,
         email: application.email,
         phone: application.phone,
         batch_year: application.batch_year,
