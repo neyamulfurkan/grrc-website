@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcrypt');
 const pool = require('../db/pool');
+const fs = require('fs');
+const path = require('path');
 const { authenticateToken, isSuperAdmin } = require('../middleware/auth');
 
 // Apply middleware to all routes
