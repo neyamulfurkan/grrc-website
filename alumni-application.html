@@ -879,8 +879,7 @@
             await loadBkashNumber();
             initializeForm();
             initializeBioCounter();
-            initializeSkillsInput();
-            initializePaymentPreview();
+            initializePhotoPreview();
 
             if (typeof initTheme === 'function') {
                 initTheme();
@@ -893,9 +892,16 @@
 
         async function loadBkashNumber() {
             try {
+                // Skip if element doesn't exist (alumni form doesn't need bKash)
+                const bkashElement = document.getElementById('bkashNumber');
+                if (!bkashElement) {
+                    console.log('ℹ️ bKash element not found - skipping (not needed for alumni form)');
+                    return;
+                }
+                
                 // For now, use a default number. Later you can fetch from API
                 const bkashNumber = '01712345678'; // Admin can configure this
-                document.getElementById('bkashNumber').textContent = bkashNumber;
+                bkashElement.textContent = bkashNumber;
             } catch (error) {
                 console.error('Error loading bKash number:', error);
             }
@@ -959,23 +965,27 @@
             const photoUrl = document.getElementById('photoUrl');
             const preview = document.getElementById('photoPreview');
 
-            photoFile.addEventListener('change', async (e) => {
-                const file = e.target.files[0];
-                if (file) {
-                    const base64 = await imageToBase64(file);
-                    preview.src = base64;
-                    preview.style.display = 'block';
-                }
-            });
+            if (photoFile) {
+                photoFile.addEventListener('change', async (e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                        const base64 = await imageToBase64(file);
+                        preview.src = base64;
+                        preview.style.display = 'block';
+                    }
+                });
+            }
 
-            photoUrl.addEventListener('input', (e) => {
-                if (e.target.value) {
-                    preview.src = e.target.value;
-                    preview.style.display = 'block';
-                } else {
-                    preview.style.display = 'none';
-                }
-            });
+            if (photoUrl) {
+                photoUrl.addEventListener('input', (e) => {
+                    if (e.target.value) {
+                        preview.src = e.target.value;
+                        preview.style.display = 'block';
+                    } else {
+                        preview.style.display = 'none';
+                    }
+                });
+            }
         }
 
         async function imageToBase64(file) {
