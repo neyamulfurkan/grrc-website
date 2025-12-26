@@ -512,7 +512,7 @@ function initProactiveChatbot() {
     const bubble = document.createElement('div');
     bubble.style.cssText = `
       position: fixed;
-      bottom: 95px;
+      bottom: 160px;
       right: 24px;
       background: white;
       color: #1a202c;
@@ -526,10 +526,17 @@ function initProactiveChatbot() {
       border: 2px solid var(--primary-color);
     `;
     
-    bubble.innerHTML = `
+        bubble.innerHTML = `
       <div style="font-size: 0.875rem; line-height: 1.4;">${messageText}</div>
       <div style="position: absolute; bottom: -8px; right: 20px; width: 0; height: 0; border-left: 8px solid transparent; border-right: 8px solid transparent; border-top: 8px solid white;"></div>
     `;
+    
+    // Adjust position on mobile
+    if (window.innerWidth <= 768) {
+      bubble.style.bottom = '150px';
+      bubble.style.right = '20px';
+      bubble.style.maxWidth = '260px';
+    }
     
     document.body.appendChild(bubble);
     

@@ -8,7 +8,7 @@
    ============================================ */
 .chatbot-toggle {
   position: fixed;
-  bottom: 24px;
+  bottom: 90px;
   right: 24px;
   width: 60px;
   height: 60px;
@@ -69,12 +69,12 @@
    ============================================ */
 .chatbot-window {
   position: fixed;
-  bottom: 24px;
+  bottom: 90px;
   right: 24px;
   width: 400px;
   max-width: calc(100vw - 48px);
   height: 600px;
-  max-height: calc(100vh - 100px);
+  max-height: calc(100vh - 170px);
   background: var(--surface-color);
   border-radius: var(--radius-2xl);
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
@@ -452,7 +452,7 @@
    ============================================ */
 @media (max-width: 768px) {
   .chatbot-toggle {
-    bottom: 20px;
+    bottom: 80px;
     right: 20px;
     width: 56px;
     height: 56px;
