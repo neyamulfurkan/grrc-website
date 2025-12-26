@@ -2038,7 +2038,7 @@ async function loadAdminDashboardInfo() {
                     await window.storage.updateMember(currentEditMemberId, memberData);
                     showToast('Member updated successfully!', 'success');
                 } else {
-                    await addMember(memberData);
+                    await window.storage.addMember(memberData);
                     showToast('Member added successfully!', 'success');
                 }
 
