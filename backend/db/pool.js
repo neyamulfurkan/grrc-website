@@ -16,7 +16,9 @@ require('dotenv').config();
  */
 function parseConnectionString(connectionString) {
   try {
-    const url = new URL(connectionString);
+    // Remove query parameters that interfere with pg connection
+    const cleanUrl = connectionString.split('?')[0];
+    const url = new URL(cleanUrl);
     
     return {
       host: url.hostname,
@@ -48,18 +50,18 @@ function getDatabaseConfig() {
       // Optimized pool settings for Supabase Pooler with proper free tier limits
       return {
         ...config,
-        max: 5,                           // ✅ Allow 5 connections for concurrent requests
-        min: 1,                           // ✅ Keep 1 connection warm
-        idleTimeoutMillis: 20000,         // ✅ Close idle connections after 20s
-        connectionTimeoutMillis: 20000,   // ✅ 20s timeout
-        acquireTimeoutMillis: 20000,      // ✅ 20s acquire timeout
+        max: 3,                           // ✅ Reduced for free tier
+        min: 0,                           // ✅ Don't keep idle connections
+        idleTimeoutMillis: 10000,         // ✅ Close idle connections after 10s
+        connectionTimeoutMillis: 30000,   // ✅ 30s timeout - increased
+        acquireTimeoutMillis: 30000,      // ✅ 30s acquire timeout
         createTimeoutMillis: 30000,       // ✅ 30s create timeout
         destroyTimeoutMillis: 5000,       // ✅ Quick cleanup
         reapIntervalMillis: 1000,         // ✅ Check for idle connections frequently
-        createRetryIntervalMillis: 200,   // ✅ Quick retries
-        allowExitOnIdle: false,           // ✅ Keep pool alive
+        createRetryIntervalMillis: 500,   // ✅ Slower retries
+        allowExitOnIdle: true,            // ✅ Allow pool to idle
         query_timeout: 30000,             // ✅ 30s query timeout
-        statement_timeout: 120000,        // ✅ INCREASED to 120s
+        statement_timeout: 60000,         // ✅ 60s statement timeout
         keepAlive: true,
         keepAliveInitialDelayMillis: 10000
       };
@@ -138,10 +140,10 @@ if (poolConfig) {
       try {
         console.log(`🔄 Attempting database connection (${6 - retries}/5)...`);
         
-        // ✅ 30s timeout for pooler
+        // ✅ 60s timeout for pooler on cold start
         const client = await Promise.race([
           pool.connect(),
-          new Promise((_, reject) => setTimeout(() => reject(new Error('Connection timeout')), 30000))
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Connection timeout')), 60000))
         ]);
         
         const result = await client.query('SELECT NOW() as time, current_database() as db');
