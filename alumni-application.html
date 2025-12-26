@@ -1090,15 +1090,22 @@
                 let photo = photoUrl || null;
                 
                 if (photoFile) {
-                    // Check file size (max 5MB)
-                    if (photoFile.size > 5 * 1024 * 1024) {
-                        showError('Photo size must be less than 5MB. Please choose a smaller image.');
+                    // Check file size (max 2MB) - REDUCED SIZE
+                    if (photoFile.size > 2 * 1024 * 1024) {
+                        showError('Photo size must be less than 2MB. Please choose a smaller image.');
                         return;
                     }
 
                     try {
                         photo = await imageToBase64(photoFile);
-                        console.log('✅ Photo converted to base64');
+                        const photoSizeMB = (photo.length / (1024 * 1024)).toFixed(2);
+                        console.log(`✅ Photo converted to base64 (${photoSizeMB}MB)`);
+                        
+                        // Check base64 size (should be < 3MB)
+                        if (photo.length > 3 * 1024 * 1024) {
+                            showError('Photo is too large after encoding. Please choose a smaller image (under 1MB original size).');
+                            return;
+                        }
                     } catch (error) {
                         console.error('Error converting photo:', error);
                         showError('Failed to process photo. Please try a smaller image or use a URL instead.');

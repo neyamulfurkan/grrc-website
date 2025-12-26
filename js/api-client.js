@@ -86,6 +86,10 @@ async function request(endpoint, options = {}) {
     const token = getAuthToken();
     const startTime = Date.now();
     
+    // 🔍 DEBUG: Log the full URL being requested
+    console.log('🌐 Requesting URL:', url);
+    console.log('📋 Request method:', options.method || 'GET');
+    
     const defaultHeaders = {
         'Content-Type': 'application/json',
     };
@@ -108,8 +112,10 @@ async function request(endpoint, options = {}) {
         }
     }
     
-    const config = {
+        const config = {
         ...options,
+        mode: 'cors', // 🔧 EXPLICIT CORS MODE
+        credentials: 'omit', // 🔧 DON'T SEND CREDENTIALS FOR PUBLIC ROUTES
         headers: {
             ...defaultHeaders,
             ...options.headers,
@@ -613,10 +619,23 @@ async function getAlumniStatistics() {
 // ============ ALUMNI APPLICATION API METHODS ============
 
 async function submitAlumniApplication(data) {
-    return request('/api/alumni-application/apply', {
-        method: 'POST',
-        body: JSON.stringify(data)
+    console.log('🎯 submitAlumniApplication called with data:', {
+        full_name: data.full_name,
+        email: data.email,
+        photo_size: data.photo ? data.photo.length : 0
     });
+    
+    try {
+        const result = await request('/api/alumni-application/apply', {
+            method: 'POST',
+            body: JSON.stringify(data)
+        });
+        console.log('✅ submitAlumniApplication result:', result);
+        return result;
+    } catch (error) {
+        console.error('❌ submitAlumniApplication error:', error);
+        throw error;
+    }
 }
 
 async function getAlumniApplications(status = null) {
