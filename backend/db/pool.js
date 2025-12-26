@@ -50,20 +50,20 @@ function getDatabaseConfig() {
       // Optimized pool settings for Supabase Pooler with proper free tier limits
             return {
         ...config,
-        max: 3,                           // ✅ Reduced for Supabase free tier
-        min: 0,                           // ✅ No minimum to save connections
-        idleTimeoutMillis: 60000,         // ✅ 60s idle - longer for pooler
-        connectionTimeoutMillis: 30000,   // ✅ 30s timeout for Supabase pooler
-        acquireTimeoutMillis: 30000,      // ✅ 30s acquire timeout
-        createTimeoutMillis: 30000,       // ✅ 30s create timeout  
+        max: 3,                           // ✅ Max 3 connections for free tier
+        min: 1,                           // 🔥 FIX: Keep 1 connection alive always
+        idleTimeoutMillis: 30000,         // 🔥 FIX: 30s idle timeout (was 60s)
+        connectionTimeoutMillis: 20000,   // 🔥 FIX: 20s timeout (was 30s)
+        acquireTimeoutMillis: 20000,      // 🔥 FIX: 20s acquire (was 30s)
+        createTimeoutMillis: 20000,       // 🔥 FIX: 20s create (was 30s)
         destroyTimeoutMillis: 5000,       // ✅ Quick cleanup
-        reapIntervalMillis: 5000,         // ✅ Check less frequently
-        createRetryIntervalMillis: 500,   // ✅ Slower retries
-        allowExitOnIdle: true,            // ✅ Allow cleanup when idle
-        query_timeout: 60000,             // ✅ 60s query timeout
-        statement_timeout: 120000,        // ✅ 120s statement timeout
+        reapIntervalMillis: 10000,        // 🔥 FIX: Check every 10s (was 5s)
+        createRetryIntervalMillis: 200,   // 🔥 FIX: Faster retries (was 500ms)
+        allowExitOnIdle: false,           // 🔥 FIX: Never exit on idle (was true)
+        query_timeout: 30000,             // 🔥 FIX: 30s query timeout (was 60s)
+        statement_timeout: 60000,         // 🔥 FIX: 60s statement timeout (was 120s)
         keepAlive: true,
-        keepAliveInitialDelayMillis: 10000
+        keepAliveInitialDelayMillis: 5000 // 🔥 FIX: Start keepalive after 5s (was 10s)
       };
     }
     
