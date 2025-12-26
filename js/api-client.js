@@ -114,15 +114,20 @@ async function request(endpoint, options = {}) {
     
         const config = {
         ...options,
-        mode: 'cors', // 🔧 EXPLICIT CORS MODE
-        credentials: 'omit', // 🔧 DON'T SEND CREDENTIALS FOR PUBLIC ROUTES
+        mode: 'cors',
+        credentials: 'omit',
         headers: {
             ...defaultHeaders,
             ...options.headers,
         },
-        // ✅ FIX: Allow caching for GET requests to static data
         cache: options.cache || (method === 'GET' && !endpoint.includes('?_t=') ? 'force-cache' : 'no-store')
     };
+    
+    // 🔥 CRITICAL FIX: Ensure Authorization header is ALWAYS included for authenticated requests
+    if (token && !config.headers['Authorization']) {
+        config.headers['Authorization'] = `Bearer ${token}`;
+        console.log('🔐 Authorization header added to request');
+    }
     
     // ✅ FIX: Cache GET requests for config/members/events (static data)
     const isStaticEndpoint = endpoint.includes('/config') || endpoint.includes('/members') || endpoint.includes('/events') || endpoint.includes('/projects');

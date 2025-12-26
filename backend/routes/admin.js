@@ -77,9 +77,14 @@ router.put('/config', async (req, res) => {
 
 router.post('/members', checkPermission('members', 'create'), async (req, res) => {
   try {
+    console.log('📥 POST /members - Request received');
+    console.log('📊 Body size:', JSON.stringify(req.body).length, 'bytes');
+    console.log('🔐 Auth header present:', !!req.headers.authorization);
+    
     const { name, department, year, role, email } = req.body;
     
     if (!name || !department || !year || !role || !email) {
+      console.error('❌ Missing required fields:', { name: !!name, email: !!email, department: !!department, year: !!year, role: !!role });
       return res.status(400).json({
         success: false,
         error: 'Required fields: name, department, year, role, email',

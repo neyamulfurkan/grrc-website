@@ -2026,13 +2026,13 @@ async function loadAdminDashboardInfo() {
                     // Compress image to reasonable size for member photos
                     try {
                         showToast('Processing photo...', 'info');
-                        photo = await compressImage(photoFile, 800, 800, 0.7);
+                        photo = await compressImage(photoFile, 600, 600, 0.6);
                         const sizeKB = (photo.length / 1024).toFixed(2);
                         console.log(`✅ Photo compressed to ${sizeKB} KB`);
                         
                         // Double-check compressed size isn't still too large
-                        if (photo.length > 2 * 1024 * 1024) { // 2MB after compression
-                            showToast('Photo still too large after compression. Please use a smaller image.', 'error');
+                        if (photo.length > 500 * 1024) { // 500KB limit for members
+                            showToast('Photo still too large after compression. Please use a smaller image or lower quality photo.', 'error');
                             return;
                         }
                     } catch (compressionError) {
