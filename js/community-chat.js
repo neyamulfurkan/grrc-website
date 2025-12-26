@@ -354,7 +354,18 @@ function renderGlobalMessages(messages) {
     btn.addEventListener('click', () => deleteGlobalMessage(btn.dataset.msgId));
   });
 }
-
+// ✅ FIX: Admin function to delete ANY global message
+async function deleteGlobalMessageAsAdmin(messageId) {
+    if (!confirm('⚠️ Delete this message from global chat?')) return;
+    
+    try {
+        await deleteDoc(doc(db, 'global_chat', messageId));
+        showToast('Message deleted', 'success');
+    } catch (error) {
+        console.error('Error deleting message:', error);
+        alert('Failed to delete message: ' + error.message);
+    }
+}
 // Delete global message
 async function deleteGlobalMessage(messageId) {
   if (!confirm('Delete this message?')) return;

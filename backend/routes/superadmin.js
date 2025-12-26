@@ -56,6 +56,15 @@ router.delete('/community/users/:userId', async (req, res) => {
       }
     }
     
+    // ✅ FIX: Delete Firestore document FIRST
+    try {
+      const firestore = admin.firestore();
+      await firestore.collection('users').doc(userId).delete();
+      console.log(`✅ Deleted user ${userId} from Firestore`);
+    } catch (firestoreError) {
+      console.error('❌ Firestore deletion error:', firestoreError);
+    }
+    
     // Delete user from Firebase Authentication
     try {
       await admin.auth().deleteUser(userId);
@@ -83,7 +92,7 @@ router.delete('/community/users/:userId', async (req, res) => {
     
     res.json({
       success: true,
-      message: 'User deleted from Firebase Authentication. Firestore data should be deleted by frontend.'
+      message: 'User permanently deleted from Firebase Authentication and Firestore.'
     });
     
   } catch (error) {
