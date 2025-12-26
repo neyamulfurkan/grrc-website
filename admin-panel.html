@@ -2011,19 +2011,34 @@ async function loadAdminDashboardInfo() {
                     return;
                 }
 
+                // ✅ FIX: Validate and compress member photo
                 const photoFile = document.getElementById('memberPhoto').files[0];
                 const photoUrl = document.getElementById('memberPhotoUrl').value.trim();
                 let photo = photoUrl;
 
                 if (photoFile) {
-                    // ✅ FIX: Compress image before sending
+                    // Check file size limit (5MB)
+                    if (photoFile.size > 5 * 1024 * 1024) {
+                        showToast('Photo too large. Please use an image under 5MB.', 'error');
+                        return;
+                    }
+                    
+                    // Compress image to reasonable size for member photos
                     try {
-                        showToast('Compressing image...', 'info');
-                        photo = await compressImage(photoFile, 800, 800, 0.7); // Smaller size for members
-                        console.log('✅ Image compressed, size:', photo.length, 'bytes');
+                        showToast('Processing photo...', 'info');
+                        photo = await compressImage(photoFile, 800, 800, 0.7);
+                        const sizeKB = (photo.length / 1024).toFixed(2);
+                        console.log(`✅ Photo compressed to ${sizeKB} KB`);
+                        
+                        // Double-check compressed size isn't still too large
+                        if (photo.length > 2 * 1024 * 1024) { // 2MB after compression
+                            showToast('Photo still too large after compression. Please use a smaller image.', 'error');
+                            return;
+                        }
                     } catch (compressionError) {
-                        console.error('Image compression failed, using original:', compressionError);
-                        photo = await imageToBase64(photoFile);
+                        console.error('Compression failed:', compressionError);
+                        showToast('Failed to process photo. Please try a different image.', 'error');
+                        return;
                     }
                 }
 
