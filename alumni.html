@@ -12,31 +12,6 @@
     <link rel="stylesheet" href="css/components.css">
     
     <style>
-       @media (max-width: 768px) {
-            .nav-menu {
-                display: none !important;
-            }
-            
-            .mobile-menu-toggle {
-                display: flex !important;
-                visibility: visible !important;
-                opacity: 1 !important;
-            }
-
-            .header {
-                height: 60px;
-            }
-
-            .club-name {
-                max-width: 150px;
-                font-size: 0.9rem;
-            }
-
-            .logo {
-                height: 40px;
-                width: 40px;
-            }
-        }
         [data-theme="dark"] .header {
             background: rgba(26, 31, 58, 0.95);
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
@@ -51,7 +26,7 @@
             height: 100%;
         }
 
-       .header-actions {
+        .header-actions {
             display: flex;
             align-items: center;
             gap: 0.5rem;
@@ -105,18 +80,7 @@
             background: var(--text-primary);
             margin: 3px 0;
             transition: all 0.3s ease;
-            position: relative;
             border-radius: 2px;
-        }
-        
-        @media (max-width: 768px) {
-            .mobile-menu-toggle {
-                display: flex !important;
-            }
-            
-            .mobile-menu-toggle span {
-                display: block !important;
-            }
         }
 
         .mobile-menu-toggle.active span:nth-child(1) {
@@ -187,42 +151,15 @@
             color: white;
         }
 
-        @media (max-width: 768px) {
-            .nav-menu {
-                display: none !important;
-            }
-
-            .mobile-menu-toggle {
-                display: flex !important;
-                visibility: visible !important;
-                opacity: 1 !important;
-            }
-
-            .header {
-                height: 60px;
-            }
-
-            .club-name {
-                max-width: 150px;
-                font-size: 0.9rem;
-            }
-
-            .logo {
-                height: 40px;
-                width: 40px;
-            }
-        }
-
-       .page-header {
+        .page-header {
             background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
             padding: 100px 0 60px;
-            margin-top: 60px;
             text-align: center;
             color: white;
             position: relative;
             overflow: hidden;
-            margin-top: 0;
         }
+
         .page-header::before {
             content: '';
             position: absolute;
@@ -800,8 +737,30 @@
         }
 
         @media (max-width: 768px) {
+            .nav-menu {
+                display: none;
+            }
+            
+            .mobile-menu-toggle {
+                display: flex;
+            }
+
+            .header {
+                height: 60px;
+            }
+
+            .club-name {
+                max-width: 150px;
+                font-size: 0.9rem;
+            }
+
+            .logo {
+                height: 40px;
+                width: 40px;
+            }
+
             .page-header {
-                padding: 100px 0 40px;
+                padding: 80px 0 40px;
             }
 
             .page-header h1 {
@@ -913,7 +872,7 @@
             <p>Honoring the Legacy of GSTU Robotics & Research Club</p>
             <p>Meet the brilliant minds who have contributed to our club's journey and are now making their mark in the world.</p>
             <div style="margin-top: 2rem;">
-                <a href="./alumni-application.html" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 1rem 2rem; font-size: 1.1rem; text-decoration: none;" onclick="event.preventDefault(); window.location.href='./alumni-application.html';">
+                <a href="./alumni-application.html" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 1rem 2rem; font-size: 1.1rem; text-decoration: none;">
                     <span>📝</span>
                     <span>Apply as Alumni</span>
                 </a>
@@ -1012,457 +971,398 @@
             </div>
             
             <div class="footer-section">
-                <h4 class="footer-subtitle">Connect With Us</h4>
-                <div class="social-links" id="footerSocialLinks">
-                    <p style="color: var(--text-secondary); font-size: 0.9rem;">No social links added yet</p>
+                <h4 class="footer-subtitle">Connect2:45 PMWith Us</h4>
+<div class="social-links" id="footerSocialLinks">
+<p style="color: var(--text-secondary); font-size: 0.9rem;">No social links added yet</p>
+</div>
+</div>
+</div>
+    <div class="footer-bottom container">
+        <p>&copy; <span id="currentYear"></span> GSTU Robotics & Research Club. All rights reserved.</p>
+    </div>
+</footer>
+
+<script src="js/api-client.js"></script>
+<script src="js/config.js"></script>
+<script src="js/storage.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/theme.js"></script>
+<script src="js/navigation.js"></script>
+<script src="js/utils.js"></script>
+<script src="js/load-config.js"></script>
+
+<link rel="stylesheet" href="css/chatbot.css">
+<script src="js/chatbot-config.js"></script>
+<script src="js/chatbot.js?v=2.0"></script>
+
+<script>
+    const state = {
+        allAlumni: [],
+        filteredAlumni: [],
+        currentBatchFilter: null,
+        currentSort: 'newest',
+        searchQuery: ''
+    };
+
+    const elements = {
+        loadingState: document.getElementById('loadingState'),
+        alumniGrid: document.getElementById('alumniGrid'),
+        emptyState: document.getElementById('emptyState'),
+        noResultsState: document.getElementById('noResultsState'),
+        searchInput: document.getElementById('searchInput'),
+        sortSelect: document.getElementById('sortSelect'),
+        batchFilters: document.getElementById('batchFilters'),
+        alumniModal: document.getElementById('alumniModal'),
+        modalContent: document.getElementById('modalContent')
+    };
+
+    async function waitForAPI() {
+        let retries = 0;
+        while ((!window.apiClient || !window.apiClient.isReady) && retries < 50) {
+            await new Promise(resolve => setTimeout(resolve, 100));
+            retries++;
+        }
+    }
+
+    async function loadClubConfig() {
+        try {
+            if (!window.apiClient?.isReady) return;
+            
+            const result = await window.apiClient.getConfig();
+            if (!result.success || !result.data) return;
+            
+            const config = result.data;
+            
+            if (config.name) {
+                document.getElementById('headerClubName').textContent = config.name;
+                document.getElementById('footerClubName').textContent = config.name;
+            }
+            
+            if (config.description) {
+                document.getElementById('footerDescription').textContent = config.description;
+            }
+            
+            const headerLogo = document.getElementById('headerLogo');
+            if (headerLogo && (config.logo || config.logo_url)) {
+                const logoUrl = config.logo || config.logo_url;
+                headerLogo.src = `${logoUrl}?t=${Date.now()}`;
+                headerLogo.onerror = () => headerLogo.src = 'assets/default-logo.jpg';
+            }
+            
+            const linksData = config.socialLinks || config.social_links;
+            if (linksData?.length) {
+                const socialIcons = { facebook: '📘', twitter: '🐦', instagram: '📷', linkedin: '💼', youtube: '📺', github: '💻', email: '📧' };
+                document.getElementById('footerSocialLinks').innerHTML = linksData
+                    .map(link => `<a href="${link.url}" target="_blank" rel="noopener noreferrer" class="social-link">${socialIcons[link.platform.toLowerCase()] || '🔗'}</a>`)
+                    .join('');
+            }
+        } catch (error) {
+            console.error('Error loading club config:', error);
+        }
+    }
+
+    function updateStatistics() {
+        const batches = new Set(state.allAlumni.map(a => a.batch_year).filter(Boolean));
+        const featured = state.allAlumni.filter(a => a.is_featured).length;
+        const companies = new Set(state.allAlumni.filter(a => a.current_company).map(a => a.current_company));
+        
+        document.getElementById('totalAlumni').textContent = state.allAlumni.length;
+        document.getElementById('totalBatches').textContent = batches.size;
+        document.getElementById('featuredCount').textContent = featured;
+        document.getElementById('uniqueCompanies').textContent = companies.size;
+    }
+
+    async function loadBatches() {
+        try {
+            const result = await window.apiClient.getAlumniBatches();
+            if (result.success && result.data) {
+                const batchesHTML = result.data.map(batch => 
+                    `<button class="filter-btn" data-batch="${batch}">${batch}</button>`
+                ).join('');
+                
+                elements.batchFilters.innerHTML = `
+                    <button class="filter-btn active" data-batch="all">All Batches</button>
+                    ${batchesHTML}
+                `;
+            }
+        } catch (error) {
+            console.error('Error loading batches:', error);
+        }
+    }
+
+    async function loadAlumni() {
+        try {
+            elements.loadingState.style.display = 'block';
+            elements.alumniGrid.style.display = 'none';
+            elements.emptyState.style.display = 'none';
+            
+            const result = await window.apiClient.getAlumni();
+            
+            if (result.success && result.data) {
+                state.allAlumni = result.data;
+                state.filteredAlumni = [...state.allAlumni];
+                
+                updateStatistics();
+                applyFilters();
+                
+                elements.loadingState.style.display = 'none';
+                
+                if (state.allAlumni.length === 0) {
+                    elements.emptyState.style.display = 'block';
+                } else {
+                    elements.alumniGrid.style.display = 'grid';
+                }
+            } else {
+                elements.loadingState.style.display = 'none';
+                elements.emptyState.style.display = 'block';
+            }
+        } catch (error) {
+            console.error('Error loading alumni:', error);
+            elements.loadingState.style.display = 'none';
+            elements.emptyState.style.display = 'block';
+        }
+    }
+
+    function applyFilters() {
+        state.filteredAlumni = state.allAlumni.filter(alumni => {
+            if (state.searchQuery) {
+                const searchLower = state.searchQuery.toLowerCase();
+                const matchesSearch = 
+                    alumni.name?.toLowerCase().includes(searchLower) ||
+                    alumni.current_company?.toLowerCase().includes(searchLower) ||
+                    alumni.current_position?.toLowerCase().includes(searchLower) ||
+                    alumni.department?.toLowerCase().includes(searchLower);
+                
+                if (!matchesSearch) return false;
+            }
+            
+            if (state.currentBatchFilter && alumni.batch_year !== state.currentBatchFilter) {
+                return false;
+            }
+            
+            return true;
+        });
+        
+        const sortFunctions = {
+            'newest': (a, b) => (b.batch_year || '').localeCompare(a.batch_year || ''),
+            'oldest': (a, b) => (a.batch_year || '').localeCompare(b.batch_year || ''),
+            'name-asc': (a, b) => (a.name || '').localeCompare(b.name || ''),
+            'name-desc': (a, b) => (b.name || '').localeCompare(a.name || '')
+        };
+        
+        state.filteredAlumni.sort(sortFunctions[state.currentSort]);
+        displayAlumni();
+    }
+
+    function displayAlumni() {
+        if (state.filteredAlumni.length === 0 && state.allAlumni.length > 0) {
+            elements.alumniGrid.style.display = 'none';
+            elements.noResultsState.style.display = 'block';
+            return;
+        }
+        
+        elements.noResultsState.style.display = 'none';
+        elements.alumniGrid.style.display = 'grid';
+        
+        elements.alumniGrid.innerHTML = state.filteredAlumni.map(alumni => createAlumniCard(alumni)).join('');
+    }
+
+    function createDefaultAvatar(name) {
+        const initial = name ? name.charAt(0).toUpperCase() : '?';
+        const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><rect fill="#1a1f3a" width="200" height="200"/><text x="100" y="110" font-family="Arial" font-size="80" fill="#00d4ff" text-anchor="middle">${initial}</text></svg>`;
+        return 'data:image/svg+xml;base64,' + btoa(svg);
+    }
+
+    function createAlumniCard(alumni) {
+        const defaultPhoto = createDefaultAvatar(alumni.name || 'Alumni');
+        const photoSrc = alumni.photo || defaultPhoto;
+        const featuredBadge = alumni.is_featured ? '<div class="featured-badge">⭐ Featured</div>' : '';
+        
+        return `
+            <div class="alumni-card" onclick="showAlumniModal('${alumni.id}')">
+                <div class="alumni-photo">
+                    <img src="${photoSrc}" alt="${alumni.name || 'Alumni'}" onerror="this.src='${defaultPhoto}'">
+                    ${featuredBadge}
+                </div>
+                <div class="alumni-content">
+                    <h3 class="alumni-name">${alumni.name || 'Unknown'}</h3>
+                    <div class="alumni-batch">Batch: ${alumni.batch_year || 'N/A'}</div>
+                    ${alumni.role_in_club ? `<div class="alumni-role-in-club">${alumni.role_in_club}</div>` : ''}
+                    <div class="alumni-current">
+                        ${alumni.current_position ? `<div class="current-position">${alumni.current_position}</div>` : ''}
+                        ${alumni.current_company ? `<div class="current-company">@ ${alumni.current_company}</div>` : ''}
+                    </div>
+                    <div class="alumni-department">${alumni.department || 'N/A'}</div>
                 </div>
             </div>
-        </div>
+        `;
+    }
+
+    function showAlumniModal(alumniId) {
+        const alumni = state.allAlumni.find(a => a.id === alumniId);
+        if (!alumni) return;
         
-        <div class="footer-bottom container">
-            <p>&copy; <span id="currentYear"></span> GSTU Robotics & Research Club. All rights reserved.</p>
-        </div>
-    </footer>
-
-    <script src="js/api-client.js"></script>
-    <script src="js/config.js"></script>
-    <script src="js/storage.js"></script>
-    <script src="js/auth.js"></script>
-    <script src="js/theme.js"></script>
-    <script src="js/navigation.js"></script>
-    <script src="js/utils.js"></script>
-    <script src="js/load-config.js"></script>
-    
-    <link rel="stylesheet" href="css/chatbot.css">
-    <script src="js/chatbot-config.js"></script>
-    <script src="js/chatbot.js?v=2.0"></script>
-
-    <script>
-        let allAlumni = [];
-        let filteredAlumni = [];
-        let currentBatchFilter = null;
-        let currentSort = 'newest';
-        let searchQuery = '';
-
-        document.addEventListener('DOMContentLoaded', async function() {
-            document.getElementById('currentYear').textContent = new Date().getFullYear();
-            
-            let retries = 0;
-            while ((!window.apiClient || !window.apiClient.isReady) && retries < 50) {
-                await new Promise(resolve => setTimeout(resolve, 100));
-                retries++;
-            }
-            
-            await loadClubConfig();
-            await loadBatches();
-            await loadAlumni();
-            initializeFilters();
-            initializeSearch();
-            initializeModal();
-            
-            if (typeof initTheme === 'function') {
-                initTheme();
-            }
-            
-           if (typeof initNavigation === 'function') {
-                initNavigation();
-            }
-            
-            // Initialize mobile menu
-            const mobileMenuToggle = document.getElementById('mobileMenuToggle');
-            const mobileNavOverlay = document.getElementById('mobileNavOverlay');
-            
-            if (mobileMenuToggle && mobileNavOverlay) {
-                mobileMenuToggle.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    mobileNavOverlay.classList.toggle('active');
-                    mobileMenuToggle.classList.toggle('active');
-                    document.body.style.overflow = mobileNavOverlay.classList.contains('active') ? 'hidden' : '';
-                });
+        const defaultPhoto = createDefaultAvatar(alumni.name || 'Alumni');
+        const photoSrc = alumni.photo || defaultPhoto;
+        
+        const modalHTML = `
+            <button class="modal-close" onclick="closeAlumniModal()">×</button>
+            <div class="modal-header">
+                <img src="${photoSrc}" alt="${alumni.name || 'Alumni'}" class="modal-photo" onerror="this.src='${defaultPhoto}'">
+                <div class="modal-name">${alumni.name || 'Unknown'}</div>
+                <div class="modal-batch">Batch: ${alumni.batch_year || 'N/A'}</div>
+                ${alumni.is_featured ? '<div class="featured-label">⭐ Featured Alumni</div>' : ''}
+            </div>
+            <div class="modal-body">
+                <div class="modal-section">
+                    <div class="modal-section-title">🎓 Academic Background</div>
+                    <div class="modal-info-grid">
+                        <div class="modal-info-item">
+                            <div class="modal-info-label">Department</div>
+                            <div class="modal-info-value">${alumni.department || 'N/A'}</div>
+                        </div>
+                        <div class="modal-info-item">
+                            <div class="modal-info-label">Batch Year</div>
+                            <div class="modal-info-value">${alumni.batch_year || 'N/A'}</div>
+                        </div>
+                        ${alumni.role_in_club ? `
+                        <div class="modal-info-item">
+                            <div class="modal-info-label">Role in Club</div>
+                            <div class="modal-info-value">${alumni.role_in_club}</div>
+                        </div>` : ''}
+                    </div>
+                </div>
                 
-                mobileNavOverlay.addEventListener('click', function(e) {
-                    if (e.target === mobileNavOverlay) {
-                        mobileNavOverlay.classList.remove('active');
-                        mobileMenuToggle.classList.remove('active');
-                        document.body.style.overflow = '';
-                    }
-                });
+                ${alumni.current_position || alumni.current_company ? `
+                <div class="modal-section">
+                    <div class="modal-section-title">💼 Current Position</div>
+                    <div class="modal-info-grid">
+                        ${alumni.current_position ? `
+                        <div class="modal-info-item">
+                            <div class="modal-info-label">Position</div>
+                            <div class="modal-info-value">${alumni.current_position}</div>
+                        </div>` : ''}
+                        ${alumni.current_company ? `
+                        <div class="modal-info-item">
+                            <div class="modal-info-label">Company</div>
+                            <div class="modal-info-value">${alumni.current_company}</div>
+                        </div>` : ''}
+                    </div>
+                </div>` : ''}
                 
-                document.querySelectorAll('.mobile-nav-link').forEach(link => {
-                    link.addEventListener('click', function() {
-                        mobileNavOverlay.classList.remove('active');
-                        mobileMenuToggle.classList.remove('active');
-                        document.body.style.overflow = '';
-                    });
-                });
+                ${alumni.bio ? `
+                <div class="modal-section">
+                    <div class="modal-section-title">📝 About</div>
+                    <p class="modal-bio">${alumni.bio}</p>
+                </div>` : ''}
+                
+                ${alumni.achievements ? `
+                <div class="modal-section">
+                    <div class="modal-section-title">🏆 Achievements</div>
+                    <p class="modal-bio">${alumni.achievements}</p>
+                </div>` : ''}
+                
+                ${alumni.email || alumni.phone || alumni.linkedin || alumni.github || alumni.facebook ? `
+                <div class="modal-section">
+                    <div class="modal-section-title">📞 Connect</div>
+                    <div class="contact-links">
+                        ${alumni.email ? `<a href="mailto:${alumni.email}" class="contact-link">📧 ${alumni.email}</a>` : ''}
+                        ${alumni.phone ? `<a href="tel:${alumni.phone}" class="contact-link">📱 ${alumni.phone}</a>` : ''}
+                        ${alumni.linkedin ? `<a href="${alumni.linkedin}" target="_blank" rel="noopener noreferrer" class="contact-link">💼 LinkedIn</a>` : ''}
+                        ${alumni.github ? `<a href="${alumni.github}" target="_blank" rel="noopener noreferrer" class="contact-link">💻 GitHub</a>` : ''}
+                        ${alumni.facebook ? `<a href="${alumni.facebook}" target="_blank" rel="noopener noreferrer" class="contact-link">📘 Facebook</a>` : ''}
+                    </div>
+                </div>` : ''}
+            </div>
+        `;
+
+        elements.modalContent.innerHTML = modalHTML;
+        elements.alumniModal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeAlumniModal() {
+        elements.alumniModal.classList.remove('active');
+        document.body.style.overflow = '';
+    }
+
+    function initializeEventListeners() {
+        elements.batchFilters.addEventListener('click', (e) => {
+            if (e.target.classList.contains('filter-btn')) {
+                document.querySelectorAll('#batchFilters .filter-btn').forEach(btn => btn.classList.remove('active'));
+                e.target.classList.add('active');
+                state.currentBatchFilter = e.target.dataset.batch === 'all' ? null : e.target.dataset.batch;
+                applyFilters();
             }
         });
-        async function loadClubConfig() {
-            try {
-                if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady) {
-                    const result = await window.apiClient.getConfig();
-                    if (result.success && result.data) {
-                        const config = result.data;
-                        
-                        if (config.name) {
-                            document.getElementById('headerClubName').textContent = config.name;
-                            document.getElementById('footerClubName').textContent = config.name;
-                        }
-                        
-                        if (config.description) {
-                            document.getElementById('footerDescription').textContent = config.description;
-                        }
-                        
-                        const headerLogo = document.getElementById('headerLogo');
-                        if (headerLogo && (config.logo || config.logo_url)) {
-                            const logoUrl = config.logo || config.logo_url;
-                            const cacheBustedUrl = logoUrl.includes('?') 
-                                ? logoUrl + '&t=' + Date.now()
-                                : logoUrl + '?t=' + Date.now();
-                            headerLogo.src = cacheBustedUrl;
-                            headerLogo.style.display = 'block';
-                            headerLogo.onerror = function() {
-                                this.src = 'assets/default-logo.jpg';
-                            };
-                        }
-                        
-                        const linksData = config.socialLinks || config.social_links;
-                        if (linksData && linksData.length > 0) {
-                            const socialContainer = document.getElementById('footerSocialLinks');
-                            socialContainer.innerHTML = linksData.map(link =>
-                                `<a href="${link.url}" target="_blank" rel="noopener noreferrer" class="social-link">${getSocialIcon(link.platform)}</a>`
-                            ).join('');
-                        }
-                    }
-                }
-            } catch (error) {
-                console.error('Error loading club config:', error);
-            }
-        }
-
-        function getSocialIcon(platform) {
-            const icons = {
-                facebook: '📘',
-                twitter: '🐦',
-                instagram: '📷',
-                linkedin: '💼',
-                youtube: '📺',
-                github: '💻',
-                email: '📧'
-            };
-            return icons[platform.toLowerCase()] || '🔗';
-        }
-
-        async function loadStatistics() {
-            try {
-                // Calculate stats directly from allAlumni array
-                const totalAlumni = allAlumni.length;
-                const batches = new Set(allAlumni.map(a => a.batch_year).filter(Boolean));
-                const featured = allAlumni.filter(a => a.is_featured).length;
-                const companies = new Set(allAlumni.filter(a => a.current_company).map(a => a.current_company));
-                
-                document.getElementById('totalAlumni').textContent = totalAlumni;
-                document.getElementById('totalBatches').textContent = batches.size;
-                document.getElementById('featuredCount').textContent = featured;
-                document.getElementById('uniqueCompanies').textContent = companies.size;
-                
-                console.log('✅ Alumni stats updated:', { totalAlumni, batches: batches.size, featured, companies: companies.size });
-            } catch (error) {
-                console.error('Error loading statistics:', error);
-                document.getElementById('totalAlumni').textContent = '0';
-                document.getElementById('totalBatches').textContent = '0';
-                document.getElementById('featuredCount').textContent = '0';
-                document.getElementById('uniqueCompanies').textContent = '0';
-            }
-        }
-
-        async function loadBatches() {
-            try {
-                const result = await window.apiClient.getAlumniBatches();
-                if (result.success && result.data) {
-                    const batchesContainer = document.getElementById('batchFilters');
-                    const batchesHTML = result.data.map(batch => 
-                        `<button class="filter-btn" data-batch="${batch}">${batch}</button>`
-                    ).join('');
-                    
-                    batchesContainer.innerHTML = `
-                        <button class="filter-btn active" data-batch="all">All Batches</button>
-                        ${batchesHTML}
-                    `;
-                }
-            } catch (error) {
-                console.error('Error loading batches:', error);
-            }
-        }
-
-        async function loadAlumni() {
-            try {
-                const loadingState = document.getElementById('loadingState');
-                const alumniGrid = document.getElementById('alumniGrid');
-                const emptyState = document.getElementById('emptyState');
-                
-                loadingState.style.display = 'block';
-                alumniGrid.style.display = 'none';
-                emptyState.style.display = 'none';
-                
-                const result = await window.apiClient.getAlumni();
-                
-                if (result.success && result.data) {
-                    allAlumni = result.data;
-                    filteredAlumni = [...allAlumni];
-                    
-                    await loadStatistics();
-                    
-                    applyFilters();
-                    
-                    loadingState.style.display = 'none';
-                    
-                    if (allAlumni.length === 0) {
-                        emptyState.style.display = 'block';
-                    } else {
-                        alumniGrid.style.display = 'grid';
-                    }
-                } else {
-                    loadingState.style.display = 'none';
-                    emptyState.style.display = 'block';
-                }
-            } catch (error) {
-                console.error('Error loading alumni:', error);
-                document.getElementById('loadingState').style.display = 'none';
-                document.getElementById('emptyState').style.display = 'block';
-            }
-        }
-
-        function initializeFilters() {
-            document.getElementById('batchFilters').addEventListener('click', (e) => {
-                if (e.target.classList.contains('filter-btn')) {
-                    document.querySelectorAll('#batchFilters .filter-btn').forEach(btn => {
-                        btn.classList.remove('active');
-                    });
-                    e.target.classList.add('active');
-                    currentBatchFilter = e.target.dataset.batch === 'all' ? null : e.target.dataset.batch;
-                    applyFilters();
-                }
-            });
-            
-            document.getElementById('sortSelect').addEventListener('change', (e) => {
-                currentSort = e.target.value;
+        
+        elements.sortSelect.addEventListener('change', (e) => {
+            state.currentSort = e.target.value;
+            applyFilters();
+        });
+        
+        let debounceTimer;
+        elements.searchInput.addEventListener('input', (e) => {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => {
+                state.searchQuery = e.target.value.toLowerCase().trim();
                 applyFilters();
-            });
-        }
+            }, 300);
+        });
+        
+        elements.alumniModal.addEventListener('click', (e) => {
+            if (e.target === elements.alumniModal) closeAlumniModal();
+        });
 
-        function initializeSearch() {
-            const searchInput = document.getElementById('searchInput');
-            let debounceTimer;
-            
-            searchInput.addEventListener('input', (e) => {
-                clearTimeout(debounceTimer);
-                debounceTimer = setTimeout(() => {
-                    searchQuery = e.target.value.toLowerCase().trim();
-                    applyFilters();
-                }, 300);
-            });
-        }
-
-        function applyFilters() {
-            filteredAlumni = allAlumni.filter(alumni => {
-                if (searchQuery) {
-                    const matchesSearch = 
-                        (alumni.name && alumni.name.toLowerCase().includes(searchQuery)) ||
-                        (alumni.current_company && alumni.current_company.toLowerCase().includes(searchQuery)) ||
-                        (alumni.current_position && alumni.current_position.toLowerCase().includes(searchQuery)) ||
-                        (alumni.department && alumni.department.toLowerCase().includes(searchQuery));
-                    
-                    if (!matchesSearch) return false;
-                }
-                
-                if (currentBatchFilter) {
-                    if (alumni.batch_year !== currentBatchFilter) return false;
-                }
-                
-                return true;
-            });
-            
-            switch (currentSort) {
-                case 'newest':
-                    filteredAlumni.sort((a, b) => (b.batch_year || '').localeCompare(a.batch_year || ''));
-                    break;
-                case 'oldest':
-                    filteredAlumni.sort((a, b) => (a.batch_year || '').localeCompare(b.batch_year || ''));
-                    break;
-                case 'name-asc':
-                    filteredAlumni.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
-                    break;
-                case 'name-desc':
-                    filteredAlumni.sort((a, b) => (b.name || '').localeCompare(a.name || ''));
-                    break;
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && elements.alumniModal.classList.contains('active')) {
+                closeAlumniModal();
             }
+        });
+        
+        const mobileMenuToggle = document.getElementById('mobileMenuToggle');
+        const mobileNavOverlay = document.getElementById('mobileNavOverlay');
+        
+        if (mobileMenuToggle && mobileNavOverlay) {
+            mobileMenuToggle.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                mobileNavOverlay.classList.toggle('active');
+                mobileMenuToggle.classList.toggle('active');
+                document.body.style.overflow = mobileNavOverlay.classList.contains('active') ? 'hidden' : '';
+            });
             
-            displayAlumni();
-        }
-
-        function displayAlumni() {
-            const alumniGrid = document.getElementById('alumniGrid');
-            const noResultsState = document.getElementById('noResultsState');
-            
-            if (filteredAlumni.length === 0 && allAlumni.length > 0) {
-                alumniGrid.style.display = 'none';
-                noResultsState.style.display = 'block';
-                return;
-            }
-            
-            noResultsState.style.display = 'none';
-            alumniGrid.style.display = 'grid';
-            
-            alumniGrid.innerHTML = filteredAlumni.map((alumni, index) => {
-                const card = createAlumniCard(alumni);
-                return card.replace('class="alumni-card"', `class="alumni-card scroll-reveal fade-up delay-${(index % 5) + 1}"`);
-            }).join('');
-            
-            // Re-initialize scroll animations
-            setTimeout(() => {
-                if (typeof window.initScrollAnimations === 'function') {
-                    window.initScrollAnimations();
-                }
-            }, 100);
-        }
-
-        function createAlumniCard(alumni) {
-            const defaultPhoto = createDefaultAvatar(alumni.name || 'Alumni');
-            const photoSrc = alumni.photo || defaultPhoto;
-            const featuredBadge = alumni.is_featured ? '<div class="featured-badge">⭐ Featured</div>' : '';
-            
-            return `
-                <div class="alumni-card" onclick="showAlumniModal('${alumni.id}')">
-                    <div class="alumni-photo">
-                        <img src="${photoSrc}" alt="${alumni.name || 'Alumni'}" onerror="this.src='${defaultPhoto}'">
-                        ${featuredBadge}
-                    </div>
-                    <div class="alumni-content">
-                        <h3 class="alumni-name">${alumni.name || 'Unknown'}</h3>
-                        <div class="alumni-batch">Batch: ${alumni.batch_year || 'N/A'}</div>
-                        ${alumni.role_in_club ? `<div class="alumni-role-in-club">${alumni.role_in_club}</div>` : ''}
-                        <div class="alumni-current">
-                            ${alumni.current_position ? `<div class="current-position">${alumni.current_position}</div>` : ''}
-                            ${alumni.current_company ? `<div class="current-company">@ ${alumni.current_company}</div>` : ''}
-                        </div>
-                        <div class="alumni-department">${alumni.department || 'N/A'}</div>
-                    </div>
-                </div>
-            `;
-        }
-
-        function showAlumniModal(alumniId) {
-            const alumni = allAlumni.find(a => a.id === alumniId);
-            if (!alumni) return;
-            
-            const defaultPhoto = createDefaultAvatar(alumni.name || 'Alumni');
-            const photoSrc = alumni.photo || defaultPhoto;
-            
-            const modalHTML = `
-                <button class="modal-close" onclick="closeAlumniModal()">×</button>
-                <div class="modal-header">
-                    <img src="${photoSrc}" alt="${alumni.name || 'Alumni'}" class="modal-photo" onerror="this.src='${defaultPhoto}'">
-                    <div class="modal-name">${alumni.name || 'Unknown'}</div>
-                    <div class="modal-batch">Batch: ${alumni.batch_year || 'N/A'}</div>
-                    ${alumni.is_featured ? '<div class="featured-label">⭐ Featured Alumni</div>' : ''}
-                </div>
-                <div class="modal-body">
-                    <div class="modal-section">
-                        <div class="modal-section-title">🎓 Academic Background</div>
-                        <div class="modal-info-grid">
-                            <div class="modal-info-item">
-                                <div class="modal-info-label">Department</div>
-                                <div class="modal-info-value">${alumni.department || 'N/A'}</div>
-                            </div>
-                            <div class="modal-info-item">
-                                <div class="modal-info-label">Batch Year</div>
-                                <div class="modal-info-value">${alumni.batch_year || 'N/A'}</div>
-                            </div>
-                            ${alumni.role_in_club ? `
-                            <div class="modal-info-item">
-                                <div class="modal-info-label">Role in Club</div>
-                                <div class="modal-info-value">${alumni.role_in_club}</div>
-                            </div>` : ''}
-                        </div>
-                    </div>
-                    
-                    ${alumni.current_position || alumni.current_company ? `
-                    <div class="modal-section">
-                        <div class="modal-section-title">💼 Current Position</div>
-                        <div class="modal-info-grid">
-                            ${alumni.current_position ? `
-                            <div class="modal-info-item">
-                                <div class="modal-info-label">Position</div>
-                                <div class="modal-info-value">${alumni.current_position}</div>
-                            </div>` : ''}
-                            ${alumni.current_company ? `
-                            <div class="modal-info-item">
-                                <div class="modal-info-label">Company</div>
-                                <div class="modal-info-value">${alumni.current_company}</div>
-                            </div>` : ''}
-                        </div>
-                    </div>` : ''}
-                    
-                    ${alumni.bio ? `
-                    <div class="modal-section">
-                        <div class="modal-section-title">📝 About</div>
-                        <p class="modal-bio">${alumni.bio}</p>
-                    </div>` : ''}
-                    
-                    ${alumni.achievements ? `
-                    <div class="modal-section">
-                        <div class="modal-section-title">🏆 Achievements</div>
-                        <p class="modal-bio">${alumni.achievements}</p>
-                    </div>` : ''}
-                    
-                    ${alumni.email || alumni.phone || alumni.linkedin || alumni.github || alumni.facebook ? `
-                    <div class="modal-section">
-                        <div class="modal-section-title">📞 Connect</div>
-                        <div class="contact-links">
-                            ${alumni.email ? `<a href="mailto:${alumni.email}" class="contact-link">📧 ${alumni.email}</a>` : ''}
-                            ${alumni.phone ? `<a href="tel:${alumni.phone}" class="contact-link">📱 ${alumni.phone}</a>` : ''}
-                            ${alumni.linkedin ? `<a href="${alumni.linkedin}" target="_blank" rel="noopener noreferrer" class="contact-link">💼 LinkedIn</a>` : ''}
-                            ${alumni.github ? `<a href="${alumni.github}" target="_blank" rel="noopener noreferrer" class="contact-link">💻 GitHub</a>` : ''}
-                            ${alumni.facebook ? `<a href="${alumni.facebook}" target="_blank" rel="noopener noreferrer" class="contact-link">📘 Facebook</a>` : ''}
-                        </div>
-                    </div>` : ''}
-                </div>
-            `;
-
-            document.getElementById('modalContent').innerHTML = modalHTML;
-            document.getElementById('alumniModal').classList.add('active');
-            document.body.style.overflow = 'hidden';
-        }
-
-        function closeAlumniModal() {
-            document.getElementById('alumniModal').classList.remove('active');
-            document.body.style.overflow = '';
-        }
-
-        function initializeModal() {
-            const modal = document.getElementById('alumniModal');
-            
-            modal.addEventListener('click', (e) => {
-                if (e.target === modal) {
-                    closeAlumniModal();
+            mobileNavOverlay.addEventListener('click', (e) => {
+                if (e.target === mobileNavOverlay) {
+                    mobileNavOverlay.classList.remove('active');
+                    mobileMenuToggle.classList.remove('active');
+                    document.body.style.overflow = '';
                 }
             });
-
-            document.addEventListener('keydown', (e) => {
-                if (e.key === 'Escape' && modal.classList.contains('active')) {
-                    closeAlumniModal();
-                }
+            
+            document.querySelectorAll('.mobile-nav-link').forEach(link => {
+                link.addEventListener('click', () => {
+                    mobileNavOverlay.classList.remove('active');
+                    mobileMenuToggle.classList.remove('active');
+                    document.body.style.overflow = '';
+                });
             });
         }
+    }
 
-        function createDefaultAvatar(name) {
-            const initial = name ? name.charAt(0).toUpperCase() : '?';
-            const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><rect fill="#1a1f3a" width="200" height="200"/><text x="100" y="110" font-family="Arial" font-size="80" fill="#00d4ff" text-anchor="middle">${initial}</text></svg>`;
-            return 'data:image/svg+xml;base64,' + btoa(svg);
-        }
-    </script>
+    document.addEventListener('DOMContentLoaded', async function() {
+        document.getElementById('currentYear').textContent = new Date().getFullYear();
+        
+        await waitForAPI();
+        await loadClubConfig();
+        await loadBatches();
+        await loadAlumni();
+        initializeEventListeners();
+        
+        if (typeof initTheme === 'function') initTheme();
+        if (typeof initNavigation === 'function') initNavigation();
+    });
+</script>
 <script src="js/community-toggle.js"></script>
 </body>
 </html>
