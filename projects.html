@@ -2031,49 +2031,77 @@
 
         async function loadProjects() {
             try {
-                if (typeof getProjects === 'function') {
-                    const result = await getProjects();
-                    if (result.success && result.data) {
-                        const projects = result.data;
-                        allProjects = projects.sort((a, b) => {
-                            const statusOrder = { ongoing: 1, planned: 2, completed: 3 };
-                            return (statusOrder[a.status] || 999) - (statusOrder[b.status] || 999);
-                        });
+                console.log('🔄 Loading projects...');
+                
+                // ✅ FIX: Use the correct API client method
+                if (window.apiClient && window.apiClient.isReady) {
+                    try {
+                        const result = await window.apiClient.getProjects();
+                        console.log('📊 API Response:', result);
+                        
+                        if (result.success && Array.isArray(result.data)) {
+                            const projects = result.data;
+                            allProjects = projects.sort((a, b) => {
+                                const statusOrder = { ongoing: 1, planned: 2, completed: 3 };
+                                return (statusOrder[a.status] || 999) - (statusOrder[b.status] || 999);
+                            });
 
-                        updateStatistics();
-                        populateCategoryFilters();
-                        applyFilters();
-                        
-                        document.getElementById('loadingState').style.display = 'none';
-                        
-                        if (allProjects.length === 0) {
-                            document.getElementById('emptyState').style.display = 'block';
-                        } else {
-                            document.getElementById('projectsGrid').style.display = 'grid';
+                            console.log(`✅ Loaded ${allProjects.length} projects from API`);
+                            
+                            // Save to cache
+                            localStorage.setItem('cache_projects', JSON.stringify(allProjects));
+
+                            updateStatistics();
+                            populateCategoryFilters();
+                            applyFilters();
+                            
+                            document.getElementById('loadingState').style.display = 'none';
+                            
+                            if (allProjects.length === 0) {
+                                document.getElementById('emptyState').style.display = 'block';
+                            } else {
+                                document.getElementById('projectsGrid').style.display = 'grid';
+                            }
+                            return;
                         }
-                        return;
+                    } catch (apiError) {
+                        console.warn('⚠️ API call failed, trying cache:', apiError.message);
                     }
                 }
                 
-                const projects = JSON.parse(localStorage.getItem('projects') || '[]');
+                // ✅ FIX: Try cache as fallback
+                const cached = localStorage.getItem('cache_projects');
+                if (cached) {
+                    const projects = JSON.parse(cached);
                 allProjects = projects.sort((a, b) => {
-                    const statusOrder = { ongoing: 1, planned: 2, completed: 3 };
-                    return (statusOrder[a.status] || 999) - (statusOrder[b.status] || 999);
-                });
+                        const statusOrder = { ongoing: 1, planned: 2, completed: 3 };
+                        return (statusOrder[a.status] || 999) - (statusOrder[b.status] || 999);
+                    });
 
-                updateStatistics();
-                populateCategoryFilters();
-                applyFilters();
-                
-                document.getElementById('loadingState').style.display = 'none';
-                
-                if (allProjects.length === 0) {
-                    document.getElementById('emptyState').style.display = 'block';
-                } else {
-                    document.getElementById('projectsGrid').style.display = 'grid';
+                    console.log(`✅ Loaded ${allProjects.length} projects from cache`);
+
+                    updateStatistics();
+                    populateCategoryFilters();
+                    applyFilters();
+                    
+                    document.getElementById('loadingState').style.display = 'none';
+                    
+                    if (allProjects.length === 0) {
+                        document.getElementById('emptyState').style.display = 'block';
+                    } else {
+                        document.getElementById('projectsGrid').style.display = 'grid';
+                    }
+                    return;
                 }
+                
+                // No data available
+                console.warn('⚠️ No projects found in API or cache');
+                allProjects = [];
+                document.getElementById('loadingState').style.display = 'none';
+                document.getElementById('emptyState').style.display = 'block';
+                
             } catch (error) {
-                console.error('Error loading projects:', error);
+                console.error('❌ Error loading projects:', error);
                 document.getElementById('loadingState').style.display = 'none';
                 document.getElementById('emptyState').style.display = 'block';
             }
