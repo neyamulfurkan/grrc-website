@@ -1,17 +1,20 @@
 const pool = require('../db/pool');
 
 async function getClubConfig() {
+  const client = await pool.connect();
   try {
     console.log('🔍 Fetching club_config from database...');
     const result = await Promise.race([
-      pool.query('SELECT * FROM club_config LIMIT 1'),
-      new Promise((_, reject) => setTimeout(() => reject(new Error('Query timeout')), 5000))
+      client.query('SELECT * FROM club_config LIMIT 1'),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('Query timeout')), 30000))
     ]);
     console.log('✅ Database returned:', result.rows[0] ? 'CONFIG FOUND' : 'NO CONFIG');
     return { success: true, data: result.rows[0] || null, error: null };
   } catch (error) {
     console.error('❌ Error in getClubConfig:', error.message);
     return { success: false, data: null, error: error.message };
+  } finally {
+    client.release();
   }
 }
 
@@ -122,6 +125,7 @@ async function updateClubConfig(data) {
 }
 
 async function getAllMembers(filters = {}) {
+  const client = await pool.connect();
   try {
     let query = 'SELECT * FROM members WHERE 1=1';
     const params = [];
@@ -147,11 +151,13 @@ async function getAllMembers(filters = {}) {
 
     query += ' ORDER BY created_at DESC';
 
-    const result = await pool.query(query, params);
+    const result = await client.query(query, params);
     return { success: true, data: result.rows, error: null };
   } catch (error) {
     console.error('❌ Error in getAllMembers:', error.message);
     return { success: false, data: null, error: error.message };
+  } finally {
+    client.release();
   }
 }
 
@@ -258,6 +264,7 @@ async function searchMembers(searchQuery) {
 }
 
 async function getAllEvents(filters = {}) {
+  const client = await pool.connect();
   try {
     let query = 'SELECT * FROM events WHERE 1=1';
     const params = [];
@@ -277,11 +284,13 @@ async function getAllEvents(filters = {}) {
 
     query += ' ORDER BY date DESC, created_at DESC';
 
-    const result = await pool.query(query, params);
+    const result = await client.query(query, params);
     return { success: true, data: result.rows, error: null };
   } catch (error) {
     console.error('❌ Error in getAllEvents:', error.message);
     return { success: false, data: null, error: error.message };
+  } finally {
+    client.release();
   }
 }
 
@@ -397,6 +406,7 @@ async function searchEvents(searchQuery) {
 }
 
 async function getAllProjects(filters = {}) {
+  const client = await pool.connect();
   try {
     let query = 'SELECT * FROM projects WHERE 1=1';
     const params = [];
@@ -416,11 +426,13 @@ async function getAllProjects(filters = {}) {
 
     query += ' ORDER BY created_at DESC';
 
-    const result = await pool.query(query, params);
+    const result = await client.query(query, params);
     return { success: true, data: result.rows, error: null };
   } catch (error) {
     console.error('❌ Error in getAllProjects:', error.message);
     return { success: false, data: null, error: error.message };
+  } finally {
+    client.release();
   }
 }
 
@@ -560,6 +572,7 @@ async function searchProjects(searchQuery) {
 }
 
 async function getAllGalleryItems(filters = {}) {
+  const client = await pool.connect();
   try {
     let query = 'SELECT * FROM gallery WHERE 1=1';
     const params = [];
@@ -573,11 +586,13 @@ async function getAllGalleryItems(filters = {}) {
 
     query += ' ORDER BY date DESC, created_at DESC';
 
-    const result = await pool.query(query, params);
+    const result = await client.query(query, params);
     return { success: true, data: result.rows, error: null };
   } catch (error) {
     console.error('❌ Error in getAllGalleryItems:', error.message);
     return { success: false, data: null, error: error.message };
+  } finally {
+    client.release();
   }
 }
 
@@ -648,6 +663,7 @@ async function deleteGalleryItem(id) {
 }
 
 async function getAllAnnouncements(filters = {}) {
+  const client = await pool.connect();
   try {
     let query = 'SELECT * FROM announcements WHERE 1=1';
     const params = [];
@@ -661,11 +677,13 @@ async function getAllAnnouncements(filters = {}) {
 
     query += ' ORDER BY date DESC, created_at DESC';
 
-    const result = await pool.query(query, params);
+    const result = await client.query(query, params);
     return { success: true, data: result.rows, error: null };
   } catch (error) {
     console.error('❌ Error in getAllAnnouncements:', error.message);
     return { success: false, data: null, error: error.message };
+  } finally {
+    client.release();
   }
 }
 

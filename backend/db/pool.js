@@ -45,23 +45,23 @@ function getDatabaseConfig() {
     const config = parseConnectionString(process.env.DATABASE_URL);
     
     if (config) {
-      // Optimized pool settings for Supabase Pooler with extended timeouts
+      // Optimized pool settings for Supabase Pooler with proper free tier limits
       return {
         ...config,
-        max: 10,
-        min: 2,
-        idleTimeoutMillis: 60000,
-        connectionTimeoutMillis: 30000,   // ✅ INCREASED from 10s to 30s
-        acquireTimeoutMillis: 30000,      // ✅ INCREASED from 10s to 30s
-        createTimeoutMillis: 30000,       // ✅ INCREASED from 10s to 30s
-        destroyTimeoutMillis: 5000,
-        reapIntervalMillis: 1000,
-        createRetryIntervalMillis: 200,
-        allowExitOnIdle: false,
-        query_timeout: 60000,             // ✅ INCREASED from 30s to 60s
-        statement_timeout: 60000,         // ✅ INCREASED from 30s to 60s
-        keepAlive: true,                  // ✅ ADDED
-        keepAliveInitialDelayMillis: 10000 // ✅ ADDED
+        max: 3,                           // ✅ REDUCED: Supabase pooler has ~5 connection limit
+        min: 0,                           // ✅ REDUCED: Let connections close when idle
+        idleTimeoutMillis: 30000,         // ✅ Close idle connections after 30s
+        connectionTimeoutMillis: 60000,   // ✅ INCREASED to 60s for cold starts
+        acquireTimeoutMillis: 60000,      // ✅ INCREASED to 60s
+        createTimeoutMillis: 60000,       // ✅ INCREASED to 60s
+        destroyTimeoutMillis: 10000,      // ✅ Give more time to clean up
+        reapIntervalMillis: 5000,         // ✅ Check for idle connections less frequently
+        createRetryIntervalMillis: 500,   // ✅ Wait longer between retries
+        allowExitOnIdle: false,           // ✅ Keep pool alive
+        query_timeout: 120000,            // ✅ INCREASED to 120s (2 minutes)
+        statement_timeout: 120000,        // ✅ INCREASED to 120s
+        keepAlive: true,
+        keepAliveInitialDelayMillis: 10000
       };
     }
     
