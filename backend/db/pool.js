@@ -50,20 +50,19 @@ function getDatabaseConfig() {
       // Optimized pool settings for Supabase Pooler with proper free tier limits
             return {
         ...config,
-        max: 5,                           // ✅ Direct connection allows more
-        min: 1,                           // ✅ Keep 1 warm connection
-        idleTimeoutMillis: 30000,         // ✅ 30s idle timeout
-        connectionTimeoutMillis: 10000,   // ✅ 10s timeout for direct
-        acquireTimeoutMillis: 10000,      // ✅ 10s acquire timeout
-        createTimeoutMillis: 10000,       // ✅ 10s create timeout
+        max: 3,                           // ✅ Reduced for Supabase free tier
+        min: 0,                           // ✅ No minimum to save connections
+        idleTimeoutMillis: 60000,         // ✅ 60s idle - longer for pooler
+        connectionTimeoutMillis: 30000,   // ✅ 30s timeout for Supabase pooler
+        acquireTimeoutMillis: 30000,      // ✅ 30s acquire timeout
+        createTimeoutMillis: 30000,       // ✅ 30s create timeout  
         destroyTimeoutMillis: 5000,       // ✅ Quick cleanup
-        reapIntervalMillis: 1000,         // ✅ Check for idle connections frequently
-        createRetryIntervalMillis: 200,   // ✅ Quick retries
-        allowExitOnIdle: false,           // ✅ Keep pool alive
-        query_timeout: 30000,             // ✅ 30s query timeout
-        statement_timeout: 60000,         // ✅ 60s statement timeout
+        reapIntervalMillis: 5000,         // ✅ Check less frequently
+        createRetryIntervalMillis: 500,   // ✅ Slower retries
+        allowExitOnIdle: true,            // ✅ Allow cleanup when idle
+        query_timeout: 60000,             // ✅ 60s query timeout
+        statement_timeout: 120000,        // ✅ 120s statement timeout
         keepAlive: true,
-
         keepAliveInitialDelayMillis: 10000
       };
     }
