@@ -244,11 +244,21 @@ router.post(
       // Handle duplicate email error
       if (error.code === '23505' || 
           error.message.includes('UNIQUE constraint') || 
-          error.message.includes('Email already used')) {
+          error.message.includes('Email already used') ||
+          error.message.includes('duplicate key')) {
         return res.status(409).json({
           success: false,
           error: 'Duplicate email',
-          message: 'An alumni application with this email already exists.'
+          message: 'An alumni application with this email already exists. Please use a different email address.'
+        });
+      }
+
+      // Handle missing required fields
+      if (error.code === '23502') {
+        return res.status(400).json({
+          success: false,
+          error: 'Missing required field',
+          message: 'Please fill in all required fields.'
         });
       }
 

@@ -43,9 +43,10 @@ const createApplication = async (applicationData) => {
     )
     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, 'pending', CURRENT_TIMESTAMP)
     RETURNING 
-      id, full_name, email, phone, batch_year, department,
+      id, full_name as name, email, phone, batch_year, department,
       role_in_club, achievements, current_position, current_company,
-      bio, linkedin, github, facebook, photo, status, applied_date
+      bio, linkedin, github, facebook, photo, status, applied_date,
+      created_at
   `;
 
   const values = [

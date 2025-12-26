@@ -1034,6 +1034,19 @@
                     showError('Invalid batch year format. Use YYYY-YYYY (e.g., 2020-2021)');
                     return;
                 }
+
+                // Parse and validate batch year range
+                const [startYear, endYear] = batchYear.split('-').map(Number);
+                if (endYear !== startYear + 1) {
+                    showError('Batch year end must be exactly 1 year after start (e.g., 2020-2021)');
+                    return;
+                }
+
+                const currentYear = new Date().getFullYear();
+                if (startYear > currentYear || endYear > currentYear + 1) {
+                    showError('Batch year cannot be in the future');
+                    return;
+                }
                 
                 if (bio.length < 50) {
                     showError('Please write at least 50 characters about your journey');
@@ -1064,15 +1077,21 @@
                // Get photo with proper error handling
                 const photoFile = document.getElementById('photo').files[0];
                 const photoUrl = document.getElementById('photoUrl').value.trim();
-                let photo = photoUrl;
+                let photo = photoUrl || null;
                 
                 if (photoFile) {
+                    // Check file size (max 5MB)
+                    if (photoFile.size > 5 * 1024 * 1024) {
+                        showError('Photo size must be less than 5MB. Please choose a smaller image.');
+                        return;
+                    }
+
                     try {
                         photo = await imageToBase64(photoFile);
                         console.log('✅ Photo converted to base64');
                     } catch (error) {
                         console.error('Error converting photo:', error);
-                        showError('Failed to process photo. Please try a smaller image.');
+                        showError('Failed to process photo. Please try a smaller image or use a URL instead.');
                         return;
                     }
                 }
