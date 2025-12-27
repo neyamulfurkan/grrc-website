@@ -81,7 +81,7 @@ router.post('/members', checkPermission('members', 'create'), async (req, res) =
     console.log('📊 Body size:', JSON.stringify(req.body).length, 'bytes');
     console.log('🔐 Auth header present:', !!req.headers.authorization);
     
-    const { name, department, year, role, email } = req.body;
+    const { name, department, year, role, email, photo } = req.body;
     
     if (!name || !department || !year || !role || !email) {
       console.error('❌ Missing required fields:', { name: !!name, email: !!email, department: !!department, year: !!year, role: !!role });
@@ -91,8 +91,35 @@ router.post('/members', checkPermission('members', 'create'), async (req, res) =
       });
     }
 
+    // ✅ CRITICAL FIX: Upload photo to Cloudinary if it's Base64
+    let cloudinaryPhotoUrl = photo;
+    if (photo && photo.startsWith('data:image')) {
+      console.log('📤 Uploading member photo to Cloudinary...');
+      const cloudinary = require('../config/cloudinary');
+      try {
+        const uploadResult = await cloudinary.uploader.upload(photo, {
+          folder: 'grrc-members',
+          transformation: [
+            { width: 400, height: 400, crop: 'fill', gravity: 'face' },
+            { quality: 'auto:good' },
+            { fetch_format: 'auto' }
+          ],
+          resource_type: 'image'
+        });
+        cloudinaryPhotoUrl = uploadResult.secure_url;
+        console.log('✅ Member photo uploaded to Cloudinary');
+      } catch (uploadError) {
+        console.error('❌ Cloudinary upload failed:', uploadError.message);
+        return res.status(500).json({
+          success: false,
+          error: 'Failed to upload photo to Cloudinary'
+        });
+      }
+    }
+
     const memberData = {
       ...req.body,
+      photo: cloudinaryPhotoUrl, // Use Cloudinary URL instead of Base64
       joined_date: req.body.joined_date || req.body.joinedDate
     };
     delete memberData.joinedDate;
@@ -200,7 +227,7 @@ router.delete('/members/:id', checkPermission('members', 'delete'), async (req, 
 
 router.post('/events', checkPermission('events', 'create'), async (req, res) => {
   try {
-    const { title, description, date, location, venue } = req.body;
+    const { title, description, date, location, venue, image } = req.body;
     
     const eventLocation = location || venue;
     
@@ -211,8 +238,35 @@ router.post('/events', checkPermission('events', 'create'), async (req, res) => 
       });
     }
 
+    // ✅ CRITICAL FIX: Upload event image to Cloudinary if it's Base64
+    let cloudinaryImageUrl = image;
+    if (image && image.startsWith('data:image')) {
+      console.log('📤 Uploading event image to Cloudinary...');
+      const cloudinary = require('../config/cloudinary');
+      try {
+        const uploadResult = await cloudinary.uploader.upload(image, {
+          folder: 'grrc-events',
+          transformation: [
+            { width: 1200, height: 675, crop: 'fill' },
+            { quality: 'auto:good' },
+            { fetch_format: 'auto' }
+          ],
+          resource_type: 'image'
+        });
+        cloudinaryImageUrl = uploadResult.secure_url;
+        console.log('✅ Event image uploaded to Cloudinary');
+      } catch (uploadError) {
+        console.error('❌ Cloudinary upload failed:', uploadError.message);
+        return res.status(500).json({
+          success: false,
+          error: 'Failed to upload image to Cloudinary'
+        });
+      }
+    }
+
     const eventData = {
       ...req.body,
+      image: cloudinaryImageUrl, // Use Cloudinary URL instead of Base64
       location: eventLocation
     };
     delete eventData.venue;
@@ -313,7 +367,7 @@ router.delete('/events/:id', checkPermission('events', 'delete'), async (req, re
 
 router.post('/projects', checkPermission('projects', 'create'), async (req, res) => {
   try {
-    const { title, description, category, status } = req.body;
+    const { title, description, category, status, image } = req.body;
     
     if (!title || !description) {
       return res.status(400).json({
@@ -322,8 +376,35 @@ router.post('/projects', checkPermission('projects', 'create'), async (req, res)
       });
     }
 
+    // ✅ CRITICAL FIX: Upload project image to Cloudinary if it's Base64
+    let cloudinaryImageUrl = image;
+    if (image && image.startsWith('data:image')) {
+      console.log('📤 Uploading project image to Cloudinary...');
+      const cloudinary = require('../config/cloudinary');
+      try {
+        const uploadResult = await cloudinary.uploader.upload(image, {
+          folder: 'grrc-projects',
+          transformation: [
+            { width: 1200, height: 800, crop: 'fill' },
+            { quality: 'auto:good' },
+            { fetch_format: 'auto' }
+          ],
+          resource_type: 'image'
+        });
+        cloudinaryImageUrl = uploadResult.secure_url;
+        console.log('✅ Project image uploaded to Cloudinary');
+      } catch (uploadError) {
+        console.error('❌ Cloudinary upload failed:', uploadError.message);
+        return res.status(500).json({
+          success: false,
+          error: 'Failed to upload image to Cloudinary'
+        });
+      }
+    }
+
     const projectData = {
       ...req.body,
+      image: cloudinaryImageUrl, // Use Cloudinary URL instead of Base64
       category: category || 'Other',
       status: status || 'ongoing'
     };
