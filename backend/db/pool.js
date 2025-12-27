@@ -3,7 +3,13 @@
  * PostgreSQL Connection Pool
  * ====================================
  * Purpose: Create and manage database connection pool
- * Optimized for Supabase Pooler (Transaction Mode)
+ * Optimized for Supabase Free Tier + Render Free Tier
+ * 
+ * Key Optimizations:
+ * - Reduced pool size (3 max) to stay within Supabase limits
+ * - Increased timeouts for geographic latency
+ * - Automatic connection recovery
+ * - Health monitoring with auto-healing
  * ====================================
  */
 
@@ -47,23 +53,27 @@ function getDatabaseConfig() {
     const config = parseConnectionString(process.env.DATABASE_URL);
     
     if (config) {
-      // Optimized pool settings for Supabase Pooler with proper free tier limits
-            return {
+      // ✅ OPTIMIZED FOR SUPABASE FREE TIER + RENDER FREE TIER
+      return {
         ...config,
-        max: 3,                           // ✅ Max 3 connections for free tier
-        min: 1,                           // 🔥 FIX: Keep 1 connection alive always
-        idleTimeoutMillis: 30000,         // 🔥 FIX: 30s idle timeout (was 60s)
-        connectionTimeoutMillis: 20000,   // 🔥 FIX: 20s timeout (was 30s)
-        acquireTimeoutMillis: 20000,      // 🔥 FIX: 20s acquire (was 30s)
-        createTimeoutMillis: 20000,       // 🔥 FIX: 20s create (was 30s)
-        destroyTimeoutMillis: 5000,       // ✅ Quick cleanup
-        reapIntervalMillis: 10000,        // 🔥 FIX: Check every 10s (was 5s)
-        createRetryIntervalMillis: 200,   // 🔥 FIX: Faster retries (was 500ms)
-        allowExitOnIdle: false,           // 🔥 FIX: Never exit on idle (was true)
-        query_timeout: 30000,             // 🔥 FIX: 30s query timeout (was 60s)
-        statement_timeout: 60000,         // 🔥 FIX: 60s statement timeout (was 120s)
+        // Connection Pool Settings
+        max: 3,                           // ✅ Max 3 connections (Supabase free tier limit: 15-20)
+        min: 1,                           // ✅ Keep 1 alive to avoid cold starts
+        
+        // Timeout Settings (increased for geographic latency)
+        connectionTimeoutMillis: 30000,   // ✅ 30s connection timeout
+        idleTimeoutMillis: 25000,         // ✅ 25s idle timeout (close unused faster)
+        
+        // Query Timeouts
+        query_timeout: 25000,             // ✅ 25s query timeout
+        statement_timeout: 25000,         // ✅ 25s statement timeout
+        
+        // Pool Management
+        allowExitOnIdle: false,           // ✅ Keep pool alive even when idle
+        
+        // Keep-Alive (prevents connection drops)
         keepAlive: true,
-        keepAliveInitialDelayMillis: 5000 // 🔥 FIX: Start keepalive after 5s (was 10s)
+        keepAliveInitialDelayMillis: 3000 // ✅ Start keepalive after 3s
       };
     }
     
@@ -86,14 +96,12 @@ function getDatabaseConfig() {
       max: 5,
       min: 1,
       idleTimeoutMillis: 30000,
-      connectionTimeoutMillis: 60000,
-      acquireTimeoutMillis: 60000,
-      createTimeoutMillis: 60000,
-      query_timeout: 60000,
-      statement_timeout: 60000,
-      destroyTimeoutMillis: 5000,
-      reapIntervalMillis: 10000,
-      allowExitOnIdle: true
+      connectionTimeoutMillis: 30000,
+      query_timeout: 30000,
+      statement_timeout: 30000,
+      allowExitOnIdle: false,
+      keepAlive: true,
+      keepAliveInitialDelayMillis: 3000
     };
   }
 
@@ -105,6 +113,8 @@ function getDatabaseConfig() {
 const poolConfig = getDatabaseConfig();
 
 let pool;
+let isHealthy = true;
+let consecutiveFailures = 0;
 
 if (poolConfig) {
   pool = new Pool(poolConfig);
@@ -115,85 +125,117 @@ if (poolConfig) {
   console.log(`   Database: ${poolConfig.database}`);
   console.log(`   Port: ${poolConfig.port}`);
   console.log(`   SSL: ${poolConfig.ssl ? 'Enabled' : 'Disabled'}`);
+  console.log(`   Max Connections: ${poolConfig.max}`);
+  console.log(`   Connection Timeout: ${poolConfig.connectionTimeoutMillis}ms`);
 
-  // 🔥 CRITICAL FIX: Enhanced error handling with recovery
+  // ✅ CONNECTION EVENT: New client connected
+  pool.on('connect', (client) => {
+    consecutiveFailures = 0;
+    if (!isHealthy) {
+      console.log('✅ Database connection restored');
+      isHealthy = true;
+    }
+  });
+
+  // ✅ ERROR EVENT: Handle pool errors with auto-recovery
   pool.on('error', async (err, client) => {
-    console.error('❌ Unexpected database pool error:', err.message);
-    console.error('   Error code:', err.code);
-    console.error('   Pool status:', {
-      total: pool.totalCount,
-      idle: pool.idleCount,
-      waiting: pool.waitingCount
+    consecutiveFailures++;
+    isHealthy = false;
+    
+    console.error('❌ Database pool error:', {
+      message: err.message,
+      code: err.code,
+      consecutiveFailures,
+      poolStatus: {
+        total: pool.totalCount,
+        idle: pool.idleCount,
+        waiting: pool.waitingCount
+      }
     });
     
-    // 🔥 Attempt automatic recovery
-    if (err.code === 'ETIMEDOUT' || err.code === 'ECONNRESET') {
-      console.log('🔄 Attempting to recover connection...');
+    // ✅ Auto-recovery for timeout/connection reset errors
+    if (err.code === 'ETIMEDOUT' || err.code === 'ECONNRESET' || err.code === 'ENOTFOUND') {
+      console.log('🔄 Attempting automatic recovery...');
+      
+      // Wait before retry (exponential backoff)
+      const delay = Math.min(1000 * consecutiveFailures, 10000);
+      await new Promise(resolve => setTimeout(resolve, delay));
+      
       try {
         const testClient = await pool.connect();
         await testClient.query('SELECT 1');
         testClient.release();
-        console.log('✅ Connection recovered');
+        console.log('✅ Auto-recovery successful');
+        consecutiveFailures = 0;
+        isHealthy = true;
       } catch (recoverError) {
-        console.error('❌ Recovery failed:', recoverError.message);
+        console.error('❌ Auto-recovery failed:', recoverError.message);
       }
     }
   });
 
-  // Handle pool connection
-  pool.on('connect', (client) => {
-    console.log('✅ Database client connected');
-  });
-
-  // Handle pool removal
+  // ✅ REMOVE EVENT: Client removed from pool
   pool.on('remove', (client) => {
-    console.log('🔌 Database client removed from pool');
+    // Only log if pool is unhealthy to reduce noise
+    if (!isHealthy || pool.idleCount === 0) {
+      console.log('🔌 Database client removed from pool');
+    }
   });
 
-  // Test connection on startup with extended timeout
+  // ✅ STARTUP: Test connection with retries
   (async () => {
-    let retries = 5;
+    const maxRetries = 5;
     let connected = false;
     
-    while (retries > 0 && !connected) {
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
-        console.log(`🔄 Attempting database connection (${6 - retries}/5)...`);
+        console.log(`🔄 Attempting database connection (${attempt}/${maxRetries})...`);
         
-        // ✅ 60s timeout for pooler on cold start
-        const client = await Promise.race([
-          pool.connect(),
-          new Promise((_, reject) => setTimeout(() => reject(new Error('Connection timeout')), 60000))
-        ]);
+        // Create connection with timeout
+        const connectionPromise = pool.connect();
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Connection timeout')), 30000)
+        );
         
-        const result = await client.query('SELECT NOW() as time, current_database() as db');
+        const client = await Promise.race([connectionPromise, timeoutPromise]);
+        
+        // Test query
+        const result = await client.query('SELECT NOW() as server_time, current_database() as database');
+        client.release();
         
         console.log('✅ Database connection test successful');
-        console.log(`   Connected to: ${result.rows[0].db}`);
-        console.log(`   Server time: ${result.rows[0].time}`);
-        client.release();
-        connected = true;
-      } catch (error) {
-        retries--;
-        console.error(`❌ Connection attempt failed: ${error.message}`);
+        console.log(`   Connected to: ${result.rows[0].database}`);
+        console.log(`   Server time: ${result.rows[0].server_time}`);
         
-        if (retries > 0) {
-          // ✅ Progressive delay
-          const delay = Math.min(1000 * (6 - retries), 3000);
-          console.log(`⏳ Retrying in ${delay}ms... (${retries} attempts left)`);
+        connected = true;
+        isHealthy = true;
+        consecutiveFailures = 0;
+        break;
+        
+      } catch (error) {
+        consecutiveFailures++;
+        console.error(`❌ Connection attempt ${attempt} failed: ${error.message}`);
+        
+        if (attempt < maxRetries) {
+          // Exponential backoff: 2s, 3s, 4s, 5s
+          const delay = (attempt + 1) * 1000;
+          console.log(`⏳ Retrying in ${delay}ms... (${maxRetries - attempt} attempts left)`);
           await new Promise(resolve => setTimeout(resolve, delay));
         } else {
-          console.error('❌ All connection attempts failed');
+          console.error('❌ Database connection failed after all retries');
           console.error('   Please check:');
-                    console.error('   1. DATABASE_URL is correct in Render');
-          console.error('   2. Using pooler (port 6543) - correct for Render');
-          console.error('   3. Check Supabase project status and connection limits');
+          console.error('   1. DATABASE_URL is correct in Render environment variables');
+          console.error('   2. Supabase project is active (not paused)');
+          console.error('   3. Supabase connection pooler is enabled');
+          console.error('   4. Network connectivity between Render and Supabase');
           console.error('   Server will continue in degraded mode');
+          isHealthy = false;
         }
       }
     }
   })();
   
-  // 🔥 CRITICAL FIX: Add connection health monitoring every 30 seconds
+  // ✅ HEALTH MONITORING: Check pool health every 30 seconds
   setInterval(async () => {
     try {
       const poolStatus = {
@@ -202,45 +244,90 @@ if (poolConfig) {
         waiting: pool.waitingCount
       };
       
-      // Only log if there are issues
-      if (poolStatus.waiting > 0 || poolStatus.idle === 0) {
-        console.warn('⚠️ Pool health check - Status:', poolStatus);
+      // Only log detailed status if there are issues
+      if (poolStatus.waiting > 0 || poolStatus.idle === 0 || !isHealthy) {
+        console.log('⚠️ Pool health check - Status:', poolStatus);
       }
       
-      // Test connection with timeout
-      const testResult = await Promise.race([
-        pool.query('SELECT 1 as health'),
-        new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Health check timeout')), 5000)
-        )
-      ]);
+      // Quick health check with 5s timeout
+      const healthCheckPromise = pool.query('SELECT 1 as health');
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Health check timeout')), 5000)
+      );
       
-      // Log recovery if there were previous issues
-      if (poolStatus.waiting > 0) {
-        console.log('✅ Pool health check passed');
+      await Promise.race([healthCheckPromise, timeoutPromise]);
+      
+      // Success - reset failure counter
+      if (consecutiveFailures > 0) {
+        console.log('✅ Pool health check passed (recovered)');
+        consecutiveFailures = 0;
+        isHealthy = true;
       }
+      
     } catch (healthError) {
-      console.error('❌ Pool health check failed:', healthError.message);
-      console.error('   Pool status:', {
-        total: pool.totalCount,
-        idle: pool.idleCount,
-        waiting: pool.waitingCount
+      consecutiveFailures++;
+      isHealthy = false;
+      
+      console.error('❌ Pool health check failed:', {
+        error: healthError.message,
+        consecutiveFailures,
+        poolStatus: {
+          total: pool.totalCount,
+          idle: pool.idleCount,
+          waiting: pool.waitingCount
+        }
       });
       
-      // Try to force a new connection
-      try {
-        const client = await pool.connect();
-        await client.query('SELECT NOW()');
-        client.release();
-        console.log('✅ Forced connection successful');
-      } catch (forceError) {
-        console.error('❌ Forced connection failed:', forceError.message);
+      // ✅ Try forced recovery if multiple failures
+      if (consecutiveFailures >= 2) {
+        console.log('🔄 Attempting forced connection recovery...');
+        
+        try {
+          const client = await pool.connect();
+          await client.query('SELECT NOW()');
+          client.release();
+          console.log('✅ Forced connection successful');
+          consecutiveFailures = 0;
+          isHealthy = true;
+        } catch (forceError) {
+          console.error('❌ Forced connection failed:', forceError.message);
+          
+          // If 5+ consecutive failures, suggest restart
+          if (consecutiveFailures >= 5) {
+            console.error('🚨 CRITICAL: 5+ consecutive connection failures');
+            console.error('   Consider restarting the server or checking Supabase status');
+          }
+        }
       }
     }
   }, 30000); // Every 30 seconds
 
+  // ✅ GRACEFUL SHUTDOWN: Handle termination signals
+  const shutdownHandler = async (signal) => {
+    console.log(`🛑 ${signal} received, closing database pool gracefully...`);
+    
+    try {
+      // Give existing queries 10s to complete
+      await Promise.race([
+        pool.end(),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Pool close timeout')), 10000)
+        )
+      ]);
+      console.log('✅ Database pool closed successfully');
+    } catch (error) {
+      console.error('❌ Error during pool shutdown:', error.message);
+      console.log('⚠️ Forcing pool close...');
+      // Force close
+      process.exit(signal === 'SIGTERM' ? 0 : 1);
+    }
+  };
+
+  process.on('SIGTERM', () => shutdownHandler('SIGTERM'));
+  process.on('SIGINT', () => shutdownHandler('SIGINT'));
+
 } else {
-  // Create a mock pool for development without database
+  // ✅ MOCK POOL: For development without database
   console.warn('⚠️  Running without database connection (mock mode)');
   
   pool = {
@@ -251,9 +338,14 @@ if (poolConfig) {
       throw new Error('Database not configured. Please set DATABASE_URL or individual DB credentials.');
     },
     end: async () => {
-      console.log('Mock pool closed');
-    }
+      console.log('✅ Mock pool closed');
+    },
+    totalCount: 0,
+    idleCount: 0,
+    waitingCount: 0
   };
+  
+  isHealthy = false;
 }
 
 /**
@@ -291,7 +383,23 @@ async function testConnection() {
   }
 }
 
+/**
+ * Get pool health status
+ */
+function getPoolStatus() {
+  return {
+    isHealthy,
+    consecutiveFailures,
+    poolStats: {
+      total: pool.totalCount || 0,
+      idle: pool.idleCount || 0,
+      waiting: pool.waitingCount || 0
+    }
+  };
+}
+
 module.exports = pool;
 module.exports.closePool = closePool;
 module.exports.testConnection = testConnection;
+module.exports.getPoolStatus = getPoolStatus;
 module.exports.isConfigured = !!poolConfig;
