@@ -161,8 +161,8 @@
             position: relative;
             overflow: hidden;
             padding: 2rem;
+            padding-top: 80px;
             margin-top: 0;
-            padding-top: 140px;
         }
         
         .hero-background {
@@ -1523,17 +1523,14 @@
         }
 
        document.addEventListener('DOMContentLoaded', async function() {
-    document.getElementById('currentYear').textContent = new Date().getFullYear();
-    
-    const htmlElement = document.documentElement;
-    const savedTheme = localStorage.getItem('theme');
-    
-    if (!savedTheme) {
-        htmlElement.setAttribute('data-theme', 'dark');
+    // ✅ Apply theme IMMEDIATELY before anything else
+    const savedTheme = localStorage.getItem('theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    if (!localStorage.getItem('theme')) {
         localStorage.setItem('theme', 'dark');
-    } else {
-        htmlElement.setAttribute('data-theme', savedTheme);
     }
+    
+    document.getElementById('currentYear').textContent = new Date().getFullYear();
     
     window.addEventListener('scroll', handleScroll);
     handleScroll();
