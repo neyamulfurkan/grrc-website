@@ -1510,7 +1510,9 @@
         let slideshowInterval = null;
 
         function handleScroll() {
-            const header = document.getElementById('mainHeader');
+            const header = document.querySelector('.header'); // ✅ FIX: Use class selector instead
+            if (!header) return; // ✅ FIX: Safety check
+            
             const hero = document.querySelector('.hero');
             const heroHeight = hero ? hero.offsetHeight : 0;
             const scrollPosition = window.scrollY;
@@ -1530,10 +1532,16 @@
         localStorage.setItem('theme', 'dark');
     }
     
-    document.getElementById('currentYear').textContent = new Date().getFullYear();
+    const yearElement = document.getElementById('currentYear');
+    if (yearElement) {
+        yearElement.textContent = new Date().getFullYear();
+    }
     
-    window.addEventListener('scroll', handleScroll);
-    handleScroll();
+    // ✅ FIX: Add scroll handler AFTER a small delay to ensure DOM is ready
+    setTimeout(() => {
+        window.addEventListener('scroll', handleScroll);
+        handleScroll();
+    }, 100);
     
     initializeMobileMenu();
     
