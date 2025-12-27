@@ -11,66 +11,11 @@
     <link rel="stylesheet" href="css/components.css">
     
     <style>
-      .header {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    width: 100%;
-    z-index: 1000;
-    background: var(--surface-color);
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    transition: all 0.3s ease;
-    backdrop-filter: blur(10px);
-    height: 70px;
-    display: flex !important;
-    align-items: center;
-}
+      /* Projects Page Specific Styles */
 
-        [data-theme="dark"] .header {
-            background: rgba(26, 31, 58, 0.95);
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
-        }
+        /* Header theming handled by common.css */
 
-        [data-theme="light"] .header {
-            background: rgba(255, 255, 255, 0.95);
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        }
-
-        .header .container {
-            height: 100%;
-        }
-
-        .header-actions {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            height: 100%;
-            flex-shrink: 0;
-        }
-
-        .theme-toggle {
-            width: 40px;
-            height: 40px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 50%;
-            background: var(--background-color);
-            border: 2px solid var(--border-color);
-            cursor: pointer;
-            transition: all 0.3s ease;
-            flex-shrink: 0;
-        }
-
-        .theme-toggle:hover {
-            background: var(--primary-color);
-            border-color: var(--primary-color);
-        }
-
-        .theme-icon {
-            font-size: 1.2rem;
-        }
+        
         .header.transparent {
             background: rgba(0, 0, 0, 0.4) !important;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15) !important;
@@ -209,7 +154,6 @@
 
         .hero {
             min-height: 100vh;
-            padding-top: 70px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -217,7 +161,8 @@
             position: relative;
             overflow: hidden;
             padding: 2rem;
-            margin-top: 70px;
+            margin-top: 0;
+            padding-top: 140px;
         }
         
         .hero-background {
@@ -1358,26 +1303,25 @@
     </style>
 </head>
 <body>
-    <header class="header transparent" id="mainHeader">
-        <div class="container">
-            <div class="header-content">
-                <div class="logo-container">
-                    <img id="clubLogo" src="assets/default-logo.jpg" alt="Club Logo" class="logo">
-                    <span id="clubName" class="club-name">GSTU Robotics & Research Club</span>
-                </div>
-                
-                <nav class="nav-menu" id="navMenu">
-                    <a href="index.html" class="nav-link">Home</a>
-                    <a href="members.html" class="nav-link">Members</a>
-                    <a href="events.html" class="nav-link">Events</a>
-                    <a href="projects.html" class="nav-link active">Projects</a>
-                    <a href="gallery.html" class="nav-link">Gallery</a>
-                    <a href="membership.html" class="nav-link">Membership</a>
-                    <a href="alumni.html" class="nav-link">Alumni</a>
-                    <a href="admin.html" class="nav-link">Admin</a>
-                </nav>
-                
-                <div class="header-actions">
+    <header class="header">
+        <div class="header-content container">
+            <div class="logo-container">
+                <img id="clubLogo" src="assets/default-logo.jpg" alt="Club Logo" class="logo">
+                <span id="clubName" class="club-name">GSTU Robotics & Research Club</span>
+            </div>
+            
+            <nav class="nav-menu" id="navMenu">
+                <a href="index.html" class="nav-link">Home</a>
+                <a href="members.html" class="nav-link">Members</a>
+                <a href="events.html" class="nav-link">Events</a>
+                <a href="projects.html" class="nav-link active">Projects</a>
+                <a href="gallery.html" class="nav-link">Gallery</a>
+                <a href="membership.html" class="nav-link">Membership</a>
+                <a href="alumni.html" class="nav-link">Alumni</a>
+                <a href="admin.html" class="nav-link">Admin</a>
+            </nav>
+            
+            <div class="header-actions">
                     <button id="themeToggle" class="theme-toggle" aria-label="Toggle theme">
                         <span class="theme-icon">🌙</span>
                     </button>
