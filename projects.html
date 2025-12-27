@@ -161,7 +161,7 @@
             position: relative;
             overflow: hidden;
             padding: 2rem;
-            padding-top: 80px;
+            padding-top: 0; /* ✅ REMOVED: No top padding */
             margin-top: 0;
         }
         
@@ -184,7 +184,7 @@
             z-index: 1;
         }
         
-        .hero-slideshow {
+                .hero-slideshow {
             position: absolute;
             top: 0;
             left: 0;
@@ -192,7 +192,7 @@
             bottom: 0;
             z-index: 1;
             opacity: 1;
-            transition: opacity 1s ease-in-out;
+            display: block; /* ✅ FIX: Always display */
         }
         
         .hero-slideshow.active {
@@ -206,15 +206,18 @@
             right: 0;
             bottom: 0;
             opacity: 0;
-            transition: opacity 1.5s ease-in-out, transform 20s ease-in-out;
+            visibility: hidden; /* ✅ FIX: Hide inactive slides */
+            transition: opacity 1.5s ease-in-out, transform 20s ease-in-out, visibility 0s 1.5s; /* ✅ FIX: Delay visibility */
             transform: scale(1);
             z-index: 1;
         }
         
         .hero-slide.active {
             opacity: 1;
+            visibility: visible; /* ✅ FIX: Show active slide */
             transform: scale(1.1);
-            z-index: 1;
+            z-index: 2; /* ✅ FIX: Active slide on top */
+            transition: opacity 1.5s ease-in-out, transform 20s ease-in-out, visibility 0s 0s; /* ✅ FIX: No delay for visibility */
         }
         
         .hero-slide img {
@@ -1759,6 +1762,19 @@
             const titleElement = document.getElementById('heroTitle');
             const subtitleElement = document.getElementById('heroSubtitle');
             
+            if (!slideshowContainer || !indicatorsContainer) {
+                console.error('❌ Slideshow containers not found');
+                return;
+            }
+            
+            if (slideshowImages.length === 0) {
+                console.warn('⚠️ No slideshow images available');
+                showFallbackHero();
+                return;
+            }
+            
+            console.log('🎬 Initializing slideshow with', slideshowImages.length, 'images');
+            
             // Clear existing content
             slideshowContainer.innerHTML = '';
             indicatorsContainer.innerHTML = '';
@@ -1797,7 +1813,6 @@
                 
                 img.onerror = function() {
                     console.error('❌ Failed to load image:', imageData.url.substring(0, 100));
-                    slide.style.display = 'none';
                     loadedCount++;
                     checkAllLoaded();
                 };
@@ -1820,37 +1835,25 @@
             
             function checkAllLoaded() {
                 if (loadedCount === totalImages) {
-                    console.log('✅ All images loaded, ready to start slideshow');
+                    console.log('✅ All images loaded, starting slideshow');
                     if (slideshowImages.length > 1) {
-                        setTimeout(() => {
-                            startSlideshow();
-                        }, 4000); // 4 second delay
+                        // ✅ FIX: Start immediately, no delay
+                        startSlideshow();
                     }
                 }
             }
             
             slideshowContainer.classList.add('active');
             indicatorsContainer.classList.add('active');
+            slideshowContainer.style.display = 'block'; // ✅ FIX: Ensure visible
             
-            // Set initial text IMMEDIATELY and DIRECTLY (no animation)
+            // Set initial text IMMEDIATELY
             if (titleElement && subtitleElement && slideshowImages[0]) {
                 const firstImage = slideshowImages[0];
-                titleElement.textContent = firstImage.title || 'GSTU Robotics & Research Club';
-                subtitleElement.textContent = firstImage.description || 'A Hub of Robothinkers';
+                titleElement.textContent = firstImage.title || 'Our Innovative Projects';
+                subtitleElement.textContent = firstImage.description || 'Building the Future with Technology';
                 titleElement.style.opacity = '1';
                 subtitleElement.style.opacity = '1';
-                titleElement.style.transition = 'none';
-                subtitleElement.style.transition = 'none';
-                
-                // Force reflow to ensure styles are applied
-                void titleElement.offsetWidth;
-                void subtitleElement.offsetWidth;
-                
-                // Re-enable transitions after a brief delay
-                setTimeout(() => {
-                    titleElement.style.transition = '';
-                    subtitleElement.style.transition = '';
-                }, 100);
                 
                 console.log('✅ Initial text set:', firstImage.title);
             }
@@ -1916,25 +1919,43 @@
         }
         
         function startSlideshow() {
+            if (slideshowInterval) {
+                clearInterval(slideshowInterval);
+            }
+            
+            console.log('▶️ Starting slideshow auto-play');
+            
             slideshowInterval = setInterval(() => {
                 nextSlide();
-            }, 5000);
+            }, 5000); // Change every 5 seconds
         }
         
         function nextSlide() {
             const slides = document.querySelectorAll('.hero-slide');
             const indicators = document.querySelectorAll('.slideshow-indicator');
             
-            if (slides.length === 0) return;
+            if (slides.length === 0) {
+                console.warn('⚠️ No slides found');
+                return;
+            }
             
-            slides[currentSlideIndex].classList.remove('active');
+            // Remove active from current slide
+            if (slides[currentSlideIndex]) {
+                slides[currentSlideIndex].classList.remove('active');
+            }
             if (indicators[currentSlideIndex]) {
                 indicators[currentSlideIndex].classList.remove('active');
             }
             
+            // Move to next slide
             currentSlideIndex = (currentSlideIndex + 1) % slides.length;
             
-            slides[currentSlideIndex].classList.add('active');
+            console.log('➡️ Moving to slide', currentSlideIndex + 1, 'of', slides.length);
+            
+            // Add active to new slide
+            if (slides[currentSlideIndex]) {
+                slides[currentSlideIndex].classList.add('active');
+            }
             if (indicators[currentSlideIndex]) {
                 indicators[currentSlideIndex].classList.add('active');
             }
