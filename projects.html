@@ -1544,9 +1544,12 @@
     }
     
     await loadClubConfig();
-    //await new Promise(resolve => setTimeout(resolve, 500));
+    
+    // ✅ FIX: Load main projects FIRST (uses cache for instant load)
+    await loadProjects();
+    
+    // ✅ FIX: Then load slideshow (will also use cache, no delay)
     await loadProjectsForSlideshow();
-            await loadProjects();
             initializeFilters();
             initializeSearch();
             initializeModal();
@@ -1598,27 +1601,37 @@
                 
                 let projectItems = [];
                 
+                // ✅ FIX: Try cache FIRST for instant load
+                const cached = localStorage.getItem('cache_projects');
+                if (cached) {
+                    try {
+                        projectItems = JSON.parse(cached);
+                        console.log('✅ Slideshow loaded', projectItems.length, 'projects from cache (instant)');
+                    } catch (e) {
+                        console.warn('⚠️ Cache parse error:', e);
+                    }
+                }
+                
+                // ✅ FIX: Then try API in background
                 if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady) {
                     try {
-                        console.log('📡 Calling API for projects...');
+                        console.log('📡 Calling API for projects (background refresh)...');
                         const response = await window.apiClient.getProjects();
                         console.log('📊 API response:', response);
                         
                         if (response.success && Array.isArray(response.data) && response.data.length > 0) {
                             projectItems = response.data;
-                            console.log('✅ Slideshow loaded', projectItems.length, 'projects from API');
+                            // ✅ FIX: Save to cache with correct key
+                            localStorage.setItem('cache_projects', JSON.stringify(projectItems));
+                            console.log('✅ Slideshow refreshed', projectItems.length, 'projects from API');
+                            
+                            // ✅ FIX: Re-initialize slideshow with fresh data
+                            if (slideshowImages.length === 0) {
+                                initializeSlideshow();
+                            }
                         }
                     } catch (apiError) {
                         console.error('❌ API call failed:', apiError);
-                    }
-                }
-                
-                if (projectItems.length === 0) {
-                    console.log('📦 Trying cache...');
-                    const cached = localStorage.getItem('projects');
-                    if (cached) {
-                        projectItems = JSON.parse(cached);
-                        console.log('✅ Slideshow loaded', projectItems.length, 'projects from cache');
                     }
                 }
                 
@@ -1974,7 +1987,30 @@
             try {
                 console.log('🔄 Loading projects...');
                 
-                // ✅ FIX: Use the correct API client method
+                // ✅ FIX: Load from cache FIRST for instant display
+                const cached = localStorage.getItem('cache_projects');
+                if (cached) {
+                    try {
+                        const projects = JSON.parse(cached);
+                        allProjects = projects.sort((a, b) => {
+                            const statusOrder = { ongoing: 1, planned: 2, completed: 3 };
+                            return (statusOrder[a.status] || 999) - (statusOrder[b.status] || 999);
+                        });
+
+                        console.log(`✅ Loaded ${allProjects.length} projects from cache (instant)`);
+
+                        updateStatistics();
+                        populateCategoryFilters();
+                        applyFilters();
+                        
+                        document.getElementById('loadingState').style.display = 'none';
+                        document.getElementById('projectsGrid').style.display = 'grid';
+                    } catch (parseError) {
+                        console.warn('⚠️ Cache parse error:', parseError);
+                    }
+                }
+                
+                // ✅ FIX: Then refresh from API in background
                 if (window.apiClient && window.apiClient.isReady) {
                     try {
                         const result = await window.apiClient.getProjects();
@@ -1987,9 +2023,9 @@
                                 return (statusOrder[a.status] || 999) - (statusOrder[b.status] || 999);
                             });
 
-                            console.log(`✅ Loaded ${allProjects.length} projects from API`);
+                            console.log(`✅ Refreshed ${allProjects.length} projects from API`);
                             
-                            // Save to cache
+                            // ✅ FIX: Save to cache with correct key
                             localStorage.setItem('cache_projects', JSON.stringify(allProjects));
 
                             updateStatistics();
@@ -2006,40 +2042,16 @@
                             return;
                         }
                     } catch (apiError) {
-                        console.warn('⚠️ API call failed, trying cache:', apiError.message);
+                        console.warn('⚠️ API refresh failed:', apiError.message);
                     }
                 }
                 
-                // ✅ FIX: Try cache as fallback
-                const cached = localStorage.getItem('cache_projects');
-                if (cached) {
-                    const projects = JSON.parse(cached);
-                allProjects = projects.sort((a, b) => {
-                        const statusOrder = { ongoing: 1, planned: 2, completed: 3 };
-                        return (statusOrder[a.status] || 999) - (statusOrder[b.status] || 999);
-                    });
-
-                    console.log(`✅ Loaded ${allProjects.length} projects from cache`);
-
-                    updateStatistics();
-                    populateCategoryFilters();
-                    applyFilters();
-                    
+                // ✅ FIX: If no cache and no API, show empty state
+                if (allProjects.length === 0) {
+                    console.warn('⚠️ No projects found in API or cache');
                     document.getElementById('loadingState').style.display = 'none';
-                    
-                    if (allProjects.length === 0) {
-                        document.getElementById('emptyState').style.display = 'block';
-                    } else {
-                        document.getElementById('projectsGrid').style.display = 'grid';
-                    }
-                    return;
+                    document.getElementById('emptyState').style.display = 'block';
                 }
-                
-                // No data available
-                console.warn('⚠️ No projects found in API or cache');
-                allProjects = [];
-                document.getElementById('loadingState').style.display = 'none';
-                document.getElementById('emptyState').style.display = 'block';
                 
             } catch (error) {
                 console.error('❌ Error loading projects:', error);
