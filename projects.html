@@ -1509,21 +1509,88 @@
         let currentSlideIndex = 0;
         let slideshowInterval = null;
 
-        function handleScroll() {
-            const header = document.querySelector('.header'); // ✅ FIX: Use class selector instead
-            if (!header) return; // ✅ FIX: Safety check
-            
-            const hero = document.querySelector('.hero');
-            const heroHeight = hero ? hero.offsetHeight : 0;
-            const scrollPosition = window.scrollY;
-            
-            if (scrollPosition < heroHeight - 100) {
-                header.classList.add('transparent');
-            } else {
-                header.classList.remove('transparent');
+  function handleScroll() {
+            try {
+                const header = document.querySelector('.header');
+                if (!header) {
+                    console.warn('Header element not found');
+                    return;
+                }
+                
+                const hero = document.querySelector('.hero');
+                if (!hero) {
+                    console.warn('Hero element not found');
+                    return;
+                }
+                
+                const heroHeight = hero.offsetHeight;
+                const scrollPosition = window.scrollY;
+                
+                if (scrollPosition < heroHeight - 100) {
+                    header.classList.add('transparent');
+                } else {
+                    header.classList.remove('transparent');
+                }
+            } catch (error) {
+                console.error('Error in handleScroll:', error);
             }
         }
 
+       document.addEventListener('DOMContentLoaded', async function() {
+    try {
+        // ✅ Apply theme IMMEDIATELY before anything else
+        const savedTheme = localStorage.getItem('theme') || 'dark';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+        if (!localStorage.getItem('theme')) {
+            localStorage.setItem('theme', 'dark');
+        }
+        
+        const yearElement = document.getElementById('currentYear');
+        if (yearElement) {
+            yearElement.textContent = new Date().getFullYear();
+        }
+        
+        // ✅ FIX: Setup scroll handler safely
+        setTimeout(() => {
+            try {
+                window.addEventListener('scroll', handleScroll);
+                handleScroll();
+            } catch (scrollError) {
+                console.error('Scroll handler error:', scrollError);
+            }
+        }, 200);
+        
+        initializeMobileMenu();
+        
+        let retries = 0;
+        while ((!window.apiClient || !window.apiClient.isReady) && retries < 50) {
+            await new Promise(resolve => setTimeout(resolve, 100));
+            retries++;
+        }
+        
+        await loadClubConfig();
+        
+        // ✅ FIX: Load main projects FIRST (uses cache for instant load)
+        await loadProjects();
+        
+        // ✅ FIX: Then load slideshow (will also use cache, no delay)
+        await loadProjectsForSlideshow();
+        
+        initializeFilters();
+        initializeSearch();
+        initializeModal();
+        
+        if (typeof initTheme === 'function') {
+            initTheme();
+        }
+        
+        if (typeof initNavigation === 'function') {
+            initNavigation();
+        }
+    } catch (error) {
+        console.error('❌ Page initialization error:', error);
+    }
+});
        document.addEventListener('DOMContentLoaded', async function() {
     // ✅ Apply theme IMMEDIATELY before anything else
     const savedTheme = localStorage.getItem('theme') || 'dark';
