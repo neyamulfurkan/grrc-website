@@ -190,7 +190,9 @@ router.post('/verify-superadmin', authenticateToken, async (req, res) => {
       {
         id: admin.id,
         username: admin.username,
-        is_super_admin: true
+        role: admin.role,
+        is_super_admin: true,
+        permissions: admin.permissions || {}
       },
       '30m'
     );
