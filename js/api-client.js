@@ -3,6 +3,9 @@ const AUTH_TOKEN_KEY = 'grrc_auth_token';
 const REQUEST_TIMEOUT = 30000; // Reduced from 90s to 30s
 
 const activeRequests = new Map();
+const requestQueue = [];
+let activeRequestCount = 0;
+const MAX_CONCURRENT_REQUESTS = 6; // Limit concurrent requests
 
 function getRequestKey(url, config) {
     const method = config.method || 'GET';
@@ -82,6 +85,15 @@ window.addEventListener('load', function() {
 });
 
 async function request(endpoint, options = {}) {
+    // ✅ Queue management to prevent connection pool exhaustion
+    if (activeRequestCount >= MAX_CONCURRENT_REQUESTS) {
+        await new Promise(resolve => {
+            requestQueue.push(resolve);
+        });
+    }
+    
+    activeRequestCount++;
+    
     const url = `${API_BASE_URL}${endpoint}`;
     const token = getAuthToken();
     const startTime = Date.now();
@@ -275,6 +287,13 @@ async function request(endpoint, options = {}) {
             };
         } finally {
             activeRequests.delete(requestKey);
+            
+            // ✅ Release queue slot
+            activeRequestCount--;
+            if (requestQueue.length > 0) {
+                const resolve = requestQueue.shift();
+                resolve();
+            }
         }
     })();
     

@@ -58,15 +58,15 @@ function getDatabaseConfig() {
       return {
         ...config,
         // Connection Pool Settings
-        max: 10,                          // ✅ INCREASED: 10 connections (safe for free tier)
-        min: 2,                           // ✅ INCREASED: Keep 2 alive for instant response
+        max: 20,                          // ✅ DOUBLED: 20 connections for concurrent requests
+        min: 5,                           // ✅ INCREASED: Keep 5 alive for instant response
         
         // Timeout Settings (optimized for Render + Supabase)
-        connectionTimeoutMillis: 15000,   // ✅ INCREASED: 15s connection timeout
-        idleTimeoutMillis: 120000,        // ✅ INCREASED: 2 minutes idle (was 25s)
+        connectionTimeoutMillis: 20000,   // ✅ INCREASED: 20s connection timeout
+        idleTimeoutMillis: 180000,        // ✅ INCREASED: 3 minutes idle
         
         // Query Timeouts
-        query_timeout: 60000,             // ✅ INCREASED: 60s query timeout
+        query_timeout: 30000,             // ✅ REDUCED: 30s query timeout (faster fails)
         statement_timeout: 60000,         // ✅ INCREASED: 60s statement timeout
         
         // Pool Management

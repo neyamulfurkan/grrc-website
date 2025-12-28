@@ -1,4 +1,5 @@
 const pool = require('../db/pool');
+const { withConnection } = require('../db/pool');
 
 /**
  * Creates a new membership application
@@ -88,7 +89,9 @@ const createApplication = async (applicationData) => {
 
     console.log('📤 Executing query with values:', values);
 
-    const result = await pool.query(query, values);
+    const result = await withConnection(async (client) => {
+      return await client.query(query, values);
+    });
     
     console.log('✅ Application created successfully:', result.rows[0]);
     
@@ -158,7 +161,9 @@ const getAllApplications = async (status = null) => {
       values = [status];
     }
 
-    const result = await pool.query(query, values);
+    const result = await withConnection(async (client) => {
+      return await client.query(query, values);
+    });
 
     console.log(`✅ Fetched ${result.rows.length} applications`);
 
@@ -191,7 +196,9 @@ const getApplicationById = async (id) => {
       WHERE ma.id = $1
     `;
 
-    const result = await pool.query(query, [id]);
+    const result = await withConnection(async (client) => {
+      return await client.query(query, [id]);
+    });
 
     if (result.rows.length === 0) {
       console.warn(`⚠️ Application ${id} not found`);
@@ -239,7 +246,9 @@ const updateApplicationStatus = async (id, status, adminId, adminNotes = '') => 
     `;
 
     const values = [status, adminId, adminNotes, id];
-    const result = await pool.query(query, values);
+    const result = await withConnection(async (client) => {
+      return await client.query(query, values);
+    });
 
     if (result.rows.length === 0) {
       throw new Error('Application not found');
@@ -282,7 +291,9 @@ const deleteApplication = async (id) => {
       RETURNING id
     `;
 
-    const result = await pool.query(query, [id]);
+    const result = await withConnection(async (client) => {
+      return await client.query(query, [id]);
+    });
 
     if (result.rows.length === 0) {
       throw new Error('Application not found');
@@ -311,7 +322,9 @@ const getApplicationStatistics = async () => {
       GROUP BY status
     `;
 
-    const result = await pool.query(query);
+    const result = await withConnection(async (client) => {
+      return await client.query(query);
+    });
 
     // Initialize statistics object
     const statistics = {

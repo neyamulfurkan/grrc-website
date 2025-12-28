@@ -5,6 +5,7 @@
  */
 
 const pool = require('../db/pool');
+const { withConnection } = require('../db/pool');
 
 /**
  * Create a new alumni application
@@ -67,7 +68,9 @@ const createApplication = async (applicationData) => {
   ];
 
   try {
-    const result = await pool.query(query, values);
+    const result = await withConnection(async (client) => {
+      return await client.query(query, values);
+    });
     return result.rows[0];
   } catch (error) {
     // Handle unique constraint violation (duplicate email)
@@ -101,7 +104,9 @@ const getAllApplications = async (status = null) => {
 
   query += ' ORDER BY aa.applied_date DESC';
 
-  const result = await pool.query(query, values);
+  const result = await withConnection(async (client) => {
+    return await client.query(query, values);
+  });
   return result.rows;
 };
 
@@ -120,7 +125,9 @@ const getApplicationById = async (id) => {
     WHERE aa.id = $1
   `;
 
-  const result = await pool.query(query, [id]);
+  const result = await withConnection(async (client) => {
+    return await client.query(query, [id]);
+  });
   return result.rows[0] || null;
 };
 
@@ -150,7 +157,9 @@ const updateApplicationStatus = async (id, status, reviewedBy, adminNotes = '') 
 
   const values = [status, reviewedBy, adminNotes, id];
 
-  const result = await pool.query(query, values);
+  const result = await withConnection(async (client) => {
+    return await client.query(query, values);
+  });
 
   if (result.rows.length === 0) {
     throw new Error(`Alumni application with ID ${id} not found`);
@@ -166,7 +175,9 @@ const updateApplicationStatus = async (id, status, reviewedBy, adminNotes = '') 
  */
 const deleteApplication = async (id) => {
   const query = 'DELETE FROM alumni_applications WHERE id = $1 RETURNING id';
-  const result = await pool.query(query, [id]);
+  const result = await withConnection(async (client) => {
+    return await client.query(query, [id]);
+  });
 
   if (result.rows.length === 0) {
     throw new Error(`Alumni application with ID ${id} not found`);
@@ -191,7 +202,9 @@ const getApplicationStatistics = async () => {
     FROM alumni_applications
   `;
 
-  const result = await pool.query(query);
+  const result = await withConnection(async (client) => {
+    return await client.query(query);
+  });
   const stats = result.rows[0];
 
   return {
@@ -211,7 +224,9 @@ const getApplicationStatistics = async () => {
  */
 const emailExists = async (email) => {
   const query = 'SELECT id FROM alumni_applications WHERE email = $1';
-  const result = await pool.query(query, [email]);
+  const result = await withConnection(async (client) => {
+    return await client.query(query, [email]);
+  });
   return result.rows.length > 0;
 };
 

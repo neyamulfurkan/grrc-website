@@ -1311,27 +1311,43 @@
             }
         };
         
-        Promise.all([
-            loadWithProgress(loadClubConfig(), 'Config'),
-            loadWithProgress(loadGalleryForSlideshow(), 'Slideshow'),
-            loadWithProgress(loadUpcomingEvents(), 'Events'),
-            loadWithProgress(loadExecutiveMembers(), 'Members'),
-            loadWithProgress(loadLatestAnnouncements(), 'Announcements')
-        ]).finally(() => {
-                const loadTime = ((performance.now() - startTime) / 1000).toFixed(2);
-                console.log(`✅ All content loaded in ${loadTime}s`);
-                
-                // Hide loading overlay immediately
-                const overlay = document.getElementById('loadingOverlay');
-                if (overlay) {
-                    overlay.classList.add('hidden');
-                }
-                
-                // Initialize scroll animations after content loads
-                if (typeof window.initScrollAnimations === 'function') {
-                    setTimeout(() => window.initScrollAnimations(), 100);
-                }
-            });
+        // ✅ STAGGERED LOADING - Prevent connection pool exhaustion
+        const staggerDelay = 150; // 150ms between requests
+        
+        (async () => {
+            // Priority 1: Critical UI
+            await loadWithProgress(loadClubConfig(), 'Config');
+            await new Promise(resolve => setTimeout(resolve, staggerDelay));
+            
+            // Priority 2: Hero content
+            await loadWithProgress(loadGalleryForSlideshow(), 'Slideshow');
+            await new Promise(resolve => setTimeout(resolve, staggerDelay));
+            
+            // Priority 3: Main content (parallel)
+            await Promise.all([
+                loadWithProgress(loadUpcomingEvents(), 'Events'),
+                new Promise(resolve => setTimeout(resolve, staggerDelay)).then(() => 
+                    loadWithProgress(loadExecutiveMembers(), 'Members')
+                ),
+                new Promise(resolve => setTimeout(resolve, staggerDelay * 2)).then(() =>
+                    loadWithProgress(loadLatestAnnouncements(), 'Announcements')
+                )
+            ]);
+        })().finally(() => {
+            const loadTime = ((performance.now() - startTime) / 1000).toFixed(2);
+            console.log(`✅ All content loaded in ${loadTime}s`);
+            
+            // Hide loading overlay immediately
+            const overlay = document.getElementById('loadingOverlay');
+            if (overlay) {
+                overlay.classList.add('hidden');
+            }
+            
+            // Initialize scroll animations after content loads
+            if (typeof window.initScrollAnimations === 'function') {
+                setTimeout(() => window.initScrollAnimations(), 100);
+            }
+        });
         });
         
         function initializeMobileMenu() {
