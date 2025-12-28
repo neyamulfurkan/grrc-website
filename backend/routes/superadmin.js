@@ -2,8 +2,6 @@ const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcrypt');
 const pool = require('../db/pool');
-const fs = require('fs');
-const path = require('path');
 const { authenticateToken, isSuperAdmin } = require('../middleware/auth');
 
 // Apply middleware to all routes
@@ -199,10 +197,10 @@ router.post('/admins', async (req, res) => {
     
     // Insert new admin
     const result = await pool.query(
-      `INSERT INTO admins (username, email, password, password_hash, permissions, created_by, is_active, is_super_admin)
-       VALUES ($1, $2, $3::varchar, $4::text, $5::jsonb, $6, true, false)
+      `INSERT INTO admins (username, email, password_hash, permissions, created_by, is_active, is_super_admin)
+       VALUES ($1, $2, $3, $4::jsonb, $5, true, false)
        RETURNING id, username, email, permissions, created_at`,
-      [username, email, hashedPassword, hashedPassword, permissionsJson, req.user.id]
+      [username, email, hashedPassword, permissionsJson, req.user.id]
     );
     
     console.log('✅ Admin created with permissions:', result.rows[0].permissions);
