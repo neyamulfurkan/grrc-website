@@ -156,6 +156,7 @@ CREATE TABLE gallery (
     category VARCHAR(100) NOT NULL, -- e.g., 'Events', 'Projects', 'Team', 'Achievements'
     date DATE NOT NULL,
     photographer VARCHAR(255), -- Name of photographer or uploader
+    show_on_homepage BOOLEAN DEFAULT FALSE, -- Whether to show in homepage slideshow
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 

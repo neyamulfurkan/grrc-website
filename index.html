@@ -1405,6 +1405,7 @@
         // ✅ VALIDATE AND PROCESS IMAGES
         if (galleryItems.length > 0) {
             slideshowImages = galleryItems
+                .filter(item => item.show_on_homepage === true) // ✅ FILTER: Only homepage images
                 .map(item => {
                     const imageUrl = item.image || item.image_url || '';
                     const cleanUrl = imageUrl.trim();
@@ -1423,7 +1424,7 @@
                 .slice(0, 10);
             
             if (slideshowImages.length > 0) {
-                console.log('✅ Initializing slideshow:', slideshowImages.length, 'valid images');
+                console.log('✅ Initializing slideshow:', slideshowImages.length, 'homepage images');
                 initializeSlideshow();
                 return;
             }

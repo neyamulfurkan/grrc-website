@@ -1243,6 +1243,16 @@
                 </div>
             </div>
 
+            <div class="form-group" style="background: var(--background-color); padding: 1rem; border-radius: var(--radius-md); border: 2px solid var(--primary-color);">
+                <label style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer; font-weight: 600; color: var(--text-primary);">
+                    <input type="checkbox" id="galleryShowOnHomepage" style="width: 20px; height: 20px; cursor: pointer; accent-color: var(--primary-color);">
+                    <span>🏠 Show this image on homepage slideshow</span>
+                </label>
+                <p style="margin: 0.5rem 0 0 2.25rem; font-size: 0.875rem; color: var(--text-secondary);">
+                    Selected images will appear in the rotating slideshow on the homepage
+                </p>
+            </div>
+
             <div style="display: flex; gap: var(--space-md);">
                 <button type="submit" class="btn btn-primary" id="gallerySubmitBtn">💾 Add to Gallery</button>
                 <button type="button" class="btn btn-secondary" onclick="resetGalleryForm()">🔄 Reset Form</button>
@@ -1263,6 +1273,7 @@
                         <th>Title</th>
                         <th>Category</th>
                         <th>Date</th>
+                        <th>Homepage</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -2916,7 +2927,8 @@ async function loadAdminDashboardInfo() {
                     category: category,
                     date: date,
                     description: document.getElementById('galleryDescription').value.trim(),
-                    photographer: document.getElementById('galleryPhotographer').value.trim()
+                    photographer: document.getElementById('galleryPhotographer').value.trim(),
+                    show_on_homepage: document.getElementById('galleryShowOnHomepage').checked
                 };
 
                 await window.storage.addGalleryItem(galleryData);
@@ -3016,6 +3028,13 @@ async function loadAdminDashboardInfo() {
                         <td style="font-weight: 600;">${item.title}</td>
                         <td><span class="badge badge-info">${item.category}</span></td>
                         <td>${formatDate(item.date)}</td>
+                        <td>
+                            <label style="display: flex; align-items: center; justify-content: center; cursor: pointer;">
+                                <input type="checkbox" ${item.show_on_homepage ? 'checked' : ''} 
+                                       onchange="toggleHomepageDisplay('${item.id}', this.checked)"
+                                       style="width: 20px; height: 20px; cursor: pointer; accent-color: var(--primary-color);">
+                            </label>
+                        </td>
                         <td class="action-buttons">
                             <button class="btn btn-icon btn-delete" onclick="deleteGalleryItem('${item.id}')">🗑️</button>
                         </td>
@@ -3070,10 +3089,40 @@ async function loadAdminDashboardInfo() {
             document.getElementById('galleryImagePreview').style.display = 'none';
             document.getElementById('uploadProgress').style.display = 'none';
             document.getElementById('galleryCloudinaryUrl').value = '';
+            document.getElementById('galleryShowOnHomepage').checked = false;
             
             const submitBtn = document.getElementById('gallerySubmitBtn');
             submitBtn.disabled = false;
             submitBtn.textContent = '💾 Add to Gallery';
+        }
+
+        async function toggleHomepageDisplay(id, showOnHomepage) {
+            try {
+                const result = await window.apiClient.request(`/api/content/gallery/${id}`, {
+                    method: 'PUT',
+                    body: JSON.stringify({ show_on_homepage: showOnHomepage })
+                });
+                
+                if (result.success) {
+                    showToast(showOnHomepage ? '✅ Image will show on homepage' : '❌ Image removed from homepage', 'success');
+                    
+                    // Update cache
+                    const gallery = JSON.parse(localStorage.getItem('gallery') || '[]');
+                    const index = gallery.findIndex(g => g.id === id);
+                    if (index !== -1) {
+                        gallery[index].show_on_homepage = showOnHomepage;
+                        localStorage.setItem('gallery', JSON.stringify(gallery));
+                    }
+                } else {
+                    showToast('Failed to update homepage display', 'error');
+                    // Revert checkbox
+                    event.target.checked = !showOnHomepage;
+                }
+            } catch (error) {
+                console.error('Toggle homepage error:', error);
+                showToast('Error updating homepage display', 'error');
+                event.target.checked = !showOnHomepage;
+            }
         }
 
         function setupAnnouncementForm() {

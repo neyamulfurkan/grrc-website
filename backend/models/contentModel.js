@@ -339,13 +339,13 @@ async function getGalleryItemById(id) {
 
 async function createGalleryItem(data) {
   return withConnection(async (client) => {
-    const { image, title, description, category, date, photographer } = data;
+    const { image, title, description, category, date, photographer, show_on_homepage } = data;
     const query = `
-      INSERT INTO gallery (image, title, description, category, date, photographer)
-      VALUES ($1, $2, $3, $4, $5, $6)
+      INSERT INTO gallery (image, title, description, category, date, photographer, show_on_homepage)
+      VALUES ($1, $2, $3, $4, $5, $6, $7)
       RETURNING *
     `;
-    const values = [image, title, description, category, date, photographer];
+    const values = [image, title, description, category, date, photographer, show_on_homepage || false];
     const result = await client.query(query, values);
     return { success: true, data: result.rows[0], error: null };
   }).catch(error => ({ success: false, data: null, error: error.message }));
@@ -353,15 +353,16 @@ async function createGalleryItem(data) {
 
 async function updateGalleryItem(id, data) {
   return withConnection(async (client) => {
-    const { image, title, description, category, date, photographer } = data;
+    const { image, title, description, category, date, photographer, show_on_homepage } = data;
     const query = `
       UPDATE gallery 
       SET image = COALESCE($1, image), title = COALESCE($2, title), description = COALESCE($3, description),
-          category = COALESCE($4, category), date = COALESCE($5, date), photographer = COALESCE($6, photographer)
-      WHERE id = $7
+          category = COALESCE($4, category), date = COALESCE($5, date), photographer = COALESCE($6, photographer),
+          show_on_homepage = COALESCE($7, show_on_homepage)
+      WHERE id = $8
       RETURNING *
     `;
-    const values = [image, title, description, category, date, photographer, id];
+    const values = [image, title, description, category, date, photographer, show_on_homepage, id];
     const result = await client.query(query, values);
     if (result.rows.length === 0) return { success: false, data: null, error: 'Gallery item not found' };
     return { success: true, data: result.rows[0], error: null };

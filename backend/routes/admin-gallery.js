@@ -13,7 +13,7 @@ router.use(authenticateToken);
 // ========== CREATE GALLERY ITEM ==========
 router.post('/', checkPermission('gallery', 'upload'), async (req, res) => {
   try {
-    const { image, title, description, category, date, photographer } = req.body;
+    const { image, title, description, category, date, photographer, show_on_homepage } = req.body;
     
     if (!image || !title || !category || !date) {
       return res.status(400).json({
@@ -43,10 +43,10 @@ router.post('/', checkPermission('gallery', 'upload'), async (req, res) => {
     }
     
     const result = await pool.query(
-      `INSERT INTO gallery (image, title, description, category, date, photographer, created_by)
-       VALUES ($1, $2, $3, $4, $5, $6, $7)
+      `INSERT INTO gallery (image, title, description, category, date, photographer, show_on_homepage, created_by)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
        RETURNING *`,
-      [cloudinaryUrl, title, description, category, date, photographer, req.user.id]
+      [cloudinaryUrl, title, description, category, date, photographer, show_on_homepage || false, req.user.id]
     );
     
     res.status(201).json({
@@ -67,14 +67,14 @@ router.post('/', checkPermission('gallery', 'upload'), async (req, res) => {
 router.put('/:id', checkPermission('gallery', 'edit'), async (req, res) => {
   try {
     const { id } = req.params;
-    const { image, title, description, category, date, photographer } = req.body;
+    const { image, title, description, category, date, photographer, show_on_homepage } = req.body;
     
     const result = await pool.query(
       `UPDATE gallery 
-       SET image = $1, title = $2, description = $3, category = $4, date = $5, photographer = $6, updated_at = NOW()
-       WHERE id = $7
+       SET image = $1, title = $2, description = $3, category = $4, date = $5, photographer = $6, show_on_homepage = $7, updated_at = NOW()
+       WHERE id = $8
        RETURNING *`,
-      [image, title, description, category, date, photographer, id]
+      [image, title, description, category, date, photographer, show_on_homepage || false, id]
     );
     
     if (result.rows.length === 0) {
