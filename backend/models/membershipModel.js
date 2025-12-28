@@ -130,17 +130,34 @@ const getAllApplications = async (status = null) => {
   try {
     console.log('🔍 Fetching applications with status:', status || 'all');
 
-    const query = `
-      SELECT 
-        ma.*,
-        a.username as reviewer_username
-      FROM membership_applications ma
-      LEFT JOIN admins a ON ma.reviewed_by = a.id
-      WHERE $1 IS NULL OR ma.status = $1
-      ORDER BY ma.applied_date DESC
-    `;
+    let query, values;
+    
+    if (status === null || status === undefined || status === '' || status === 'all') {
+      // Fetch all applications
+      query = `
+        SELECT 
+          ma.*,
+          a.username as reviewer_username
+        FROM membership_applications ma
+        LEFT JOIN admins a ON ma.reviewed_by = a.id
+        ORDER BY ma.applied_date DESC
+      `;
+      values = [];
+    } else {
+      // Fetch applications with specific status
+      query = `
+        SELECT 
+          ma.*,
+          a.username as reviewer_username
+        FROM membership_applications ma
+        LEFT JOIN admins a ON ma.reviewed_by = a.id
+        WHERE ma.status = $1
+        ORDER BY ma.applied_date DESC
+      `;
+      values = [status];
+    }
 
-    const result = await pool.query(query, [status]);
+    const result = await pool.query(query, values);
 
     console.log(`✅ Fetched ${result.rows.length} applications`);
 
