@@ -3029,9 +3029,9 @@ async function loadAdminDashboardInfo() {
                         <td><span class="badge badge-info">${item.category}</span></td>
                         <td>${formatDate(item.date)}</td>
                         <td>
-                            <label style="display: flex; align-items: center; justify-content: center; cursor: pointer;">
+                            <label style="display: flex; align-items: center; justify-content: center; cursor: pointer;" title="${item.show_on_homepage ? 'Shown on homepage' : 'Not shown on homepage'}">
                                 <input type="checkbox" ${item.show_on_homepage ? 'checked' : ''} 
-                                       onchange="toggleHomepageDisplay('${item.id}', this.checked)"
+                                       onclick="toggleHomepageDisplay('${item.id}', this.checked)"
                                        style="width: 20px; height: 20px; cursor: pointer; accent-color: var(--primary-color);">
                             </label>
                         </td>
@@ -3096,32 +3096,33 @@ async function loadAdminDashboardInfo() {
             submitBtn.textContent = '💾 Add to Gallery';
         }
 
-        async function toggleHomepageDisplay(id, showOnHomepage) {
+        async function toggleHomepageDisplay(id, checked) {
             try {
                 const result = await window.apiClient.request(`/api/content/gallery/${id}`, {
                     method: 'PUT',
-                    body: JSON.stringify({ show_on_homepage: showOnHomepage })
+                    body: JSON.stringify({ show_on_homepage: checked })
                 });
                 
                 if (result.success) {
-                    showToast(showOnHomepage ? '✅ Image will show on homepage' : '❌ Image removed from homepage', 'success');
+                    showToast(checked ? '✅ Image will show on homepage' : '❌ Image removed from homepage', 'success');
                     
                     // Update cache
+                    localStorage.removeItem('cache_gallery');
+                    localStorage.removeItem('gallery');
+                    
                     const gallery = JSON.parse(localStorage.getItem('gallery') || '[]');
                     const index = gallery.findIndex(g => g.id === id);
                     if (index !== -1) {
-                        gallery[index].show_on_homepage = showOnHomepage;
+                        gallery[index].show_on_homepage = checked;
                         localStorage.setItem('gallery', JSON.stringify(gallery));
                     }
                 } else {
                     showToast('Failed to update homepage display', 'error');
-                    // Revert checkbox
-                    event.target.checked = !showOnHomepage;
                 }
             } catch (error) {
                 console.error('Toggle homepage error:', error);
                 showToast('Error updating homepage display', 'error');
-                event.target.checked = !showOnHomepage;
+                await loadGallery();
             }
         }
 
