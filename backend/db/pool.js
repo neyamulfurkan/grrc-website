@@ -51,6 +51,13 @@ function getDatabaseConfig() {
   // Try DATABASE_URL first (best for Render deployment)
   if (process.env.DATABASE_URL) {
     console.log('📡 Using DATABASE_URL for connection');
+    
+    // ✅ LOG PARTIAL CONNECTION STRING FOR DEBUGGING
+    const urlParts = process.env.DATABASE_URL.split('@');
+    if (urlParts.length > 1) {
+      console.log('🔍 Connecting to:', urlParts[1].substring(0, 50) + '...');
+    }
+    
     const config = parseConnectionString(process.env.DATABASE_URL);
     
     if (config) {
