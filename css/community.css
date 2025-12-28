@@ -22,7 +22,9 @@
 .community-header {
   background: var(--header-background);
   border-bottom: 1px solid var(--border-color);
-  padding: 1rem 1.5rem;
+  padding: 0;
+  margin: 0;
+  height: 70px;
   display: flex;
   justify-content: space-between;
   align-items: center;

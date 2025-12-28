@@ -35,7 +35,7 @@ body {
   background-color: var(--background-color);
   transition: background-color var(--transition-base), color var(--transition-base);
   overflow-x: hidden;
-  padding-top: 80px;
+  padding-top: 0;
 }
 
 /* ============================================
@@ -139,10 +139,13 @@ em {
   width: 100%;
   background-color: var(--header-background);
   backdrop-filter: blur(12px);
+  margin: 0;
+  padding: 0;
   border-bottom: 1px solid var(--header-border);
   z-index: var(--z-fixed);
   transition: transform var(--transition-base), box-shadow var(--transition-base), background-color var(--transition-base);
-  height: 80px;
+  height: 70px;
+  min-height: 70px;
 }
 
 .header.hidden {
