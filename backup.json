@@ -1,0 +1,1558 @@
+{
+  "club_config": [
+    {
+      "id": 1,
+      "logo": "https://res.cloudinary.com/dot1uykrf/image/upload/v1766807852/grrc-config/wgx84gaeivcqfj5flltl.jpg",
+      "club_name": "GSTU Robotics & Research Club",
+      "club_motto": "A Hub of Robothinkers",
+      "club_description": "Empowering students to explore robotics, AI, and innovative technologies through hands-on projects and collaborative learning.",
+      "social_links": [
+        {
+          "url": "https://www.facebook.com/profile.php?id=61577073392739",
+          "platform": "facebook"
+        }
+      ],
+      "bkash_number": "01710207818",
+      "membership_fee": 200,
+      "updated_at": "2025-12-26T21:57:33.083Z"
+    }
+  ],
+  "admins": [
+    {
+      "id": 40,
+      "username": "Moon",
+      "email": "neyamulfurkan22@gmail.con",
+      "password": "$2b$10$UtVQvUkpZat2IliIS..CXelezPMlWV2PUCVPs5ll3oybVns/Fw4PS",
+      "role": "Admin",
+      "is_super_admin": false,
+      "permissions": {
+        "alumni": {
+          "edit": true,
+          "view": true,
+          "create": true,
+          "delete": true,
+          "approve_applications": true
+        },
+        "events": {
+          "edit": true,
+          "view": true,
+          "create": true,
+          "delete": true
+        },
+        "gallery": {
+          "view": true,
+          "delete": true,
+          "upload": true
+        },
+        "members": {
+          "edit": true,
+          "view": true,
+          "create": true,
+          "delete": true
+        },
+        "projects": {
+          "edit": true,
+          "view": true,
+          "create": true,
+          "delete": true
+        },
+        "membership": {
+          "view": true,
+          "delete": true,
+          "approve": true
+        },
+        "announcements": {
+          "edit": true,
+          "view": true,
+          "create": true,
+          "delete": true
+        }
+      },
+      "is_active": true,
+      "created_by": 24,
+      "created_at": "2025-12-26T03:36:20.218Z",
+      "updated_at": "2025-12-26T03:36:20.218Z",
+      "last_login": "2025-12-27T07:04:43.894Z",
+      "permissions_type": "object",
+      "password_hash": "$2b$10$UtVQvUkpZat2IliIS..CXelezPMlWV2PUCVPs5ll3oybVns/Fw4PS"
+    },
+    {
+      "id": 39,
+      "username": "Mahin",
+      "email": "mdsejanmnr@gmail.com",
+      "password": "$2b$10$nbYZ4Q63qqXssp3DiFkK6OXPCe7E3lUFl9/2HSINnsSWc6NqHTTiq",
+      "role": "Admin",
+      "is_super_admin": false,
+      "permissions": {
+        "alumni": {
+          "edit": true,
+          "view": true,
+          "create": true,
+          "delete": true,
+          "approve_applications": true
+        },
+        "events": {
+          "edit": true,
+          "view": true,
+          "create": true,
+          "delete": true
+        },
+        "gallery": {
+          "view": true,
+          "delete": true,
+          "upload": true
+        },
+        "members": {
+          "edit": true,
+          "view": true,
+          "create": true,
+          "delete": true
+        },
+        "projects": {
+          "edit": true,
+          "view": true,
+          "create": true,
+          "delete": true
+        },
+        "membership": {
+          "view": true,
+          "delete": true,
+          "approve": true
+        },
+        "announcements": {
+          "edit": true,
+          "view": true,
+          "create": true,
+          "delete": true
+        }
+      },
+      "is_active": true,
+      "created_by": 24,
+      "created_at": "2025-12-24T08:00:56.045Z",
+      "updated_at": "2025-12-24T08:00:56.045Z",
+      "last_login": "2025-12-24T08:14:45.678Z",
+      "permissions_type": "object",
+      "password_hash": "$2b$10$nbYZ4Q63qqXssp3DiFkK6OXPCe7E3lUFl9/2HSINnsSWc6NqHTTiq"
+    },
+    {
+      "id": 24,
+      "username": "admin",
+      "email": "admin@grrc.com",
+      "password": "$2a$10$z/AVgRzkhgn8r.u0.wDTgOAXd/g/a/QKQbJq0lp1E8tHB7t/VZZ4a",
+      "role": "Super Admin",
+      "is_super_admin": true,
+      "permissions": {},
+      "is_active": true,
+      "created_by": null,
+      "created_at": "2025-12-09T02:06:38.525Z",
+      "updated_at": "2025-12-09T02:06:38.525Z",
+      "last_login": "2025-12-28T06:25:08.131Z",
+      "permissions_type": "object",
+      "password_hash": "$2b$10$tQGNeDXVeKVlsFl94/cC/OkPUsLwGWZLw.YYkCcXy/J0w6E9r1hrK"
+    }
+  ],
+  "members": [
+    {
+      "id": 12,
+      "name": "Neamul Forkan",
+      "photo": "https://res.cloudinary.com/dot1uykrf/image/upload/v1766807837/grrc-members/njkmkcesazil9kxuv1rh.jpg",
+      "department": "Electrical and Electronic Engineering (EEE)",
+      "year": "3rd",
+      "role": "Executive Member",
+      "position": "",
+      "email": "neyamulfurkan22@gmail.com",
+      "phone": "+880 1618115175",
+      "bio": "ags",
+      "skills": [
+        "programming",
+        "ai",
+        "machine learning",
+        "EEE"
+      ],
+      "joined_date": "2025-10-19T18:00:00.000Z",
+      "created_at": "2025-12-09T03:53:52.799Z"
+    },
+    {
+      "id": 22,
+      "name": "Md. Rakibul Islam",
+      "photo": "https://res.cloudinary.com/dot1uykrf/image/upload/v1766807838/grrc-members/uvslejfkyiwxlazqhvfe.jpg",
+      "department": "Electrical and Electronic Engineering (EEE)",
+      "year": "4th",
+      "role": "Executive Member",
+      "position": "",
+      "email": "rakibulislam2133@gmail.com",
+      "phone": "01705301005",
+      "bio": "currently working as president.",
+      "skills": [
+        "talkative",
+        "initiative"
+      ],
+      "joined_date": "2025-05-22T18:00:00.000Z",
+      "created_at": "2025-12-22T12:00:57.887Z"
+    },
+    {
+      "id": 23,
+      "name": "Meskat Meskat Sharif",
+      "photo": "https://res.cloudinary.com/dot1uykrf/image/upload/v1766807839/grrc-members/xp78ougwt1ubgm0xl6ro.jpg",
+      "department": "Electrical and Electronic Engineering (EEE)",
+      "year": "3rd",
+      "role": "Executive Member",
+      "position": "",
+      "email": "meskatsharif123@gmail.com",
+      "phone": "01521788367",
+      "bio": "for myself, there are no bio required. cause i am more than bio.",
+      "skills": [
+        "robotics",
+        "iot"
+      ],
+      "joined_date": "2023-04-19T18:00:00.000Z",
+      "created_at": "2025-12-22T12:28:04.906Z"
+    },
+    {
+      "id": 24,
+      "name": "Miftahul Islam Mahin",
+      "photo": "https://res.cloudinary.com/dot1uykrf/image/upload/v1766807841/grrc-members/txoelp8ouajpmgfwkaqm.jpg",
+      "department": "Electrical and Electronic Engineering (EEE)",
+      "year": "3rd",
+      "role": "Executive Member",
+      "position": "",
+      "email": "mdsejanmnr@gmail.com",
+      "phone": "+8801637965098",
+      "bio": "",
+      "skills": [],
+      "joined_date": "2025-12-23T18:00:00.000Z",
+      "created_at": "2025-12-24T07:58:09.110Z"
+    },
+    {
+      "id": 27,
+      "name": "Nokibul Hasan Mojumder Tasir",
+      "photo": "https://res.cloudinary.com/dot1uykrf/image/upload/v1766807842/grrc-members/rxldgtasqwu47qcxpbuv.jpg",
+      "department": "Computer Science and Engineering (CSE)",
+      "year": "3rd",
+      "role": "Executive Member",
+      "position": "",
+      "email": "nokibulofficial18@gmail.com",
+      "phone": "01975725361",
+      "bio": "i am a student of cse",
+      "skills": [
+        "programming",
+        "python",
+        "javascript",
+        "java",
+        "quicklearner"
+      ],
+      "joined_date": "2023-12-20T18:00:00.000Z",
+      "created_at": "2025-12-26T13:47:04.418Z"
+    },
+    {
+      "id": 29,
+      "name": "Sk. Md. Hisbur Rahman",
+      "photo": "https://res.cloudinary.com/dot1uykrf/image/upload/v1766810196/grrc-members/rodd9gxamev6boxjvulj.jpg",
+      "department": "Electrical and Electronic Engineering (EEE)",
+      "year": "4th",
+      "role": "Executive Member",
+      "position": "",
+      "email": "hisbur.20eee014@gstu.edu.bd",
+      "phone": "01710207818",
+      "bio": ".",
+      "skills": [],
+      "joined_date": "2024-07-31T18:00:00.000Z",
+      "created_at": "2025-12-26T22:36:37.020Z"
+    }
+  ],
+  "events": [
+    {
+      "id": 3,
+      "title": "Beyond Academics: Exploring Opportunities in Robotics, Research, and Extracurricular Activities.",
+      "description": "Speaker:\n  Utshob Shutradhar\n Chief Guest:\nDr. A.T.M. Saiful Islam\nChairman, Dept. of Electrical and Electronic Engineering, GSTU",
+      "category": "Seminar",
+      "date": "2025-10-27T18:00:00.000Z",
+      "time": "2:00PM - 3:00PM",
+      "venue": "ACADEMIC ROOM 305",
+      "image": "https://res.cloudinary.com/dot1uykrf/image/upload/v1766807844/grrc-events/jngtjcdrzwigpv6bvox8.jpg",
+      "status": "completed",
+      "registration_link": "",
+      "details": null,
+      "organizer": null,
+      "created_at": "2025-12-09T02:48:19.036Z"
+    },
+    {
+      "id": 4,
+      "title": "Beyond Academics: Exploring Opportunities in Robotics, Research, and Extracurricular Activities.",
+      "description": "Utshob Shutradhar vai taking his seminar on Beyond Academics: Exploring Opportunities in Robotics, Research, and Extracurricular Activities. that was an amazing seminar that we all enjoyed a lot",
+      "category": "Seminar",
+      "date": "2025-10-27T18:00:00.000Z",
+      "time": "2:00PM - 3:00PM",
+      "venue": "ACADEMIC ROOM 305",
+      "image": "https://res.cloudinary.com/dot1uykrf/image/upload/v1766807845/grrc-events/s0cvhginczfwltbswaq0.jpg",
+      "status": "completed",
+      "registration_link": "",
+      "details": null,
+      "organizer": null,
+      "created_at": "2025-12-09T02:50:36.104Z"
+    },
+    {
+      "id": 29,
+      "title": "3-Day Arduino-Based Robotics Bootcamp",
+      "description": "From Basics to Intelligent Robots Robotics teaches the practical use of circuits, control systems, sensors, and motors while building strong problem-solving and system-level thinking skills. This bootcamp is designed for EEE and tech-enthusiastic students who want to turn logic into real, working robots.",
+      "category": "Workshop",
+      "date": "2025-12-24T18:00:00.000Z",
+      "time": "3:00PM - 6:00PM",
+      "venue": "Dept. of EEE, Room 402",
+      "image": "https://res.cloudinary.com/dot1uykrf/image/upload/v1766807846/grrc-events/tfnthhry1xhe9osqryty.jpg",
+      "status": "upcoming",
+      "registration_link": "https://forms.gle/rNqwqZWYLtxAK5bRA",
+      "details": null,
+      "organizer": null,
+      "created_at": "2025-12-24T05:11:04.975Z"
+    }
+  ],
+  "projects": [
+    {
+      "id": 5,
+      "title": "Day-2 workshop: Arduino Bootcamp",
+      "description": "Arduino Bootcamp: From Basics to Hardware Control!",
+      "category": "Robotics",
+      "status": "completed",
+      "image": "https://res.cloudinary.com/dot1uykrf/image/upload/v1766807848/grrc-projects/za8lbnqoivnewcgmwiuf.jpg",
+      "technologies": [
+        "servo",
+        "arduino"
+      ],
+      "team_members": [],
+      "github_link": null,
+      "live_link": null,
+      "completion_date": "2025-11-07T18:00:00.000Z",
+      "features": null,
+      "achievements": null,
+      "created_at": "2025-12-09T02:42:44.381Z"
+    },
+    {
+      "id": 6,
+      "title": "Day-2 workshop: Arduino Bootcamp",
+      "description": "nahid vai is taking his important class on the arduino bootcamp day 2",
+      "category": "Robotics",
+      "status": "completed",
+      "image": "https://res.cloudinary.com/dot1uykrf/image/upload/v1766807850/grrc-projects/ybfvqqawowwmen4szl6y.jpg",
+      "technologies": [
+        "arduino",
+        "servo motor"
+      ],
+      "team_members": [
+        "seniors",
+        "juniors"
+      ],
+      "github_link": null,
+      "live_link": null,
+      "completion_date": "2025-11-07T18:00:00.000Z",
+      "features": null,
+      "achievements": null,
+      "created_at": "2025-12-09T02:44:21.919Z"
+    }
+  ],
+  "gallery": [
+    {
+      "id": 28,
+      "image": "https://res.cloudinary.com/dot1uykrf/image/upload/v1765270499/grrc-gallery/txqo2r56uuvv1i20y22o.jpg",
+      "title": "providing certificate",
+      "description": "we always provide certification based on what have you done.",
+      "category": "General",
+      "date": "2025-10-14T18:00:00.000Z",
+      "photographer": null,
+      "created_at": "2025-12-09T02:55:00.870Z",
+      "show_on_homepage": false
+    },
+    {
+      "id": 29,
+      "image": "https://res.cloudinary.com/dot1uykrf/image/upload/v1765270603/grrc-gallery/ntsijj9heat4akl6gb0f.jpg",
+      "title": "providing certificate",
+      "description": "we always provides certificate based on what have you done.",
+      "category": "General",
+      "date": "2025-10-14T18:00:00.000Z",
+      "photographer": null,
+      "created_at": "2025-12-09T02:56:44.808Z",
+      "show_on_homepage": false
+    },
+    {
+      "id": 31,
+      "image": "https://res.cloudinary.com/dot1uykrf/image/upload/v1765270873/grrc-gallery/kmtark23ocgmflrk8471.jpg",
+      "title": "The GSTU Robotics and Research Club (GRRC) 2025 Executive Committee has been announced.",
+      "description": "executive committee has been announced this year",
+      "category": "General",
+      "date": "2025-04-23T18:00:00.000Z",
+      "photographer": null,
+      "created_at": "2025-12-09T03:01:15.395Z",
+      "show_on_homepage": false
+    },
+    {
+      "id": 39,
+      "image": "https://res.cloudinary.com/dot1uykrf/image/upload/v1766601401/grrc-gallery/hb7kmj9x9gzqyjmobxtq.jpg",
+      "title": "Robotics Workshop",
+      "description": "Kicked off the first day of our robotics boot-camp.",
+      "category": "Workshops",
+      "date": "2025-12-23T18:00:00.000Z",
+      "photographer": null,
+      "created_at": "2025-12-24T12:36:43.158Z",
+      "show_on_homepage": true
+    },
+    {
+      "id": 41,
+      "image": "https://res.cloudinary.com/dot1uykrf/image/upload/v1766781227/grrc-gallery/dhcvibw2g7dugs2ceycq.jpg",
+      "title": "Obstacle avoidance robot part completed.",
+      "description": "We believe in quality over quantity.",
+      "category": "Workshops",
+      "date": "2025-12-25T18:00:00.000Z",
+      "photographer": "Mahin",
+      "created_at": "2025-12-26T14:33:47.916Z",
+      "show_on_homepage": true
+    },
+    {
+      "id": 30,
+      "image": "https://res.cloudinary.com/dot1uykrf/image/upload/v1765270703/grrc-gallery/iantviaijw8zkfblv3nz.jpg",
+      "title": "workshop on arduino bootcamp",
+      "description": "you will have hands on experience if you attend on any workshop",
+      "category": "Workshops",
+      "date": "2025-11-07T18:00:00.000Z",
+      "photographer": "moon",
+      "created_at": "2025-12-09T02:58:25.156Z",
+      "show_on_homepage": true
+    },
+    {
+      "id": 26,
+      "image": "https://res.cloudinary.com/dot1uykrf/image/upload/v1765270342/grrc-gallery/ach3snogyot5jsuu0o0a.jpg",
+      "title": "Beyond Academics: Exploring Opportunities in Robotics, Research, and Extracurricular Activities.",
+      "description": "perticipating in a seminar named, Beyond Academics: Exploring Opportunities in Robotics, Research, and Extracurricular Activities. our focus on our instructor  Utshob Shutradhar vai .",
+      "category": "Events",
+      "date": "2025-10-27T18:00:00.000Z",
+      "photographer": null,
+      "created_at": "2025-12-09T02:52:23.836Z",
+      "show_on_homepage": true
+    }
+  ],
+  "alumni": [
+    {
+      "id": 4,
+      "name": "Neamul forkan khan",
+      "photo": "https://res.cloudinary.com/dot1uykrf/image/upload/v1766807851/grrc-alumni/nk7om8t3juk19vwu9xil.jpg",
+      "batch_year": "2020-2021",
+      "department": "Computer Science and Engineering (CSE)",
+      "role_in_club": "presidents",
+      "achievements": "fgn sifuhygf",
+      "current_position": "sse",
+      "current_company": "gdsd",
+      "bio": "xchfl ugs",
+      "email": "Neyamulfurkan222@gmail.com",
+      "phone": "+8801931955516",
+      "linkedin": "",
+      "github": "",
+      "facebook": "",
+      "is_featured": true,
+      "display_order": 0,
+      "created_at": "2025-12-26T20:41:59.525Z",
+      "updated_at": "2025-12-26T21:57:32.166Z"
+    }
+  ],
+  "alumni_applications": [
+    {
+      "id": 1,
+      "full_name": "Neamul forkan",
+      "email": "neyamulfurkan1@gmail.com",
+      "phone": "+8801931955516",
+      "batch_year": "2020-2021",
+      "department": "Electrical and Electronic Engineering (EEE)",
+      "role_in_club": "president",
+      "achievements": "nothing",
+      "current_position": "researcher",
+      "current_company": "nothing",
+      "bio": "sdkf uhaduhfsudh flfhgluahglaudghiaeu ilfauehku gjdfh gskjdfgukygfule",
+      "linkedin": null,
+      "github": null,
+      "facebook": null,
+      "photo": null,
+      "status": "approved",
+      "applied_date": "2025-12-26T20:31:10.236Z",
+      "reviewed_date": "2025-12-26T20:31:47.888Z",
+      "reviewed_by": 24,
+      "admin_notes": null,
+      "created_at": "2025-12-26T20:31:10.236Z"
+    },
+    {
+      "id": 2,
+      "full_name": "bangladeshi",
+      "email": "abab48931@gmail.com",
+      "phone": "01618776534",
+      "batch_year": "2020-2021",
+      "department": "Electronics and Telecommunication Engineering (ETE)",
+      "role_in_club": "gs",
+      "achievements": "her ef",
+      "current_position": "swe",
+      "current_company": "google",
+      "bio": "dfg uydgfyhgfyduyfhgdusyhfg uygf udygfuyd jhgf h gyg",
+      "linkedin": null,
+      "github": null,
+      "facebook": null,
+      "photo": null,
+      "status": "pending",
+      "applied_date": "2025-12-26T20:34:24.128Z",
+      "reviewed_date": null,
+      "reviewed_by": null,
+      "admin_notes": null,
+      "created_at": "2025-12-26T20:34:24.128Z"
+    }
+  ],
+  "membership_applications": [
+    {
+      "id": 16,
+      "full_name": "Mooon khaaan",
+      "email": "moonsallform@gmail.com",
+      "phone": "01887504125",
+      "student_id": "31EEE009",
+      "department": "EEE",
+      "year": "4th Year",
+      "bio": "Bdjsn s jdjdk d djdidus w sisbdjdokd d djdkdhshs s jdhdd. djdjdbd djdisoaobsbd d jdjdjsndndndksisnd. djd",
+      "skills": [
+        "Moon",
+        "Hoon"
+      ],
+      "previous_experience": "No",
+      "github_profile": null,
+      "linkedin_profile": null,
+      "status": "approved",
+      "applied_date": "2025-12-22T03:48:26.276Z",
+      "reviewed_date": "2025-12-22T03:48:44.868Z",
+      "reviewed_by": 24,
+      "admin_notes": null,
+      "created_at": "2025-12-22T03:48:26.276Z",
+      "photo": "https://res.cloudinary.com/dot1uykrf/image/upload/v1766396901/grrc-membership/qhl4le8ybtgovbm9ocoj.jpg",
+      "payment_screenshot": "https://res.cloudinary.com/dot1uykrf/image/upload/v1766396904/grrc-membership/q5aoqqnnktrpmuucbrvd.jpg",
+      "transaction_id": "21jhkla9"
+    },
+    {
+      "id": 17,
+      "full_name": "BANGLADESH ISLAM",
+      "email": "bangladeshislam@gmail.com",
+      "phone": "01887593213",
+      "student_id": "21RRR008",
+      "department": "EEE",
+      "year": "4th Year",
+      "bio": "I HAVE NOTHING TOHDJFA FJASF HIASJDHF AJDHFIDUHFILADUHFLIADUHFLIASUHF LIAEUFH ILAUDH FLIUE DHF;UHAILEDUH",
+      "skills": [
+        "A IDF'DLHF",
+        "LI UDHF",
+        "DF A"
+      ],
+      "previous_experience": "MOONS SJDJ FKAJ",
+      "github_profile": "https://neyamulfurkan.github.io/grrc-website/index.html",
+      "linkedin_profile": "https://neyamulfurkan.github.io/grrc-website/index.html",
+      "status": "approved",
+      "applied_date": "2025-12-26T02:38:10.253Z",
+      "reviewed_date": "2025-12-26T02:39:26.943Z",
+      "reviewed_by": 24,
+      "admin_notes": "done",
+      "created_at": "2025-12-26T02:38:10.253Z",
+      "photo": "https://res.cloudinary.com/dot1uykrf/image/upload/v1766738287/grrc-membership/dpiz4xvrbgktzqgim1wr.jpg",
+      "payment_screenshot": "https://res.cloudinary.com/dot1uykrf/image/upload/v1766738288/grrc-membership/l1mwkpfd1gwxisctepux.jpg",
+      "transaction_id": "34EJ32KEJ"
+    }
+  ],
+  "announcements": [
+    {
+      "id": 3,
+      "title": "Reminder: All-Members General Meeting Next Week",
+      "content": "Greetings members! A mandatory general meeting has been scheduled to discuss upcoming projects and the budget for the new year. Please ensure you attend. * Date: Wednesday, January 15, 2026 * Time: 7:00 PM - 8:30 PM * Location: Conference Room B (or via Zoom link: [Insert Link Here]) * Agenda Highlights: 1. Q2 Project Review 2. Annual Budget Approval 3. Volunteer sign-ups for the Spring Fair. We look forward to seeing you there!",
+      "priority": "high",
+      "date": "2025-12-09T04:46:09.304Z",
+      "created_at": "2025-12-09T04:46:08.283Z"
+    }
+  ],
+  "super_admin_settings": [
+    {
+      "id": 1,
+      "setting_key": "require_approval_members",
+      "setting_value": "false",
+      "updated_at": "2025-12-26T03:36:48.527Z"
+    },
+    {
+      "id": 2,
+      "setting_key": "require_approval_events",
+      "setting_value": "false",
+      "updated_at": "2025-12-26T03:36:48.531Z"
+    },
+    {
+      "id": 3,
+      "setting_key": "require_approval_projects",
+      "setting_value": "false",
+      "updated_at": "2025-12-26T03:36:48.535Z"
+    },
+    {
+      "id": 4,
+      "setting_key": "require_approval_gallery",
+      "setting_value": "false",
+      "updated_at": "2025-12-26T03:36:48.540Z"
+    },
+    {
+      "id": 5,
+      "setting_key": "require_approval_announcements",
+      "setting_value": "false",
+      "updated_at": "2025-12-26T03:36:48.544Z"
+    }
+  ],
+  "pending_approvals": [],
+  "admin_audit_log": [
+    {
+      "id": 52,
+      "admin_id": 24,
+      "action_type": "approve_request",
+      "module": "events",
+      "item_id": 27,
+      "action_details": {
+        "module": "events",
+        "action_type": "delete"
+      },
+      "ip_address": "127.0.0.1",
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36",
+      "status": "success",
+      "created_at": "2025-12-09T20:47:27.414Z"
+    },
+    {
+      "id": 53,
+      "admin_id": 24,
+      "action_type": "approve_request",
+      "module": "projects",
+      "item_id": 26,
+      "action_details": {
+        "module": "projects",
+        "action_type": "delete"
+      },
+      "ip_address": "127.0.0.1",
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36",
+      "status": "success",
+      "created_at": "2025-12-09T20:47:29.568Z"
+    },
+    {
+      "id": 54,
+      "admin_id": 24,
+      "action_type": "approve_request",
+      "module": "gallery",
+      "item_id": 25,
+      "action_details": {
+        "module": "gallery",
+        "action_type": "delete"
+      },
+      "ip_address": "127.0.0.1",
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36",
+      "status": "success",
+      "created_at": "2025-12-09T20:47:31.318Z"
+    },
+    {
+      "id": 55,
+      "admin_id": 24,
+      "action_type": "approve_request",
+      "module": "gallery",
+      "item_id": 24,
+      "action_details": {
+        "module": "gallery",
+        "action_type": "delete"
+      },
+      "ip_address": "127.0.0.1",
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36",
+      "status": "success",
+      "created_at": "2025-12-09T20:47:32.760Z"
+    },
+    {
+      "id": 32,
+      "admin_id": 24,
+      "action_type": "create_admin",
+      "module": "admin",
+      "item_id": 36,
+      "action_details": {
+        "email": "Neyamulfurkan22@gmail.com",
+        "username": "president",
+        "permissions": {
+          "alumni": {
+            "edit": true,
+            "view": true,
+            "create": true,
+            "delete": true,
+            "approve_applications": true
+          },
+          "events": {
+            "edit": true,
+            "view": true,
+            "create": true,
+            "delete": true
+          },
+          "gallery": {
+            "view": true,
+            "delete": true,
+            "upload": true
+          },
+          "members": {
+            "edit": true,
+            "view": true,
+            "create": true,
+            "delete": true
+          },
+          "projects": {
+            "edit": true,
+            "view": true,
+            "create": true,
+            "delete": true
+          },
+          "membership": {
+            "view": true,
+            "delete": true,
+            "approve": true
+          },
+          "announcements": {
+            "edit": true,
+            "view": true,
+            "create": true,
+            "delete": true
+          }
+        }
+      },
+      "ip_address": "127.0.0.1",
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36",
+      "status": "success",
+      "created_at": "2025-12-09T04:28:17.016Z"
+    },
+    {
+      "id": 33,
+      "admin_id": 24,
+      "action_type": "update_admin_permissions",
+      "module": "admin",
+      "item_id": 36,
+      "action_details": {
+        "permissions": {
+          "alumni": {
+            "edit": true,
+            "view": true,
+            "create": true,
+            "delete": true,
+            "approve_applications": true
+          },
+          "events": {
+            "edit": true,
+            "view": true,
+            "create": true,
+            "delete": true
+          },
+          "gallery": {
+            "view": true,
+            "delete": true,
+            "upload": true
+          },
+          "members": {
+            "edit": true,
+            "view": true,
+            "create": true,
+            "delete": true
+          },
+          "projects": {
+            "edit": true,
+            "view": true,
+            "create": true,
+            "delete": true
+          },
+          "membership": {
+            "view": true,
+            "delete": true,
+            "approve": true
+          },
+          "announcements": {
+            "edit": true,
+            "view": true,
+            "create": true,
+            "delete": true
+          }
+        }
+      },
+      "ip_address": "127.0.0.1",
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36",
+      "status": "success",
+      "created_at": "2025-12-09T04:29:07.116Z"
+    },
+    {
+      "id": 34,
+      "admin_id": 24,
+      "action_type": "update_settings",
+      "module": "settings",
+      "item_id": null,
+      "action_details": {
+        "require_approval_events": false,
+        "require_approval_gallery": false,
+        "require_approval_members": false,
+        "require_approval_projects": false,
+        "require_approval_announcements": false
+      },
+      "ip_address": "127.0.0.1",
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36",
+      "status": "success",
+      "created_at": "2025-12-09T05:03:50.078Z"
+    },
+    {
+      "id": 35,
+      "admin_id": 24,
+      "action_type": "update_settings",
+      "module": "settings",
+      "item_id": null,
+      "action_details": {
+        "require_approval_events": true,
+        "require_approval_gallery": true,
+        "require_approval_members": true,
+        "require_approval_projects": true,
+        "require_approval_announcements": true
+      },
+      "ip_address": "127.0.0.1",
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36",
+      "status": "success",
+      "created_at": "2025-12-09T05:23:06.840Z"
+    },
+    {
+      "id": 36,
+      "admin_id": 24,
+      "action_type": "approve_request",
+      "module": "announcements",
+      "item_id": 9,
+      "action_details": {
+        "module": "announcements",
+        "action_type": "create"
+      },
+      "ip_address": "127.0.0.1",
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36",
+      "status": "success",
+      "created_at": "2025-12-09T05:26:48.516Z"
+    },
+    {
+      "id": 37,
+      "admin_id": 24,
+      "action_type": "approve_request",
+      "module": "projects",
+      "item_id": 8,
+      "action_details": {
+        "module": "projects",
+        "action_type": "create"
+      },
+      "ip_address": "127.0.0.1",
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36",
+      "status": "success",
+      "created_at": "2025-12-09T05:27:25.834Z"
+    },
+    {
+      "id": 38,
+      "admin_id": 24,
+      "action_type": "delete_admin",
+      "module": "admin",
+      "item_id": 36,
+      "action_details": {
+        "username": "president"
+      },
+      "ip_address": "127.0.0.1",
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36",
+      "status": "success",
+      "created_at": "2025-12-09T19:37:20.564Z"
+    },
+    {
+      "id": 39,
+      "admin_id": 24,
+      "action_type": "create_admin",
+      "module": "admin",
+      "item_id": 37,
+      "action_details": {
+        "email": "president@gmail.com",
+        "username": "president",
+        "permissions": {
+          "alumni": {
+            "edit": true,
+            "view": true,
+            "create": true,
+            "delete": true,
+            "approve_applications": true
+          },
+          "events": {
+            "edit": true,
+            "view": true,
+            "create": true,
+            "delete": true
+          },
+          "gallery": {
+            "view": true,
+            "delete": true,
+            "upload": true
+          },
+          "members": {
+            "edit": true,
+            "view": true,
+            "create": true,
+            "delete": true
+          },
+          "projects": {
+            "edit": true,
+            "view": true,
+            "create": true,
+            "delete": true
+          },
+          "membership": {
+            "view": true,
+            "delete": true,
+            "approve": true
+          },
+          "announcements": {
+            "edit": false,
+            "view": false,
+            "create": false,
+            "delete": false
+          }
+        }
+      },
+      "ip_address": "127.0.0.1",
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36",
+      "status": "success",
+      "created_at": "2025-12-09T19:40:54.656Z"
+    },
+    {
+      "id": 40,
+      "admin_id": 24,
+      "action_type": "approve_request",
+      "module": "projects",
+      "item_id": 10,
+      "action_details": {
+        "module": "projects",
+        "action_type": "create"
+      },
+      "ip_address": "127.0.0.1",
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36",
+      "status": "success",
+      "created_at": "2025-12-09T19:54:28.525Z"
+    },
+    {
+      "id": 41,
+      "admin_id": 24,
+      "action_type": "approve_request",
+      "module": "projects",
+      "item_id": 14,
+      "action_details": {
+        "module": "projects",
+        "action_type": "create"
+      },
+      "ip_address": "127.0.0.1",
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36",
+      "status": "success",
+      "created_at": "2025-12-09T20:09:33.522Z"
+    },
+    {
+      "id": 42,
+      "admin_id": 24,
+      "action_type": "approve_request",
+      "module": "gallery",
+      "item_id": 12,
+      "action_details": {
+        "module": "gallery",
+        "action_type": "upload"
+      },
+      "ip_address": "127.0.0.1",
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36",
+      "status": "success",
+      "created_at": "2025-12-09T20:10:06.555Z"
+    },
+    {
+      "id": 43,
+      "admin_id": 24,
+      "action_type": "approve_request",
+      "module": "gallery",
+      "item_id": 19,
+      "action_details": {
+        "module": "gallery",
+        "action_type": "upload"
+      },
+      "ip_address": "127.0.0.1",
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36",
+      "status": "success",
+      "created_at": "2025-12-09T20:19:21.196Z"
+    },
+    {
+      "id": 44,
+      "admin_id": 24,
+      "action_type": "approve_request",
+      "module": "projects",
+      "item_id": 16,
+      "action_details": {
+        "module": "projects",
+        "action_type": "create"
+      },
+      "ip_address": "127.0.0.1",
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36",
+      "status": "success",
+      "created_at": "2025-12-09T20:19:43.177Z"
+    },
+    {
+      "id": 45,
+      "admin_id": 24,
+      "action_type": "approve_request",
+      "module": "events",
+      "item_id": 15,
+      "action_details": {
+        "module": "events",
+        "action_type": "create"
+      },
+      "ip_address": "127.0.0.1",
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36",
+      "status": "success",
+      "created_at": "2025-12-09T20:25:30.865Z"
+    },
+    {
+      "id": 46,
+      "admin_id": 24,
+      "action_type": "approve_request",
+      "module": "gallery",
+      "item_id": 22,
+      "action_details": {
+        "module": "gallery",
+        "action_type": "upload"
+      },
+      "ip_address": "127.0.0.1",
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36",
+      "status": "success",
+      "created_at": "2025-12-09T20:33:02.345Z"
+    },
+    {
+      "id": 47,
+      "admin_id": 24,
+      "action_type": "approve_request",
+      "module": "projects",
+      "item_id": 21,
+      "action_details": {
+        "module": "projects",
+        "action_type": "create"
+      },
+      "ip_address": "127.0.0.1",
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36",
+      "status": "success",
+      "created_at": "2025-12-09T20:33:13.814Z"
+    },
+    {
+      "id": 48,
+      "admin_id": 24,
+      "action_type": "approve_request",
+      "module": "events",
+      "item_id": 20,
+      "action_details": {
+        "module": "events",
+        "action_type": "create"
+      },
+      "ip_address": "127.0.0.1",
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36",
+      "status": "success",
+      "created_at": "2025-12-09T20:33:27.509Z"
+    },
+    {
+      "id": 49,
+      "admin_id": 24,
+      "action_type": "approve_request",
+      "module": "gallery",
+      "item_id": 30,
+      "action_details": {
+        "module": "gallery",
+        "action_type": "upload"
+      },
+      "ip_address": "127.0.0.1",
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36",
+      "status": "success",
+      "created_at": "2025-12-09T20:46:33.883Z"
+    },
+    {
+      "id": 50,
+      "admin_id": 24,
+      "action_type": "approve_request",
+      "module": "projects",
+      "item_id": 29,
+      "action_details": {
+        "module": "projects",
+        "action_type": "create"
+      },
+      "ip_address": "127.0.0.1",
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36",
+      "status": "success",
+      "created_at": "2025-12-09T20:46:52.586Z"
+    },
+    {
+      "id": 51,
+      "admin_id": 24,
+      "action_type": "approve_request",
+      "module": "events",
+      "item_id": 28,
+      "action_details": {
+        "module": "events",
+        "action_type": "create"
+      },
+      "ip_address": "127.0.0.1",
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36",
+      "status": "success",
+      "created_at": "2025-12-09T20:47:10.143Z"
+    },
+    {
+      "id": 56,
+      "admin_id": 24,
+      "action_type": "approve_request",
+      "module": "gallery",
+      "item_id": 23,
+      "action_details": {
+        "module": "gallery",
+        "action_type": "delete"
+      },
+      "ip_address": "127.0.0.1",
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36",
+      "status": "success",
+      "created_at": "2025-12-09T20:47:34.712Z"
+    },
+    {
+      "id": 57,
+      "admin_id": 24,
+      "action_type": "reject_request",
+      "module": "gallery",
+      "item_id": 37,
+      "action_details": {
+        "notes": "no reason",
+        "action_type": "upload"
+      },
+      "ip_address": "127.0.0.1",
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36",
+      "status": "success",
+      "created_at": "2025-12-09T20:56:38.786Z"
+    },
+    {
+      "id": 58,
+      "admin_id": 24,
+      "action_type": "reject_request",
+      "module": "projects",
+      "item_id": 36,
+      "action_details": {
+        "notes": "No reason provided",
+        "action_type": "create"
+      },
+      "ip_address": "127.0.0.1",
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36",
+      "status": "success",
+      "created_at": "2025-12-09T20:56:45.154Z"
+    },
+    {
+      "id": 59,
+      "admin_id": 24,
+      "action_type": "reject_request",
+      "module": "events",
+      "item_id": 35,
+      "action_details": {
+        "notes": "No reason provided",
+        "action_type": "create"
+      },
+      "ip_address": "127.0.0.1",
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36",
+      "status": "success",
+      "created_at": "2025-12-09T20:56:52.938Z"
+    },
+    {
+      "id": 60,
+      "admin_id": 24,
+      "action_type": "approve_request",
+      "module": "gallery",
+      "item_id": 34,
+      "action_details": {
+        "module": "gallery",
+        "action_type": "delete"
+      },
+      "ip_address": "127.0.0.1",
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36",
+      "status": "success",
+      "created_at": "2025-12-09T20:56:55.329Z"
+    },
+    {
+      "id": 61,
+      "admin_id": 24,
+      "action_type": "reject_request",
+      "module": "projects",
+      "item_id": 33,
+      "action_details": {
+        "notes": "No reason provided",
+        "action_type": "delete"
+      },
+      "ip_address": "127.0.0.1",
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36",
+      "status": "success",
+      "created_at": "2025-12-09T20:56:59.271Z"
+    },
+    {
+      "id": 62,
+      "admin_id": 24,
+      "action_type": "reject_request",
+      "module": "events",
+      "item_id": 32,
+      "action_details": {
+        "notes": "No reason provided",
+        "action_type": "delete"
+      },
+      "ip_address": "127.0.0.1",
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36",
+      "status": "success",
+      "created_at": "2025-12-09T20:57:02.652Z"
+    },
+    {
+      "id": 63,
+      "admin_id": 24,
+      "action_type": "approve_request",
+      "module": "events",
+      "item_id": 31,
+      "action_details": {
+        "module": "events",
+        "action_type": "delete"
+      },
+      "ip_address": "127.0.0.1",
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36",
+      "status": "success",
+      "created_at": "2025-12-09T20:57:04.112Z"
+    },
+    {
+      "id": 64,
+      "admin_id": 24,
+      "action_type": "delete_admin",
+      "module": "admin",
+      "item_id": 37,
+      "action_details": {
+        "username": "president"
+      },
+      "ip_address": "127.0.0.1",
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36",
+      "status": "success",
+      "created_at": "2025-12-11T02:39:14.974Z"
+    },
+    {
+      "id": 65,
+      "admin_id": 24,
+      "action_type": "create_admin",
+      "module": "admin",
+      "item_id": 38,
+      "action_details": {
+        "email": "moon@gmail.com",
+        "username": "president",
+        "permissions": {
+          "alumni": {
+            "edit": false,
+            "view": false,
+            "create": false,
+            "delete": false,
+            "approve_applications": false
+          },
+          "events": {
+            "edit": false,
+            "view": false,
+            "create": false,
+            "delete": false
+          },
+          "gallery": {
+            "view": false,
+            "delete": false,
+            "upload": false
+          },
+          "members": {
+            "edit": false,
+            "view": false,
+            "create": false,
+            "delete": false
+          },
+          "projects": {
+            "edit": true,
+            "view": true,
+            "create": true,
+            "delete": true
+          },
+          "membership": {
+            "view": false,
+            "delete": false,
+            "approve": false
+          },
+          "announcements": {
+            "edit": false,
+            "view": false,
+            "create": false,
+            "delete": false
+          }
+        }
+      },
+      "ip_address": "127.0.0.1",
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36",
+      "status": "success",
+      "created_at": "2025-12-11T02:40:24.650Z"
+    },
+    {
+      "id": 66,
+      "admin_id": 24,
+      "action_type": "update_settings",
+      "module": "settings",
+      "item_id": null,
+      "action_details": {
+        "require_approval_events": true,
+        "require_approval_gallery": true,
+        "require_approval_members": true,
+        "require_approval_projects": false,
+        "require_approval_announcements": true
+      },
+      "ip_address": "127.0.0.1",
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36",
+      "status": "success",
+      "created_at": "2025-12-11T02:41:13.536Z"
+    },
+    {
+      "id": 67,
+      "admin_id": 24,
+      "action_type": "update_settings",
+      "module": "settings",
+      "item_id": null,
+      "action_details": {
+        "require_approval_events": true,
+        "require_approval_gallery": true,
+        "require_approval_members": true,
+        "require_approval_projects": true,
+        "require_approval_announcements": true
+      },
+      "ip_address": "127.0.0.1",
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36",
+      "status": "success",
+      "created_at": "2025-12-11T02:41:20.545Z"
+    },
+    {
+      "id": 68,
+      "admin_id": 24,
+      "action_type": "approve_request",
+      "module": "projects",
+      "item_id": 38,
+      "action_details": {
+        "module": "projects",
+        "action_type": "create"
+      },
+      "ip_address": "127.0.0.1",
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36",
+      "status": "success",
+      "created_at": "2025-12-11T02:45:03.873Z"
+    },
+    {
+      "id": 69,
+      "admin_id": 24,
+      "action_type": "delete_admin",
+      "module": "admin",
+      "item_id": 38,
+      "action_details": {
+        "username": "president"
+      },
+      "ip_address": "127.0.0.1",
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36",
+      "status": "success",
+      "created_at": "2025-12-17T08:39:56.304Z"
+    },
+    {
+      "id": 70,
+      "admin_id": 24,
+      "action_type": "create_admin",
+      "module": "admin",
+      "item_id": 39,
+      "action_details": {
+        "email": "mdsejanmnr@gmail.com",
+        "username": "Mahin",
+        "permissions": {
+          "alumni": {
+            "edit": true,
+            "view": true,
+            "create": true,
+            "delete": true,
+            "approve_applications": true
+          },
+          "events": {
+            "edit": true,
+            "view": true,
+            "create": true,
+            "delete": true
+          },
+          "gallery": {
+            "view": true,
+            "delete": true,
+            "upload": true
+          },
+          "members": {
+            "edit": true,
+            "view": true,
+            "create": true,
+            "delete": true
+          },
+          "projects": {
+            "edit": true,
+            "view": true,
+            "create": true,
+            "delete": true
+          },
+          "membership": {
+            "view": true,
+            "delete": true,
+            "approve": true
+          },
+          "announcements": {
+            "edit": true,
+            "view": true,
+            "create": true,
+            "delete": true
+          }
+        }
+      },
+      "ip_address": "127.0.0.1",
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0",
+      "status": "success",
+      "created_at": "2025-12-24T08:00:56.055Z"
+    },
+    {
+      "id": 71,
+      "admin_id": 24,
+      "action_type": "update_settings",
+      "module": "settings",
+      "item_id": null,
+      "action_details": {
+        "require_approval_events": false,
+        "require_approval_gallery": false,
+        "require_approval_members": false,
+        "require_approval_projects": false,
+        "require_approval_announcements": false
+      },
+      "ip_address": "127.0.0.1",
+      "user_agent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Mobile Safari/537.36",
+      "status": "success",
+      "created_at": "2025-12-24T08:11:08.296Z"
+    },
+    {
+      "id": 72,
+      "admin_id": 24,
+      "action_type": "update_settings",
+      "module": "settings",
+      "item_id": null,
+      "action_details": {
+        "require_approval_events": false,
+        "require_approval_gallery": false,
+        "require_approval_members": false,
+        "require_approval_projects": false,
+        "require_approval_announcements": false
+      },
+      "ip_address": "127.0.0.1",
+      "user_agent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Mobile Safari/537.36",
+      "status": "success",
+      "created_at": "2025-12-24T08:11:17.667Z"
+    },
+    {
+      "id": 73,
+      "admin_id": 24,
+      "action_type": "update_settings",
+      "module": "settings",
+      "item_id": null,
+      "action_details": {
+        "require_approval_events": false,
+        "require_approval_gallery": false,
+        "require_approval_members": false,
+        "require_approval_projects": false,
+        "require_approval_announcements": false
+      },
+      "ip_address": "127.0.0.1",
+      "user_agent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Mobile Safari/537.36",
+      "status": "success",
+      "created_at": "2025-12-24T08:33:04.639Z"
+    },
+    {
+      "id": 74,
+      "admin_id": 24,
+      "action_type": "create_admin",
+      "module": "admin",
+      "item_id": 40,
+      "action_details": {
+        "email": "neyamulfurkan22@gmail.con",
+        "username": "Moon",
+        "permissions": {
+          "alumni": {
+            "edit": true,
+            "view": true,
+            "create": true,
+            "delete": true,
+            "approve_applications": true
+          },
+          "events": {
+            "edit": true,
+            "view": true,
+            "create": true,
+            "delete": true
+          },
+          "gallery": {
+            "view": true,
+            "delete": true,
+            "upload": true
+          },
+          "members": {
+            "edit": true,
+            "view": true,
+            "create": true,
+            "delete": true
+          },
+          "projects": {
+            "edit": true,
+            "view": true,
+            "create": true,
+            "delete": true
+          },
+          "membership": {
+            "view": true,
+            "delete": true,
+            "approve": true
+          },
+          "announcements": {
+            "edit": true,
+            "view": true,
+            "create": true,
+            "delete": true
+          }
+        }
+      },
+      "ip_address": "10.17.186.18",
+      "user_agent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Mobile Safari/537.36",
+      "status": "success",
+      "created_at": "2025-12-26T03:36:20.236Z"
+    },
+    {
+      "id": 75,
+      "admin_id": 24,
+      "action_type": "update_settings",
+      "module": "settings",
+      "item_id": null,
+      "action_details": {
+        "require_approval_events": false,
+        "require_approval_gallery": false,
+        "require_approval_members": false,
+        "require_approval_projects": false,
+        "require_approval_announcements": false
+      },
+      "ip_address": "10.16.240.206",
+      "user_agent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Mobile Safari/537.36",
+      "status": "success",
+      "created_at": "2025-12-26T03:36:38.346Z"
+    },
+    {
+      "id": 76,
+      "admin_id": 24,
+      "action_type": "update_settings",
+      "module": "settings",
+      "item_id": null,
+      "action_details": {
+        "require_approval_events": false,
+        "require_approval_gallery": false,
+        "require_approval_members": false,
+        "require_approval_projects": false,
+        "require_approval_announcements": false
+      },
+      "ip_address": "10.17.74.173",
+      "user_agent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Mobile Safari/537.36",
+      "status": "success",
+      "created_at": "2025-12-26T03:36:48.548Z"
+    }
+  ]
+}

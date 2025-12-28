@@ -142,21 +142,6 @@ body('payment_screenshot')
     throw new Error('Payment screenshot must be a Cloudinary URL');
   }),
     
-    body('payment_screenshot')
-      .custom((value) => {
-        if (!value || value === '') {
-          throw new Error('Payment screenshot is required');
-        }
-        // Allow data URLs (base64) or regular URLs
-        if (value.startsWith('data:image/')) return true;
-        try {
-          new URL(value);
-          return true;
-        } catch (e) {
-          throw new Error('Payment screenshot must be a valid URL or base64 image');
-        }
-      }),
-    
     body('transaction_id')
       .optional({ nullable: true, checkFalsy: true })
       .trim()
