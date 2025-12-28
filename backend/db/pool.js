@@ -24,7 +24,7 @@ require('dotenv').config();
 function parseConnectionString(connectionString) {
   try {
     // Remove query parameters that interfere with pg connection
-    const cleanUrl = connectionString.split('?')[0];
+    const cleanUrl = connectionString;
     const url = new URL(cleanUrl);
     
     return {
@@ -65,12 +65,12 @@ function getDatabaseConfig() {
       return {
         ...config,
         // Connection Pool Settings
-        max: 20,                          // ✅ DOUBLED: 20 connections for concurrent requests
-        min: 5,                           // ✅ INCREASED: Keep 5 alive for instant response
+        max: 4,                          // ✅ DOUBLED: 20 connections for concurrent requests
+        min: 0,                           // ✅ INCREASED: Keep 5 alive for instant response
         
         // Timeout Settings (optimized for Render + Supabase)
-        connectionTimeoutMillis: 20000,   // ✅ INCREASED: 20s connection timeout
-        idleTimeoutMillis: 180000,        // ✅ INCREASED: 3 minutes idle
+        connectionTimeoutMillis: 30000,   // ✅ INCREASED: 20s connection timeout
+        idleTimeoutMillis: 1000,        // ✅ INCREASED: 3 minutes idle
         
         // Query Timeouts
         query_timeout: 30000,             // ✅ REDUCED: 30s query timeout (faster fails)
