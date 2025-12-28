@@ -3098,9 +3098,31 @@ async function loadAdminDashboardInfo() {
 
         async function toggleHomepageDisplay(id, checked) {
             try {
-                const result = await window.apiClient.request(`/api/content/gallery/${id}`, {
+                // Get the current gallery item first
+                const galleryResult = await window.apiClient.getGallery();
+                if (!galleryResult.success) {
+                    throw new Error('Failed to fetch gallery data');
+                }
+                
+                const item = galleryResult.data.find(g => g.id === parseInt(id));
+                if (!item) {
+                    throw new Error('Gallery item not found');
+                }
+                
+                // Update with all required fields
+                const updateData = {
+                    image: item.image,
+                    title: item.title,
+                    description: item.description,
+                    category: item.category,
+                    date: item.date,
+                    photographer: item.photographer,
+                    show_on_homepage: checked
+                };
+                
+                const result = await window.apiClient.request(`/api/admin/gallery/${id}`, {
                     method: 'PUT',
-                    body: JSON.stringify({ show_on_homepage: checked })
+                    body: JSON.stringify(updateData)
                 });
                 
                 if (result.success) {
