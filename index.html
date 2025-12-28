@@ -1311,28 +1311,39 @@
             }
         };
         
-        // ✅ STAGGERED LOADING - Prevent connection pool exhaustion
-        const staggerDelay = 150; // 150ms between requests
+                // ✅ STAGGERED LOADING - Prevent connection pool exhaustion
+        const staggerDelay = 200; // Increased to 200ms for safety
         
         (async () => {
-            // Priority 1: Critical UI
+            console.log('🔄 Starting staggered content load...');
+            const loadStart = performance.now();
+            
+            // Priority 1: Critical UI (BLOCKS everything else)
+            console.log('📡 [1/5] Loading config...');
             await loadWithProgress(loadClubConfig(), 'Config');
+            console.log(`✅ Config loaded in ${(performance.now() - loadStart).toFixed(0)}ms`);
             await new Promise(resolve => setTimeout(resolve, staggerDelay));
             
-            // Priority 2: Hero content
+            // Priority 2: Hero content (BLOCKS main content)
+            console.log('📡 [2/5] Loading slideshow...');
             await loadWithProgress(loadGalleryForSlideshow(), 'Slideshow');
+            console.log(`✅ Slideshow loaded in ${(performance.now() - loadStart).toFixed(0)}ms`);
             await new Promise(resolve => setTimeout(resolve, staggerDelay));
             
-            // Priority 3: Main content (parallel)
-            await Promise.all([
-                loadWithProgress(loadUpcomingEvents(), 'Events'),
-                new Promise(resolve => setTimeout(resolve, staggerDelay)).then(() => 
-                    loadWithProgress(loadExecutiveMembers(), 'Members')
-                ),
-                new Promise(resolve => setTimeout(resolve, staggerDelay * 2)).then(() =>
-                    loadWithProgress(loadLatestAnnouncements(), 'Announcements')
-                )
-            ]);
+            // Priority 3: Main content (staggered parallel)
+            console.log('📡 [3/5] Loading events...');
+            await loadWithProgress(loadUpcomingEvents(), 'Events');
+            console.log(`✅ Events loaded in ${(performance.now() - loadStart).toFixed(0)}ms`);
+            await new Promise(resolve => setTimeout(resolve, staggerDelay));
+            
+            console.log('📡 [4/5] Loading members...');
+            await loadWithProgress(loadExecutiveMembers(), 'Members');
+            console.log(`✅ Members loaded in ${(performance.now() - loadStart).toFixed(0)}ms`);
+            await new Promise(resolve => setTimeout(resolve, staggerDelay));
+            
+            console.log('📡 [5/5] Loading announcements...');
+            await loadWithProgress(loadLatestAnnouncements(), 'Announcements');
+            console.log(`✅ Announcements loaded in ${(performance.now() - loadStart).toFixed(0)}ms`);
         })().finally(() => {
             const loadTime = ((performance.now() - startTime) / 1000).toFixed(2);
             console.log(`✅ All content loaded in ${loadTime}s`);
