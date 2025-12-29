@@ -824,6 +824,7 @@ em {
   z-index: 9999;
   transition: width 0.3s ease, opacity 0.3s ease;
   box-shadow: 0 0 10px var(--primary-color);
+  display: none;
 }
 
 .page-loading-bar.active {
@@ -839,11 +840,12 @@ em {
   bottom: 0;
   background: var(--background-color);
   z-index: 9998;
-  display: flex;
+  display: none;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  opacity: 1;
+  opacity: 0;
+  pointer-events: none;
   transition: opacity 0.5s ease;
 }
 

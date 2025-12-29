@@ -315,8 +315,8 @@
             width: 100%;
             height: 100%;
             z-index: 1;
-            opacity: 1;
-            transition: opacity 1s ease-in-out;
+            opacity: 0;
+            transition: opacity 0.8s ease-in-out;
         }
         .hero-slideshow.active {
             opacity: 1;
@@ -329,17 +329,23 @@
             right: 0;
             bottom: 0;
             opacity: 0;
-            transition: opacity 1.5s ease-in-out, transform 20s ease-in-out;
-            transform: scale(1);
+            clip-path: inset(0 100% 0 0);
+            transition: clip-path 1.2s cubic-bezier(0.65, 0, 0.35, 1), opacity 0.3s ease;
             z-index: 1;
+            transform-origin: center center;
         }
         
         .hero-slide.active {
             opacity: 1;
-            transform: scale(1.1);
-            z-index: 1;
+            clip-path: inset(0 0 0 0);
+            z-index: 2;
+            animation: gentleZoom 20s ease-in-out infinite alternate;
         }
         
+        @keyframes gentleZoom {
+            0% { transform: scale(1); }
+            100% { transform: scale(1.08); }
+        }
         
         .hero-slide img {
             width: 100%;
@@ -354,17 +360,22 @@
             right: 0;
             bottom: 0;
             background: linear-gradient(135deg, 
-                rgba(29, 78, 216, 0.7) 0%, 
-                rgba(124, 58, 237, 0.7) 100%);
+                rgba(29, 78, 216, 0.65) 0%, 
+                rgba(124, 58, 237, 0.65) 100%);
             z-index: 2;
-            transition: background 0.3s ease;
+            transition: opacity 0.8s ease, background 0.3s ease;
             pointer-events: none;
+            opacity: 1;
+        }
+        
+        .hero-overlay.slideshow-active {
+            opacity: 1;
         }
         
        [data-theme="dark"] .hero-overlay {
             background: linear-gradient(135deg, 
-                rgba(15, 23, 42, 0.3) 0%, 
-                rgba(30, 41, 59, 0.3) 100%);
+                rgba(15, 23, 42, 0.4) 0%, 
+                rgba(30, 41, 59, 0.4) 100%);
         }
         
         .hero::before {
@@ -391,6 +402,19 @@
             position: relative;
             z-index: 4;
             max-width: 800px;
+            opacity: 1;
+            transition: opacity 0.6s ease;
+        }
+        
+        .hero-content.fadeForSlideshow {
+            animation: contentFadeForSlide 0.8s ease-out;
+        }
+        
+        @keyframes contentFadeForSlide {
+            0% { opacity: 1; }
+            25% { opacity: 0.7; }
+            50% { opacity: 0.85; }
+            100% { opacity: 1; }
         }
         
         .hero h1 {
@@ -398,80 +422,30 @@
             font-weight: 700;
             color: white;
             margin-bottom: 1rem;
-            text-shadow: 0 2px 12px rgba(0, 0, 0, 0.3), 0 1px 4px rgba(0, 0, 0, 0.2);
-            transition: all 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            text-shadow: 0 3px 15px rgba(0, 0, 0, 0.5), 0 2px 6px rgba(0, 0, 0, 0.3);
+            transition: none;
+        }
+        
+        .hero h1.initial-load-animation {
+            animation: textAppear 1.2s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+        }
+        
+        @keyframes textAppear {
+            0% { opacity: 0; transform: translateY(40px) scale(0.9); }
+            100% { opacity: 1; transform: translateY(0) scale(1); }
         }
         
         .hero .motto {
             font-size: clamp(1.2rem, 3vw, 1.8rem);
             color: rgba(255, 255, 255, 0.95);
             margin-bottom: 2rem;
-            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-            transition: all 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            text-shadow: 0 3px 12px rgba(0, 0, 0, 0.5), 0 1px 5px rgba(0, 0, 0, 0.3);
+            transition: none;
         }
         
-        .hero h1.animate-fadeInUp {
-            animation: textFadeInUp 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-        }
-        
-        .hero .motto.animate-fadeInUp {
-            animation: textFadeInUp 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55) 0.15s;
-        }
-        
-        .hero h1.animate-slideFromLeft {
-            animation: slideFromLeft 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-        }
-        
-        .hero .motto.animate-slideFromLeft {
-            animation: slideFromLeft 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55) 0.15s;
-        }
-        
-        .hero h1.animate-slideFromRight {
-            animation: slideFromRight 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-        }
-        
-        .hero .motto.animate-slideFromRight {
-            animation: slideFromRight 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55) 0.15s;
-        }
-        
-        .hero h1.animate-zoomIn {
-            animation: zoomIn 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-        }
-        
-        .hero .motto.animate-zoomIn {
-            animation: zoomIn 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55) 0.15s;
-        }
-        
-        .hero h1.animate-rotateIn {
-            animation: rotateIn 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-        }
-        
-        .hero .motto.animate-rotateIn {
-            animation: rotateIn 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55) 0.15s;
-        }
-        
-        .hero h1.animate-butterfly {
-            animation: butterfly 1s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-        }
-        
-        .hero .motto.animate-butterfly {
-            animation: butterfly 1s cubic-bezier(0.68, -0.55, 0.265, 1.55) 0.15s;
-        }
-        
-        .hero h1.animate-bounce {
-            animation: bounceIn 0.9s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-        }
-        
-        .hero .motto.animate-bounce {
-            animation: bounceIn 0.9s cubic-bezier(0.68, -0.55, 0.265, 1.55) 0.15s;
-        }
-        
-        .hero h1.animate-flipIn {
-            animation: flipIn 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-        }
-        
-        .hero .motto.animate-flipIn {
-            animation: flipIn 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55) 0.15s;
+        .hero .motto.initial-load-animation {
+            animation: textAppear 1.2s cubic-bezier(0.68, -0.55, 0.265, 1.55) 0.2s forwards;
+            opacity: 0;
         }
         
         @keyframes textFadeInUp {
@@ -582,21 +556,13 @@
             }
         }
         
-        .hero .description {
-            font-size: 1.1rem;
-            color: rgba(255, 255, 255, 0.9);
-            margin-bottom: 2rem;
-            line-height: 1.6;
-            animation: fadeInUp 0.8s ease-out 0.4s backwards;
-            text-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
-        }
-        
         .hero-buttons {
             display: flex;
             gap: 1rem;
             justify-content: center;
             flex-wrap: wrap;
-            animation: fadeInUp 0.8s ease-out 0.6s backwards;
+            animation: textAppear 1.2s cubic-bezier(0.68, -0.55, 0.265, 1.55) 0.6s forwards;
+            opacity: 0;
         }
         
         @keyframes fadeInUp {
@@ -619,7 +585,7 @@
             gap: 0.5rem;
             z-index: 5;
             opacity: 0;
-            transition: opacity 0.3s ease;
+            transition: opacity 0.8s ease 1s;
         }
         
         .slideshow-indicators.active {
@@ -627,11 +593,11 @@
         }
         
         .slideshow-indicator {
-            width: 12px;
-            height: 12px;
+            width: 14px;
+            height: 14px;
             border-radius: 50%;
-            background: rgba(255, 255, 255, 0.4);
-            border: 2px solid rgba(255, 255, 255, 0.6);
+            background: rgba(255, 255, 255, 0.3);
+            border: 2px solid rgba(255, 255, 255, 0.7);
             cursor: pointer;
             transition: all 0.3s ease;
         }
@@ -1414,7 +1380,7 @@
         // ✅ VALIDATE AND PROCESS IMAGES
         if (galleryItems.length > 0) {
             slideshowImages = galleryItems
-                .filter(item => item.show_on_homepage === true) // ✅ FILTER: Only homepage images
+                .filter(item => item.show_on_homepage === true)
                 .map(item => {
                     const imageUrl = item.image || item.image_url || '';
                     const cleanUrl = imageUrl.trim();
@@ -1434,51 +1400,54 @@
             
             if (slideshowImages.length > 0) {
                 console.log('✅ Initializing slideshow:', slideshowImages.length, 'homepage images');
-                initializeSlideshow();
+                setTimeout(() => initializeSlideshow(), 800);
                 return;
             }
         }
         
-        // ✅ FALLBACK TO GRADIENT
-        console.warn('⚠️ No valid images - using gradient background');
-        showGradientBackground();
+        console.warn('⚠️ No valid images - keeping logo visible');
+        showInitialContent();
         
     } catch (error) {
         console.error('❌ Slideshow load error:', error);
-        showGradientBackground();
+        showInitialContent();
     }
 }
 
-function showGradientBackground() {
+function showInitialContent() {
     const slideshowContainer = document.getElementById('heroSlideshow');
     const indicatorsContainer = document.getElementById('slideshowIndicators');
     const titleElement = document.getElementById('heroTitle');
     const subtitleElement = document.getElementById('heroSubtitle');
+    const heroContent = document.querySelector('.hero-content');
     
     if (slideshowContainer) {
-        slideshowContainer.classList.remove('active');
-        slideshowContainer.style.opacity = '0';
+        slideshowContainer.style.display = 'none';
     }
     if (indicatorsContainer) {
-        indicatorsContainer.classList.remove('active');
+        indicatorsContainer.style.display = 'none';
     }
     
-    // Set default text with no animation
-    if (titleElement) {
+    // Show initial content with animation
+    if (titleElement && !titleElement.classList.contains('initial-load-animation')) {
+        titleElement.classList.add('initial-load-animation');
         titleElement.textContent = 'GSTU Robotics & Research Club';
-        titleElement.style.opacity = '1';
-        titleElement.style.transition = 'none';
     }
-    if (subtitleElement) {
+    if (subtitleElement && !subtitleElement.classList.contains('initial-load-animation')) {
+        subtitleElement.classList.add('initial-load-animation');
         subtitleElement.textContent = 'A Hub of Robothinkers';
-        subtitleElement.style.opacity = '1';
-        subtitleElement.style.transition = 'none';
     }
 }
+        
+        let hasInitialAnimationPlayed = false;
+        let slideDirection = 'right'; // Alternates between 'left' and 'right'
         
         function initializeSlideshow() {
             const slideshowContainer = document.getElementById('heroSlideshow');
             const indicatorsContainer = document.getElementById('slideshowIndicators');
+            const titleElement = document.getElementById('heroTitle');
+            const subtitleElement = document.getElementById('heroSubtitle');
+            const heroContent = document.querySelector('.hero-content');
             
             if (!slideshowContainer || !indicatorsContainer) {
                 console.error('❌ Slideshow containers not found');
@@ -1488,13 +1457,19 @@ function showGradientBackground() {
             slideshowContainer.innerHTML = '';
             indicatorsContainer.innerHTML = '';
             
+            // Add initial load animation to text (only once)
+            if (!hasInitialAnimationPlayed) {
+                if (titleElement) titleElement.classList.add('initial-load-animation');
+                if (subtitleElement) subtitleElement.classList.add('initial-load-animation');
+                hasInitialAnimationPlayed = true;
+            }
+            
             let loadedCount = 0;
             const totalImages = slideshowImages.length;
             
             slideshowImages.forEach((imageData, index) => {
                 const slide = document.createElement('div');
                 slide.className = 'hero-slide';
-                if (index === 0) slide.classList.add('active');
                 
                 const img = document.createElement('img');
                 img.src = imageData.url;
@@ -1515,10 +1490,13 @@ function showGradientBackground() {
                     loadedCount++;
                     console.log('✅ Image', index + 1, 'loaded (', loadedCount, '/', totalImages, ')');
                     
-                    if (index === 0) {
+                    if (loadedCount === totalImages) {
+                        // All images loaded - start slideshow with dramatic entrance
                         setTimeout(() => {
-                            slideshowContainer.style.opacity = '1';
-                        }, 100);
+                            slideshowContainer.classList.add('active');
+                            showSlideWithCurtainEffect(0);
+                            indicatorsContainer.classList.add('active');
+                        }, 1200);
                     }
                 };
                 
@@ -1527,91 +1505,92 @@ function showGradientBackground() {
                 
                 const indicator = document.createElement('div');
                 indicator.className = 'slideshow-indicator';
-                if (index === 0) indicator.classList.add('active');
                 indicator.addEventListener('click', () => goToSlide(index));
                 indicatorsContainer.appendChild(indicator);
             });
             
-            slideshowContainer.classList.add('active');
-            indicatorsContainer.classList.add('active');
-            
-            // Set initial text WITHOUT animation
-            const titleElement = document.getElementById('heroTitle');
-            const subtitleElement = document.getElementById('heroSubtitle');
-            if (titleElement && subtitleElement && slideshowImages[0]) {
-                titleElement.textContent = slideshowImages[0].title;
-                subtitleElement.textContent = slideshowImages[0].description;
-                titleElement.style.transition = 'none';
-                subtitleElement.style.transition = 'none';
-                titleElement.style.opacity = '1';
-                subtitleElement.style.opacity = '1';
-                
-                // Re-enable transitions after initial render
-                setTimeout(() => {
-                    titleElement.style.transition = '';
-                    subtitleElement.style.transition = '';
-                }, 100);
+            // Set initial text (logo and motto visible first)
+            if (titleElement && subtitleElement) {
+                titleElement.textContent = 'GSTU Robotics & Research Club';
+                subtitleElement.textContent = 'A Hub of Robothinkers';
             }
             
             if (slideshowImages.length > 1) {
-                startSlideshow();
+                setTimeout(() => startSlideshow(), 3000);
             }
         }
+        
+        function showSlideWithCurtainEffect(index) {
+            const slides = document.querySelectorAll('.hero-slide');
+            const indicators = document.querySelectorAll('.slideshow-indicator');
+            
+            if (slides.length === 0) return;
+            
+            // Remove active from all slides
+            slides.forEach(s => {
+                s.classList.remove('active');
+                s.style.clipPath = 'inset(0 100% 0 0)';
+            });
+            
+            // Alternate curtain direction
+            const currentSlide = slides[index];
+            if (slideDirection === 'right') {
+                currentSlide.style.clipPath = 'inset(0 100% 0 0)';
+            } else {
+                currentSlide.style.clipPath = 'inset(0 0 0 100%)';
+            }
+            
+            // Trigger curtain effect
+            setTimeout(() => {
+                currentSlide.classList.add('active');
+            }, 50);
+            
+            // Alternate direction for next slide
+            slideDirection = slideDirection === 'right' ? 'left' : 'right';
+        // Update indicators
+        indicators.forEach((ind, i) => {
+            if (i === index) {
+                ind.classList.add('active');
+            } else {
+                ind.classList.remove('active');
+            }
+        });
+        
+        // Update text with subtle animation
+        updateHeroText(index);
+    }
         
         function updateHeroText(index) {
             const imageData = slideshowImages[index];
             const titleElement = document.getElementById('heroTitle');
             const subtitleElement = document.getElementById('heroSubtitle');
+            const heroContent = document.querySelector('.hero-content');
             
             if (!titleElement || !subtitleElement || !imageData) {
                 return;
             }
             
-            const animations = [
-                'animate-fadeInUp',
-                'animate-slideFromLeft',
-                'animate-slideFromRight',
-                'animate-zoomIn',
-                'animate-rotateIn',
-                'animate-butterfly',
-                'animate-bounce',
-                'animate-flipIn'
-            ];
+            // Subtle content pulse animation
+            if (heroContent) {
+                heroContent.classList.remove('fadeForSlideshow');
+                void heroContent.offsetWidth; // Trigger reflow
+                heroContent.classList.add('fadeForSlideshow');
+            }
             
-            const randomAnimation = animations[Math.floor(Math.random() * animations.length)];
+            // Smooth text update
+            titleElement.style.transition = 'opacity 0.4s ease';
+            subtitleElement.style.transition = 'opacity 0.4s ease';
             
-            // Clear all animation classes
-            animations.forEach(anim => {
-                titleElement.classList.remove(anim);
-                subtitleElement.classList.remove(anim);
-            });
+            titleElement.style.opacity = '0.6';
+            subtitleElement.style.opacity = '0.6';
             
-            // Fade out quickly
-            titleElement.style.opacity = '0';
-            subtitleElement.style.opacity = '0';
-            
-            // Update content after fade out
             setTimeout(() => {
                 titleElement.textContent = imageData.title;
                 subtitleElement.textContent = imageData.description;
                 
-                // Add animation and show
-                requestAnimationFrame(() => {
-                    titleElement.classList.add(randomAnimation);
-                    subtitleElement.classList.add(randomAnimation);
-                    
-                    titleElement.style.opacity = '1';
-                    subtitleElement.style.opacity = '1';
-                });
-                
-                // Clean up animation classes
-                setTimeout(() => {
-                    animations.forEach(anim => {
-                        titleElement.classList.remove(anim);
-                        subtitleElement.classList.remove(anim);
-                    });
-                }, 1000);
-            }, 300);
+                titleElement.style.opacity = '1';
+                subtitleElement.style.opacity = '1';
+            }, 400);
         }
         
         function startSlideshow() {
@@ -1628,62 +1607,26 @@ function showGradientBackground() {
         
         function nextSlide() {
             const slides = document.querySelectorAll('.hero-slide');
-            const indicators = document.querySelectorAll('.slideshow-indicator');
             
             if (slides.length === 0) {
                 console.warn('⚠️ No slides found');
                 return;
             }
             
-            // Remove active class from current slide
-            if (slides[currentSlideIndex]) {
-                slides[currentSlideIndex].classList.remove('active');
-            }
-            if (indicators[currentSlideIndex]) {
-                indicators[currentSlideIndex].classList.remove('active');
-            }
-            
             // Move to next slide
             currentSlideIndex = (currentSlideIndex + 1) % slides.length;
             
-            // Add active class to new slide
-            if (slides[currentSlideIndex]) {
-                slides[currentSlideIndex].classList.add('active');
-            }
-            if (indicators[currentSlideIndex]) {
-                indicators[currentSlideIndex].classList.add('active');
-            }
-            
             console.log('🔄 Slide changed to:', currentSlideIndex + 1, '/', slides.length);
             
-            // Update text AFTER slide change
-            updateHeroText(currentSlideIndex);
+            // Show slide with curtain effect
+            showSlideWithCurtainEffect(currentSlideIndex);
         }
         
-        function goToSlide(index) {
-            const slides = document.querySelectorAll('.hero-slide');
-            const indicators = document.querySelectorAll('.slideshow-indicator');
-            
-            if (slides.length === 0) return;
-            
-            if (slides[currentSlideIndex]) {
-                slides[currentSlideIndex].classList.remove('active');
-            }
-            if (indicators[currentSlideIndex]) {
-                indicators[currentSlideIndex].classList.remove('active');
-            }
+         function goToSlide(index) {
+            if (currentSlideIndex === index) return;
             
             currentSlideIndex = index;
-            
-            if (slides[currentSlideIndex]) {
-                slides[currentSlideIndex].classList.add('active');
-            }
-            if (indicators[currentSlideIndex]) {
-                indicators[currentSlideIndex].classList.add('active');
-            }
-            
-            // Update text for the selected image
-            updateHeroText(currentSlideIndex);
+            showSlideWithCurtainEffect(currentSlideIndex);
             
             if (slideshowInterval) {
                 clearInterval(slideshowInterval);
