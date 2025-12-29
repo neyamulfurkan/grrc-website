@@ -7,6 +7,9 @@
     <meta name="keywords" content="GSTU, robotics, research, technology, Gopalganj, university club">
     <title>GSTU Robotics & Research Club - Home</title>
     
+    <!-- Preload critical slideshow image -->
+    <link rel="preload" as="image" href="assets/default-logo.jpg" fetchpriority="high">
+    
     <link rel="stylesheet" href="css/variables.css">
     <link rel="stylesheet" href="css/common.css">
     <link rel="stylesheet" href="css/components.css">
@@ -1215,9 +1218,12 @@
     <script src="js/utils.js"></script>
     <script src="js/load-config.js"></script>
     
-    <link rel="stylesheet" href="css/chatbot.css">
-    <script src="js/chatbot-config.js"></script>
-  <script src="js/chatbot.js?v=2.0"></script>
+    <!-- Defer chatbot CSS (not critical for initial render) -->
+    <link rel="stylesheet" href="css/chatbot.css" media="print" onload="this.media='all'">
+    <noscript><link rel="stylesheet" href="css/chatbot.css"></noscript>
+    
+    <script defer src="js/chatbot-config.js"></script>
+    <script defer src="js/chatbot.js?v=2.0"></script>
     
     <script>
         let slideshowImages = [];
@@ -1237,12 +1243,16 @@
             }
         }
 
-        document.addEventListener('DOMContentLoaded', async function() {
-            // ✅ Apply theme IMMEDIATELY
+        // ✅ IMMEDIATE THEME (before DOMContentLoaded)
+        (function() {
             const savedTheme = localStorage.getItem('theme') || 'dark';
             document.documentElement.setAttribute('data-theme', savedTheme);
+        })();
+
+        document.addEventListener('DOMContentLoaded', async function() {
+            console.log('🚀 Page load started:', performance.now(), 'ms');
             
-            // ✅ INSTANT UI
+            // ✅ INSTANT UI - No waiting
             document.getElementById('currentYear').textContent = new Date().getFullYear();
             window.addEventListener('scroll', handleScroll);
             handleScroll();
@@ -1252,59 +1262,43 @@
             if (typeof initTheme === 'function') initTheme();
             if (typeof initNavigation === 'function') initNavigation();
             
-            // ✅ PARALLEL LOADING with Progress Indicator
-        const startTime = performance.now();
-        const loadingProgress = new LoadingProgress();
-        const loadingTasks = [
-            'Club Configuration',
-            'Gallery Slideshow',
-            'Upcoming Events',
-            'Executive Members',
-            'Latest Announcements'
-        ];
-        
-        loadingProgress.start(loadingTasks);
-        
-        const loadWithProgress = async (task, taskName) => {
-            try {
-                await task;
-                loadingProgress.increment();
-            } catch (e) {
-                console.warn(`${taskName} load failed:`, e);
-                loadingProgress.increment();
-            }
-        };
-        
-                // ✅ TRUE PARALLEL LOADING - All at once
-        (async () => {
-            console.log('🚀 Starting parallel content load...');
-            const loadStart = performance.now();
+            // ✅ SLIDESHOW LOADS FIRST - Top Priority!
+            console.log('🎬 Loading slideshow FIRST...');
+            loadGalleryForSlideshow().then(() => {
+                console.log('✅ Slideshow ready!');
+            }).catch(err => {
+                console.warn('⚠️ Slideshow failed, using fallback');
+            });
             
-            // Load ALL content simultaneously
-            await Promise.all([
-                loadWithProgress(loadClubConfig(), 'Config'),
-                loadWithProgress(loadGalleryForSlideshow(), 'Slideshow'),
-                loadWithProgress(loadUpcomingEvents(), 'Events'),
-                loadWithProgress(loadExecutiveMembers(), 'Members'),
-                loadWithProgress(loadLatestAnnouncements(), 'Announcements')
-            ]);
+            // ✅ Other content loads in parallel AFTER slideshow starts
+            const startTime = performance.now();
             
-            console.log(`✅ All content loaded in ${(performance.now() - loadStart).toFixed(0)}ms`);
-        })().finally(() => {
-            const loadTime = ((performance.now() - startTime) / 1000).toFixed(2);
-            console.log(`✅ All content loaded in ${loadTime}s`);
+            // Load remaining content immediately (no delay needed)
+            (async () => {
+                console.log('🚀 Loading other content in parallel...');
+                const loadStart = performance.now();
+                
+                // Load remaining content simultaneously
+                await Promise.all([
+                    loadClubConfig().catch(e => console.warn('Config failed:', e)),
+                    loadUpcomingEvents().catch(e => console.warn('Events failed:', e)),
+                    loadExecutiveMembers().catch(e => console.warn('Members failed:', e)),
+                    loadLatestAnnouncements().catch(e => console.warn('Announcements failed:', e))
+                ]);
+                
+                console.log(`✅ Secondary content loaded in ${(performance.now() - loadStart).toFixed(0)}ms`);
+                console.log(`⚡ Total page load: ${((performance.now() - startTime) / 1000).toFixed(2)}s`);
+                
+                // Initialize scroll animations
+                if (typeof window.initScrollAnimations === 'function') {
+                    setTimeout(() => window.initScrollAnimations(), 100);
+                }
+            })();
             
-            // Hide loading overlay immediately
-            const overlay = document.getElementById('loadingOverlay');
-            if (overlay) {
-                overlay.classList.add('hidden');
-            }
-            
-            // Initialize scroll animations after content loads
+            // Initialize scroll animations
             if (typeof window.initScrollAnimations === 'function') {
                 setTimeout(() => window.initScrollAnimations(), 100);
             }
-        });
         });
         
         function initializeMobileMenu() {
@@ -1438,7 +1432,8 @@ function showInitialContent() {
 }
         
         let hasInitialAnimationPlayed = false;
-        let slideDirection = 'right'; // Alternates between 'left' and 'right'
+        let slideDirection = 'right';
+        let firstImageLoaded = false;
         
         function initializeSlideshow() {
             const slideshowContainer = document.getElementById('heroSlideshow');
@@ -1451,6 +1446,8 @@ function showInitialContent() {
                 console.error('❌ Slideshow containers not found');
                 return;
             }
+            
+            console.log('🎬 Initializing slideshow with', slideshowImages.length, 'images');
             
             slideshowContainer.innerHTML = '';
             indicatorsContainer.innerHTML = '';
@@ -1478,13 +1475,12 @@ function showInitialContent() {
                     img.fetchpriority = 'high';
                 }
                 
-                // Preload first image immediately for instant display
+                // ✅ INSTANT first image load
                 if (index === 0) {
-                    const preloadImg = new Image();
-                    preloadImg.src = imageData.url;
-                    preloadImg.onload = () => {
-                        img.src = imageData.url;
-                    };
+                    img.fetchpriority = 'high';
+                    img.src = imageData.url;
+                    img.style.opacity = '0';
+                    img.style.transition = 'opacity 0.3s ease';
                 } else {
                     img.src = imageData.url;
                 }
@@ -1495,6 +1491,11 @@ function showInitialContent() {
                 };
                 
                 img.onload = function() {
+                    if (index === 0 && !firstImageLoaded) {
+                        img.style.opacity = '1';
+                        firstImageLoaded = true;
+                        console.log('⚡ First image loaded INSTANTLY');
+                    }
                     loadedCount++;
                     console.log('✅ Image', index + 1, 'loaded (', loadedCount, '/', totalImages, ')');
                     
@@ -2048,5 +2049,18 @@ function showInitialContent() {
         }
     </script>
 <script src="js/community-toggle.js"></script>
+    <script>
+        // ✅ Performance monitoring
+        window.addEventListener('load', function() {
+            const perfData = performance.timing;
+            const pageLoadTime = perfData.loadEventEnd - perfData.navigationStart;
+            const domReadyTime = perfData.domContentLoadedEventEnd - perfData.navigationStart;
+            
+            console.log(`📊 Performance Report:
+- DOM Ready: ${domReadyTime}ms
+- Page Load: ${pageLoadTime}ms
+- First Paint: ${performance.getEntriesByType('paint')[0]?.startTime.toFixed(0)}ms`);
+        });
+    </script>
 </body>
 </html>
