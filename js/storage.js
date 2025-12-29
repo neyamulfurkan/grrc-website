@@ -693,12 +693,10 @@ async function addEvent(eventData) {
           category: newEvent.category,
           date: newEvent.date,
           time: newEvent.time,
-          location: newEvent.venue,
-          venue: newEvent.venue, // ✅ FIX: Include both field names
+          venue: newEvent.venue,
           image: newEvent.image,
           status: newEvent.status,
-          registration_link: newEvent.registrationLink,
-          created_at: newEvent.createdAt
+          registration_link: newEvent.registrationLink
         };
         
         console.log('📤 Sending to backend:', JSON.stringify(backendEvent, null, 2));
