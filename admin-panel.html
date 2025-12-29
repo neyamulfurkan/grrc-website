@@ -2245,8 +2245,13 @@ async function loadAdminDashboardInfo() {
 
         function setupEventForm() {
             const form = document.getElementById('eventForm');
+            if (!form) {
+                console.error('❌ Event form not found!');
+                return;
+            }
             form.addEventListener('submit', async (e) => {
                 e.preventDefault();
+                e.stopPropagation();
                 await saveEvent();
             });
 
@@ -2260,6 +2265,8 @@ async function loadAdminDashboardInfo() {
 
         async function saveEvent() {
             try {
+                console.log('📝 saveEvent() called');
+                
                 if (!isAuthenticated()) {
                     showToast('Please log in again', 'error');
                     setTimeout(() => window.location.href = 'admin.html', 1000);
@@ -2272,10 +2279,46 @@ async function loadAdminDashboardInfo() {
                 const venue = document.getElementById('eventVenue').value.trim();
                 const time = document.getElementById('eventTime').value.trim();
 
-                console.log('Event form values:', { title, description, date, venue, time });
+                console.log('📋 Event form values:', { 
+                    title, 
+                    description, 
+                    date, 
+                    venue, 
+                    time,
+                    hasTitle: !!title,
+                    hasDescription: !!description,
+                    hasDate: !!date,
+                    hasVenue: !!venue,
+                    hasTime: !!time
+                });
 
-                if (!title || !description || !date || !venue || !time) {
-                    showToast('Please fill all required fields', 'error');
+                if (!title) {
+                    showToast('Event title is required', 'error');
+                    document.getElementById('eventTitle').focus();
+                    return;
+                }
+                
+                if (!description) {
+                    showToast('Event description is required', 'error');
+                    document.getElementById('eventDescription').focus();
+                    return;
+                }
+                
+                if (!date) {
+                    showToast('Event date is required', 'error');
+                    document.getElementById('eventDate').focus();
+                    return;
+                }
+                
+                if (!venue) {
+                    showToast('Event venue is required', 'error');
+                    document.getElementById('eventVenue').focus();
+                    return;
+                }
+                
+                if (!time) {
+                    showToast('Event time is required', 'error');
+                    document.getElementById('eventTime').focus();
                     return;
                 }
 
@@ -2320,18 +2363,21 @@ async function loadAdminDashboardInfo() {
                     date: date,
                     time: time,
                     venue: venue,
+                    location: venue, // ✅ FIX: Add both field names for backend compatibility
                     image: image,
                     status: document.getElementById('eventStatus').value,
                     registrationLink: document.getElementById('eventRegistrationLink').value.trim()
                 };
 
-                console.log('Submitting event data:', eventData);
+                console.log('📤 Submitting event data:', JSON.stringify(eventData, null, 2));
 
                 if (currentEditEventId) {
+                    console.log('🔄 Updating existing event:', currentEditEventId);
                     await window.storage.updateEvent(currentEditEventId, eventData);
                     showToast('Event updated successfully!', 'success');
                 } else {
-                    await addEvent(eventData);
+                    console.log('➕ Creating new event');
+                    await window.storage.addEvent(eventData);
                     showToast('Event added successfully!', 'success');
                 }
 

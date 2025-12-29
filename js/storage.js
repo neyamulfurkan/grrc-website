@@ -637,12 +637,16 @@ async function getEvents(filters = {}) {
 }
 
 async function addEvent(eventData) {
-  if (!eventData.title || !eventData.description || !eventData.date || !eventData.venue) {
+  console.log('🎯 addEvent() called with data:', eventData);
+  
+  if (!eventData.title || !eventData.description || !eventData.date || (!eventData.venue && !eventData.location)) {
     console.error('❌ Missing required fields:', {
       title: !!eventData.title,
       description: !!eventData.description,
       date: !!eventData.date,
-      venue: !!eventData.venue
+      venue: !!eventData.venue,
+      location: !!eventData.location,
+      time: !!eventData.time
     });
     throw new Error('Required fields missing: title, description, date, venue');
   }
@@ -655,6 +659,8 @@ async function addEvent(eventData) {
     const eventsResult = await getEvents();
     const events = eventsResult.data || [];
     
+    const venue = eventData.venue || eventData.location;
+    
     const newEvent = {
       id: generateUniqueId('event'),
       title: eventData.title.trim(),
@@ -662,32 +668,48 @@ async function addEvent(eventData) {
       category: eventData.category || 'General',
       date: eventData.date,
       time: eventData.time || '',
-      venue: eventData.venue.trim(),
+      venue: venue.trim(),
+      location: venue.trim(), // ✅ FIX: Add both field names
       image: eventData.image || '',
       status: eventData.status || 'upcoming',
       registrationLink: eventData.registrationLink || '',
       createdAt: getCurrentTimestamp()
     };
     
-    console.log('📝 Creating event with data:', newEvent);
+    console.log('📝 Creating event with data:', JSON.stringify(newEvent, null, 2));
+    console.log('🔍 Event validation:', {
+      hasTitle: !!newEvent.title,
+      hasDescription: !!newEvent.description,
+      hasDate: !!newEvent.date,
+      hasVenue: !!newEvent.venue,
+      hasTime: !!newEvent.time
+    });
     
     if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady) {
       try {
         const backendEvent = {
-          id: newEvent.id,
           title: newEvent.title,
           description: newEvent.description,
           category: newEvent.category,
           date: newEvent.date,
           time: newEvent.time,
           location: newEvent.venue,
+          venue: newEvent.venue, // ✅ FIX: Include both field names
           image: newEvent.image,
           status: newEvent.status,
           registration_link: newEvent.registrationLink,
           created_at: newEvent.createdAt
         };
         
-        console.log('🔄 Sending to backend:', backendEvent);
+        console.log('📤 Sending to backend:', JSON.stringify(backendEvent, null, 2));
+        console.log('🔍 Backend validation:', {
+          hasTitle: !!backendEvent.title,
+          hasDescription: !!backendEvent.description,
+          hasDate: !!backendEvent.date,
+          hasLocation: !!backendEvent.location,
+          hasVenue: !!backendEvent.venue,
+          hasTime: !!backendEvent.time
+        });
         
         const apiResult = await window.apiClient.createEvent(backendEvent);
         

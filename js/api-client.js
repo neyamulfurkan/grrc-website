@@ -225,6 +225,11 @@ async function request(endpoint, options = {}) {
             
             if (!response.ok) {
                 console.error(`❌ API Error [${endpoint}]: ${data.error || data.message || 'Unknown error'}`);
+                console.error('📋 Response data:', data);
+                console.error('📋 Response status:', response.status);
+                if (config.body) {
+                    console.error('📋 Request body:', config.body);
+                }
                 return {
                     success: false,
                     data: null,
@@ -453,9 +458,23 @@ async function deleteMember(id) {
 }
 
 async function createEvent(data) {
+    console.log('🎯 API createEvent() called');
+    console.log('📦 Payload:', JSON.stringify(data, null, 2));
+    console.log('🔍 Payload validation:', {
+        hasTitle: !!data.title,
+        hasDescription: !!data.description,
+        hasDate: !!data.date,
+        hasLocation: !!data.location,
+        hasVenue: !!data.venue,
+        hasTime: !!data.time
+    });
+    
     return request('/api/admin/events', {
         method: 'POST',
-        body: JSON.stringify(data)
+        body: JSON.stringify(data),
+        headers: {
+            'Content-Type': 'application/json'
+        }
     });
 }
 
