@@ -33,14 +33,19 @@
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         }
 
-        .header-content {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            height: 70px;
-            padding: 0 2rem;
+        .header .container {
             max-width: 1400px;
             margin: 0 auto;
+            padding: 0;
+        }
+
+        .header-content {
+            display: grid;
+            grid-template-columns: auto 1fr auto;
+            align-items: center;
+            gap: 2rem;
+            height: 70px;
+            padding: 0 2rem;
         }
 
         .logo-container {
@@ -55,10 +60,12 @@
             height: 50px;
             border-radius: 8px;
             object-fit: cover;
+            flex-shrink: 0;
+            display: block;
         }
 
         .club-name {
-            font-size: 1.1rem;
+            font-size: 1rem;
             font-weight: 600;
             color: var(--text-primary);
             white-space: nowrap;
@@ -67,16 +74,19 @@
         .nav-menu {
             display: flex;
             align-items: center;
-            gap: 2rem;
+            justify-content: center;
+            gap: 1.25rem;
+            flex-wrap: nowrap;
         }
 
         .nav-link {
             color: var(--text-secondary);
             text-decoration: none;
             font-weight: 500;
-            font-size: 1rem;
+            font-size: 0.95rem;
             transition: color 0.3s ease;
             white-space: nowrap;
+            padding: 0.5rem 0;
         }
 
         .nav-link:hover {
@@ -92,6 +102,7 @@
             align-items: center;
             gap: 0.5rem;
             flex-shrink: 0;
+            justify-self: end;
         }
 
         .theme-toggle {
