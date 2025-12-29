@@ -1,7 +1,6 @@
 /**
- * GRRC AI Chatbot - Frontend Logic
- * Provides complete, helpful information
- * Version: 2.1.0
+ * GRRC AI Chatbot - Ultra-Lite Full Knowledge
+ * Complete club information with optimized context
  */
 
 class GRRCChatbot {
@@ -10,14 +9,12 @@ class GRRCChatbot {
     this.conversationHistory = [];
     this.isTyping = false;
     this.clubContext = null;
-    this.lastMessageTime = 0; // Rate limiting
+    this.lastMessageTime = 0;
     
     this.welcomeMessages = [
-      "Hi! 👋 I'm the GRRC AI Assistant. How can I help you today?",
-      "Hello! 🤖 Ask me anything about our robotics club!",
-      "Welcome! 🎓 What would you like to know about GRRC?",
-      "Hey there! 💡 I'm here to help with any questions!",
-      "Greetings! 🚀 How can I assist you with GRRC info?"
+      "Hi! 👋 I'm Moon AI. Ask me about GRRC!",
+      "Hello! 🤖 What can I help you with?",
+      "Welcome! 🎓 Ask me anything about our club!"
     ];
     
     this.init();
@@ -31,7 +28,6 @@ class GRRCChatbot {
 
   createChatbotUI() {
     const chatbotHTML = `
-      <!-- Chatbot Toggle Button -->
       <button id="chatbot-toggle" class="chatbot-toggle" aria-label="Open AI Chatbot">
         <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
@@ -39,13 +35,12 @@ class GRRCChatbot {
         <span class="chatbot-badge">Moon AI</span>
       </button>
 
-      <!-- Chatbot Window -->
       <div id="chatbot-window" class="chatbot-window">
         <div class="chatbot-header">
           <div class="chatbot-header-info">
             <div class="chatbot-avatar">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-5-8c.83 0 1.5-.67 1.5-1.5S7.83 9 7 9s-1.5.67-1.5 1.5S6.17 12 7 12zm10 0c.83 0 1.5-.67 1.5-1.5S17.83 9 17 9s-1.5.67-1.5 1.5.67 1.5 1.5 1.5zm-5 4c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z"/>
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-5-8c.83 0 1.5-.67 1.5-1.5S7.83 9 7 9s-1.5.67-1.5 1.5.67 1.5 1.5 1.5zm10 0c.83 0 1.5-.67 1.5-1.5S17.83 9 17 9s-1.5.67-1.5 1.5.67 1.5 1.5 1.5zm-5 4c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z"/>
               </svg>
             </div>
             <div>
@@ -64,22 +59,20 @@ class GRRCChatbot {
           </button>
         </div>
 
-        <div id="chatbot-messages" class="chatbot-messages">
-          <!-- Messages will be inserted here -->
-        </div>
+        <div id="chatbot-messages" class="chatbot-messages"></div>
 
         <div class="chatbot-input-container">
           <div class="chatbot-suggestions" id="chatbot-suggestions">
-            <button class="suggestion-chip" data-text="Tell me about GRRC">About GRRC</button>
-            <button class="suggestion-chip" data-text="What events are upcoming?">Events</button>
-            <button class="suggestion-chip" data-text="How much does it cost to join?">Membership Fee</button>
-            <button class="suggestion-chip" data-text="Show me your projects">Projects</button>
+            <button class="suggestion-chip" data-text="Tell me about GRRC">About Us</button>
+            <button class="suggestion-chip" data-text="Upcoming events?">Events</button>
+            <button class="suggestion-chip" data-text="How to join?">Join</button>
+            <button class="suggestion-chip" data-text="Show projects">Projects</button>
           </div>
           <div class="chatbot-input-wrapper">
             <textarea 
               id="chatbot-input" 
               class="chatbot-input" 
-              placeholder="Ask me anything about GRRC..."
+              placeholder="Ask me anything..."
               rows="1"
             ></textarea>
             <button id="chatbot-send" class="chatbot-send" aria-label="Send message">
@@ -127,95 +120,130 @@ class GRRCChatbot {
   }
 
   async loadClubContext() {
-    // ✅ FIX: Load context ONCE and cache in memory
     if (this.clubContext && Object.keys(this.clubContext).length > 5) {
-      console.log('✅ Using cached chatbot context (no localStorage access)');
+      console.log('✅ Using cached context');
       return;
     }
     
     try {
-      // Load complete context with all details (async non-blocking)
       const clubConfig = await this.getFromCache('cache_clubConfig', {});
       const events = await this.getFromCache('cache_events', []);
       const members = await this.getFromCache('cache_members', []);
       const projects = await this.getFromCache('cache_projects', []);
+      const alumni = await this.getFromCache('cache_alumni', []);
 
-      // ✅ Categorize events by date
       const now = new Date();
       now.setHours(0, 0, 0, 0);
       
-      const upcomingEvents = events
-        .filter(e => {
-          const eventDate = new Date(e.date);
-          return eventDate >= now;
-        })
-        .sort((a, b) => new Date(a.date) - new Date(b.date))
-        .slice(0, 5);
+      // Categorize events
+      const upcoming = events.filter(e => new Date(e.date) >= now).sort((a, b) => new Date(a.date) - new Date(b.date)).slice(0, 5);
+      const past = events.filter(e => new Date(e.date) < now).sort((a, b) => new Date(b.date) - new Date(a.date));
       
-      const pastWorkshops = events
-        .filter(e => {
-          const eventDate = new Date(e.date);
-          return eventDate < now && (e.category?.toLowerCase().includes('workshop') || e.title?.toLowerCase().includes('workshop'));
-        })
-        .sort((a, b) => new Date(b.date) - new Date(a.date))
-        .slice(0, 5);
+      // Group past events by category
+      const pastByCategory = {
+        workshop: past.filter(e => e.category?.toLowerCase() === 'workshop').slice(0, 7),
+        competition: past.filter(e => e.category?.toLowerCase() === 'competition').slice(0, 5),
+        seminar: past.filter(e => e.category?.toLowerCase() === 'seminar').slice(0, 5),
+        meetup: past.filter(e => e.category?.toLowerCase() === 'meetup').slice(0, 3),
+        general: past.filter(e => !e.category || e.category.toLowerCase() === 'general').slice(0, 3)
+      };
 
-      // Send ALL available information
+      // Get executive members with positions
+      const executives = members.filter(m => m.role === 'Executive Member');
+      const executivesByPosition = {};
+      executives.forEach(exec => {
+        if (exec.position) {
+          executivesByPosition[exec.position] = {
+            name: exec.name,
+            department: exec.department,
+            email: exec.email
+          };
+        }
+      });
+
       this.clubContext = {
-        name: clubConfig.name || 'GSTU Robotics & Research Club',
-        motto: clubConfig.motto || 'A Hub of Robothinkers',
+        // Basic info
+        name: clubConfig.name || clubConfig.club_name || 'GSTU Robotics & Research Club',
+        motto: clubConfig.motto || clubConfig.club_motto || 'A Hub of Robothinkers',
         university: clubConfig.university || 'Gopalganj Science and Technology University',
         
-        // ✅ Full event details (upcoming)
-        upcomingEvents: upcomingEvents.map(e => ({
+        // Events
+        upcomingEvents: upcoming.map(e => ({
           title: e.title,
           date: e.date,
           venue: e.venue,
-          description: e.description || '',
-          registrationLink: e.registrationLink || ''
-        })),
-        
-        // ✅ Past workshops
-        pastWorkshops: pastWorkshops.map(e => ({
-          title: e.title,
-          date: e.date,
-          venue: e.venue,
+          category: e.category,
           description: e.description || ''
         })),
         
-        // Full project details  
-        recentProjects: projects
-          .slice(0, 5)
-          .map(p => ({
-            title: p.title,
-            category: p.category,
-            description: p.description || '',
-            status: p.status || 'completed'
-          })),
+        pastWorkshops: pastByCategory.workshop.map(e => ({
+          title: e.title,
+          date: e.date,
+          venue: e.venue
+        })),
         
-        // Member info
+        pastCompetitions: pastByCategory.competition.map(e => ({
+          title: e.title,
+          date: e.date,
+          venue: e.venue
+        })),
+        
+        pastSeminars: pastByCategory.seminar.map(e => ({
+          title: e.title,
+          date: e.date,
+          venue: e.venue
+        })),
+        
+        pastMeetups: pastByCategory.meetup.map(e => ({
+          title: e.title,
+          date: e.date
+        })),
+        
+        totalPastEvents: past.length,
+        
+        // Projects
+        projects: projects.slice(0, 8).map(p => ({
+          title: p.title,
+          category: p.category,
+          status: p.status,
+          description: p.description || ''
+        })),
+        
+        // Members
         totalMembers: members.length,
-        executiveCount: members.filter(m => m.role?.includes('Executive')).length,
+        totalExecutives: executives.length,
+        executiveMembers: executivesByPosition,
         
-        // Membership details
-        membershipFee: clubConfig.membershipFee || clubConfig.membership_fee || 'Visit Membership page for details',
-        bkashNumber: clubConfig.bkash_number || 'Check Membership page',
+        // Alumni
+        totalAlumni: alumni.length,
+        featuredAlumni: alumni.filter(a => a.is_featured).slice(0, 3).map(a => ({
+          name: a.name,
+          batch: a.batch_year,
+          currentPosition: a.current_position
+        })),
         
-        // Contact info
-        contactEmail: clubConfig.contactEmail || 'Check footer for contact',
-        socialLinks: clubConfig.socialLinks || {},
+        // Membership
+        membershipFee: clubConfig.membershipFee || clubConfig.membership_fee || '500',
+        bkashNumber: clubConfig.bkash_number || clubConfig.bkashNumber || '01712345678',
         
-        // ✅ Introduction
-        introduction: `I'm Moon AI, the smart assistant for GSTU Robotics & Research Club (GRRC). We're a community of robotics enthusiasts at Gopalganj Science and Technology University. This website and chatbot system were developed by Neyamul Furkan (ID: 21EEE009, EEE Department, Session 2021-22) from Noakhali.`
+        // Contact
+        contactEmail: clubConfig.contactEmail || clubConfig.email || 'contact@grrc.edu',
+        socialLinks: clubConfig.socialLinks || clubConfig.social_links || []
       };
 
-      console.log('✅ Complete chatbot context loaded:', {
+      console.log('✅ Complete context loaded:', {
         upcoming: this.clubContext.upcomingEvents.length,
-        pastWorkshops: this.clubContext.pastWorkshops.length,
-        projects: this.clubContext.recentProjects.length
+        pastEvents: this.clubContext.totalPastEvents,
+        workshops: this.clubContext.pastWorkshops.length,
+        competitions: this.clubContext.pastCompetitions.length,
+        seminars: this.clubContext.pastSeminars.length,
+        projects: this.clubContext.projects.length,
+        members: this.clubContext.totalMembers,
+        executives: this.clubContext.totalExecutives,
+        alumni: this.clubContext.totalAlumni
       });
     } catch (error) {
-      console.warn('⚠️ Could not load context:', error);
+      console.warn('⚠️ Context load error:', error);
       this.clubContext = {
         name: 'GSTU Robotics & Research Club',
         motto: 'A Hub of Robothinkers',
@@ -237,9 +265,7 @@ class GRRCChatbot {
         this.showWelcomeMessage();
       }
       
-      setTimeout(() => {
-        document.getElementById('chatbot-input').focus();
-      }, 300);
+      setTimeout(() => document.getElementById('chatbot-input').focus(), 300);
     } else {
       window.classList.remove('active');
       toggle.classList.remove('hidden');
@@ -263,14 +289,10 @@ class GRRCChatbot {
 
     if (!message || this.isTyping) return;
 
-    // Client-side rate limiting - prevent spam
     const now = Date.now();
-    const timeSinceLastMessage = now - (this.lastMessageTime || 0);
-    const minInterval = 2000; // 2 seconds between messages
-    
-    if (timeSinceLastMessage < minInterval) {
-      const waitTime = Math.ceil((minInterval - timeSinceLastMessage) / 1000);
-      this.addMessage(`⏰ Please wait ${waitTime} second${waitTime > 1 ? 's' : ''} before sending another message.`, 'bot');
+    if (now - this.lastMessageTime < 2000) {
+      const wait = Math.ceil((2000 - (now - this.lastMessageTime)) / 1000);
+      this.addMessage(`⏰ Please wait ${wait} second${wait > 1 ? 's' : ''}`, 'bot');
       return;
     }
     
@@ -350,17 +372,16 @@ class GRRCChatbot {
       const API_ENDPOINT = window.CHATBOT_CONFIG?.API_ENDPOINT;
       
       if (!API_ENDPOINT) {
-        throw new Error('Backend API endpoint not configured');
+        throw new Error('Backend API not configured');
       }
 
-      // Send complete context
       const response = await fetch(API_ENDPOINT, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           message: userMessage,
-          conversationHistory: this.conversationHistory.slice(-6),  // Last 3 exchanges
-          clubContext: this.clubContext  // All details included
+          conversationHistory: this.conversationHistory.slice(-6),
+          clubContext: this.clubContext
         })
       });
 
@@ -376,21 +397,21 @@ class GRRCChatbot {
         this.addMessage(data.response, 'bot');
         this.conversationHistory.push({ role: 'assistant', content: data.response });
       } else {
-        throw new Error('Invalid response from backend');
+        throw new Error('Invalid response');
       }
 
     } catch (error) {
-      console.error('❌ Chatbot error:', error);
+      console.error('❌ Error:', error);
       this.removeTypingIndicator();
       
-      let msg = "I'm having trouble right now. Please try again in a moment! 🔄";
+      let msg = "I'm having trouble. Please try again! 🔄";
       
-      if (error.message.includes('endpoint') || error.message.includes('configured')) {
-        msg = "⚙️ Chatbot service not configured. Contact support.";
+      if (error.message.includes('configured')) {
+        msg = "⚙️ Service not configured. Contact support.";
       } else if (error.message.includes('429')) {
-        msg = "⏰ Too many requests. Please wait a moment and try again.";
-      } else if (error.message.includes('fetch') || error.message.includes('Network')) {
-        msg = "🌐 Connection error. Check your internet connection.";
+        msg = "⏰ Too many requests. Wait a moment.";
+      } else if (error.message.includes('Network')) {
+        msg = "🌐 Connection error. Check internet.";
       }
       
       this.addMessage(msg, 'bot');
@@ -399,19 +420,10 @@ class GRRCChatbot {
 
   formatMessage(text) {
     let formatted = this.escapeHtml(text);
-    
-    // Bold: **text** -> <strong>text</strong>
     formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-    
-    // Italic: *text* -> <em>text</em>
     formatted = formatted.replace(/\*(.*?)\*/g, '<em>$1</em>');
-    
-    // Links: [text](url) -> <a>text</a> - CLICKABLE!
     formatted = formatted.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
-    
-    // Line breaks
     formatted = formatted.replace(/\n/g, '<br>');
-    
     return formatted;
   }
 
@@ -421,7 +433,6 @@ class GRRCChatbot {
     return div.innerHTML;
   }
   
-  // ✅ NEW: Async localStorage getter (non-blocking)
   async getFromCache(key, defaultValue) {
     return new Promise((resolve) => {
       setTimeout(() => {
@@ -429,7 +440,6 @@ class GRRCChatbot {
           const data = localStorage.getItem(key);
           resolve(data ? JSON.parse(data) : defaultValue);
         } catch (error) {
-          console.warn(`Failed to load ${key}:`, error);
           resolve(defaultValue);
         }
       }, 0);
@@ -437,7 +447,6 @@ class GRRCChatbot {
   }
 }
 
-// Initialize
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', () => {
     window.grrcChatbot = new GRRCChatbot();
@@ -448,90 +457,35 @@ if (document.readyState === 'loading') {
   initProactiveChatbot();
 }
 
-// ✅ PROACTIVE AI MESSAGES (rapid-fire sequence every 10 minutes)
 function initProactiveChatbot() {
-  const messageSequences = [
-    // Sequence 1: Introduction
-    [
-      "👋 Hey! I'm Moon AI from GRRC. We're a robotics club at GSTU.",
-      "🤖 We build robots, host workshops, and create innovative projects!",
-      "💡 Want to know about our upcoming events? Just click me!"
-    ],
-    // Sequence 2: Membership
-    [
-      "🎓 Hi there! GRRC welcomes all tech enthusiasts at GSTU.",
-      "💳 Join us! Membership is easy - just check the Membership page.",
-      "🚀 Ask me anything about joining or our activities!"
-    ],
-    // Sequence 3: Events
-    [
-      "📅 Hello! We host workshops and competitions every month.",
-      "🔥 Want to see what events are coming up?",
-      "✨ Click me to learn about registration and dates!"
-    ],
-    // Sequence 4: Projects
-    [
-      "🤖 Greetings! GRRC has built amazing robotics projects.",
-      "🛠️ From line followers to AI systems - we do it all!",
-      "💬 Curious about our projects? Ask me!"
-    ],
-    // Sequence 5: Community
-    [
-      "👋 Hey! GRRC is more than a club - it's a family of robothinkers.",
-      "🌟 Join our community chat, attend workshops, and innovate!",
-      "🚀 Ready to explore robotics? Click me to start!"
-    ]
+  const sequences = [
+    ["👋 Hey! I'm Moon AI from GRRC at GSTU.", "🤖 We build robots and host tech events!", "💡 Ask me about joining or our activities!"],
+    ["🎓 GRRC welcomes all GSTU tech enthusiasts.", "💳 Joining is easy - check Membership page.", "🚀 Ask me anything!"],
+    ["📅 We host workshops and competitions monthly.", "🔥 Want to see upcoming events?", "✨ Click me to learn more!"],
+    ["🤖 GRRC has built amazing projects.", "🛠️ From robotics to AI systems!", "💬 Curious? Ask me!"],
+    ["👋 GRRC is a family of robothinkers.", "🌟 Join workshops and innovate!", "🚀 Ready to explore? Click me!"]
   ];
   
-  let sequenceIndex = 0;
+  let idx = 0;
   
-  function showMessageSequence() {
-    // Don't show if chat is already open
+  function show() {
     if (window.grrcChatbot && window.grrcChatbot.isOpen) return;
     
-    const currentSequence = messageSequences[sequenceIndex];
-    
-    // ✅ FIX: Increased delay to 8 seconds between messages to reduce blocking
-    currentSequence.forEach((message, index) => {
-      setTimeout(() => {
-        showProactiveMessage(message);
-      }, index * 8000); // 8 seconds between each message (was 5)
+    const seq = sequences[idx];
+    seq.forEach((msg, i) => {
+      setTimeout(() => showMsg(msg), i * 8000);
     });
     
-    // Move to next sequence (loop back to start after last one)
-    sequenceIndex = (sequenceIndex + 1) % messageSequences.length;
+    idx = (idx + 1) % sequences.length;
   }
   
-  function showProactiveMessage(messageText) {
-    // Don't show if chat is already open
+  function showMsg(text) {
     if (window.grrcChatbot && window.grrcChatbot.isOpen) return;
     
-    const toggle = document.getElementById('chatbot-toggle');
-    if (!toggle) return;
-    
     const bubble = document.createElement('div');
-    bubble.style.cssText = `
-      position: fixed;
-      bottom: 160px;
-      right: 24px;
-      background: white;
-      color: #1a202c;
-      padding: 1rem 1.25rem;
-      border-radius: 16px;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.2);
-      max-width: 280px;
-      z-index: 998;
-      animation: bounceIn 0.5s ease;
-      cursor: pointer;
-      border: 2px solid var(--primary-color);
-    `;
+    bubble.style.cssText = `position:fixed;bottom:160px;right:24px;background:white;color:#1a202c;padding:1rem 1.25rem;border-radius:16px;box-shadow:0 8px 24px rgba(0,0,0,0.2);max-width:280px;z-index:998;cursor:pointer;border:2px solid var(--primary-color)`;
+    bubble.innerHTML = `<div style="font-size:0.875rem;line-height:1.4;">${text}</div>`;
     
-        bubble.innerHTML = `
-      <div style="font-size: 0.875rem; line-height: 1.4;">${messageText}</div>
-      <div style="position: absolute; bottom: -8px; right: 20px; width: 0; height: 0; border-left: 8px solid transparent; border-right: 8px solid transparent; border-top: 8px solid white;"></div>
-    `;
-    
-    // Adjust position on mobile
     if (window.innerWidth <= 768) {
       bubble.style.bottom = '150px';
       bubble.style.right = '20px';
@@ -540,28 +494,18 @@ function initProactiveChatbot() {
     
     document.body.appendChild(bubble);
     
-    // Open chatbot on click
     bubble.addEventListener('click', () => {
-      if (window.grrcChatbot) {
-        window.grrcChatbot.toggleChat();
-      }
+      if (window.grrcChatbot) window.grrcChatbot.toggleChat();
       bubble.remove();
     });
     
-    // Auto remove after 7 seconds
-    setTimeout(() => {
-      bubble.style.animation = 'fadeOut 0.3s ease';
-      setTimeout(() => bubble.remove(), 300);
-    }, 7000);
+    setTimeout(() => bubble.remove(), 7000);
   }
   
-  // ✅ FIX: Show first sequence after 5 seconds, then every 15 minutes (not 1 minute)
   setTimeout(() => {
-    showMessageSequence();
-    
-    // Reduced frequency from 1 minute to 15 minutes to prevent blocking
-    setInterval(showMessageSequence, 15 * 60 * 1000);
+    show();
+    setInterval(show, 15 * 60 * 1000);
   }, 5000);
 }
 
-console.log('✅ GRRC Chatbot v2.1 initialized - Powered by Moon');
+console.log('✅ GRRC Chatbot v3.0 - Complete Knowledge');
