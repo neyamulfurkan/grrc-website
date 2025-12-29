@@ -58,8 +58,9 @@ router.get('/health', (req, res) => {
 router.options('/apply', (req, res) => {
   res.header('Access-Control-Allow-Origin', '*');
   res.header('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  res.sendStatus(204);
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept');
+  res.header('Access-Control-Max-Age', '86400');
+  res.status(204).end();
 });
 
 router.post(
@@ -180,6 +181,21 @@ router.post(
     body('photo')
       .optional({ checkFalsy: true })
       .trim()
+      .custom((value) => {
+        if (value && value.length > 0) {
+          // Must be a URL (Cloudinary), not base64
+          if (value.startsWith('data:')) {
+            throw new Error('Base64 images not allowed. Please upload to Cloudinary first.');
+          }
+          try {
+            new URL(value);
+            return true;
+          } catch (e) {
+            throw new Error('Photo must be a valid URL');
+          }
+        }
+        return true;
+      })
   ],
   validateRequest,
   async (req, res) => {
@@ -187,6 +203,7 @@ router.post(
       console.log('📝 Received alumni application');
       console.log('   Name:', req.body.full_name);
       console.log('   Email:', req.body.email);
+      console.log('   Photo:', req.body.photo ? 'Cloudinary URL' : 'No photo');
 
       const applicationData = {
         full_name: req.body.full_name,

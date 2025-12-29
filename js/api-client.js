@@ -1,6 +1,6 @@
 const API_BASE_URL = 'https://grrc-website-10.onrender.com';
 const AUTH_TOKEN_KEY = 'grrc_auth_token';
-const REQUEST_TIMEOUT = 30000; // Reduced from 90s to 30s
+const REQUEST_TIMEOUT = 60000; // 60 seconds for image uploads
 
 const activeRequests = new Map();
 const requestQueue = [];
@@ -649,13 +649,17 @@ async function submitAlumniApplication(data) {
     console.log('🎯 submitAlumniApplication called with data:', {
         full_name: data.full_name,
         email: data.email,
-        photo_size: data.photo ? data.photo.length : 0
+        photo: data.photo ? 'URL provided' : 'No photo'
     });
     
     try {
         const result = await request('/api/alumni-application/apply', {
             method: 'POST',
-            body: JSON.stringify(data)
+            body: JSON.stringify(data),
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            }
         });
         console.log('✅ submitAlumniApplication result:', result);
         return result;

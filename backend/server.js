@@ -317,7 +317,12 @@ try {
     const alumniApplicationRoutes = require('./routes/alumniApplication');
     // 🔧 FIX: Add explicit CORS preflight handling for alumni routes
     app.options('/api/alumni-application/*', cors(corsOptions));
-    app.use('/api/alumni-application', cors(corsOptions), alumniApplicationRoutes);
+    app.use('/api/alumni-application', (req, res, next) => {
+        res.header('Access-Control-Allow-Origin', '*');
+        res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+        res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept');
+        next();
+    }, cors(corsOptions), alumniApplicationRoutes);
     console.log(`✅ alumni application routes loaded successfully`);
     routesLoaded.alumniApplication = true;
 } catch (error) {
