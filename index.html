@@ -315,8 +315,7 @@
             width: 100%;
             height: 100%;
             z-index: 1;
-            opacity: 0;
-            transition: opacity 0.8s ease-in-out;
+            opacity: 1;
         }
         .hero-slideshow.active {
             opacity: 1;
@@ -328,15 +327,14 @@
             left: 0;
             right: 0;
             bottom: 0;
-            opacity: 0;
+            opacity: 1;
             clip-path: inset(0 100% 0 0);
-            transition: clip-path 1.2s cubic-bezier(0.65, 0, 0.35, 1), opacity 0.3s ease;
+            transition: clip-path 1.2s cubic-bezier(0.65, 0, 0.35, 1);
             z-index: 1;
             transform-origin: center center;
         }
         
         .hero-slide.active {
-            opacity: 1;
             clip-path: inset(0 0 0 0);
             z-index: 2;
             animation: gentleZoom 20s ease-in-out infinite alternate;
@@ -1529,36 +1527,39 @@ function showInitialContent() {
             // Remove active from all slides
             slides.forEach(s => {
                 s.classList.remove('active');
-                s.style.clipPath = 'inset(0 100% 0 0)';
             });
             
-            // Alternate curtain direction
+            // Get current slide
             const currentSlide = slides[index];
+            
+            // Set initial clip-path based on direction
             if (slideDirection === 'right') {
                 currentSlide.style.clipPath = 'inset(0 100% 0 0)';
             } else {
                 currentSlide.style.clipPath = 'inset(0 0 0 100%)';
             }
             
-            // Trigger curtain effect
-            setTimeout(() => {
-                currentSlide.classList.add('active');
-            }, 50);
+            // Force reflow
+            void currentSlide.offsetWidth;
+            
+            // Add active class to trigger transition
+            currentSlide.classList.add('active');
             
             // Alternate direction for next slide
             slideDirection = slideDirection === 'right' ? 'left' : 'right';
-        // Update indicators
-        indicators.forEach((ind, i) => {
-            if (i === index) {
-                ind.classList.add('active');
-            } else {
-                ind.classList.remove('active');
-            }
-        });
-        
-        // Update text with subtle animation
-        updateHeroText(index);
-    }
+            
+            // Update indicators
+            indicators.forEach((ind, i) => {
+                if (i === index) {
+                    ind.classList.add('active');
+                } else {
+                    ind.classList.remove('active');
+                }
+            });
+            
+            // Update text with subtle animation
+            updateHeroText(index);
+        }
         
         function updateHeroText(index) {
             const imageData = slideshowImages[index];
