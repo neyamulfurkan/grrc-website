@@ -1602,20 +1602,33 @@ function showInitialContent() {
                 heroContent.classList.add('fadeForSlideshow');
             }
             
-            // Smooth text update
-            titleElement.style.transition = 'opacity 0.4s ease';
-            subtitleElement.style.transition = 'opacity 0.4s ease';
+            // ✅ SMOOTH FADE OUT → CHANGE TEXT → FADE IN
+            titleElement.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+            subtitleElement.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
             
-            titleElement.style.opacity = '0.6';
-            subtitleElement.style.opacity = '0.6';
+            // Phase 1: Fade out with slight upward movement
+            titleElement.style.opacity = '0';
+            titleElement.style.transform = 'translateY(-10px)';
+            subtitleElement.style.opacity = '0';
+            subtitleElement.style.transform = 'translateY(-10px)';
             
+            // Phase 2: Change text while invisible (after 250ms)
             setTimeout(() => {
                 titleElement.textContent = imageData.title;
                 subtitleElement.textContent = imageData.description;
                 
-                titleElement.style.opacity = '1';
-                subtitleElement.style.opacity = '1';
-            }, 300);
+                // Reset transform for fade-in from below
+                titleElement.style.transform = 'translateY(10px)';
+                subtitleElement.style.transform = 'translateY(10px)';
+                
+                // Phase 3: Fade in with upward movement (after 50ms)
+                setTimeout(() => {
+                    titleElement.style.opacity = '1';
+                    titleElement.style.transform = 'translateY(0)';
+                    subtitleElement.style.opacity = '1';
+                    subtitleElement.style.transform = 'translateY(0)';
+                }, 50);
+            }, 250);
         }
         
         function startSlideshow() {
