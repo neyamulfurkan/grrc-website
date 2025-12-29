@@ -15,8 +15,21 @@
 
         
 
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            width: 100%;
+            height: 70px;
+            z-index: 1000;
+            background-color: var(--header-background);
+            border-bottom: 1px solid var(--header-border);
+            backdrop-filter: blur(10px);
+        }
+
         .header-actions {
-            display: flex;
+            display: flex !important;
             align-items: center;
             gap: 0.5rem;
             height: 100%;
@@ -26,7 +39,7 @@
         .theme-toggle {
             width: 40px;
             height: 40px;
-            display: flex;
+            display: flex !important;
             align-items: center;
             justify-content: center;
             border-radius: 50%;
@@ -54,9 +67,9 @@
             position: relative;
             overflow: hidden;
             padding: 2rem;
-            padding-top: 140px;
-            margin-top: 0;
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            padding-top: 100px;
+            margin-top: 70px;
+            background: linear-gradient(135degdeg, var(--primary-color), var(--secondary-color));
         }
 
         .hero::before {
@@ -1133,7 +1146,11 @@
                 }
                 if (config.logo || config.logo_url) {
                     const logoUrl = config.logo || config.logo_url;
-                    document.getElementById('clubLogo').src = logoUrl + '?t=' + Date.now();
+                    const logoElement = document.getElementById('clubLogo');
+                    if (logoElement) {
+                        logoElement.src = logoUrl + '?t=' + Date.now();
+                        logoElement.onerror = () => logoElement.src = 'assets/default-logo.jpg';
+                    }
                 }
                 // Load bKash number with fallback
                 const bkashNumber = config.bkash_number || '01712345678';
