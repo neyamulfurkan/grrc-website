@@ -155,10 +155,36 @@ router.post('/members', checkPermission('members', 'create'), async (req, res) =
   } catch (error) {
     console.error('❌ Error in POST /members:', {
       error: error.message,
+      code: error.code,
+      constraint: error.constraint,
+      detail: error.detail,
       stack: error.stack,
       body: req.body,
       params: req.params
     });
+    
+    // Handle specific PostgreSQL errors
+    if (error.code === '23505') {
+      if (error.constraint === 'members_email_key') {
+        return res.status(409).json({
+          success: false,
+          error: 'Email already exists. Please use a different email address.',
+        });
+      }
+      console.error('🔄 Duplicate key error - sequence may be out of sync');
+      return res.status(409).json({
+        success: false,
+        error: 'Database conflict. Please refresh the page and try again.',
+      });
+    }
+    
+    if (error.code === '23502') {
+      return res.status(400).json({
+        success: false,
+        error: 'Missing required field: ' + (error.column || 'unknown'),
+      });
+    }
+    
     res.status(500).json({
       success: false,
       error: 'Failed to create member',
@@ -220,14 +246,12 @@ router.delete('/members/:id', checkPermission('members', 'delete'), async (req, 
 
 router.post('/events', checkPermission('events', 'create'), async (req, res) => {
   try {
-    const { title, description, date, location, venue, image } = req.body;
+    const { title, description, date, venue, image } = req.body;
     
-    const eventLocation = location || venue;
-    
-    if (!title || !description || !date || !eventLocation) {
+    if (!title || !description || !date || !venue) {
       return res.status(400).json({
         success: false,
-        error: 'Required fields: title, description, date, location (or venue)',
+        error: 'Required fields: title, description, date, venue',
       });
     }
 
@@ -252,10 +276,8 @@ router.post('/events', checkPermission('events', 'create'), async (req, res) => 
 
     const eventData = {
       ...req.body,
-      image: cloudinaryImageUrl,
-      location: eventLocation
+      image: cloudinaryImageUrl
     };
-    delete eventData.venue;
     
     // Check if approval is required
     const needsApproval = await checkApprovalRequired('events', 'create');
@@ -288,10 +310,31 @@ router.post('/events', checkPermission('events', 'create'), async (req, res) => 
   } catch (error) {
     console.error('❌ Error in POST /events:', {
       error: error.message,
+      code: error.code,
+      constraint: error.constraint,
+      detail: error.detail,
       stack: error.stack,
       body: req.body,
       params: req.params
     });
+    
+    // Handle specific PostgreSQL errors
+    if (error.code === '23505') {
+      console.error('🔄 Duplicate key error - sequence may be out of sync');
+      return res.status(409).json({
+        success: false,
+        error: 'Database conflict. Please refresh the page and try again.',
+        hint: 'If this persists, contact administrator to reset database sequences.'
+      });
+    }
+    
+    if (error.code === '23502') {
+      return res.status(400).json({
+        success: false,
+        error: 'Missing required field: ' + (error.column || 'unknown'),
+      });
+    }
+    
     res.status(500).json({
       success: false,
       error: 'Failed to create event',
@@ -419,10 +462,30 @@ router.post('/projects', checkPermission('projects', 'create'), async (req, res)
   } catch (error) {
     console.error('❌ Error in POST /projects:', {
       error: error.message,
+      code: error.code,
+      constraint: error.constraint,
+      detail: error.detail,
       stack: error.stack,
       body: req.body,
       params: req.params
     });
+    
+    // Handle specific PostgreSQL errors
+    if (error.code === '23505') {
+      console.error('🔄 Duplicate key error - sequence may be out of sync');
+      return res.status(409).json({
+        success: false,
+        error: 'Database conflict. Please refresh the page and try again.',
+      });
+    }
+    
+    if (error.code === '23502') {
+      return res.status(400).json({
+        success: false,
+        error: 'Missing required field: ' + (error.column || 'unknown'),
+      });
+    }
+    
     res.status(500).json({
       success: false,
       error: 'Failed to create project',
@@ -554,7 +617,30 @@ router.post('/gallery', checkPermission('gallery', 'upload'), async (req, res) =
     console.log(`➕ Gallery item created: ${title} by ${req.user.username}`);
     res.status(201).json(result);
   } catch (error) {
-    console.error('❌ Error in POST /gallery:', error);
+    console.error('❌ Error in POST /gallery:', {
+      error: error.message,
+      code: error.code,
+      constraint: error.constraint,
+      detail: error.detail,
+      stack: error.stack
+    });
+    
+    // Handle specific PostgreSQL errors
+    if (error.code === '23505') {
+      console.error('🔄 Duplicate key error - sequence may be out of sync');
+      return res.status(409).json({
+        success: false,
+        error: 'Database conflict. Please refresh the page and try again.',
+      });
+    }
+    
+    if (error.code === '23502') {
+      return res.status(400).json({
+        success: false,
+        error: 'Missing required field: ' + (error.column || 'unknown'),
+      });
+    }
+    
     res.status(500).json({
       success: false,
       error: 'Failed to create gallery item',
@@ -662,10 +748,30 @@ router.post('/announcements', checkPermission('announcements', 'create'), async 
   } catch (error) {
     console.error('❌ Error in POST /announcements:', {
       error: error.message,
+      code: error.code,
+      constraint: error.constraint,
+      detail: error.detail,
       stack: error.stack,
       body: req.body,
       params: req.params
     });
+    
+    // Handle specific PostgreSQL errors
+    if (error.code === '23505') {
+      console.error('🔄 Duplicate key error - sequence may be out of sync');
+      return res.status(409).json({
+        success: false,
+        error: 'Database conflict. Please refresh the page and try again.',
+      });
+    }
+    
+    if (error.code === '23502') {
+      return res.status(400).json({
+        success: false,
+        error: 'Missing required field: ' + (error.column || 'unknown'),
+      });
+    }
+    
     res.status(500).json({
       success: false,
       error: 'Failed to create announcement',
@@ -784,10 +890,30 @@ router.post('/alumni', checkPermission('alumni', 'create'), async (req, res) => 
   } catch (error) {
     console.error('❌ Error in POST /alumni:', {
       error: error.message,
+      code: error.code,
+      constraint: error.constraint,
+      detail: error.detail,
       stack: error.stack,
       body: req.body,
       params: req.params
     });
+    
+    // Handle specific PostgreSQL errors
+    if (error.code === '23505') {
+      console.error('🔄 Duplicate key error - sequence may be out of sync');
+      return res.status(409).json({
+        success: false,
+        error: 'Database conflict. Please refresh the page and try again.',
+      });
+    }
+    
+    if (error.code === '23502') {
+      return res.status(400).json({
+        success: false,
+        error: 'Missing required field: ' + (error.column || 'unknown'),
+      });
+    }
+    
     res.status(500).json({
       success: false,
       error: 'Failed to create alumni',
