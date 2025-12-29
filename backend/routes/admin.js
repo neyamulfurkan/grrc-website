@@ -91,35 +91,28 @@ router.post('/members', checkPermission('members', 'create'), async (req, res) =
       });
     }
 
-    // ✅ CRITICAL FIX: Upload photo to Cloudinary if it's Base64
+    // ✅ CRITICAL FIX: Reject Base64 images - must upload first
     let cloudinaryPhotoUrl = photo;
     if (photo && photo.startsWith('data:image')) {
-      console.log('📤 Uploading member photo to Cloudinary...');
-      const cloudinary = require('../config/cloudinary');
-      try {
-        const uploadResult = await cloudinary.uploader.upload(photo, {
-          folder: 'grrc-members',
-          transformation: [
-            { width: 400, height: 400, crop: 'fill', gravity: 'face' },
-            { quality: 'auto:good' },
-            { fetch_format: 'auto' }
-          ],
-          resource_type: 'image'
-        });
-        cloudinaryPhotoUrl = uploadResult.secure_url;
-        console.log('✅ Member photo uploaded to Cloudinary');
-      } catch (uploadError) {
-        console.error('❌ Cloudinary upload failed:', uploadError.message);
-        return res.status(500).json({
-          success: false,
-          error: 'Failed to upload photo to Cloudinary'
-        });
-      }
+      console.error('❌ Base64 image rejected - must upload to Cloudinary first');
+      return res.status(400).json({
+        success: false,
+        error: 'Base64 images not allowed. Please upload to Cloudinary first using /api/upload/image endpoint.'
+      });
+    }
+    
+    // Validate it's a Cloudinary URL if provided
+    if (photo && !photo.startsWith('https://res.cloudinary.com/') && !photo.startsWith('http')) {
+      console.error('❌ Invalid photo URL format');
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid photo URL. Must be a Cloudinary URL or valid HTTP(S) URL.'
+      });
     }
 
     const memberData = {
       ...req.body,
-      photo: cloudinaryPhotoUrl, // Use Cloudinary URL instead of Base64
+      photo: cloudinaryPhotoUrl,
       joined_date: req.body.joined_date || req.body.joinedDate
     };
     delete memberData.joinedDate;
@@ -238,35 +231,28 @@ router.post('/events', checkPermission('events', 'create'), async (req, res) => 
       });
     }
 
-    // ✅ CRITICAL FIX: Upload event image to Cloudinary if it's Base64
+    // ✅ CRITICAL FIX: Validate image is already a Cloudinary URL
     let cloudinaryImageUrl = image;
     if (image && image.startsWith('data:image')) {
-      console.log('📤 Uploading event image to Cloudinary...');
-      const cloudinary = require('../config/cloudinary');
-      try {
-        const uploadResult = await cloudinary.uploader.upload(image, {
-          folder: 'grrc-events',
-          transformation: [
-            { width: 1200, height: 675, crop: 'fill' },
-            { quality: 'auto:good' },
-            { fetch_format: 'auto' }
-          ],
-          resource_type: 'image'
-        });
-        cloudinaryImageUrl = uploadResult.secure_url;
-        console.log('✅ Event image uploaded to Cloudinary');
-      } catch (uploadError) {
-        console.error('❌ Cloudinary upload failed:', uploadError.message);
-        return res.status(500).json({
-          success: false,
-          error: 'Failed to upload image to Cloudinary'
-        });
-      }
+      console.error('❌ Base64 image rejected - must upload to Cloudinary first');
+      return res.status(400).json({
+        success: false,
+        error: 'Base64 images not allowed. Please upload to Cloudinary first using /api/upload/image endpoint.'
+      });
+    }
+    
+    // Validate it's a Cloudinary URL if provided
+    if (image && !image.startsWith('https://res.cloudinary.com/') && !image.startsWith('http')) {
+      console.error('❌ Invalid image URL format');
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid image URL. Must be a Cloudinary URL or valid HTTP(S) URL.'
+      });
     }
 
     const eventData = {
       ...req.body,
-      image: cloudinaryImageUrl, // Use Cloudinary URL instead of Base64
+      image: cloudinaryImageUrl,
       location: eventLocation
     };
     delete eventData.venue;
@@ -376,35 +362,28 @@ router.post('/projects', checkPermission('projects', 'create'), async (req, res)
       });
     }
 
-    // ✅ CRITICAL FIX: Upload project image to Cloudinary if it's Base64
+    // ✅ CRITICAL FIX: Reject Base64 images - must upload first
     let cloudinaryImageUrl = image;
     if (image && image.startsWith('data:image')) {
-      console.log('📤 Uploading project image to Cloudinary...');
-      const cloudinary = require('../config/cloudinary');
-      try {
-        const uploadResult = await cloudinary.uploader.upload(image, {
-          folder: 'grrc-projects',
-          transformation: [
-            { width: 1200, height: 800, crop: 'fill' },
-            { quality: 'auto:good' },
-            { fetch_format: 'auto' }
-          ],
-          resource_type: 'image'
-        });
-        cloudinaryImageUrl = uploadResult.secure_url;
-        console.log('✅ Project image uploaded to Cloudinary');
-      } catch (uploadError) {
-        console.error('❌ Cloudinary upload failed:', uploadError.message);
-        return res.status(500).json({
-          success: false,
-          error: 'Failed to upload image to Cloudinary'
-        });
-      }
+      console.error('❌ Base64 image rejected - must upload to Cloudinary first');
+      return res.status(400).json({
+        success: false,
+        error: 'Base64 images not allowed. Please upload to Cloudinary first using /api/upload/image endpoint.'
+      });
+    }
+    
+    // Validate it's a Cloudinary URL if provided
+    if (image && !image.startsWith('https://res.cloudinary.com/') && !image.startsWith('http')) {
+      console.error('❌ Invalid image URL format');
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid image URL. Must be a Cloudinary URL or valid HTTP(S) URL.'
+      });
     }
 
     const projectData = {
       ...req.body,
-      image: cloudinaryImageUrl, // Use Cloudinary URL instead of Base64
+      image: cloudinaryImageUrl,
       category: category || 'Other',
       status: status || 'ongoing'
     };

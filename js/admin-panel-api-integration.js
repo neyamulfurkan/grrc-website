@@ -217,8 +217,33 @@ async function saveEvent() {
         const imageUrl = document.getElementById('eventImageUrl').value;
         let image = imageUrl;
 
+        // ✅ CRITICAL FIX: Upload to Cloudinary FIRST if file selected
         if (imageFile) {
-            image = await imageToBase64(imageFile);
+            try {
+                showToast('Uploading image...', 'info');
+                const base64 = await imageToBase64(imageFile);
+                
+                const uploadResponse = await fetch(`${window.apiClient.baseURL}/api/upload/image`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${window.apiClient.getAuthToken()}`
+                    },
+                    body: JSON.stringify({ image: base64 })
+                });
+                
+                if (!uploadResponse.ok) {
+                    throw new Error('Image upload failed');
+                }
+                
+                const uploadResult = await uploadResponse.json();
+                image = uploadResult.url;
+                console.log('✅ Event image uploaded to Cloudinary:', image);
+            } catch (uploadError) {
+                console.error('❌ Image upload error:', uploadError);
+                showToast('Failed to upload image. Please try again.', 'error');
+                return;
+            }
         }
 
         const eventData = {
