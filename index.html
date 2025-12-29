@@ -1522,28 +1522,41 @@ function showInitialContent() {
             const slides = document.querySelectorAll('.hero-slide');
             const indicators = document.querySelectorAll('.slideshow-indicator');
             
-            if (slides.length === 0) return;
+            if (slides.length === 0) {
+                console.warn('⚠️ No slides to show');
+                return;
+            }
             
-            // Remove active from all slides
-            slides.forEach(s => {
+            console.log('🎬 Showing slide', index + 1, 'with direction:', slideDirection);
+            
+            // Remove active from all slides and reset their clip-path
+            slides.forEach((s, i) => {
                 s.classList.remove('active');
+                if (i !== index) {
+                    s.style.clipPath = 'inset(0 100% 0 0)';
+                }
             });
             
             // Get current slide
             const currentSlide = slides[index];
             
-            // Set initial clip-path based on direction
+            // Set initial clip-path OFF SCREEN based on direction
             if (slideDirection === 'right') {
+                // Coming from right
                 currentSlide.style.clipPath = 'inset(0 100% 0 0)';
             } else {
+                // Coming from left
                 currentSlide.style.clipPath = 'inset(0 0 0 100%)';
             }
             
-            // Force reflow
-            void currentSlide.offsetWidth;
+            // Force reflow to ensure initial state is applied
+            currentSlide.offsetHeight;
             
-            // Add active class to trigger transition
-            currentSlide.classList.add('active');
+            // Trigger curtain reveal by setting final clip-path
+            requestAnimationFrame(() => {
+                currentSlide.style.clipPath = 'inset(0 0 0 0)';
+                currentSlide.classList.add('active');
+            });
             
             // Alternate direction for next slide
             slideDirection = slideDirection === 'right' ? 'left' : 'right';
