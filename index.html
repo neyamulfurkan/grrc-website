@@ -277,10 +277,6 @@
             min-height: 100vh;
             display: flex;
             align-items: center;
-            margin-top: -70px;
-            padding-top: 70px;
-            margin-top: -70px;
-            padding-top: 70px;
             justify-content: center;
             text-align: center;
             position: relative;
@@ -1262,12 +1258,11 @@
             if (typeof initTheme === 'function') initTheme();
             if (typeof initNavigation === 'function') initNavigation();
             
-            // ✅ SLIDESHOW LOADS FIRST - Top Priority!
-            console.log('🎬 Loading slideshow FIRST...');
-            loadGalleryForSlideshow().then(() => {
-                console.log('✅ Slideshow ready!');
-            }).catch(err => {
+            // ✅ SLIDESHOW LOADS FIRST - Immediate execution (no await)
+            console.log('🎬 Loading slideshow IMMEDIATELY...');
+            loadGalleryForSlideshow().catch(err => {
                 console.warn('⚠️ Slideshow failed, using fallback');
+                showInitialContent();
             });
             
             // ✅ Other content loads in parallel AFTER slideshow starts
@@ -1339,34 +1334,29 @@
         
         let galleryItems = [];
         
-        // ✅ TRY API FIRST
-        if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady) {
+        // ✅ CACHE FIRST (instant load)
+        const cached = localStorage.getItem('gallery');
+        if (cached) {
             try {
-                const response = await window.apiClient.getGallery();
-                if (response.success && Array.isArray(response.data) && response.data.length > 0) {
-                    galleryItems = response.data;
-                    localStorage.setItem('gallery', JSON.stringify(response.data));
-                    console.log('✅ API: Loaded', galleryItems.length, 'images');
+                galleryItems = JSON.parse(cached);
+                if (galleryItems.length > 0) {
+                    console.log('✅ Cache: Loaded', galleryItems.length, 'images INSTANTLY');
                 }
-            } catch (apiError) {
-                console.warn('⚠️ API failed:', apiError);
+            } catch (e) {
+                console.warn('Cache parse failed:', e);
             }
         }
         
-        // ✅ FALLBACK TO CACHE
-        if (galleryItems.length === 0) {
-            const cached = localStorage.getItem('gallery');
-            if (cached) {
-                try {
-                    galleryItems = JSON.parse(cached);
-                    if (galleryItems.length > 0) {
-                        console.log('✅ Cache: Loaded', galleryItems.length, 'images');
-                    }
-                } catch (e) {
-                    console.warn('Cache parse failed:', e);
-                    galleryItems = [];
+        // ✅ API IN BACKGROUND (updates cache for next visit)
+        if (typeof window.apiClient !== 'undefined' && window.apiClient.isReady) {
+            window.apiClient.getGallery().then(response => {
+                if (response.success && Array.isArray(response.data) && response.data.length > 0) {
+                    localStorage.setItem('gallery', JSON.stringify(response.data));
+                    console.log('✅ API: Updated cache with', response.data.length, 'images');
                 }
-            }
+            }).catch(apiError => {
+                console.warn('⚠️ API update failed:', apiError);
+            });
         }
         
         // ✅ VALIDATE AND PROCESS IMAGES
@@ -1452,13 +1442,6 @@ function showInitialContent() {
             slideshowContainer.innerHTML = '';
             indicatorsContainer.innerHTML = '';
             
-            // Add initial load animation to text (only once)
-            if (!hasInitialAnimationPlayed) {
-                if (titleElement) titleElement.classList.add('initial-load-animation');
-                if (subtitleElement) subtitleElement.classList.add('initial-load-animation');
-                hasInitialAnimationPlayed = true;
-            }
-            
             let loadedCount = 0;
             const totalImages = slideshowImages.length;
             
@@ -1488,24 +1471,28 @@ function showInitialContent() {
                 img.onerror = function() {
                     console.error('❌ Image', index + 1, 'failed:', imageData.url.substring(0, 80));
                     slide.style.display = 'none';
+                    
+                    if (index === 0) {
+                        console.warn('⚠️ First image failed - showing fallback');
+                        showInitialContent();
+                    }
                 };
                 
                 img.onload = function() {
-                    if (index === 0 && !firstImageLoaded) {
-                        img.style.opacity = '1';
-                        firstImageLoaded = true;
-                        console.log('⚡ First image loaded INSTANTLY');
-                    }
                     loadedCount++;
                     console.log('✅ Image', index + 1, 'loaded (', loadedCount, '/', totalImages, ')');
                     
-                    if (loadedCount === totalImages) {
-                        // All images loaded - start slideshow with dramatic entrance
-                        setTimeout(() => {
-                            slideshowContainer.classList.add('active');
-                            showSlideWithCurtainEffect(0);
-                            indicatorsContainer.classList.add('active');
-                        }, 100);
+                    if (index === 0 && !firstImageLoaded) {
+                        img.style.opacity = '1';
+                        firstImageLoaded = true;
+                        slideshowContainer.classList.add('active');
+                        showSlideWithCurtainEffect(0);
+                        indicatorsContainer.classList.add('active');
+                        console.log('⚡ First image displayed INSTANTLY');
+                    }
+                    
+                    if (loadedCount === totalImages && slideshowImages.length > 1) {
+                        setTimeout(() => startSlideshow(), 1000);
                     }
                 };
                 
@@ -1520,12 +1507,16 @@ function showInitialContent() {
             
             // Set initial text (logo and motto visible first)
             if (titleElement && subtitleElement) {
-                titleElement.textContent = 'GSTU Robotics & Research Club';
-                subtitleElement.textContent = 'A Hub of Robothinkers';
+                titleElement.textContent = slideshowImages[0]?.title || 'GSTU Robotics & Research Club';
+                subtitleElement.textContent = slideshowImages[0]?.description || 'A Hub of Robothinkers';
             }
             
+            // Only start slideshow if there are multiple images
             if (slideshowImages.length > 1) {
-                setTimeout(() => startSlideshow(), 1000);
+                // Wait for first image to be visible before starting rotation
+                setTimeout(() => {
+                    if (firstImageLoaded) startSlideshow();
+                }, 1500);
             }
         }
         
