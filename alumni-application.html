@@ -645,7 +645,7 @@
                 
                 <div class="header-actions">
                     <button id="themeToggle" class="theme-toggle" aria-label="Toggle theme">
-                        <span class="theme-icon">ðŸŒ™</span>
+                        <span class="theme-icon">🌙</span>
                     </button>
                     <button class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Toggle menu">
                         <span></span>
@@ -693,7 +693,7 @@
                     <!-- Section 1: Personal Information -->
                     <div class="form-section">
                         <h3 class="section-title">
-                            <span>ðŸ‘¤</span>
+                            <span>👤</span>
                             <span>Personal Information</span>
                         </h3>
 
@@ -716,7 +716,7 @@
                                 Phone Number<span class="required">*</span>
                             </label>
                             <input type="tel" id="phone" class="form-input" placeholder="+8801XXXXXXXXX or 01XXXXXXXXX" required>
-                            <div class="form-help">ðŸ“± Enter your active mobile number</div>
+                            <div class="form-help">📱 Enter your active mobile number</div>
                         </div>
 
                         <div class="form-group">
@@ -724,7 +724,7 @@
                                 Batch Year<span class="required">*</span>
                             </label>
                             <input type="text" id="batchYear" class="form-input" placeholder="2020-2021" pattern="\d{4}-\d{4}" required>
-                            <div class="form-help">ðŸ“… Enter in format: YYYY-YYYY (e.g., 2020-2021)</div>
+                            <div class="form-help">📅 Enter in format: YYYY-YYYY (e.g., 2020-2021)</div>
                         </div>
 
                         <div class="form-group">
@@ -790,14 +790,14 @@
                     <!-- Section 2: Club Experience -->
                     <div class="form-section">
                         <h3 class="section-title">
-                            <span>ðŸŽ“</span>
+                            <span>🎓</span>
                             <span>Club Experience</span>
                         </h3>
 
                         <div class="form-group">
                             <label class="form-label">Your Role in Club</label>
                             <input type="text" id="roleInClub" class="form-input" placeholder="e.g., President, Vice President, Project Lead">
-                            <div class="form-help">ðŸ’¡ What was your primary role in the club?</div>
+                            <div class="form-help">💡 What was your primary role in the club?</div>
                         </div>
 
                         <div class="form-group">
@@ -809,7 +809,7 @@
                     <!-- Section 3: Current Status -->
                     <div class="form-section">
                         <h3 class="section-title">
-                            <span>ðŸ’¼</span>
+                            <span>💼</span>
                             <span>Current Status</span>
                         </h3>
 
@@ -837,14 +837,14 @@
                     <!-- Section 4: Optional Information -->
                     <div class="form-section">
                         <h3 class="section-title">
-                            <span>ðŸ”—</span>
+                            <span>🔗</span>
                             <span>Optional Information</span>
                         </h3>
 
                         <div class="form-group">
                             <label class="form-label">Photo</label>
                             <div class="file-input-wrapper">
-                                <label for="photo" class="file-input-label">ðŸ“· Choose Photo</label>
+                                <label for="photo" class="file-input-label">📷 Choose Photo</label>
                                 <input type="file" id="photo" accept="image/*">
                             </div>
                             <input type="url" class="form-input" id="photoUrl" placeholder="Or enter image URL" style="margin-top: var(--space-sm);">
@@ -907,7 +907,6 @@
             }
 
             await loadClubConfig();
-            await loadBkashNumber();
             initializeForm();
             initializeBioCounter();
             initializePhotoPreview();
@@ -920,40 +919,6 @@
                 initNavigation();
             }
         });
-
-        async function loadBkashNumber() {
-            try {
-                // Skip if element doesn't exist (alumni form doesn't need bKash)
-                const bkashElement = document.getElementById('bkashNumber');
-                if (!bkashElement) {
-                    console.log('ℹ️ bKash element not found - skipping (not needed for alumni form)');
-                    return;
-                }
-                
-                // For now, use a default number. Later you can fetch from API
-                const bkashNumber = '01712345678'; // Admin can configure this
-                bkashElement.textContent = bkashNumber;
-            } catch (error) {
-                console.error('Error loading bKash number:', error);
-            }
-        }
-
-        function initializePaymentPreview() {
-            const paymentInput = document.getElementById('paymentScreenshot');
-            const preview = document.getElementById('paymentPreview');
-
-            paymentInput.addEventListener('change', async (e) => {
-                const file = e.target.files[0];
-                if (file) {
-                    const reader = new FileReader();
-                    reader.onload = (e) => {
-                        preview.src = e.target.result;
-                        preview.style.display = 'block';
-                    };
-                    reader.readAsDataURL(file);
-                }
-            });
-        }
 
         async function loadClubConfig() {
             try {
@@ -1115,13 +1080,13 @@
                     return;
                 }
                 
-               // Get photo with proper error handling
+                // Get photo with proper error handling
                 const photoFile = document.getElementById('photo').files[0];
                 const photoUrl = document.getElementById('photoUrl').value.trim();
                 let photo = photoUrl || null;
                 
                 if (photoFile) {
-                    // Check file size (max 500KB) - FURTHER REDUCED
+                    // Check file size (max 500KB)
                     if (photoFile.size > 500 * 1024) {
                         showError('Photo size must be less than 500KB. Please compress your image first.');
                         return;
@@ -1231,7 +1196,7 @@
             modal.className = 'success-modal active';
             modal.innerHTML = `
                 <div class="modal-content">
-                    <div class="success-icon">âœ“</div>
+                    <div class="success-icon">✓</div>
                     <h2>Application Submitted Successfully!</h2>
                     <p>Thank you for joining our alumni network!</p>
                     <p>We'll review your application and add you to our alumni directory soon.</p>
@@ -1241,6 +1206,6 @@
             document.body.appendChild(modal);
         }
     </script>
-<script src="js/community-toggle.js"></script>
+    <script src="js/community-toggle.js"></script>
 </body>
 </html>
